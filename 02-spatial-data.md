@@ -1,10 +1,8 @@
 # (PART) Foundations {-}
 
-# Geographic data in R {#spatial-class}
+# Geographic data in Python {#spatial-class}
 
 ## Prerequisites
-
-
 
 ...
 
