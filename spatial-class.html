@@ -6,16 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Chapter 3 Geographic data in Python | Geocomputation with R</title>
 <meta name="author" content="Robin Lovelace, Jakub Nowosad, Jannes Muenchow">
-<meta name="description" content="3.1 Introduction …  3.2 Vector data  3.2.1 Geometries …  3.2.2 Geometry columns …  3.2.3 Vector layers …   3.3 Raster data …  3.4 Coordinate Reference Systems …  3.5 Units …  3.6 Exercises …...">
+<meta name="description" content="3.1 Introduction … Importing packages import shapely.geometry import geopandas as gpd # import matplotlib.pyplot as plt  3.2 Vector data  3.2.1 Vector layers The typical data structure for vector...">
 <meta name="generator" content="bookdown 0.24 with bs4_book()">
 <meta property="og:title" content="Chapter 3 Geographic data in Python | Geocomputation with R">
 <meta property="og:type" content="book">
 <meta property="og:url" content="https://geocompr.robinlovelace.net/spatial-class.html">
 <meta property="og:image" content="https://geocompr.robinlovelace.net/images/cover.png">
-<meta property="og:description" content="3.1 Introduction …  3.2 Vector data  3.2.1 Geometries …  3.2.2 Geometry columns …  3.2.3 Vector layers …   3.3 Raster data …  3.4 Coordinate Reference Systems …  3.5 Units …  3.6 Exercises …...">
+<meta property="og:description" content="3.1 Introduction … Importing packages import shapely.geometry import geopandas as gpd # import matplotlib.pyplot as plt  3.2 Vector data  3.2.1 Vector layers The typical data structure for vector...">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Chapter 3 Geographic data in Python | Geocomputation with R">
-<meta name="twitter:description" content="3.1 Introduction …  3.2 Vector data  3.2.1 Geometries …  3.2.2 Geometry columns …  3.2.3 Vector layers …   3.3 Raster data …  3.4 Coordinate Reference Systems …  3.5 Units …  3.6 Exercises …...">
+<meta name="twitter:description" content="3.1 Introduction … Importing packages import shapely.geometry import geopandas as gpd # import matplotlib.pyplot as plt  3.2 Vector data  3.2.1 Vector layers The typical data structure for vector...">
 <meta name="twitter:image" content="https://geocompr.robinlovelace.net/images/cover.png">
 <!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/header-attrs-2.11/header-attrs.js"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
@@ -77,16 +77,41 @@
 <span class="header-section-number">3.1</span> Introduction<a class="anchor" aria-label="anchor" href="#introduction-1"><i class="fas fa-link"></i></a>
 </h2>
 <p>…</p>
+<p>Importing packages</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="spatial-class.html#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely.geometry</span>
+<span id="cb1-2"><a href="spatial-class.html#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="spatial-class.html#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># import matplotlib.pyplot as plt</span></span></code></pre></div>
 </div>
 <div id="vector-data" class="section level2" number="3.2">
 <h2>
 <span class="header-section-number">3.2</span> Vector data<a class="anchor" aria-label="anchor" href="#vector-data"><i class="fas fa-link"></i></a>
 </h2>
-<div id="geometries" class="section level3" number="3.2.1">
+<div id="vector-layers" class="section level3" number="3.2.1">
 <h3>
-<span class="header-section-number">3.2.1</span> Geometries<a class="anchor" aria-label="anchor" href="#geometries"><i class="fas fa-link"></i></a>
+<span class="header-section-number">3.2.1</span> Vector layers<a class="anchor" aria-label="anchor" href="#vector-layers"><i class="fas fa-link"></i></a>
 </h3>
-<p>…</p>
+<p>The typical data structure for vector data is a vector layer.</p>
+<p>Importing from file:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="spatial-class.html#cb3-1" aria-hidden="true" tabindex="-1"></a>path <span class="op">=</span> gpd.datasets.get_path(<span class="st">'naturalearth_lowres'</span>)</span>
+<span id="cb3-2"><a href="spatial-class.html#cb3-2" aria-hidden="true" tabindex="-1"></a>dat <span class="op">=</span> gpd.read_file(path)</span></code></pre></div>
+<p>The result is a <code>GeoDataFrame</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="spatial-class.html#cb4-1" aria-hidden="true" tabindex="-1"></a>dat</span></code></pre></div>
+<pre><code>##        pop_est  ...                                           geometry
+## 0       920938  ...  MULTIPOLYGON (((180.00000 -16.06713, 180.00000...
+## 1     53950935  ...  POLYGON ((33.90371 -0.95000, 34.07262 -1.05982...
+## 2       603253  ...  POLYGON ((-8.66559 27.65643, -8.66512 27.58948...
+## 3     35623680  ...  MULTIPOLYGON (((-122.84000 49.00000, -122.9742...
+## 4    326625791  ...  MULTIPOLYGON (((-122.84000 49.00000, -120.0000...
+## ..         ...  ...                                                ...
+## 172    7111024  ...  POLYGON ((18.82982 45.90887, 18.82984 45.90888...
+## 173     642550  ...  POLYGON ((20.07070 42.58863, 19.80161 42.50009...
+## 174    1895250  ...  POLYGON ((20.59025 41.85541, 20.52295 42.21787...
+## 175    1218208  ...  POLYGON ((-61.68000 10.76000, -61.10500 10.890...
+## 176   13026129  ...  POLYGON ((30.83385 3.50917, 29.95350 4.17370, ...
+## 
+## [177 rows x 6 columns]</code></pre>
+<p>Basic plotting using the <code>.plot</code> method:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="spatial-class.html#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dat.plot()</span></span></code></pre></div>
 </div>
 <div id="geometry-columns" class="section level3" number="3.2.2">
 <h3>
@@ -94,9 +119,9 @@
 </h3>
 <p>…</p>
 </div>
-<div id="vector-layers" class="section level3" number="3.2.3">
+<div id="geometries" class="section level3" number="3.2.3">
 <h3>
-<span class="header-section-number">3.2.3</span> Vector layers<a class="anchor" aria-label="anchor" href="#vector-layers"><i class="fas fa-link"></i></a>
+<span class="header-section-number">3.2.3</span> Geometries<a class="anchor" aria-label="anchor" href="#geometries"><i class="fas fa-link"></i></a>
 </h3>
 <p>…</p>
 </div>
@@ -124,16 +149,6 @@
 <span class="header-section-number">3.6</span> Exercises<a class="anchor" aria-label="anchor" href="#exercises"><i class="fas fa-link"></i></a>
 </h2>
 <p>…</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="spatial-class.html#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb1-2"><a href="spatial-class.html#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas</span>
-<span id="cb1-3"><a href="spatial-class.html#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> cartopy <span class="im">import</span> crs <span class="im">as</span> ccrs</span>
-<span id="cb1-4"><a href="spatial-class.html#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="spatial-class.html#cb1-5" aria-hidden="true" tabindex="-1"></a>path <span class="op">=</span> geopandas.datasets.get_path(<span class="st">'naturalearth_lowres'</span>)</span>
-<span id="cb1-6"><a href="spatial-class.html#cb1-6" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> geopandas.read_file(path)</span>
-<span id="cb1-7"><a href="spatial-class.html#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Add a column we'll use later</span></span>
-<span id="cb1-8"><a href="spatial-class.html#cb1-8" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'gdp_pp'</span>] <span class="op">=</span> df[<span class="st">'gdp_md_est'</span>] <span class="op">/</span> df[<span class="st">'pop_est'</span>]</span>
-<span id="cb1-9"><a href="spatial-class.html#cb1-9" aria-hidden="true" tabindex="-1"></a>df.plot()</span></code></pre></div>
-<div class="inline-figure"><img src="02-spatial-data_files/figure-html/unnamed-chunk-1-1.png" width="672"></div>
 
 </div>
 </div>
@@ -156,9 +171,9 @@
 <li><a class="nav-link" href="#introduction-1"><span class="header-section-number">3.1</span> Introduction</a></li>
 <li>
 <a class="nav-link" href="#vector-data"><span class="header-section-number">3.2</span> Vector data</a><ul class="nav navbar-nav">
-<li><a class="nav-link" href="#geometries"><span class="header-section-number">3.2.1</span> Geometries</a></li>
+<li><a class="nav-link" href="#vector-layers"><span class="header-section-number">3.2.1</span> Vector layers</a></li>
 <li><a class="nav-link" href="#geometry-columns"><span class="header-section-number">3.2.2</span> Geometry columns</a></li>
-<li><a class="nav-link" href="#vector-layers"><span class="header-section-number">3.2.3</span> Vector layers</a></li>
+<li><a class="nav-link" href="#geometries"><span class="header-section-number">3.2.3</span> Geometries</a></li>
 </ul>
 </li>
 <li><a class="nav-link" href="#raster-data"><span class="header-section-number">3.3</span> Raster data</a></li>
@@ -182,7 +197,7 @@
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong>Geocomputation with R</strong>" was written by Robin Lovelace, Jakub Nowosad, Jannes Muenchow. It was last built on 2022-01-16.</p>
+    <p>"<strong>Geocomputation with R</strong>" was written by Robin Lovelace, Jakub Nowosad, Jannes Muenchow. It was last built on 2022-01-28.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">
