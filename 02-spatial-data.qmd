@@ -40,9 +40,25 @@ Basic plotting using the `.plot` method:
 dat.plot()
 ```
 
+Subsetting:
+
+```{python}
+dat1 = dat[["name", "pop_est", "geometry"]]
+dat1
+```
+
+```{python}
+dat1 = dat1[dat1["name"] == "Egypt"]
+dat1
+```
+
 ### Geometry columns
 
 One of the columns in a `GeoDataFrame` is a geometry column, of class `GeoSeries`. The geometry column contains the geometric part of the vector layer, e.g., the `POLYGON` or `MULTIPOLYGON` geometries of the 177 countries in `dat`:
+
+```{python}
+dat.dtypes
+```
 
 ```{python}
 dat["geometry"]
@@ -69,6 +85,7 @@ dat[dat["name"] == "Egypt"]["geometry"].iloc[0]
 Importing the `rasterio` package:
 
 ```{python}
+import numpy as np
 import rasterio
 from rasterio.plot import show
 ```
@@ -76,32 +93,52 @@ from rasterio.plot import show
 Creating a file connection:
 
 ```{python}
-r = rasterio.open("data/air.2x2.250.mon.anom.comb.nc")
+src = rasterio.open("data/gpw_v4_population_density_rev11_2020_15_min.tif")
 ```
 
 Examining the metadata:
 
 ```{python}
-r.meta
+src.meta
 ```
 
 Plotting:
 
 ```{python}
-show(r)
+show(src)
 ```
 
 Reading the 1st layer:
 
 ```{python}
-s = r.read(1)
-```
-
-```{python}
+s = src.read(1)
 s
 ```
 
+
+```{python}
+msk = src.read_masks(1)
+msk
+```
+
+
+```{python}
+s[msk == 0] = np.nan
+```
+
+```{python}
+show(~(np.isnan(s)) & (s > 100))
+```
+
+### Using `xarray`
+
+...
+
 ## Coordinate Reference Systems
+
+```{python}
+dat.crs
+```
 
 ```{python}
 r.crs
