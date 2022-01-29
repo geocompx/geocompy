@@ -1,7 +1,8 @@
 on:
   push:
     branches:
-      main
+      - main
+      - quartotest
 name: Render
 jobs:
   bookdown:
@@ -15,10 +16,15 @@ jobs:
       - name: Render Book
         run: |
           Rscript -e 'bookdown::render_book("index.Rmd")'
+      - uses: quarto-dev/quarto-actions/install-quarto@v1
+      - name: Install Quarto
+      - run: |
+          quarto --version
+          quarto render
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_book
+          publish_dir: ./docs
           publish_branch: gh-pages
           commit_message: 'Deploy commit: ${{ github.event.head_commit.message }}'
