@@ -12,13 +12,22 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - name: Render Book
+      - name: Install Quarto
         run: |
-          Rscript -e 'bookdown::render_book("index.Rmd")'
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/etc/apt/trusted.gpg.d/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/trusted.gpg.d/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+          wget https://github.com/quarto-dev/quarto-cli/releases/download/v0.3.63/quarto-0.3.63-linux-amd64.deb
+          sudo dpkg -i quarto-0.3.63-linux-amd64.deb
+          quarto --version
+          python3 -m pip install jupyter
+          quarto render
+          ls docs
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_book
+          publish_dir: ./docs
           publish_branch: gh-pages
           commit_message: 'Deploy commit: ${{ github.event.head_commit.message }}'
