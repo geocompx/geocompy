@@ -9,43 +9,43 @@
   {
     "objectID": "02-spatial-data.html#introduction",
     "href": "02-spatial-data.html#introduction",
-    "title": "Appendix A — Geographic data in Python",
-    "section": "A.1 Introduction",
-    "text": "A.1 Introduction\n…\nImporting packages\n\nimport shapely.geometry\nimport geopandas as gpd\n\n\nimport pandas as pd\npd.set_option(\"display.max_rows\", 4)"
+    "title": "2  Geographic data in Python",
+    "section": "2.1 Introduction",
+    "text": "2.1 Introduction\n…\nImporting packages\n\nimport shapely.geometry\nimport geopandas as gpd\n\n\nimport pandas as pd\npd.set_option(\"display.max_rows\", 4)"
   },
   {
     "objectID": "02-spatial-data.html#vector-data",
     "href": "02-spatial-data.html#vector-data",
-    "title": "Appendix A — Geographic data in Python",
-    "section": "A.2 Vector data",
-    "text": "A.2 Vector data\n\nA.2.1 Vector layers\nThe typical data structure for vector data is a vector layer.\nMost often, we import an existing vector layer from a file, such as a Shapefile or a GeoPackage file.\n\npath = gpd.datasets.get_path('naturalearth_lowres')\ndat = gpd.read_file(path)\n\nThe result is a GeoDataFrame:\n\ndat\n\n\n\n\n  \n    \n      \n      pop_est\n      continent\n      name\n      iso_a3\n      gdp_md_est\n      geometry\n    \n  \n  \n    \n      0\n      920938\n      Oceania\n      Fiji\n      FJI\n      8374.0\n      MULTIPOLYGON (((180.00000 -16.06713, 180.00000...\n    \n    \n      1\n      53950935\n      Africa\n      Tanzania\n      TZA\n      150600.0\n      POLYGON ((33.90371 -0.95000, 34.07262 -1.05982...\n    \n    \n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n    \n    \n      175\n      1218208\n      North America\n      Trinidad and Tobago\n      TTO\n      43570.0\n      POLYGON ((-61.68000 10.76000, -61.10500 10.890...\n    \n    \n      176\n      13026129\n      Africa\n      S. Sudan\n      SSD\n      20880.0\n      POLYGON ((30.83385 3.50917, 29.95350 4.17370, ...\n    \n  \n\n177 rows × 6 columns\n\n\n\nBasic plotting using the .plot method:\n\ndat.plot()\n\n<AxesSubplot:>\n\n\n\n\n\n\n\nA.2.2 Geometry columns\nOne of the columns in a GeoDataFrame is a geometry column, of class GeoSeries. The geometry column contains the geometric part of the vector layer, e.g., the POLYGON or MULTIPOLYGON geometries of the 177 countries in dat:\n\ndat[\"geometry\"]\n\n0      MULTIPOLYGON (((180.00000 -16.06713, 180.00000...\n1      POLYGON ((33.90371 -0.95000, 34.07262 -1.05982...\n                             ...                        \n175    POLYGON ((-61.68000 10.76000, -61.10500 10.890...\n176    POLYGON ((30.83385 3.50917, 29.95350 4.17370, ...\nName: geometry, Length: 177, dtype: geometry\n\n\n\n\nA.2.3 Geometries\nEach element in the geometry column is a (Simple Feature) geometry, of class shapely. For example, here is one specific geometry selected by implicit index (that of Canada):\n\ndat[\"geometry\"].iloc[3]\n\n\n\n\nand here is a specific geometry selected based on the \"name\" attribute:\n\ndat[dat[\"name\"] == \"Egypt\"][\"geometry\"].iloc[0]"
+    "title": "2  Geographic data in Python",
+    "section": "2.2 Vector data",
+    "text": "2.2 Vector data\n\n2.2.1 Vector layers\nThe typical data structure for vector data is a vector layer.\nMost often, we import an existing vector layer from a file, such as a Shapefile or a GeoPackage file.\n\ndat = gpd.read_file(\"data/ne_110m_admin_0_countries.shp\")\n\nThe result is a GeoDataFrame:\n\ndat\n\n\n\n\n  \n    \n      \n      featurecla\n      scalerank\n      LABELRANK\n      SOVEREIGNT\n      SOV_A3\n      ADM0_DIF\n      LEVEL\n      TYPE\n      ADMIN\n      ADM0_A3\n      ...\n      FCLASS_TR\n      FCLASS_ID\n      FCLASS_PL\n      FCLASS_GR\n      FCLASS_IT\n      FCLASS_NL\n      FCLASS_SE\n      FCLASS_BD\n      FCLASS_UA\n      geometry\n    \n  \n  \n    \n      0\n      Admin-0 country\n      1\n      6\n      Fiji\n      FJI\n      0\n      2\n      Sovereign country\n      Fiji\n      FJI\n      ...\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      MULTIPOLYGON (((180.00000 -16.06713, 180.00000...\n    \n    \n      1\n      Admin-0 country\n      1\n      3\n      United Republic of Tanzania\n      TZA\n      0\n      2\n      Sovereign country\n      United Republic of Tanzania\n      TZA\n      ...\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      POLYGON ((33.90371 -0.95000, 34.07262 -1.05982...\n    \n    \n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n      ...\n    \n    \n      175\n      Admin-0 country\n      1\n      5\n      Trinidad and Tobago\n      TTO\n      0\n      2\n      Sovereign country\n      Trinidad and Tobago\n      TTO\n      ...\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      POLYGON ((-61.68000 10.76000, -61.10500 10.890...\n    \n    \n      176\n      Admin-0 country\n      1\n      3\n      South Sudan\n      SDS\n      0\n      2\n      Sovereign country\n      South Sudan\n      SDS\n      ...\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      None\n      POLYGON ((30.83385 3.50917, 29.95350 4.17370, ...\n    \n  \n\n177 rows × 162 columns\n\n\n\nBasic plotting using the .plot method:\n\ndat.plot()\n\n<AxesSubplot:>\n\n\n\n\n\nSubsetting:\n\ndat1 = dat[[\"SOVEREIGNT\", \"geometry\"]]\ndat1\n\n\n\n\n  \n    \n      \n      SOVEREIGNT\n      geometry\n    \n  \n  \n    \n      0\n      Fiji\n      MULTIPOLYGON (((180.00000 -16.06713, 180.00000...\n    \n    \n      1\n      United Republic of Tanzania\n      POLYGON ((33.90371 -0.95000, 34.07262 -1.05982...\n    \n    \n      ...\n      ...\n      ...\n    \n    \n      175\n      Trinidad and Tobago\n      POLYGON ((-61.68000 10.76000, -61.10500 10.890...\n    \n    \n      176\n      South Sudan\n      POLYGON ((30.83385 3.50917, 29.95350 4.17370, ...\n    \n  \n\n177 rows × 2 columns\n\n\n\n\ndat1 = dat1[dat1[\"SOVEREIGNT\"] == \"Egypt\"]\ndat1\n\n\n\n\n  \n    \n      \n      SOVEREIGNT\n      geometry\n    \n  \n  \n    \n      163\n      Egypt\n      POLYGON ((36.86623 22.00000, 32.90000 22.00000...\n    \n  \n\n\n\n\n\n\n2.2.2 Geometry columns\nOne of the columns in a GeoDataFrame is a geometry column, of class GeoSeries. The geometry column contains the geometric part of the vector layer, e.g., the POLYGON or MULTIPOLYGON geometries of the 177 countries in dat:\n\ndat.dtypes\n\nfeaturecla      object\nscalerank        int64\n                ...   \nFCLASS_UA       object\ngeometry      geometry\nLength: 162, dtype: object\n\n\n\ndat[\"geometry\"]\n\n0      MULTIPOLYGON (((180.00000 -16.06713, 180.00000...\n1      POLYGON ((33.90371 -0.95000, 34.07262 -1.05982...\n                             ...                        \n175    POLYGON ((-61.68000 10.76000, -61.10500 10.890...\n176    POLYGON ((30.83385 3.50917, 29.95350 4.17370, ...\nName: geometry, Length: 177, dtype: geometry\n\n\n\n\n2.2.3 Geometries\nEach element in the geometry column is a (Simple Feature) geometry, of class shapely. For example, here is one specific geometry selected by implicit index (that of Canada):\n\ndat[\"geometry\"].iloc[3]\n\n\n\n\nand here is a specific geometry selected based on the \"SOVEREIGNT\" attribute:\n\ndat[dat[\"SOVEREIGNT\"] == \"Egypt\"][\"geometry\"].iloc[0]"
   },
   {
     "objectID": "02-spatial-data.html#raster-data",
     "href": "02-spatial-data.html#raster-data",
-    "title": "Appendix A — Geographic data in Python",
-    "section": "A.3 Raster data",
-    "text": "A.3 Raster data\n…"
+    "title": "2  Geographic data in Python",
+    "section": "2.3 Raster data",
+    "text": "2.3 Raster data\n\n2.3.1 Using rasterio\nImporting the rasterio package:\n\nimport numpy as np\nimport rasterio\nfrom rasterio.plot import show\n\nCreating a file connection:\n\nsrc = rasterio.open(\"data/gpw_v4_population_density_rev11_2020_15_min.tif\")\n\nExamining the metadata:\n\nsrc.meta\n\n{'driver': 'GTiff',\n 'dtype': 'float32',\n 'nodata': -3.4028230607370965e+38,\n 'width': 1440,\n 'height': 720,\n 'count': 1,\n 'crs': CRS.from_epsg(4326),\n 'transform': Affine(0.25, 0.0, -180.0,\n        0.0, -0.25, 89.99999999999991)}\n\n\nPlotting:\n\nshow(src)\n\n\n\n\n<AxesSubplot:>\n\n\nReading the 1st layer:\n\ns = src.read(1)\ns\n\narray([[-3.402823e+38, -3.402823e+38, -3.402823e+38, ..., -3.402823e+38,\n        -3.402823e+38, -3.402823e+38],\n       [-3.402823e+38, -3.402823e+38, -3.402823e+38, ..., -3.402823e+38,\n        -3.402823e+38, -3.402823e+38],\n       [-3.402823e+38, -3.402823e+38, -3.402823e+38, ..., -3.402823e+38,\n        -3.402823e+38, -3.402823e+38],\n       ...,\n       [-3.402823e+38, -3.402823e+38, -3.402823e+38, ..., -3.402823e+38,\n        -3.402823e+38, -3.402823e+38],\n       [-3.402823e+38, -3.402823e+38, -3.402823e+38, ..., -3.402823e+38,\n        -3.402823e+38, -3.402823e+38],\n       [-3.402823e+38, -3.402823e+38, -3.402823e+38, ..., -3.402823e+38,\n        -3.402823e+38, -3.402823e+38]], dtype=float32)\n\n\n\nshow(s)\n\n\n\n\n<AxesSubplot:>\n\n\n\nmsk = src.read_masks(1)\nmsk\n\narray([[0, 0, 0, ..., 0, 0, 0],\n       [0, 0, 0, ..., 0, 0, 0],\n       [0, 0, 0, ..., 0, 0, 0],\n       ...,\n       [0, 0, 0, ..., 0, 0, 0],\n       [0, 0, 0, ..., 0, 0, 0],\n       [0, 0, 0, ..., 0, 0, 0]], dtype=uint8)\n\n\n\ns[msk == 0] = np.nan\n\n\nshow(s)\n\n\n\n\n<AxesSubplot:>\n\n\n\n\n2.3.2 Using xarray\n…"
   },
   {
     "objectID": "02-spatial-data.html#coordinate-reference-systems",
     "href": "02-spatial-data.html#coordinate-reference-systems",
-    "title": "Appendix A — Geographic data in Python",
-    "section": "A.4 Coordinate Reference Systems",
-    "text": "A.4 Coordinate Reference Systems\n…"
+    "title": "2  Geographic data in Python",
+    "section": "2.4 Coordinate Reference Systems",
+    "text": "2.4 Coordinate Reference Systems\n\ndat.crs\n\n<Geographic 2D CRS: EPSG:4326>\nName: WGS 84\nAxis Info [ellipsoidal]:\n- Lat[north]: Geodetic latitude (degree)\n- Lon[east]: Geodetic longitude (degree)\nArea of Use:\n- name: World.\n- bounds: (-180.0, -90.0, 180.0, 90.0)\nDatum: World Geodetic System 1984 ensemble\n- Ellipsoid: WGS 84\n- Prime Meridian: Greenwich\n\n\n\nsrc.crs\n\nCRS.from_epsg(4326)"
   },
   {
     "objectID": "02-spatial-data.html#units",
     "href": "02-spatial-data.html#units",
-    "title": "Appendix A — Geographic data in Python",
-    "section": "A.5 Units",
-    "text": "A.5 Units\n…"
+    "title": "2  Geographic data in Python",
+    "section": "2.5 Units",
+    "text": "2.5 Units\n…"
   },
   {
     "objectID": "02-spatial-data.html#exercises",
     "href": "02-spatial-data.html#exercises",
-    "title": "Appendix A — Geographic data in Python",
-    "section": "A.6 Exercises",
-    "text": "A.6 Exercises\n…"
+    "title": "2  Geographic data in Python",
+    "section": "2.6 Exercises",
+    "text": "2.6 Exercises\n…"
   }
 ]
