@@ -7,7 +7,6 @@
 Importing packages
 
 ```{python}
-import shapely.geometry
 import geopandas as gpd
 ```
 
@@ -34,22 +33,23 @@ The result is a `GeoDataFrame`:
 dat
 ```
 
-Basic plotting using the `.plot` method:
+The `GeoDataFrame` is an extension of the `DataFrame` class. Thus, we can treat a vector layer as a table and process it using the ordinary, i.e., non-spatial, `pandas` methods. For example, the following expression creates a subset with just the country name and the geometry (see below):
+
+```{python}
+dat = dat[["SOVEREIGNT", "geometry"]]
+dat
+```
+
+The following expression creates a subset based on a condition, including just `"Egypt"`:
+
+```{python}
+dat[dat["SOVEREIGNT"] == "Egypt"]
+```
+
+Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method, as follows:
 
 ```{python}
 dat.plot()
-```
-
-Subsetting:
-
-```{python}
-dat1 = dat[["SOVEREIGNT", "geometry"]]
-dat1
-```
-
-```{python}
-dat1 = dat1[dat1["SOVEREIGNT"] == "Egypt"]
-dat1
 ```
 
 ### Geometry columns
@@ -57,16 +57,24 @@ dat1
 One of the columns in a `GeoDataFrame` is a geometry column, of class `GeoSeries`. The geometry column contains the geometric part of the vector layer, e.g., the `POLYGON` or `MULTIPOLYGON` geometries of the 177 countries in `dat`:
 
 ```{python}
-dat.dtypes
+dat["geometry"]
+```
+
+The geomtery column also contains the spatial reference information, if any (see below).
+
+Many of the spatial operators, such as calculating the centroid, buffer, or bounding box of each feature, in fact involve just the geometry. Therefore, for example, the following expressions give exactly the same result, a `GeoSeries` with country bounding boxes:
+
+```{python}
+dat.bounds
 ```
 
 ```{python}
-dat["geometry"]
+dat["geometry"].bounds
 ```
 
 ### Geometries
 
-Each element in the geometry column is a (Simple Feature) geometry, of class `shapely`. For example, here is one specific geometry selected by implicit index (that of Canada):
+Each element in the geometry column is a geometry object, of class `shapely`. For example, here is one specific geometry selected by implicit index (that of Canada):
 
 ```{python}
 dat["geometry"].iloc[3]
@@ -76,6 +84,47 @@ and here is a specific geometry selected based on the `"SOVEREIGNT"` attribute:
 
 ```{python}
 dat[dat["SOVEREIGNT"] == "Egypt"]["geometry"].iloc[0]
+```
+
+The `shapely` package is compatible with the Simple Features standard. Accoridngly, seven types of geometries are supported. The following section demonstrates creating a `shapely` geometry of each type, using a `string` in the WKT format as input:
+
+```{python}
+import shapely.wkt as wkt
+```
+
+```{python}
+point = wkt.loads("POINT (5 2)")
+point
+```
+
+```{python}
+multipoint = wkt.loads("MULTIPOINT ((5 2), (1 3), (3 4), (3 2))")
+multipoint
+```
+
+```{python}
+linestring = wkt.loads("LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)")
+linestring
+```
+
+```{python}
+multilinestring = wkt.loads("MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))")
+multilinestring
+```
+
+```{python}
+polygon = wkt.loads("POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5), (2 4, 3 4, 3 3, 2 3, 2 4))")
+polygon
+```
+
+```{python}
+multipolygon = wkt.loads("MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5)), ((0 2, 1 2, 1 3, 0 3, 0 2)))")
+multipolygon
+```
+
+```{python}
+geometrycollection = wkt.loads("GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))")
+geometrycollection
 ```
 
 ## Raster data
