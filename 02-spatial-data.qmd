@@ -72,6 +72,20 @@ dat.bounds
 dat["geometry"].bounds
 ```
 
+Another useful property of the geometry column is the geometry type (see below). Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same. Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value:
+
+```{python}
+dat["geometry"].type
+```
+
+To summarize the occurence of different geometry types in a geometry column, we can use the `pandas` method named `value_counts`:
+
+```{python}
+dat["geometry"].type.value_counts()
+```
+
+In this case, we see that the `dat` layer contains `Polygon` and `MultiPolygon` geometries.
+
 ### Geometries
 
 Each element in the geometry column is a geometry object, of class `shapely`. For example, here is one specific geometry selected by implicit index (that of Canada):
@@ -86,45 +100,85 @@ and here is a specific geometry selected based on the `"SOVEREIGNT"` attribute:
 dat[dat["SOVEREIGNT"] == "Egypt"]["geometry"].iloc[0]
 ```
 
-The `shapely` package is compatible with the Simple Features standard. Accoridngly, seven types of geometries are supported. The following section demonstrates creating a `shapely` geometry of each type, using a `string` in the WKT format as input:
+The `shapely` package is compatible with the Simple Features standard. Accoridngly, seven types of geometries are supported. The following section demonstrates creating a `shapely` geometry of each type, using a `string` in the WKT format as input. First, we need to import the `shapely.wkt` module:
 
 ```{python}
 import shapely.wkt as wkt
 ```
+
+Then, we use the `wkt.loads` (stands for "load a WKT *s*tring") to transform a WKT string to a `shapely` geometry object. Here is an example of a `POINT` geometry:
 
 ```{python}
 point = wkt.loads("POINT (5 2)")
 point
 ```
 
+Here is an example of a `MULTIPOINT` geometry:
+
 ```{python}
 multipoint = wkt.loads("MULTIPOINT ((5 2), (1 3), (3 4), (3 2))")
 multipoint
 ```
+
+Here is an example of a `LINESTRING` geometry:
 
 ```{python}
 linestring = wkt.loads("LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)")
 linestring
 ```
 
+Here is an example of a `MULTILINESTRING` geometry:
+
 ```{python}
 multilinestring = wkt.loads("MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))")
 multilinestring
 ```
+
+Here is an example of a `POLYGON` geometry:
 
 ```{python}
 polygon = wkt.loads("POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5), (2 4, 3 4, 3 3, 2 3, 2 4))")
 polygon
 ```
 
+Here is an example of a `MULTIPOLYGON` geometry:
+
 ```{python}
 multipolygon = wkt.loads("MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5)), ((0 2, 1 2, 1 3, 0 3, 0 2)))")
 multipolygon
 ```
 
+And, finally, here is an example of a `GEOMETRYCOLLECTION` geometry:
+
 ```{python}
 geometrycollection = wkt.loads("GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))")
 geometrycollection
+```
+
+`shapely` geometries act as atomic units of vector data, as spatial operations on a geometry return a single new geometry. For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.1`) and itself:
+
+```{python}
+multipolygon.buffer(0.1).difference(multipolygon)
+```
+
+Internally, many spatial operations on a geometry column (or a vector layer) are basically iterations where the operator is applied on all geometries, one by one, to return a new geometry column (or layer) with the combined results.
+
+As demonstrated above, a `shapely` geometry object is automatically evaluated to a small image of the geometry (when using an interface capable of displaying it, such as a Jupyter Notebook). To print the WKT string instead, we can use the `print` function:
+
+```{python}
+print(linestring)
+```
+
+We can determine the geometry type using the `.geom_type` property, which is a `string`:
+
+```{python}
+linestring.geom_type
+```
+
+Finally, it is important to note that raw coordinates of `shapely` geometries are accessible through a combination of the `.coords`, `.geoms`, `.exterior`, and `.interiors`, properties (depending on the geometry type). These access methods are useful for when we need to develop our own spatial operators for specific tasks. For example, the following expression returns the coordinates of the `polygon` geometry exterior (note that the returned object is iterable, thus enclosed in a `list` to return all coordinates at once):
+
+```{python}
+list(polygon.exterior.coords)
 ```
 
 ## Raster data
