@@ -19,6 +19,15 @@ While `geopandas` (including its `shapely` dependency), at present, comprises a 
 
 ## Vector data
 
+### Introduction
+
+When introducing the packages for working with vector layers in Python, we are going to go from the complex class (vector layer), through the intermediate (geometry column), to the simple (geometry). As we will see, the three classes are hierarchical, meaning that the complex encompasses the simple:
+
+* A vector layer (class `GeoDataFrame`) contains a geometry column (class `GeoSeries`) as one of the columns
+* A geometry column (class `GeoSeries`) is composed of individual geometries (class `shapely`)
+
+The first two classes (`GeoDataFrame` and `GeoSeries`) are defined in package `geopandas`. The third class is defined in package `shapely`, which deals with individual geometries, and comprises on of the dependencies of the `geopandas` package.
+
 ### Vector layers
 
 The typical data structure for vector data is a vector layer. There are several methods to work with vector layers in Python, ranging from low-level (e.g., `fiona`) to high-level (`geopandas`). In this book, we focus on `geopandas`.
@@ -197,6 +206,16 @@ list(polygon.exterior.coords)
 ```
 
 ## Raster data
+
+### Introduction
+
+As mentioned above, working with rasters in Python is less organized around one comprehensive package (such as the case for vector layers and `geopandas`). Instead, there are several packages providing alternative (subsets of methods) of working with raster data. 
+
+The two most notable approaches for working with rasters in Python are provided by the `rasterio` and `xarray` packages. As we will see shortly, they differ in their scope and underlying data models. Specifically, `rasterio` represents rasters as `numpy` arrays associated with a separate object holding the spatial metadata. The `xarray` package, however, represents rasters with the native `DataArray` object, which is an extension of numpy array designed to hold axis labels and attributes, in the same object together with the array of raster values.
+
+Both packages are not comprehensive in the same way as `geopandas` is. For example, on the one hand, more packages may be needed to accomplish tasks such as zonal statistics (package `zonalstats`) or to calculate topographic indices (package `richdem`) which working with `rasterio`. On the other hand, `xarray` was extended to accomodate spatial operatiors, with the `rioxarray` and `xarray-spatial` packages.
+
+In the following two sections, we introduce the core well-established packages `rasterio` and `xarray`, which form the basis for most raster functionality in Python. Using any of the add-on packages, or the extensions, should be straightforward, once the reader is familiar with the basics.
 
 ### Using `rasterio`
 
