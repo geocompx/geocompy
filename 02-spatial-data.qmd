@@ -234,7 +234,7 @@ Rasters are typically imported from existing files. When working with `rasterio`
 
 This kind of separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file. The rationale is that we don't always want to read all information from the file into memory, which is particularly important as rastert size can be larger than RAM size. Accordingly, the second step (`.read`) is selective. For example, we may want to read just one raster band rather than reading all band.
 
-In the first step, to create a file connection, we pass a file path to the `rasterio.open` function:
+In the first step, to create a file connection, we pass a file path to the `rasterio.open` function. For this example, we use a single-band raster representing global population density in 2020:
 
 ```{python}
 src = rasterio.open("data/gpw_v4_population_density_rev11_2020_15_min.tif")
@@ -262,13 +262,28 @@ Affine(delta_x, 0.0, x_min,
 
 Note that, by convention, raster y-axis origin is set to the maximum value ($y_{max}$) rather than the minimum, and, accordingly, the y-axis resolution ($delta_{y}$) is negative. 
 
-Plotting:
+To get a first impression of the raster values, we can "plot" the file connection object as follows:
 
 ```{python}
 show(src)
 ```
 
-Reading the 1st layer:
+This plot is not very informaive due to the extreme range of raster values. We will see how to deal with this next, when reading the raster values.
+
+The `.read` method of a raster file connection object is used to read the last but not least piece of information: the raster values. Importantly, we can read:
+
+* A particular layer, passing a numeric index (as in `.read(1)`)
+* A subset of layers, passing a `list` of indices (as in `.read([1,2])`)
+* All layers (as in `.read()`)
+
+Note that the layer indices start from `1` contrary to the Python convention of the first index being `0`. 
+
+The resulting object is a `numpy` array, with either two or three dimensions:
+
+* *Three* dimensions, when reading all layers or more than one layer (e.g., `.read()` or `.read([1,2])`). In such case, the dimensions pattern is `(layers, rows, columns)`
+* *Two* dimensions, when reading one specific layer (e.g., `.read(1)`)
+
+For example, let us read the first (and only) layer from our raster:
 
 ```{python}
 s = src.read(1)
@@ -277,6 +292,10 @@ s
 
 ```{python}
 show(s)
+```
+
+```{python}
+show(np.log10(s))
 ```
 
 ```{python}
