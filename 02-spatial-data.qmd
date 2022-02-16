@@ -219,7 +219,7 @@ In the following two sections, we introduce the two well-established packages, `
 
 ### Using `rasterio`
 
-Importing the `rasterio` package:
+To work with the `rasterio` package, we first need to import it. We also import `numpy`, since (as we will see shortly), the underlying raster data are stored in `numpy` arrays. To efffectively work with those we therefore expose all `numpy` functions. Finally, we import the `show` function from the `rasterio.plot` sub-module for quick visualization of rasters.
 
 ```{python}
 import numpy as np
@@ -227,17 +227,40 @@ import rasterio
 from rasterio.plot import show
 ```
 
-Creating a file connection:
+Rasters are typically imported from existing files. When working with `rasterio`, "importing" a raster is actually a two-step process:
+
+* First, we open a raster file "connection", using `rasterio.open`
+* Second, we read raster values from the connection using the `.read` method
+
+This kind of separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file. The rationale is that we don't always want to read all information from the file into memory, which is particularly important as rastert size can be larger than RAM size. Accordingly, the second step (`.read`) is selective. For example, we may want to read just one raster band rather than reading all band.
+
+In the first step, to create a file connection, we pass a file path to the `rasterio.open` function:
 
 ```{python}
 src = rasterio.open("data/gpw_v4_population_density_rev11_2020_15_min.tif")
 ```
 
-Examining the metadata:
+The "connection" object contains the raster metadata, that is, all of the information other than the raster values. Let us examine it:
 
 ```{python}
 src.meta
 ```
+
+Importantly, we can see: 
+
+* The raster data type (`dtype`), 
+* Raster dimensions (`width`, `height`, and `count`, i.e., number of layers)
+* Raster Coordinate Reference System (`crs`)
+* The raster affine transformation matrix (`transform`)
+
+The last item (i.e., `transform`) deserves a few more words. To position a raster in geographical space, in addition to the CRS we must specify the raster *origin* ($x_{min}$, $y_{max}$) and resolution ($delta_{x}$, $delta_{y}$). In the transform matrix notation, these data items are stored as follows:
+
+```{text}
+Affine(delta_x, 0.0, x_min,
+       0.0, delta_y, y_max)
+```
+
+Note that, by convention, raster y-axis origin is set to the maximum value ($y_{max}$) rather than the minimum, and, accordingly, the y-axis resolution ($delta_{y}$) is negative. 
 
 Plotting:
 
