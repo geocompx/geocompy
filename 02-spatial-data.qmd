@@ -55,7 +55,7 @@ pd.set_option("display.max_rows", 4)
 Most often, we import an existing vector layer from a file, such as a Shapefile or a GeoPackage file. 
 
 ```{python}
-dat = gpd.read_file("data/ne_110m_admin_0_countries.shp")
+dat = gpd.read_file("data/world.gpkg")
 ```
 
 The result is a `GeoDataFrame`:
@@ -69,14 +69,14 @@ Thus, we can treat a vector layer as a table and process it using the ordinary, 
 For example, the following expression creates a subset with just the country name and the geometry (see below):
 
 ```{python}
-dat = dat[["SOVEREIGNT", "geometry"]]
+dat = dat[["name_long", "geometry"]]
 dat
 ```
 
 The following expression creates a subset based on a condition, including just `"Egypt"`:
 
 ```{python}
-dat[dat["SOVEREIGNT"] == "Egypt"]
+dat[dat["name_long"] == "Egypt"]
 ```
 
 Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method, as follows:
@@ -132,10 +132,10 @@ For example, here is one specific geometry selected by implicit index (that of C
 dat["geometry"].iloc[3]
 ```
 
-and here is a specific geometry selected based on the `"SOVEREIGNT"` attribute:
+and here is a specific geometry selected based on the `"name_long"` attribute:
 
 ```{python}
-dat[dat["SOVEREIGNT"] == "Egypt"]["geometry"].iloc[0]
+dat[dat["name_long"] == "Egypt"]["geometry"].iloc[0]
 ```
 
 The **shapely** package is compatible with the Simple Features standard.
@@ -269,10 +269,16 @@ The rationale is that we do not always want to read all information from the fil
 Accordingly, the second step (`.read`) is selective. For example, we may want to read just one raster band rather than reading all band.
 
 In the first step, to create a file connection, we pass a file path to the `rasterio.open` function. 
-For this example, we use a single-band raster representing global population density in 2020:
+For this example, we use a single-band raster representing elevation in Zion National Park:
 
 ```{python}
-src = rasterio.open("data/gpw_v4_population_density_rev11_2020_15_min.tif")
+src = rasterio.open("data/srtm.tif")
+```
+
+To get a first impression of the raster values, we can plot it using the `show` function:
+
+```{python}
+show(src)
 ```
 
 The "connection" object contains the raster metadata, that is, all of the information other than the raster values.
@@ -300,15 +306,6 @@ Affine(delta_x, 0.0, x_min,
 
 Note that, by convention, raster y-axis origin is set to the maximum value ($y_{max}$) rather than the minimum, and, accordingly, the y-axis resolution ($delta_{y}$) is negative. 
 
-To get a first impression of the raster values, we can "plot" the file connection object as follows:
-
-```{python}
-show(src)
-```
-
-This plot is not very informative due to the extreme range of raster values. 
-We will see how to deal with this next, when reading the raster values.
-
 The `.read` method of a raster file connection object is used to read the last but not least piece of information: the raster values.
 Importantly, we can read:
 
@@ -323,32 +320,11 @@ The resulting object is a **numpy** array, with either two or three dimensions:
 * *Three* dimensions, when reading all layers or more than one layer (e.g., `.read()` or `.read([1,2])`). In such case, the dimensions pattern is `(layers, rows, columns)`
 * *Two* dimensions, when reading one specific layer (e.g., `.read(1)`)
 
-For example, let us read the first (and only) layer from our raster:
+For example, let us read the first (and only) layer from the `srtm.tif` raster, using the file connection object `src`:
 
 ```{python}
 s = src.read(1)
 s
-```
-
-```{python}
-show(s)
-```
-
-```{python}
-show(np.log10(s))
-```
-
-```{python}
-msk = src.read_masks(1)
-msk
-```
-
-```{python}
-s[msk == 0] = np.nan
-```
-
-```{python}
-show(s)
 ```
 
 ### Using `xarray`
