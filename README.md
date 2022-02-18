@@ -1,4 +1,3 @@
-# pytest
-Python tests
+# geocompy
 
-<https://geocompr.github.io/pytest/>
+<https://geocompr.github.io/py/>
