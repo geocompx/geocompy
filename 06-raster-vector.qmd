@@ -2,7 +2,67 @@
 
 ## Introduction
 
+```{python}
+import numpy as np
+import geopandas as gpd
+import rasterio
+import rasterio.mask
+from rasterio.plot import show
+```
+
+
 ## Raster cropping
+
+```{python}
+src = rasterio.open("data/srtm.tif")
+```
+
+```{python}
+pol = gpd.read_file("data/zion.gpkg")
+```
+
+```{python}
+pol = pol.to_crs(src.crs)
+```
+
+
+
+```{python}
+out_image, out_transform = rasterio.mask.mask(src, pol.geometry, crop = False, nodata = 9999)
+```
+
+
+```{python}
+show(out_image)
+```
+
+```{python}
+meta = src.meta
+meta.update(height = out_image[0].shape[0])
+meta.update(width = out_image[0].shape[1])
+meta.update(transform = out_transform)
+meta.update(nodata = 9999)
+meta
+```
+
+```{python}
+new_dataset = rasterio.open("output/srtm_cropped.tif", "w", **meta)
+new_dataset.write(out_image)
+new_dataset.close()
+```
+
+```{python}
+src2 = rasterio.open("output/srtm_cropped.tif")
+show(src2)
+```
+
+```{python}
+src2.meta
+```
+
+```{python}
+src2.read()
+```
 
 ## Raster extraction
 
