@@ -381,8 +381,7 @@
 <p>Subsetting rows by attribute…</p>
 <p>Selecting columns…</p>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode" id="cb4"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>world <span class="op">=</span> world[[<span class="st">"name_long"</span>, <span class="st">"geometry"</span>]]</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>world</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>world[[<span class="st">"name_long"</span>, <span class="st">"geometry"</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="4">
 <div>
 
@@ -500,7 +499,16 @@
   <thead>
     <tr>
       <th></th>
+      <th>iso_a2</th>
       <th>name_long</th>
+      <th>continent</th>
+      <th>region_un</th>
+      <th>subregion</th>
+      <th>type</th>
+      <th>area_km2</th>
+      <th>pop</th>
+      <th>lifeExp</th>
+      <th>gdpPercap</th>
       <th>geometry</th>
       <th>coffee_production_2016</th>
       <th>coffee_production_2017</th>
@@ -509,14 +517,32 @@
   <tbody>
     <tr>
       <th>0</th>
+      <td>FJ</td>
       <td>Fiji</td>
+      <td>Oceania</td>
+      <td>Oceania</td>
+      <td>Melanesia</td>
+      <td>Sovereign country</td>
+      <td>19289.970733</td>
+      <td>885806.0</td>
+      <td>69.960</td>
+      <td>8222.253784</td>
       <td>MULTIPOLYGON (((-180.00000 -16.55522, -179.917...</td>
       <td>NaN</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>1</th>
+      <td>TZ</td>
       <td>Tanzania</td>
+      <td>Africa</td>
+      <td>Africa</td>
+      <td>Eastern Africa</td>
+      <td>Sovereign country</td>
+      <td>932745.792357</td>
+      <td>52234869.0</td>
+      <td>64.163</td>
+      <td>2402.099404</td>
       <td>MULTIPOLYGON (((33.90371 -0.95000, 31.86617 -1...</td>
       <td>81.0</td>
       <td>66.0</td>
@@ -527,24 +553,51 @@
       <td>...</td>
       <td>...</td>
       <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
     </tr>
     <tr>
       <th>175</th>
+      <td>TT</td>
       <td>Trinidad and Tobago</td>
+      <td>North America</td>
+      <td>Americas</td>
+      <td>Caribbean</td>
+      <td>Sovereign country</td>
+      <td>7737.809855</td>
+      <td>1354493.0</td>
+      <td>70.426</td>
+      <td>31181.821196</td>
       <td>MULTIPOLYGON (((-61.68000 10.76000, -61.66000 ...</td>
       <td>NaN</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>176</th>
+      <td>SS</td>
       <td>South Sudan</td>
+      <td>Africa</td>
+      <td>Africa</td>
+      <td>Eastern Africa</td>
+      <td>Sovereign country</td>
+      <td>624909.099086</td>
+      <td>11530971.0</td>
+      <td>55.817</td>
+      <td>1935.879400</td>
       <td>MULTIPOLYGON (((30.83385 3.50917, 31.24556 3.7...</td>
       <td>NaN</td>
       <td>NaN</td>
     </tr>
   </tbody>
 </table>
-<p>177 rows × 4 columns</p>
+<p>177 rows × 13 columns</p>
 </div>
 </div>
 </div>
@@ -559,7 +612,231 @@
 </section>
 <section id="creating-attributes-and-removing-spatial-information" class="level3" data-number="3.2.4">
 <h3 data-number="3.2.4" class="anchored" data-anchor-id="creating-attributes-and-removing-spatial-information"><span class="header-section-number">3.2.4</span> Creating attributes and removing spatial information</h3>
-<p>Calculating new columns…</p>
+<p>Calculate new column…</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode" id="cb9"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world.copy()</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>world2[<span class="st">"pop_dens"</span>] <span class="op">=</span> world2[<span class="st">"pop"</span>] <span class="op">/</span> world2[<span class="st">"area_km2"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Unite columns…</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode" id="cb10"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>world2[<span class="st">"con_reg"</span>] <span class="op">=</span> world[<span class="st">"continent"</span>] <span class="op">+</span> <span class="st">":"</span> <span class="op">+</span> world2[<span class="st">"region_un"</span>]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2.drop([<span class="st">"continent"</span>, <span class="st">"region_un"</span>], axis<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Split column…</p>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode" id="cb11"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>world2[[<span class="st">"continent"</span>, <span class="st">"region_un"</span>]] <span class="op">=</span> world2[<span class="st">"con_reg"</span>].<span class="bu">str</span>.split(<span class="st">":"</span>, expand<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Rename…</p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode" id="cb12"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>world2.rename(columns<span class="op">=</span>{<span class="st">"name_long"</span>: <span class="st">"name"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="12">
+<div>
+
+<table class="dataframe table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>iso_a2</th>
+      <th>name</th>
+      <th>subregion</th>
+      <th>type</th>
+      <th>area_km2</th>
+      <th>pop</th>
+      <th>lifeExp</th>
+      <th>gdpPercap</th>
+      <th>geometry</th>
+      <th>pop_dens</th>
+      <th>con_reg</th>
+      <th>continent</th>
+      <th>region_un</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>FJ</td>
+      <td>Fiji</td>
+      <td>Melanesia</td>
+      <td>Sovereign country</td>
+      <td>19289.970733</td>
+      <td>885806.0</td>
+      <td>69.960</td>
+      <td>8222.253784</td>
+      <td>MULTIPOLYGON (((-180.00000 -16.55522, -179.917...</td>
+      <td>45.920547</td>
+      <td>Oceania:Oceania</td>
+      <td>Oceania</td>
+      <td>Oceania</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TZ</td>
+      <td>Tanzania</td>
+      <td>Eastern Africa</td>
+      <td>Sovereign country</td>
+      <td>932745.792357</td>
+      <td>52234869.0</td>
+      <td>64.163</td>
+      <td>2402.099404</td>
+      <td>MULTIPOLYGON (((33.90371 -0.95000, 31.86617 -1...</td>
+      <td>56.001184</td>
+      <td>Africa:Africa</td>
+      <td>Africa</td>
+      <td>Africa</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>175</th>
+      <td>TT</td>
+      <td>Trinidad and Tobago</td>
+      <td>Caribbean</td>
+      <td>Sovereign country</td>
+      <td>7737.809855</td>
+      <td>1354493.0</td>
+      <td>70.426</td>
+      <td>31181.821196</td>
+      <td>MULTIPOLYGON (((-61.68000 10.76000, -61.66000 ...</td>
+      <td>175.048628</td>
+      <td>North America:Americas</td>
+      <td>North America</td>
+      <td>Americas</td>
+    </tr>
+    <tr>
+      <th>176</th>
+      <td>SS</td>
+      <td>South Sudan</td>
+      <td>Eastern Africa</td>
+      <td>Sovereign country</td>
+      <td>624909.099086</td>
+      <td>11530971.0</td>
+      <td>55.817</td>
+      <td>1935.879400</td>
+      <td>MULTIPOLYGON (((30.83385 3.50917, 31.24556 3.7...</td>
+      <td>18.452237</td>
+      <td>Africa:Africa</td>
+      <td>Africa</td>
+      <td>Africa</td>
+    </tr>
+  </tbody>
+</table>
+<p>177 rows × 13 columns</p>
+</div>
+</div>
+</div>
+<p>Renaming all columns…</p>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode" id="cb13"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>new_names <span class="op">=</span>[<span class="st">"i"</span>, <span class="st">"n"</span>, <span class="st">"c"</span>, <span class="st">"r"</span>, <span class="st">"s"</span>, <span class="st">"t"</span>, <span class="st">"a"</span>, <span class="st">"p"</span>, <span class="st">"l"</span>, <span class="st">"gP"</span>, <span class="st">"geom"</span>]</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>world.columns <span class="op">=</span> new_names</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Dropping geometry…</p>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode" id="cb14"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(world.drop(columns<span class="op">=</span><span class="st">"geom"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="14">
+<div>
+
+<table class="dataframe table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>i</th>
+      <th>n</th>
+      <th>c</th>
+      <th>r</th>
+      <th>s</th>
+      <th>t</th>
+      <th>a</th>
+      <th>p</th>
+      <th>l</th>
+      <th>gP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>FJ</td>
+      <td>Fiji</td>
+      <td>Oceania</td>
+      <td>Oceania</td>
+      <td>Melanesia</td>
+      <td>Sovereign country</td>
+      <td>19289.970733</td>
+      <td>885806.0</td>
+      <td>69.960</td>
+      <td>8222.253784</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TZ</td>
+      <td>Tanzania</td>
+      <td>Africa</td>
+      <td>Africa</td>
+      <td>Eastern Africa</td>
+      <td>Sovereign country</td>
+      <td>932745.792357</td>
+      <td>52234869.0</td>
+      <td>64.163</td>
+      <td>2402.099404</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>175</th>
+      <td>TT</td>
+      <td>Trinidad and Tobago</td>
+      <td>North America</td>
+      <td>Americas</td>
+      <td>Caribbean</td>
+      <td>Sovereign country</td>
+      <td>7737.809855</td>
+      <td>1354493.0</td>
+      <td>70.426</td>
+      <td>31181.821196</td>
+    </tr>
+    <tr>
+      <th>176</th>
+      <td>SS</td>
+      <td>South Sudan</td>
+      <td>Africa</td>
+      <td>Africa</td>
+      <td>Eastern Africa</td>
+      <td>Sovereign country</td>
+      <td>624909.099086</td>
+      <td>11530971.0</td>
+      <td>55.817</td>
+      <td>1935.879400</td>
+    </tr>
+  </tbody>
+</table>
+<p>177 rows × 10 columns</p>
+</div>
+</div>
+</div>
 </section>
 </section>
 <section id="manipulating-raster-objects" class="level2" data-number="3.3">
