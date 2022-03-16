@@ -1,5 +1,11 @@
 # Spatial data operations {#spatial-operations}
 
+```{python}
+import pandas as pd
+pd.set_option("display.max_rows", 4)
+pd.set_option("display.max_columns", 6)
+```
+
 ## Introduction
 
 ## Spatial operations on vector data {#spatial-vec}
@@ -17,10 +23,40 @@ nz = gpd.read_file("data/nz.gpkg")
 nz_height = gpd.read_file("data/nz_height.gpkg")
 ```
 
-...
+Plot...
 
 ```{python}
+base = nz.plot(color="white", edgecolor="lightgrey")
+nz_height.plot(ax=base, color="None", edgecolor="red");
+```
 
+Spatial subsetting...
+
+```{python}
+canterbury = nz[nz["Name"] == "Canterbury"]
+sel = nz_height.intersects(canterbury["geometry"].iloc[0])
+canterbury_height = nz_height[sel]
+```
+
+Plot...
+
+```{python}
+base = nz.plot(color="white", edgecolor="lightgrey")
+canterbury_height.plot(ax=base, color="None", edgecolor="red");
+```
+
+Spatial subsetting 2...
+
+```{python}
+sel = nz_height.disjoint(canterbury["geometry"].iloc[0])
+non_canterbury_height = nz_height[sel]
+```
+
+Plot...
+
+```{python}
+base = nz.plot(color="white", edgecolor="lightgrey")
+non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
 ```
 
 ...
