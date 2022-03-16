@@ -63,7 +63,44 @@ world_coffee.plot(ax = base, column = "coffee_production_2017");
 
 ### Creating attributes and removing spatial information
 
-Calculating new columns...
+Calculate new column...
+
+```{python}
+world2 = world.copy()
+world2["pop_dens"] = world2["pop"] / world2["area_km2"]
+```
+
+Unite columns...
+
+```{python}
+world2["con_reg"] = world["continent"] + ":" + world2["region_un"]
+world2 = world2.drop(["continent", "region_un"], axis=1)
+```
+
+Split column...
+
+```{python}
+world2[["continent", "region_un"]] = world2["con_reg"].str.split(":", expand=True)
+```
+
+Rename...
+
+```{python}
+world2.rename(columns={"name_long": "name"})
+```
+
+Renaming all columns...
+
+```{python}
+new_names =["i", "n", "c", "r", "s", "t", "a", "p", "l", "gP", "geom"]
+world.columns = new_names
+```
+
+Dropping geometry...
+
+```{python}
+pd.DataFrame(world.drop(columns="geom"))
+```
 
 ## Manipulating raster objects
 
