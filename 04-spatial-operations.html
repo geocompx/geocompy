@@ -271,6 +271,11 @@
 <h1 class="title display-7"><span id="spatial-operations" class="quarto-section-identifier d-none d-lg-block"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Spatial data operations</span></span></h1>
 </header>
 
+<div class="cell" data-execution_count="1">
+<div class="sourceCode" id="cb1"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">"display.max_rows"</span>, <span class="dv">4</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">"display.max_columns"</span>, <span class="dv">6</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <section id="introduction" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">4.1</span> Introduction</h2>
 </section>
@@ -278,15 +283,49 @@
 <h2 data-number="4.2" class="anchored" data-anchor-id="spatial-vec"><span class="header-section-number">4.2</span> Spatial operations on vector data</h2>
 <section id="spatial-subsetting" class="level3" data-number="4.2.1">
 <h3 data-number="4.2.1" class="anchored" data-anchor-id="spatial-subsetting"><span class="header-section-number">4.2.1</span> Spatial subsetting</h3>
-<div class="cell" data-execution_count="1">
-<div class="sourceCode" id="cb1"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode" id="cb2"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Sample data…</p>
-<div class="cell" data-execution_count="2">
-<div class="sourceCode" id="cb2"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>nz <span class="op">=</span> gpd.read_file(<span class="st">"data/nz.gpkg"</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>nz_height <span class="op">=</span> gpd.read_file(<span class="st">"data/nz_height.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode" id="cb3"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>nz <span class="op">=</span> gpd.read_file(<span class="st">"data/nz.gpkg"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>nz_height <span class="op">=</span> gpd.read_file(<span class="st">"data/nz_height.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>…</p>
+<p>Plot…</p>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode" id="cb4"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>nz_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"red"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="04-spatial-operations_files/figure-html/cell-5-output-1.png" width="301" height="435"></p>
+</div>
+</div>
+<p>Spatial subsetting…</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode" id="cb5"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>canterbury <span class="op">=</span> nz[nz[<span class="st">"Name"</span>] <span class="op">==</span> <span class="st">"Canterbury"</span>]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.intersects(canterbury[<span class="st">"geometry"</span>].iloc[<span class="dv">0</span>])</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>canterbury_height <span class="op">=</span> nz_height[sel]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Plot…</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode" id="cb6"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>canterbury_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"red"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="04-spatial-operations_files/figure-html/cell-7-output-1.png" width="301" height="435"></p>
+</div>
+</div>
+<p>Spatial subsetting 2…</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode" id="cb7"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.disjoint(canterbury[<span class="st">"geometry"</span>].iloc[<span class="dv">0</span>])</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>non_canterbury_height <span class="op">=</span> nz_height[sel]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Plot…</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode" id="cb8"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>non_canterbury_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"red"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="04-spatial-operations_files/figure-html/cell-9-output-1.png" width="301" height="435"></p>
+</div>
+</div>
 <p>…</p>
 </section>
 <section id="topological-relations" class="level3" data-number="4.2.2">
