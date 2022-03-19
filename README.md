@@ -5,4 +5,4 @@
 ## Setup
 
 1. Install Quarto https://quarto.org/docs/get-started/
-2. Install Jupyter, RSTudio or VS Code
+2. Install Jupyter, RStudio or VS Code
