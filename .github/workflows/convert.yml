@@ -15,7 +15,11 @@ jobs:
       - name: Render
         run: |
           pip3 install jupytext
-          ./convert.sh
+          # Aim: convert .qmd files to .ipynb and .py files, see convert.sh
+          for i in *.qmd; do
+            quarto convert $i
+          done
+          jupytext --to py *.ipynb
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git commit *.ipynb -m 'Re-build Rmarkdown files' || echo "No changes to commit"
