@@ -49,7 +49,10 @@ axes[1].set_title("Simplified (d=2000 m)")
 
 # Compare number of nodes:
 
-len(list(seine["geometry"].iloc[0].geoms[0].coords)) # Original
+import sys
+sys.getsizeof(seine)       ## Bytes
+
+sys.getsizeof(seine_simp)  ## Bytes
 
 len(list(seine_simp.iloc[0].coords)) # Simplified
 
