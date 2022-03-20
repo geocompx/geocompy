@@ -62,7 +62,7 @@ import geopandas as gpd
 import pandas as pd
 pd.set_option("display.max_rows", 4)
 
-# Most often, we import an existing vector layer from a file, such as a Shapefile or a GeoPackage file. 
+# Most often, we import an existing vector layer from a file, such as a Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file. 
 
 #| echo: false
 from pathlib import Path
