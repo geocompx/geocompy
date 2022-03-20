@@ -51,9 +51,9 @@ axes[1].set_title("Simplified (d=2000 m)")
 # Compare number of nodes:
 
 import sys
-sys.getsizeof(seine)       ## Bytes
+sys.getsizeof(seine)       ## Original (bytes)
 
-sys.getsizeof(seine_simp)  ## Bytes
+sys.getsizeof(seine_simp)  ## Simplified (bytes)
 
 # US states example.... Transform...
 
@@ -67,11 +67,9 @@ us_states_simp1 = us_states2163.simplify(100000)
 
 us_states_simp1.plot()
 
-# ```{Python}
-# import topojson as tp
-# topo = tp.Topology(us_states2163, prequantize=False)
-# us_states_simp2 = topo.toposimplify(100000).to_gdf()
-# ```
+import topojson as tp
+topo = tp.Topology(us_states2163, prequantize=False)
+us_states_simp2 = topo.toposimplify(100000).to_gdf()
 
 fig, axes = plt.subplots(ncols=3)
 us_states2163.plot(ax=axes[0])
