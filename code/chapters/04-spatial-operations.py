@@ -13,16 +13,14 @@
 # ---
 
 # # Spatial data operations {#spatial-operations}
+#
+# ## Prerequisites
 
 import pandas as pd
 pd.set_option("display.max_rows", 4)
 pd.set_option("display.max_columns", 6)
 
-# ## Introduction
-#
-# ## Spatial operations on vector data {#spatial-vec}
-#
-# ### Spatial subsetting
+# Packages...
 
 import geopandas as gpd
 
@@ -31,6 +29,12 @@ import geopandas as gpd
 nz = gpd.read_file("data/nz.gpkg")
 nz_height = gpd.read_file("data/nz_height.gpkg")
 
+# ## Introduction
+#
+# ## Spatial operations on vector data {#spatial-vec}
+#
+# ### Spatial subsetting
+#
 # Plot...
 
 base = nz.plot(color="white", edgecolor="lightgrey")

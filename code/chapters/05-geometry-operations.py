@@ -13,10 +13,21 @@
 # ---
 
 # # Geometry operations {#geometric-operations}
+#
+# ## Prerequisites
 
 import pandas as pd
 pd.set_option("display.max_rows", 4)
 pd.set_option("display.max_columns", 6)
+
+# Packages...
+
+import matplotlib.pyplot as plt
+import geopandas as gpd
+
+# Sample data...
+
+seine = gpd.read_file("data/seine.gpkg")
 
 # ## Introduction
 #
@@ -24,9 +35,23 @@ pd.set_option("display.max_columns", 6)
 #
 # ### Simplification
 #
-# ...
+# Simplify...
 
-# ...
+seine_simp = seine.simplify(2000)  # 2000 m
+
+# Plot:
+
+fig, axes = plt.subplots(ncols=2)
+seine.plot(ax=axes[0])
+seine_simp.plot(ax=axes[1])
+axes[0].set_title("Original")
+axes[1].set_title("Simplified (d=2000 m)")
+
+# Compare number of nodes:
+
+len(list(seine["geometry"].iloc[0].geoms[0].coords)) # Original
+
+len(list(seine_simp.iloc[0].coords)) # Simplified
 
 # ### Centroids
 #

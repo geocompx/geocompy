@@ -13,22 +13,27 @@
 # ---
 
 # # Attribute data operations {#attr}
+#
+# ## Prerequisites
 
 import pandas as pd
 pd.set_option("display.max_rows", 4)
 pd.set_option("display.max_columns", 6)
+
+# Packages...
+
+import geopandas as gpd
+
+# Sample data...
+
+world = gpd.read_file("data/world.gpkg")
 
 # ## Introduction
 #
 # ## Vector attribute manipulation
 #
 # ### Vector attribute subsetting
-
-import geopandas as gpd
-
-world = gpd.read_file("data/world.gpkg")
-world
-
+#
 # Subsetting rows by attribute...
 #
 # Selecting columns...
