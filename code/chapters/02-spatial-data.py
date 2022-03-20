@@ -64,6 +64,19 @@ pd.set_option("display.max_rows", 4)
 
 # Most often, we import an existing vector layer from a file, such as a Shapefile or a GeoPackage file. 
 
+#| echo: false
+from pathlib import Path
+data_path = Path("data")
+if data_path.is_dir():
+  # directory exists
+  print("path exists")
+else:
+  print("Attempting to get and unzip the data")
+  import requests, zipfile, io
+  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/data.zip")
+  z = zipfile.ZipFile(io.BytesIO(r.content))
+  z.extractall(".")
+
 dat = gpd.read_file("data/world.gpkg")
 
 # The result is a `GeoDataFrame`:
