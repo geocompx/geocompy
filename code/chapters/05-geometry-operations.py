@@ -29,6 +29,7 @@ import geopandas as gpd
 
 seine = gpd.read_file("data/seine.gpkg")
 us_states = gpd.read_file("data/us_states.gpkg")
+nz = gpd.read_file("data/nz.gpkg")
 
 # ## Introduction
 #
@@ -81,7 +82,23 @@ axes[2].set_title("Simplified (w/ topojson)")
 
 # ### Centroids
 #
-# ...
+# Centroids...
+
+nz_centroid = nz.centroid
+seine_centroid = seine.centroid
+
+# Point on surface...
+
+nz_pos = nz.representative_point()
+seine_pos = seine.representative_point()
+
+base = nz.plot(color="white", edgecolor="lightgrey")
+nz_centroid.plot(ax=base, color="None", edgecolor="black");
+nz_pos.plot(ax=base, color="None", edgecolor="red");
+
+base = seine.plot(color="grey")
+seine_centroid.plot(ax=base, color="None", edgecolor="black");
+seine_pos.plot(ax=base, color="None", edgecolor="red");
 
 # ### Buffers
 #
