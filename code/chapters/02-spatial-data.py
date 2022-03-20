@@ -21,7 +21,7 @@
 # * **shapely** and **geopandas** --- for working with vector layers
 # * **rasterio** and **xarray** --- for working with rasters
 #
-# As we will see later on, **shapely** and **geopandas** are related:
+# As we will see in the code chunks presented later in this chapter, **shapely** and **geopandas** are related:
 #
 # * **shapely** is a "low-level" package for working with individual vector geometry objects
 # * **geopandas** is a "high-level" package for working with geometry columns (`GeoSeries` objects), which internally contain **shapely** geometries, and vector layers (`GeoDataFrame` objects)
