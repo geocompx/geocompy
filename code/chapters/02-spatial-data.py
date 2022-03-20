@@ -68,7 +68,7 @@ pd.set_option("display.max_rows", 4)
 from pathlib import Path
 data_path = Path("data")
 if data_path.is_dir():
-  # print("path exists") # directory exists
+  print("path exists") # directory exists
 else:
   print("Attempting to get and unzip the data")
   import requests, zipfile, io
