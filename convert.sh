@@ -8,3 +8,7 @@ done
 # Convert ipynb files to .py files
 jupytext --to py *.ipynb
 
+# Move files to correct folders
+mv *.py -v code/chapters
+mv *.ipynb -v ipynb
+
