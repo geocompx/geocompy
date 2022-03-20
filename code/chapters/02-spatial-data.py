@@ -16,7 +16,7 @@
 #
 # ## Introduction
 #
-# In this chapter, we introduce the key Python packages (and data structures) for working with the two major types of spatial data, namely:
+# This chapter introduces key Python packages and data structures for working with the two major types of spatial data, namely:
 #
 # * **shapely** and **geopandas** --- for working with vector layers
 # * **rasterio** and **xarray** --- for working with rasters
@@ -68,8 +68,7 @@ pd.set_option("display.max_rows", 4)
 from pathlib import Path
 data_path = Path("data")
 if data_path.is_dir():
-  # directory exists
-  print("path exists")
+  # print("path exists") # directory exists
 else:
   print("Attempting to get and unzip the data")
   import requests, zipfile, io
