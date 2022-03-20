@@ -7,9 +7,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.13.7
 #   kernelspec:
-#     display_name: OSMNX
+#     display_name: Python 3 (ipykernel)
 #     language: python
-#     name: osmnx
+#     name: python3
 # ---
 
 # # Installing R and RStudio {#sec-appendix-starting}
