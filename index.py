@@ -58,6 +58,18 @@
 # conda env create -f environment.yml
 # ```
 #
+# Activate the new environment with
+#
+# ```sh
+# conda activate geocompy # the default name of the environment
+# ```
+#
+# Reproduce a live preview of the book with the following command, which reqires that you have installed [quarto](https://quarto.org/):
+#
+# ```sh
+# quarto preview # generate live preview of the book
+# ```
+#
 # * Open the Jupyter Notebook of any of chapters using a command such as:
 #
 # ```sh
@@ -96,6 +108,12 @@
 #
 # ```sh
 # jupyter notebook 02-spatial-data.ipynb
+# ```
+#
+# You can also install individual packages with:
+#
+# ```sh
+# conda install jupyter # for example
 # ```
 #
 # ### Reproduce the book in a Docker container with VSCode IDE
