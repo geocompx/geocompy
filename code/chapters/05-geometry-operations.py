@@ -121,29 +121,42 @@ axes[1].set_title("50 km buffer");
 
 # ### Affine transformations
 #
-# Affine transformations in `geopandas` are a wrapper around the `shapely.affinity.affine_transform` function. According to the [documentation](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates:
+# Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function. According to the [documentation](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates:
 #
 # $$
 # x' = a x + b y + x_\mathrm{off}
+#
 # y' = d x + e y + y_\mathrm{off}
 # $$
 #
-# For example, the code below shifts the y-coordinates by 100,000 meters to the north, but leaves the x-coordinates untouched:
+# There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations) for specific scenarios: 
+#
+# * `GeoSeries.rotate(angle, origin='center', use_radians=False)`
+# *  `GeoSeries.scale(xfact=1.0, yfact=1.0, zfact=1.0, origin='center')`
+# *  `GeoSeries.skew(angle, origin='center', use_radians=False)`
+# * ` GeoSeries.translate(xoff=0.0, yoff=0.0, zoff=0.0)`
+#
+# For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using `.translate`. The code below shifts the y-coordinates by 100,000 meters to the north, but leaves the x-coordinates untouched:
 
-m = [1, 0, 0, 1, 0, 100000]
-nz_shift = nz["geometry"].affine_transform(m)
+nz_shift = nz["geometry"].translate(0, 100000)
 
 # Scale...
 
+nz_scale = nz["geometry"].scale(0.5, 0.5)
+
 # Rotate...
 
-# Plot...
+nz_rotate = nz["geometry"].rotate(-30, "centroid")
+
+# Plot... 
 
 fig, axes = plt.subplots(ncols=3)
 nz.plot(ax=axes[0], color="lightgrey", edgecolor="darkgrey")
 nz_shift.plot(ax=axes[0], color="red", edgecolor="darkgrey")
 nz.plot(ax=axes[1], color="lightgrey", edgecolor="darkgrey")
+nz_scale.plot(ax=axes[1], color="red", edgecolor="darkgrey")
 nz.plot(ax=axes[2], color="lightgrey", edgecolor="darkgrey")
+nz_rotate.plot(ax=axes[2], color="red", edgecolor="darkgrey")
 axes[0].set_title("Shift");
 axes[0].set_title("Scale");
 axes[0].set_title("Rotate");
