@@ -238,12 +238,13 @@
         <nav id="TOC" role="doc-toc">
 <h2 id="toc-title">Table of contents</h2>
 <ul>
-<li><a href="#introduction" class="nav-link active" data-scroll-target="#introduction"> <span class="header-section-number">6.1</span> Introduction</a></li>
-<li><a href="#raster-cropping" class="nav-link" data-scroll-target="#raster-cropping"> <span class="header-section-number">6.2</span> Raster cropping</a></li>
-<li><a href="#raster-extraction" class="nav-link" data-scroll-target="#raster-extraction"> <span class="header-section-number">6.3</span> Raster extraction</a></li>
-<li><a href="#rasterization" class="nav-link" data-scroll-target="#rasterization"> <span class="header-section-number">6.4</span> Rasterization</a></li>
-<li><a href="#spatial-vectorization" class="nav-link" data-scroll-target="#spatial-vectorization"> <span class="header-section-number">6.5</span> Spatial vectorization</a></li>
-<li><a href="#exercises" class="nav-link" data-scroll-target="#exercises"> <span class="header-section-number">6.6</span> Exercises</a></li>
+<li><a href="#prerequisites" class="nav-link active" data-scroll-target="#prerequisites"> <span class="header-section-number">6.1</span> Prerequisites</a></li>
+<li><a href="#introduction" class="nav-link" data-scroll-target="#introduction"> <span class="header-section-number">6.2</span> Introduction</a></li>
+<li><a href="#raster-cropping" class="nav-link" data-scroll-target="#raster-cropping"> <span class="header-section-number">6.3</span> Raster cropping</a></li>
+<li><a href="#raster-extraction" class="nav-link" data-scroll-target="#raster-extraction"> <span class="header-section-number">6.4</span> Raster extraction</a></li>
+<li><a href="#rasterization" class="nav-link" data-scroll-target="#rasterization"> <span class="header-section-number">6.5</span> Rasterization</a></li>
+<li><a href="#spatial-vectorization" class="nav-link" data-scroll-target="#spatial-vectorization"> <span class="header-section-number">6.6</span> Spatial vectorization</a></li>
+<li><a href="#exercises" class="nav-link" data-scroll-target="#exercises"> <span class="header-section-number">6.7</span> Exercises</a></li>
 </ul>
 <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/geocompr/py/edit/main/06-raster-vector.qmd" class="toc-action">Edit this page</a></p></div></div></nav>
     </div>
@@ -253,24 +254,37 @@
 <h1 class="title display-7"><span id="raster-vector" class="quarto-section-identifier d-none d-lg-block"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Raster-vector interactions</span></span></h1>
 </header>
 
-<section id="introduction" class="level2" data-number="6.1">
-<h2 data-number="6.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">6.1</span> Introduction</h2>
+<section id="prerequisites" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="prerequisites"><span class="header-section-number">6.1</span> Prerequisites</h2>
 <div class="cell" data-execution_count="1">
-<div class="sourceCode" id="cb1"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.mask</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.plot <span class="im">import</span> show</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">"display.max_rows"</span>, <span class="dv">4</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">"display.max_columns"</span>, <span class="dv">6</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>pd.options.display.max_rows <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>pd.options.display.max_columns <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>pd.options.display.max_colwidth <span class="op">=</span> <span class="dv">35</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">"figure.figsize"</span>] <span class="op">=</span> (<span class="dv">5</span>, <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Packages…</p>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode" id="cb2"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.mask</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.plot <span class="im">import</span> show</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Sample data…</p>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode" id="cb3"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"data/srtm.tif"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> gpd.read_file(<span class="st">"data/zion.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="raster-cropping" class="level2" data-number="6.2">
-<h2 data-number="6.2" class="anchored" data-anchor-id="raster-cropping"><span class="header-section-number">6.2</span> Raster cropping</h2>
-<div class="cell" data-execution_count="2">
-<div class="sourceCode" id="cb2"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"data/srtm.tif"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode" id="cb3"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> gpd.read_file(<span class="st">"data/zion.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="introduction" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="introduction"><span class="header-section-number">6.2</span> Introduction</h2>
+</section>
+<section id="raster-cropping" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="raster-cropping"><span class="header-section-number">6.3</span> Raster cropping</h2>
 <div class="cell" data-execution_count="4">
 <div class="sourceCode" id="cb4"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> pol.to_crs(src.crs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -346,21 +360,34 @@
         [9999, 9999, 9999, ..., 9999, 9999, 9999]]], dtype=uint16)</code></pre>
 </div>
 </div>
-</section>
-<section id="raster-extraction" class="level2" data-number="6.3">
-<h2 data-number="6.3" class="anchored" data-anchor-id="raster-extraction"><span class="header-section-number">6.3</span> Raster extraction</h2>
-</section>
-<section id="rasterization" class="level2" data-number="6.4">
-<h2 data-number="6.4" class="anchored" data-anchor-id="rasterization"><span class="header-section-number">6.4</span> Rasterization</h2>
-</section>
-<section id="spatial-vectorization" class="level2" data-number="6.5">
-<h2 data-number="6.5" class="anchored" data-anchor-id="spatial-vectorization"><span class="header-section-number">6.5</span> Spatial vectorization</h2>
+<p>Plot…</p>
 <div class="cell" data-execution_count="12">
-<div class="sourceCode" id="cb17"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"data/grain.tif"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>show(src, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>show(src, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>show(src2, ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Crop"</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Mask"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="06-raster-vector_files/figure-html/cell-13-output-1.png" width="728" height="255"></p>
+</div>
 </div>
 </section>
-<section id="exercises" class="level2" data-number="6.6">
-<h2 data-number="6.6" class="anchored" data-anchor-id="exercises"><span class="header-section-number">6.6</span> Exercises</h2>
+<section id="raster-extraction" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="raster-extraction"><span class="header-section-number">6.4</span> Raster extraction</h2>
+</section>
+<section id="rasterization" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="rasterization"><span class="header-section-number">6.5</span> Rasterization</h2>
+</section>
+<section id="spatial-vectorization" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="spatial-vectorization"><span class="header-section-number">6.6</span> Spatial vectorization</h2>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode" id="cb18"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"data/grain.tif"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exercises" class="level2" data-number="6.7">
+<h2 data-number="6.7" class="anchored" data-anchor-id="exercises"><span class="header-section-number">6.7</span> Exercises</h2>
 
 
 </section>
