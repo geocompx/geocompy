@@ -121,7 +121,9 @@ axes[1].set_title("50 km buffer");
 
 # ### Affine transformations
 #
-# ...
+# Shift...
+
+nz_shift = nz_sfc + c(0, 100000)
 
 # ### Clipping
 #
