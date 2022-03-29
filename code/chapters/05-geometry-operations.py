@@ -150,15 +150,15 @@ nz_rotate = nz["geometry"].rotate(-30, "centroid")
 
 # Plot... 
 
-fig, axes = plt.subplots(ncols=3, figsize=(15,5))
+fig, axes = plt.subplots(ncols=3, figsize=(10,5))
 nz.plot(ax=axes[0], color="lightgrey", edgecolor="darkgrey")
 nz_shift.plot(ax=axes[0], color="red", edgecolor="darkgrey")
 nz.plot(ax=axes[1], color="lightgrey", edgecolor="darkgrey")
 nz_scale.plot(ax=axes[1], color="red", edgecolor="darkgrey")
 nz.plot(ax=axes[2], color="lightgrey", edgecolor="darkgrey")
 nz_rotate.plot(ax=axes[2], color="red", edgecolor="darkgrey")
-axes[0].set_title("Shift");
-axes[1].set_title("Scale");
+axes[0].set_title("Shift")
+axes[1].set_title("Scale")
 axes[2].set_title("Rotate");
 
 # ### Clipping
