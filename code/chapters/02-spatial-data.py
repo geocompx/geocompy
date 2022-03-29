@@ -99,12 +99,16 @@ dat.plot()
 
 # or using `.hvplot` to get an interactive plot:
 
-import hvplot.pandas
-dat.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
+# +
+# import hvplot.pandas
+# dat.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
+# -
 
 # This way, we can also add background tiles:
 
-dat.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
+# +
+# dat.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
+# -
 
 # ### Geometry columns
 #
