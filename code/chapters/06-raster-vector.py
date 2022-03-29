@@ -14,7 +14,18 @@
 
 # # Raster-vector interactions {#raster-vector}
 #
-# ## Introduction
+# ## Prerequisites
+
+import pandas as pd
+import matplotlib.pyplot as plt
+pd.set_option("display.max_rows", 4)
+pd.set_option("display.max_columns", 6)
+pd.options.display.max_rows = 10
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams["figure.figsize"] = (5, 5)
+
+# Packages...
 
 import numpy as np
 import geopandas as gpd
@@ -22,11 +33,14 @@ import rasterio
 import rasterio.mask
 from rasterio.plot import show
 
-# ## Raster cropping
+# Sample data...
 
 src = rasterio.open("data/srtm.tif")
-
 pol = gpd.read_file("data/zion.gpkg")
+
+# ## Introduction
+#
+# ## Raster cropping
 
 pol = pol.to_crs(src.crs)
 
@@ -54,8 +68,9 @@ src2.read()
 
 # Plot...
 
-fig, axes = plt.subplots(ncols=3, figsize=(15,5))
+fig, axes = plt.subplots(ncols=3, figsize=(9,5))
 show(src, ax=axes[0])
+show(src, ax=axes[1])
 show(src2, ax=axes[2])
 axes[0].set_title("Original")
 axes[1].set_title("Crop")

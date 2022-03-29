@@ -76,7 +76,7 @@ import topojson as tp
 topo = tp.Topology(us_states2163, prequantize=False)
 us_states_simp2 = topo.toposimplify(100000).to_gdf()
 
-fig, axes = plt.subplots(ncols=3)
+fig, axes = plt.subplots(ncols=3, figsize=(9,5))
 us_states2163.plot(ax=axes[0])
 us_states_simp1.plot(ax=axes[1])
 us_states_simp2.plot(ax=axes[2])
@@ -125,7 +125,9 @@ axes[1].set_title("50 km buffer");
 #
 # $$
 # x' = a x + b y + x_\mathrm{off}
+# $$
 #
+# $$
 # y' = d x + e y + y_\mathrm{off}
 # $$
 #
@@ -142,15 +144,15 @@ nz_shift = nz["geometry"].translate(0, 100000)
 
 # Scale...
 
-nz_scale = nz["geometry"].scale(0.5, 0.5)
+nz_scale = nz["geometry"].scale(0.5, 0.5, origin="centroid")
 
 # Rotate...
 
-nz_rotate = nz["geometry"].rotate(-30, "centroid")
+nz_rotate = nz["geometry"].rotate(-30, origin="centroid")
 
 # Plot... 
 
-fig, axes = plt.subplots(ncols=3, figsize=(10,5))
+fig, axes = plt.subplots(ncols=3, figsize=(9,5))
 nz.plot(ax=axes[0], color="lightgrey", edgecolor="darkgrey")
 nz_shift.plot(ax=axes[0], color="red", edgecolor="darkgrey")
 nz.plot(ax=axes[1], color="lightgrey", edgecolor="darkgrey")
