@@ -17,12 +17,16 @@
 # ## Prerequisites
 
 import pandas as pd
+import matplotlib.pyplot as plt
 pd.set_option("display.max_rows", 4)
 pd.set_option("display.max_columns", 6)
+pd.options.display.max_rows = 10
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams["figure.figsize"] = (5, 5)
 
 # Packages...
 
-import matplotlib.pyplot as plt
 import geopandas as gpd
 
 # Sample data...
@@ -47,7 +51,7 @@ fig, axes = plt.subplots(ncols=2)
 seine.plot(ax=axes[0])
 seine_simp.plot(ax=axes[1])
 axes[0].set_title("Original")
-axes[1].set_title("Simplified (d=2000 m)")
+axes[1].set_title("Simplified (d=2000 m)");
 
 # Compare number of nodes:
 
@@ -66,7 +70,7 @@ us_states_simp1 = us_states2163.simplify(100000)
 
 # Plot...
 
-us_states_simp1.plot()
+us_states_simp1.plot();
 
 import topojson as tp
 topo = tp.Topology(us_states2163, prequantize=False)
@@ -78,7 +82,7 @@ us_states_simp1.plot(ax=axes[1])
 us_states_simp2.plot(ax=axes[2])
 axes[0].set_title("Original")
 axes[1].set_title("Simplified (w/ geopandas)")
-axes[2].set_title("Simplified (w/ topojson)")
+axes[2].set_title("Simplified (w/ topojson)");
 
 # ### Centroids
 #
@@ -93,16 +97,27 @@ nz_pos = nz.representative_point()
 seine_pos = seine.representative_point()
 
 base = nz.plot(color="white", edgecolor="lightgrey")
-nz_centroid.plot(ax=base, color="None", edgecolor="black");
+nz_centroid.plot(ax=base, color="None", edgecolor="black")
 nz_pos.plot(ax=base, color="None", edgecolor="red");
 
 base = seine.plot(color="grey")
-seine_centroid.plot(ax=base, color="None", edgecolor="black");
+seine_centroid.plot(ax=base, color="None", edgecolor="black")
 seine_pos.plot(ax=base, color="None", edgecolor="red");
 
 # ### Buffers
 #
-# ...
+# Buffers...
+
+seine_buff_5km = seine.buffer(5000)
+seine_buff_50km = seine.buffer(50000)
+
+# Plot...
+
+fig, axes = plt.subplots(ncols=2)
+seine_buff_5km.plot(ax=axes[0], color="None", edgecolor=["red", "green", "blue"])
+seine_buff_50km.plot(ax=axes[1], color="None", edgecolor=["red", "green", "blue"])
+axes[0].set_title("5 km buffer")
+axes[1].set_title("50 km buffer");
 
 # ### Affine transformations
 #
