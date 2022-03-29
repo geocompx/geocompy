@@ -124,19 +124,29 @@ axes[1].set_title("50 km buffer");
 # Affine transformations in `geopandas` are a wrapper around the `shapely.affinity.affine_transform` function. According to the [documentation](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates:
 #
 # $$
-# x' &= a x + b y + x_\mathrm{off}
-# y' &= d x + e y + y_\mathrm{off}
+# x' = a x + b y + x_\mathrm{off}
+# y' = d x + e y + y_\mathrm{off}
 # $$
+#
+# For example, the code below shifts the y-coordinates by 100,000 meters to the north, but leaves the x-coordinates untouched:
 
 m = [1, 0, 0, 1, 0, 100000]
 nz_shift = nz["geometry"].affine_transform(m)
 
+# Scale...
+
+# Rotate...
+
 # Plot...
 
-fig, axes = plt.subplots(ncols=2)
+fig, axes = plt.subplots(ncols=3)
 nz.plot(ax=axes[0], color="lightgrey", edgecolor="darkgrey")
 nz_shift.plot(ax=axes[0], color="red", edgecolor="darkgrey")
+nz.plot(ax=axes[1], color="lightgrey", edgecolor="darkgrey")
+nz.plot(ax=axes[2], color="lightgrey", edgecolor="darkgrey")
 axes[0].set_title("Shift");
+axes[0].set_title("Scale");
+axes[0].set_title("Rotate");
 
 # ### Clipping
 #
