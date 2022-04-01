@@ -38,7 +38,8 @@
 # Geocompy is a sister project of [Geocomputation with R](https://geocompr.robinlovelace.net/) -- a book on geographic data analysis, visualization, and modeling using the R programming language.
 #
 # ## Reproducing this book
-# <!-- Would this live better in the README? (RL 2022-02-16) -->
+#
+# To reproduce this book you need to have a reasonable 
 #
 # An important aspect of scientific research and 'citizen science' that is participatory is reproducibility of results.
 # We aim to make this web version of the book as easy as possible. See the source code for details (work in progress).
