@@ -1,5 +1,7 @@
 # geocompy
 
+[![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb)
+
 <https://geocompr.github.io/py/>
 
 ## Setup
