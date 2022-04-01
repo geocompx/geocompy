@@ -14,7 +14,7 @@
 
 # # Introduction
 #
-# This is site contains ideas, code and an outline of a yet-to-be written book on *Geocomputation with Python*.
+# This site contains ideas, code and an outline of a yet-to-be written book on *Geocomputation with Python*.
 #
 # ## Motivations
 #
@@ -115,6 +115,12 @@
 #
 # ```sh
 # conda install jupyter # for example
+# ```
+#
+# or
+#
+# ```sh
+# conda install -c conda-forge topojson # from the conda-forge channel
 # ```
 #
 # ### Reproduce the book in a Docker container with VSCode IDE
