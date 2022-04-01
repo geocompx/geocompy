@@ -55,6 +55,7 @@
 # * Open the Anaconda Prompt (or a fresh PowerShell terminal after running the command [`conda init powershell`](https://github.com/conda/conda/issues/8428#issuecomment-474867193) from the Anaconda prompt), navigate to the above-mentioned working directory, and then run:
 #
 # ```sh
+#  # Warning may take several (10+) minutes to install the dependencies:
 # conda env create -f environment.yml
 # ```
 #
