@@ -1,2 +1,0 @@
-FROM geocompr/geocompr:geocompy
-
