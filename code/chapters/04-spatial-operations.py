@@ -161,26 +161,20 @@ axes[3].set_title("elev > 5");
 
 # NDVI...
 
-# +
-# multi_rast = src_multi_rast.read()
-# nir = multi_rast[3,:,:]
-# red = multi_rast[2,:,:]
-# ndvi = (nir-red)/(nir+red)
-# -
+multi_rast = src_multi_rast.read()
+nir = multi_rast[3,:,:]
+red = multi_rast[2,:,:]
+ndvi = (nir-red)/(nir+red)
 
 # Convert values >1 to "No Data":
 
-# +
-# ndvi[ndvi>1] = np.nan
-# -
+ndvi[ndvi>1] = np.nan
 
 # Plot...
 
-# +
-# fig, axes = plt.subplots(ncols=2, figsize=(9,5))
-# show(multi_rast[(2,1,0), :, :]/multi_rast.max(), ax=axes[0], cmap="RdYlGn")
-# show(ndvi, ax=axes[1], cmap="Greens")
-# -
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+show(multi_rast[(2,1,0), :, :]/multi_rast.max(), ax=axes[0], cmap="RdYlGn")
+show(ndvi, ax=axes[1], cmap="Greens")
 
 # ### Zonal operations
 #
