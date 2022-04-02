@@ -65,6 +65,7 @@ pd.set_option("display.max_rows", 4)
 # Most often, we import an existing vector layer from a file, such as a Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file. 
 
 #| echo: false
+#| label: getdata
 from pathlib import Path
 data_path = Path("data")
 if data_path.is_dir():
