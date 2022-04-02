@@ -175,6 +175,8 @@ ndvi[ndvi>1] = np.nan
 fig, axes = plt.subplots(ncols=2, figsize=(9,5))
 show(multi_rast[(2,1,0), :, :]/multi_rast.max(), ax=axes[0], cmap="RdYlGn")
 show(ndvi, ax=axes[1], cmap="Greens")
+axes[0].set_title("RGB image")
+axes[1].set_title("NDVI");
 
 # ### Zonal operations
 #
