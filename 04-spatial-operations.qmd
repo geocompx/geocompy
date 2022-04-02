@@ -188,14 +188,26 @@ Convert values >1 to "No Data":
 ndvi[ndvi>1] = np.nan
 ```
 
+When plotting an RGB image using the `show` function, the function assumes that:
+
+* Values are in the range `[0,1]` for floats, or `[0,255]` for integers (otherwise clipped)
+* The order of bands is RGB
+
+To "prepare" the multi-band raster for `show`, we therefore reverse the order of bands (which is originally BGR+NIR), and divided by the maximum to set the maximum value at `1`:
+
+```{python}
+multi_rast_rgb = multi_rast[(2,1,0), :, :]/multi_rast.max()
+```
+
 Plot...
 
 ```{python}
 fig, axes = plt.subplots(ncols=2, figsize=(9,5))
-show(multi_rast[(2,1,0), :, :]/multi_rast.max(), ax=axes[0], cmap="RdYlGn")
+show(multi_rast_rgb, ax=axes[0], cmap="RdYlGn")
 show(ndvi, ax=axes[1], cmap="Greens")
 axes[0].set_title("RGB image")
 axes[1].set_title("NDVI");
+plt.show()
 ```
 
 ### Zonal operations
