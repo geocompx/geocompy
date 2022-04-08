@@ -33,6 +33,21 @@ import rasterio
 
 # Sample data...
 
+#| echo: false
+from pathlib import Path
+data_path = Path("data")
+file_path = Path("data/landsat.tif")
+if not file_path.exists():
+  if not data_path.is_dir():
+     os
+     os.mkdir(data_path)
+  import os
+  print("Attempting to get the data")
+  import requests
+  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/landsat.tif")  
+  with open(file_path, "wb") as f:
+    f.write(r.content)
+
 world = gpd.read_file("data/world.gpkg")
 src_elev = rasterio.open("data/elev.tif")
 src_multi_rast = rasterio.open("data/landsat.tif")
