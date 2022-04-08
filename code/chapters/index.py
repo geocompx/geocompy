@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.7
+#       jupytext_version: 1.13.8
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -18,7 +18,9 @@
 #
 # ## Motivations
 #
-# This book, tentatively called Geocomputation with Python ('geocompy'), is motivated by the need for an introductory yet rigorous and up-to-date resource on working with geographic data in Python that demonstrates basic data structures and describes code for handling vector *and* raster datasets in an integrated way.
+# *Geocomputation with Python*, is motivated by the need for an introductory yet rigorous and maintained resource on working with geographic data in Python.
+# A unique feature of the book is that it that demonstrates code for working with *both vector and raster* geographic data types.
+# <!-- , and how to use them together. -->
 # There are many resources on Python packages for geographic research and various applications but, to the best of our knowledge, no other resource brings together the following features into a single home:
 #
 # 1. Small introductory textbook focuses on doing basic operations well
