@@ -13,7 +13,7 @@ pd.options.display.max_colwidth = 35
 plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
-Packages...
+Let's import the required packages:
 
 ```{python}
 import numpy as np
@@ -23,65 +23,88 @@ import rasterio.mask
 from rasterio.plot import show
 ```
 
-Sample data...
+and load the sample data:
 
 ```{python}
-src = rasterio.open("data/srtm.tif")
-pol = gpd.read_file("data/zion.gpkg")
+src_srtm = rasterio.open("data/srtm.tif")
+zion = gpd.read_file("data/zion.gpkg")
 ```
 
 ## Introduction
 
 ## Raster cropping
 
+Many geographic data projects involve integrating data from many different sources, such as remote sensing images (rasters) and administrative boundaries (vectors). Often the extent of input raster datasets is larger than the area of interest. In this case raster **cropping** and **masking** are useful for unifying the spatial extent of input data. Both operations reduce object memory use and associated computational resources for subsequent analysis steps, and may be a necessary preprocessing step before creating attractive maps involving raster data.
+
+We will use two objects to illustrate raster cropping:
+
+* The `srtm.tif` raster representing elevation (meters above sea level) in south-western Utah
+* The `zion.gpkg` vector layer representing the Zion National Park
+
+Both target and cropping objects must have the same projection. The following reprojects the vector layer `zion` into the CRS of the raster `src_srtm`:
+
 ```{python}
-pol = pol.to_crs(src.crs)
+zion = zion.to_crs(src_srtm.crs)
 ```
 
+To mask the image, i.e., convert all pixels which do not intersect with the `zion` polygon to "No Data", we use the `rasterio.mask.mask` function as follows:
+
 ```{python}
-out_image, out_transform = rasterio.mask.mask(src, pol.geometry, crop = False, nodata = 9999)
+out_image, out_transform = rasterio.mask.mask(src_srtm, zion.geometry, crop=False, nodata=9999)
 ```
 
+Note that we need to specify the "No Data" value.
+
+The result is the `out_image` array with the masked values: 
 
 ```{python}
-show(out_image)
+out_image
 ```
 
-```{python}
-meta = src.meta
-meta.update(height = out_image[0].shape[0])
-meta.update(width = out_image[0].shape[1])
-meta.update(transform = out_transform)
-meta.update(nodata = 9999)
-meta
-```
+and the new `out_transform`:
 
 ```{python}
-new_dataset = rasterio.open("output/srtm_cropped.tif", "w", **meta)
+out_transform
+```
+
+Note that masking (without cropping!) does not modify the raster spatial configuration. Therefore, the new transform is identical to the original:
+
+```{python}
+src_srtm.transform
+```
+
+To write the cropped raster to file, we need to modify the "No Data" setting in the metadata:
+
+```{python}
+out_meta = src_srtm.meta
+out_meta.update(nodata=9999)
+out_meta
+```
+
+Then we can write the cropped raster to file:
+
+```{python}
+new_dataset = rasterio.open("output/srtm_masked.tif", "w", **out_meta)
 new_dataset.write(out_image)
 new_dataset.close()
 ```
 
-```{python}
-src2 = rasterio.open("output/srtm_cropped.tif")
-show(src2)
-```
+and re-import it:
 
 ```{python}
-src2.meta
+src_srtm_masked = rasterio.open("output/srtm_masked.tif")
+show(src_srtm_masked)
 ```
 
-```{python}
-src2.read()
-```
+Cropping means to reduce the raster extent to the extent of the vector layer. To crop *and* mask, we just need to set `crop=False` in `rasterio.mask.mask` (see above). Crop...
 
 Plot...
 
 ```{python}
 fig, axes = plt.subplots(ncols=3, figsize=(9,5))
-show(src, ax=axes[0])
-show(src, ax=axes[1])
-show(src2, ax=axes[2])
+show(src_srtm, ax=axes[0])
+show(src_srtm, ax=axes[1])
+show(src_srtm_masked, ax=axes[2])
 axes[0].set_title("Original")
 axes[1].set_title("Crop")
 axes[2].set_title("Mask");
