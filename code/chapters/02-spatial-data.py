@@ -77,85 +77,90 @@ else:
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall(".")
 
-dat = gpd.read_file("data/world.gpkg")
+gdf = gpd.read_file("data/world.gpkg")
 
 # The result is a `GeoDataFrame`:
 
-type(dat)
+type(gdf)
 
 # The `GeoDataFrame` class is an extension of the `DataFrame` class. 
 # Thus, we can treat a vector layer as a table and process it using the ordinary, i.e., non-spatial, **pandas** methods.
 # For example, the following expression creates a subset with just the country name and the geometry (see below):
 
-dat = dat[["name_long", "geometry"]]
-dat
+gdf = gdf[["name_long", "geometry"]]
+gdf
 
 # The following expression creates a subset based on a condition, including just `"Egypt"`:
 
-dat[dat["name_long"] == "Egypt"]
+gdf[gdf["name_long"] == "Egypt"]
 
 # Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method, as follows:
 
-dat.plot()
+gdf.plot()
 
 # or using `.hvplot` to get an interactive plot:
 
 # +
 # import hvplot.pandas
-# dat.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
+# gdf.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
 # -
 
 # This way, we can also add background tiles:
 
 # +
-# dat.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
+# gdf.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
 # -
 
 # ### Geometry columns
 #
 # One of the columns in a `GeoDataFrame` is a geometry column, of class `GeoSeries`.
-# The geometry column contains the geometric part of the vector layer, e.g., the `POLYGON` or `MULTIPOLYGON` geometries of the 177 countries in `dat`:
+# The geometry column contains the geometric part of the vector layer, e.g., the `POLYGON` or `MULTIPOLYGON` geometries of the 177 countries in `gdf`:
 
-dat["geometry"]
+gdf["geometry"]
 
 # The geometry column also contains the spatial reference information, if any (see below).
 #
 # Many of the spatial operators, such as calculating the centroid, buffer, or bounding box of each feature, in fact involve just the geometry. 
 # Therefore, for example, the following expressions give exactly the same result, a `GeoSeries` with country bounding boxes:
 
-dat.bounds
+gdf.bounds
 
-dat["geometry"].bounds
+gdf["geometry"].bounds
 
 # Another useful property of the geometry column is the geometry type (see below). 
 # Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same.
 # Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value:
 
-dat["geometry"].type
+gdf["geometry"].type
 
 # To summarize the occurrence of different geometry types in a geometry column, we can use the **pandas** method called `value_counts`:
 
-dat["geometry"].type.value_counts()
+gdf["geometry"].type.value_counts()
 
-# In this case, we see that the `dat` layer contains `Polygon` and `MultiPolygon` geometries.
+# In this case, we see that the `gdf` layer contains `Polygon` and `MultiPolygon` geometries.
 #
 # ### Geometries
 #
 # Each element in the geometry column is a geometry object, of class `shapely`.
 # For example, here is one specific geometry selected by implicit index (that of Canada):
 
-dat["geometry"].iloc[3]
+gdf["geometry"].iloc[3]
 
 # and here is a specific geometry selected based on the `"name_long"` attribute:
 
-dat[dat["name_long"] == "Egypt"]["geometry"].iloc[0]
+gdf[gdf["name_long"] == "Egypt"]["geometry"].iloc[0]
 
 # The **shapely** package is compatible with the Simple Features standard.
 # Accordingly, seven types of geometries are supported.
-# The following section demonstrates creating a `shapely` geometry of each type, using a `string` in the WKT format as input.
-# First, we need to import the `shapely.wkt` module:
+# The following section demonstrates creating a `shapely` geometry of each type, from scratch or using a `string` in the WKT format as input. To do so , we need to import the `shapely.wkt` module and geometry types:
 
 import shapely.wkt as wkt
+from shapely.geometry import Point
+
+# Creating a point object is as simple as:
+
+point = Point(5,2)
+point
 
 # Then, we use the `wkt.loads` (stands for "load a WKT *s*tring") to transform a WKT string to a `shapely` geometry object. 
 # Here is an example of a `POINT` geometry:
@@ -165,30 +170,56 @@ point
 
 # Here is an example of a `MULTIPOINT` geometry:
 
+from shapely.geometry import MultiPoint
+multipoint = MultiPoint([(5,2), (1,3), (3,4), (3,2)])
+multipoint
+
 multipoint = wkt.loads("MULTIPOINT ((5 2), (1 3), (3 4), (3 2))")
 multipoint
 
 # Here is an example of a `LINESTRING` geometry:
+
+from shapely.geometry import LineString
+linestring = LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
+linestring
 
 linestring = wkt.loads("LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)")
 linestring
 
 # Here is an example of a `MULTILINESTRING` geometry:
 
+from shapely.geometry import MultiLineString
+linestring = MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
+linestring
+
 multilinestring = wkt.loads("MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))")
 multilinestring
 
 # Here is an example of a `POLYGON` geometry:
+
+from shapely.geometry import Polygon
+linestring = Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
+linestring
 
 polygon = wkt.loads("POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5), (2 4, 3 4, 3 3, 2 3, 2 4))")
 polygon
 
 # Here is an example of a `MULTIPOLYGON` geometry:
 
+from shapely.geometry import MultiPolygon
+multipolygon = MultiPolygon([Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]), 
+                             Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])])
+multipolygon
+
 multipolygon = wkt.loads("MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5)), ((0 2, 1 2, 1 3, 0 3, 0 2)))")
 multipolygon
 
 # And, finally, here is an example of a `GEOMETRYCOLLECTION` geometry:
+
+from shapely.geometry import GeometryCollection
+multipoint = GeometryCollection([MultiPoint([(5,2), (1,3), (3,4), (3,2)]),
+                                 MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])])
+multipoint
 
 geometrycollection = wkt.loads("GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))")
 geometrycollection
@@ -324,7 +355,7 @@ x["tem"].plot(col="time", col_wrap=4)
 
 # ## Coordinate Reference Systems
 
-dat.crs
+gdf.crs
 
 src.crs
 
