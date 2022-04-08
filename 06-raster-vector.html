@@ -266,7 +266,7 @@
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>pd.options.display.max_colwidth <span class="op">=</span> <span class="dv">35</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">"figure.figsize"</span>] <span class="op">=</span> (<span class="dv">5</span>, <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Packages…</p>
+<p>Let’s import the required packages:</p>
 <div class="cell" data-execution_count="2">
 <div class="sourceCode" id="cb2"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
@@ -274,10 +274,10 @@
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.mask</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.plot <span class="im">import</span> show</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Sample data…</p>
+<p>and load the sample data:</p>
 <div class="cell" data-execution_count="3">
-<div class="sourceCode" id="cb3"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"data/srtm.tif"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> gpd.read_file(<span class="st">"data/zion.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>src_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"data/srtm.tif"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>zion <span class="op">=</span> gpd.read_file(<span class="st">"data/zion.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="introduction" class="level2" data-number="6.2">
@@ -285,29 +285,56 @@
 </section>
 <section id="raster-cropping" class="level2" data-number="6.3">
 <h2 data-number="6.3" class="anchored" data-anchor-id="raster-cropping"><span class="header-section-number">6.3</span> Raster cropping</h2>
+<p>Many geographic data projects involve integrating data from many different sources, such as remote sensing images (rasters) and administrative boundaries (vectors). Often the extent of input raster datasets is larger than the area of interest. In this case raster <strong>cropping</strong> and <strong>masking</strong> are useful for unifying the spatial extent of input data. Both operations reduce object memory use and associated computational resources for subsequent analysis steps, and may be a necessary preprocessing step before creating attractive maps involving raster data.</p>
+<p>We will use two objects to illustrate raster cropping:</p>
+<ul>
+<li>The <code>srtm.tif</code> raster representing elevation (meters above sea level) in south-western Utah</li>
+<li>The <code>zion.gpkg</code> vector layer representing the Zion National Park</li>
+</ul>
+<p>Both target and cropping objects must have the same projection. The following reprojects the vector layer <code>zion</code> into the CRS of the raster <code>src_srtm</code>:</p>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode" id="cb4"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> pol.to_crs(src.crs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>zion <span class="op">=</span> zion.to_crs(src_srtm.crs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>To mask the image, i.e., convert all pixels which do not intersect with the <code>zion</code> polygon to “No Data”, we use the <code>rasterio.mask.mask</code> function as follows:</p>
 <div class="cell" data-execution_count="5">
-<div class="sourceCode" id="cb5"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.mask.mask(src, pol.geometry, crop <span class="op">=</span> <span class="va">False</span>, nodata <span class="op">=</span> <span class="dv">9999</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.mask.mask(src_srtm, zion.geometry, crop<span class="op">=</span><span class="va">False</span>, nodata<span class="op">=</span><span class="dv">9999</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Note that we need to specify the “No Data” value.</p>
+<p>The result is the <code>out_image</code> array with the masked values:</p>
 <div class="cell" data-execution_count="6">
-<div class="sourceCode" id="cb6"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>show(out_image)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="06-raster-vector_files/figure-html/cell-7-output-1.png" width="423" height="409"></p>
-</div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>out_image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="6">
-<pre><code>&lt;AxesSubplot:&gt;</code></pre>
+<pre><code>array([[[9999, 9999, 9999, ..., 9999, 9999, 9999],
+        [9999, 9999, 9999, ..., 9999, 9999, 9999],
+        [9999, 9999, 9999, ..., 9999, 9999, 9999],
+        ...,
+        [9999, 9999, 9999, ..., 9999, 9999, 9999],
+        [9999, 9999, 9999, ..., 9999, 9999, 9999],
+        [9999, 9999, 9999, ..., 9999, 9999, 9999]]], dtype=uint16)</code></pre>
 </div>
 </div>
+<p>and the new <code>out_transform</code>:</p>
 <div class="cell" data-execution_count="7">
-<div class="sourceCode" id="cb8"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>meta <span class="op">=</span> src.meta</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>meta.update(height <span class="op">=</span> out_image[<span class="dv">0</span>].shape[<span class="dv">0</span>])</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>meta.update(width <span class="op">=</span> out_image[<span class="dv">0</span>].shape[<span class="dv">1</span>])</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>meta.update(transform <span class="op">=</span> out_transform)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>meta.update(nodata <span class="op">=</span> <span class="dv">9999</span>)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>out_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="7">
+<pre><code>Affine(0.0008333333332777796, 0.0, -113.23958321278403,
+       0.0, -0.0008333333332777843, 37.512916763165805)</code></pre>
+</div>
+</div>
+<p>Note that masking (without cropping!) does not modify the raster spatial configuration. Therefore, the new transform is identical to the original:</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode" id="cb10"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>src_srtm.transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="8">
+<pre><code>Affine(0.0008333333332777796, 0.0, -113.23958321278403,
+       0.0, -0.0008333333332777843, 37.512916763165805)</code></pre>
+</div>
+</div>
+<p>To write the cropped raster to file, we need to modify the “No Data” setting in the metadata:</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode" id="cb12"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>out_meta <span class="op">=</span> src_srtm.meta</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>out_meta.update(nodata<span class="op">=</span><span class="dv">9999</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>out_meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="9">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint16',
  'nodata': 9999,
@@ -319,53 +346,30 @@
         0.0, -0.0008333333332777843, 37.512916763165805)}</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode" id="cb10"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>new_dataset <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"output/srtm_cropped.tif"</span>, <span class="st">"w"</span>, <span class="op">**</span>meta)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>new_dataset.write(out_image)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>new_dataset.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Then we can write the cropped raster to file:</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode" id="cb14"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>new_dataset <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"output/srtm_masked.tif"</span>, <span class="st">"w"</span>, <span class="op">**</span>out_meta)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>new_dataset.write(out_image)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>new_dataset.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode" id="cb11"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>src2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"output/srtm_cropped.tif"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>show(src2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>and re-import it:</p>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode" id="cb15"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>src_srtm_masked <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">"output/srtm_masked.tif"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>show(src_srtm_masked)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="06-raster-vector_files/figure-html/cell-10-output-1.png" width="435" height="404"></p>
+<p><img src="06-raster-vector_files/figure-html/cell-12-output-1.png" width="435" height="404"></p>
 </div>
-<div class="cell-output-display" data-execution_count="9">
+<div class="cell-output-display" data-execution_count="11">
 <pre><code>&lt;AxesSubplot:&gt;</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode" id="cb13"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>src2.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display" data-execution_count="10">
-<pre><code>{'driver': 'GTiff',
- 'dtype': 'uint16',
- 'nodata': 9999.0,
- 'width': 465,
- 'height': 457,
- 'count': 1,
- 'crs': CRS.from_epsg(4326),
- 'transform': Affine(0.0008333333332777796, 0.0, -113.23958321278403,
-        0.0, -0.0008333333332777843, 37.512916763165805)}</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="11">
-<div class="sourceCode" id="cb15"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>src2.read()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display" data-execution_count="11">
-<pre><code>array([[[9999, 9999, 9999, ..., 9999, 9999, 9999],
-        [9999, 9999, 9999, ..., 9999, 9999, 9999],
-        [9999, 9999, 9999, ..., 9999, 9999, 9999],
-        ...,
-        [9999, 9999, 9999, ..., 9999, 9999, 9999],
-        [9999, 9999, 9999, ..., 9999, 9999, 9999],
-        [9999, 9999, 9999, ..., 9999, 9999, 9999]]], dtype=uint16)</code></pre>
-</div>
-</div>
+<p>Cropping means to reduce the raster extent to the extent of the vector layer. To crop <em>and</em> mask, we just need to set <code>crop=False</code> in <code>rasterio.mask.mask</code> (see above). Crop…</p>
 <p>Plot…</p>
 <div class="cell" data-execution_count="12">
 <div class="sourceCode" id="cb17"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>show(src, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>show(src, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>show(src2, ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>show(src_srtm, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>show(src_srtm, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>show(src_srtm_masked, ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Crop"</span>)</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Mask"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
