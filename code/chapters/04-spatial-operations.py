@@ -46,7 +46,7 @@ if not file_path.exists():
   print("Attempting to get the data")
   import requests
   r = requests.get("https://github.com/geocompr/py/releases/download/0.1/landsat.tif")  
-  with open(file_path, 'wb') as f:
+  with open(file_path, "wb") as f:
     f.write(r.content)
 
 nz = gpd.read_file("data/nz.gpkg")
@@ -130,11 +130,8 @@ non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
 #
 # ### Local operations
 #
-# ...
 #
-# ### Focal operations
-#
-# For focal operations, we first need to read raster values:
+# First, we need to read raster values:
 
 elev = src_elev.read()
 elev
@@ -155,11 +152,26 @@ axes[1].set_title("elev ** 2")
 axes[2].set_title("np.log(elev)")
 axes[3].set_title("elev > 5");
 
-# Example of reclassify...
-#
-# Here, we assign the raster values in the ranges 0–12, 12–24 and 24–36 are reclassified to take values 1, 2 and 3, respectively...
+# Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges 0–12, 12–24 and 24–36 are reclassified to take values 1, 2 and 3, respectively...
 
-# NDVI...
+recl = elev.copy()
+recl[(elev > 0)  & (elev <= 12)] = 1
+recl[(elev > 12) & (elev <= 24)] = 2
+recl[(elev > 24) & (elev <= 36)] = 3
+
+# Plot...
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+show(elev, ax=axes[0], cmap="Oranges")
+show(recl, ax=axes[1], cmap="Oranges")
+axes[0].set_title("Original")
+axes[1].set_title("Reclassified");
+
+# The calculation of the normalized difference vegetation index (NDVI) is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between -1 and 1; positive values indicate the presence of living plants (mostly > 0.2). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula:
+#
+# $NDVI=\frac{NIR+Red} {NIR-Red}$
+#
+# Let's calculate NDVI for the multispectral satellite file of the Zion National Park.
 
 multi_rast = src_multi_rast.read()
 nir = multi_rast[3,:,:]
@@ -186,8 +198,11 @@ show(multi_rast_rgb, ax=axes[0], cmap="RdYlGn")
 show(ndvi, ax=axes[1], cmap="Greens")
 axes[0].set_title("RGB image")
 axes[1].set_title("NDVI");
-plt.show()
 
+# ### Focal operations
+#
+# ...
+#
 # ### Zonal operations
 #
 # ...
