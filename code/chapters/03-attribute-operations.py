@@ -142,26 +142,18 @@ elev
 # ### Summarizing raster objects
 #
 # Global summaries of raster values can be calculated by applying `numpy` summary functions---such as `np.mean`---on the array with raster values. For example:
-#
-# ```{numpy}
-# np.mean(elev)
-# ```
-#
+
+np.mean(elev)
+
 # Note that "No Data"-safe functions--such as `np.nanmean`---should be used in case the raster contains "No Data" values which need to be ignored:
-#
-# ```{numpy}
-# elev[0, 2] = np.nan
-# elev
-# ```
-#
-# ```{numpy}
-# np.mean(elev)
-# ```
-#
-# ```{numpy}
-# np.nanmean(elev)
-# ```
-#
+
+elev[0, 2] = np.nan
+elev
+
+np.mean(elev)
+
+np.nanmean(elev)
+
 # Raster value statistics can be visualized in a variety of ways. One approach is to "flatten" the raster values into a one-dimensional array, then use a graphical function such as `plt.hist` or `plt.boxplot` (from `matplotlib.pyplot`). For example:
 
 x = elev.flatten()
