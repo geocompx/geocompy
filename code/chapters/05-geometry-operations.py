@@ -16,6 +16,7 @@
 #
 # ## Prerequisites
 
+#| echo: false
 import pandas as pd
 import matplotlib.pyplot as plt
 pd.set_option("display.max_rows", 4)

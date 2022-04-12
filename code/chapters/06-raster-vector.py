@@ -16,6 +16,7 @@
 #
 # ## Prerequisites
 
+#| echo: false
 import pandas as pd
 import matplotlib.pyplot as plt
 pd.set_option("display.max_rows", 4)
@@ -28,6 +29,7 @@ plt.rcParams["figure.figsize"] = (5, 5)
 # Let's import the required packages:
 
 import numpy as np
+import matplotlib.pyplot as plt
 import geopandas as gpd
 import rasterio
 import rasterio.mask
@@ -55,23 +57,23 @@ zion = zion.to_crs(src_srtm.crs)
 
 # To mask the image, i.e., convert all pixels which do not intersect with the `zion` polygon to "No Data", we use the `rasterio.mask.mask` function as follows:
 
-out_image, out_transform = rasterio.mask.mask(src_srtm, zion.geometry, crop=False, nodata=9999)
+out_image_mask, out_transform_mask = rasterio.mask.mask(src_srtm, zion["geometry"], crop=False, nodata=9999)
 
-# Note that we need to specify the "No Data" value.
+# Note that we need to specify a "No Data" value in agreement with the raster data type. Since `srtm.tif` is of type `uint16`, we choose `9999` (a positive integer that is guaranteed not to occur in the raster). 
 #
 # The result is the `out_image` array with the masked values: 
 
-out_image
+out_image_mask
 
 # and the new `out_transform`:
 
-out_transform
+out_transform_mask
 
 # Note that masking (without cropping!) does not modify the raster spatial configuration. Therefore, the new transform is identical to the original:
 
 src_srtm.transform
 
-# To write the cropped raster to file, we need to modify the "No Data" setting in the metadata:
+# Unfortunately, the `out_image` and `out_transform` object do not contain any information indicating that `9999` represents "No Data". To associate the information with the raster, we must write it to file along with the corresponding metadata. For example, to write the cropped raster to file, we need to modify the "No Data" setting in the metadata:
 
 out_meta = src_srtm.meta
 out_meta.update(nodata=9999)
@@ -80,25 +82,44 @@ out_meta
 # Then we can write the cropped raster to file:
 
 new_dataset = rasterio.open("output/srtm_masked.tif", "w", **out_meta)
-new_dataset.write(out_image)
+new_dataset.write(out_image_mask)
 new_dataset.close()
 
-# and re-import it:
+# Now we can re-import the raster:
 
-src_srtm_masked = rasterio.open("output/srtm_masked.tif")
-show(src_srtm_masked)
+src_srtm_mask = rasterio.open("output/srtm_masked.tif")
 
-# Cropping means to reduce the raster extent to the extent of the vector layer. To crop *and* mask, we just need to set `crop=False` in `rasterio.mask.mask` (see above). Crop...
+# The `.meta` property contains the `nodata` entry. Now, any relevant operation (such as plotting) will take "No Data" into account:
+
+src_srtm_mask.meta
+
+# Cropping means reducing the raster extent to the extent of the vector layer:
 #
-# Plot...
+# * To crop *and* mask, we can use the same in `rasterio.mask.mask` expression shown above for masking, just setting `crop=True` instead of `crop=False`. 
+# * To just crop, *without* masking, we can derive the extent polygon and then crop using it.
+#
+# For example, here is how we can obtain the extent polygon of `zion`, as a `shapely` geometry object:
+
+bb = zion.unary_union.envelope
+bb
+
+# The extent can now be used for masking. Here, we are also using the `all_touched=True` option so that pixels partially overlapping with the extent are included:
+
+out_image_crop, out_transform_crop = rasterio.mask.mask(src_srtm, [bb], crop=True, all_touched=True, nodata=9999)
+
+# Figure ... shows the original raster, and the cropped and masked results.
 
 fig, axes = plt.subplots(ncols=3, figsize=(9,5))
 show(src_srtm, ax=axes[0])
-show(src_srtm, ax=axes[1])
-show(src_srtm_masked, ax=axes[2])
+zion.plot(ax=axes[0], color="none", edgecolor="black")
+show(src_srtm_mask, ax=axes[1])
+zion.plot(ax=axes[1], color="none", edgecolor="black")
+show(out_image_crop, transform=out_transform_crop, ax=axes[2])
+zion.plot(ax=axes[2], color="none", edgecolor="black")
 axes[0].set_title("Original")
-axes[1].set_title("Crop")
-axes[2].set_title("Mask");
+axes[1].set_title("Mask");
+axes[2].set_title("Crop")
+plt.show()
 
 # ## Raster extraction
 #

@@ -16,8 +16,6 @@
 #
 # ## Introduction
 #
-# ## Introduction
-#
 # ## Coordinate Reference Systems
 #
 # ## Querying and setting coordinate systems
