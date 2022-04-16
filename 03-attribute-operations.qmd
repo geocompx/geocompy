@@ -70,28 +70,68 @@ In both cases the method is followed by square brackets, and two indices, separa
 
 The once exception which we are going to with subsetting by indices is when selecting columns, directly using a list, as in `df[["a","b"]]`, instead of `df.loc[:, ["a","b"]]`, to select columns `"a"` and `"b"` from `df`.
 
-Here are few examples of subsetting the `GeoDataFrame` of world countries:
+Here are few examples of subsetting the `GeoDataFrame` of world countries.
+
+Subsetting rows by position:
 
 ```{python}
-world.iloc[0:3, :]                ## subset rows by position
+world.iloc[0:3, :]
 ```
 
-```{python}
-world.iloc[:, 0:3]                ## subset columns by position
-```
+Subsetting columns by position:
 
 ```{python}
-world.iloc[0:3, 0:3]              ## subset rows and columns by position
+world.iloc[:, 0:3]
 ```
 
+Subsetting rows and columns by position:
+
 ```{python}
-world[["name_long", "geometry"]]  ## columns by name
+world.iloc[0:3, 0:3]
 ```
+
+Subsetting columns by name:
+
+```{python}
+world[["name_long", "geometry"]]
+```
+
+"Slice" of columns between given ones:
+
+```{python}
+world.loc[:, "name_long":"pop"]
+```
+
+Subsetting by a boolean series:
 
 ```{python}
 x = np.array([1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0], dtype=bool)
-world.iloc[:, x]                  ## by logical indices
+world.iloc[:, x]
 ```
+
+We can remove specific columns using the `.drop` method and `axis=1` (i.e., columns):
+
+```{python}
+world.drop(["name_long", "continent"], axis=1)
+```
+
+We can rename (some of) the selected columns using the `.rename` method:
+
+```{python}
+world[["name_long", "pop"]].rename(columns={"pop": "population"})
+```
+
+The standard `numpy` comparison operators can be used in boolean subsetting, as illustrated in Table ...
+
+TABLE ...: Comparison operators that return Booleans (TRUE/FALSE).
+ 
+|`Symbol` | `Name` |
+|---|---|
+| `==` | Equal to |
+| `!=` | Not equal to |
+| `>`, `<` | Greater/Less than |
+| `>=`, `<=` | Greater/Less than or equal |
+| `&`, `|`, `~` Logical operators: And, Or, Not |
 
 A demonstration of the utility of using logical vectors for subsetting is shown in the code chunk below. This creates a new object, small_countries, containing nations whose surface area is smaller than 10,000 km^2^:
 
