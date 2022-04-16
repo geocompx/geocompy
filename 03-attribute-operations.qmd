@@ -27,19 +27,17 @@ Sample data...
 
 ```{python}
 #| echo: false
+import os
+import requests
 from pathlib import Path
 data_path = Path("data")
 file_path = Path("data/landsat.tif")
 if not file_path.exists():
-  if not data_path.is_dir():
-     os
-     os.mkdir(data_path)
-  import os
-  print("Attempting to get the data")
-  import requests
-  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/landsat.tif")  
-  with open(file_path, "wb") as f:
-    f.write(r.content)
+    if not data_path.is_dir():
+        os.mkdir(data_path)
+    r = requests.get("https://github.com/geocompr/py/releases/download/0.1/landsat.tif")  
+    with open(file_path, "wb") as f:
+        f.write(r.content)
 ```
 
 ```{python}
@@ -50,9 +48,50 @@ src_multi_rast = rasterio.open("data/landsat.tif")
 
 ## Introduction
 
+...
+
 ## Vector attribute manipulation
 
+As mentioned previously (...), vector layers (`GeoDataFrame`, from package `geopandas`) are basically extended tables (`DataFrame` from package `pandas`), the difference being that a vector layer has a geometry column. Since `GeoDataFrame` extends `DataFrame`, all ordinary table-related operations from package `pandas` are supported for vector laters as well, as shown below.
+
 ### Vector attribute subsetting
+
+`pandas` supports several subsetting interfaces, though the most [recommended](https://stackoverflow.com/questions/38886080/python-pandas-series-why-use-loc) ones are:
+
+* `.loc`, which uses pandas indices, and
+* `.iloc`, which uses (implicit) numpy-style numeric indices.
+
+In both cases the method is followed by square brackets, and two indices, separated by a comma. Each index can comprise:
+
+* A specific value, as in `1`
+* A slice, as in `0:3`
+* A `list`, as in `[0,2,4]`
+* `:`—indicating "all" indices
+
+The once exception which we are going to with subsetting by indices is when selecting columns, directly using a list, as in `df[["a","b"]]`, instead of `df.loc[:, ["a","b"]]`, to select columns `"a"` and `"b"` from `df`.
+
+Here are few examples of subsetting the `GeoDataFrame` of world countries:
+
+```{python}
+world.iloc[0:3, :]                ## subset rows by position
+```
+
+```{python}
+world.iloc[:, 0:3]                ## subset columns by position
+```
+
+```{python}
+world.iloc[0:3, 0:3]              ## subset rows and columns by position
+```
+
+```{python}
+world[["name_long", "geometry"]]  ## columns by name
+```
+
+```{python}
+x = np.array([1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0], dtype=bool)
+world.iloc[:, x]                  ## by logical indices
+```
 
 Subsetting rows by attribute...
 
