@@ -39,6 +39,7 @@ from rasterio.plot import show
 
 src_srtm = rasterio.open("data/srtm.tif")
 zion = gpd.read_file("data/zion.gpkg")
+zion_points = gpd.read_file("data/zion_points.gpkg")
 
 # ## Introduction
 #
@@ -133,6 +134,14 @@ axes[2].set_title("Crop")
 plt.show()
 
 # ## Raster extraction
+#
+# From points...
+#
+# From line...
+#
+# From polygon (srtm)...
+#
+# From polygon (nlcd)...
 #
 # ## Rasterization
 #
