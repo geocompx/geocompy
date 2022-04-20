@@ -158,7 +158,51 @@ world[world["continent"] == "Asia"]  \
 
 ### Vector attribute aggregation
 
-Aggregation without geometry...
+Aggregation involves summarizing data with one or more *grouping variables*, typically from columns in the table to be aggregated (geographic aggregation is covered in the next chapter). An example of attribute aggregation is calculating the number of people per continent based on country-level data (one row per country). The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller data frame (aggregation is a form of data reduction and can be a useful early step when working with large datasets). This can be done with a combination of `.groupby` and `.sum`:
+
+```{python}
+world_agg1 = world[['continent', 'pop']].groupby('continent').sum()
+world_agg1
+```
+
+The result is a (non-spatial) table with eight rows, one per continent, and two columns reporting the name and population of each continent.
+
+Alternatively, to include the geometry in the aggregation result, we can use the `.dissolve` method. That way, in addition to the summed population we also get the associated geometry per continent, i.e., the union of all countries. Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the summary function for non-geometry columns:
+
+```{python}
+world_agg2 = world[['continent', 'pop', 'geometry']].dissolve(by='continent', aggfunc='sum')
+world_agg2
+```
+
+Here is a plot of the result:
+
+```{python}
+world_agg2.plot(column='pop');
+```
+
+The resulting `world_agg2` object is a vector layer containing 8 features representing the continents of the world (and the open ocean). 
+
+Other options for the `aggfunc` parameter in `.dissolve` [include](https://geopandas.org/en/stable/docs/user_guide/aggregation_with_dissolve.html):
+
+* `'first'`
+* `'last'`
+* `'min'`
+* `'max'`
+* `'sum'`
+* `'mean'`
+* `'median'`
+
+Additionally, we can pass a custom functiom.
+
+For example, here is how we can calculate the summed population, summed area, and count of countries, per continent. We do this in two steps, then join the results:
+
+```{python}
+world_agg3a = world[['continent', 'area_km2', 'geometry']].dissolve(by='continent', aggfunc='sum')
+world_agg3b = world[['continent', 'name_long', 'geometry']].dissolve(by='continent', aggfunc=lambda x: x.nunique()).rename(columns={"name_long": "n"})
+world_agg = pd.merge(world_agg3a, world_agg3b, on='continent')
+```
+
+...
 
 ### Vector attribute joining
 
