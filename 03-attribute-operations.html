@@ -1086,8 +1086,9 @@
 <p>The result is a (non-spatial) table with eight rows, one per continent, and two columns reporting the name and population of each continent.</p>
 <p>Alternatively, to include the geometry in the aggregation result, we can use the <code>.dissolve</code> method. That way, in addition to the summed population we also get the associated geometry per continent, i.e., the union of all countries. Note that we use the <code>by</code> parameter to choose which column(s) are used for grouping, and the <code>aggfunc</code> parameter to choose the summary function for non-geometry columns:</p>
 <div class="cell" data-execution_count="17">
-<div class="sourceCode" id="cb16"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>world_agg2 <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'pop'</span>, <span class="st">'geometry'</span>]].dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>world_agg2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>world_agg2 <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'pop'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>world_agg2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="17">
 <div>
 
@@ -1167,9 +1168,12 @@
 <p>Additionally, we can pass a custom functiom.</p>
 <p>For example, here is how we can calculate the summed population, summed area, and count of countries, per continent. We do this in two steps, then join the results:</p>
 <div class="cell" data-execution_count="19">
-<div class="sourceCode" id="cb18"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>world_agg3a <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'area_km2'</span>, <span class="st">'geometry'</span>]].dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>world_agg3b <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'name_long'</span>, <span class="st">'geometry'</span>]].dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="kw">lambda</span> x: x.nunique()).rename(columns<span class="op">=</span>{<span class="st">"name_long"</span>: <span class="st">"n"</span>})</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>world_agg <span class="op">=</span> pd.merge(world_agg3a, world_agg3b, on<span class="op">=</span><span class="st">'continent'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>world_agg3a <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'area_km2'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>world_agg3b <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'name_long'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="kw">lambda</span> x: x.nunique()) <span class="op">\</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    .rename(columns<span class="op">=</span>{<span class="st">"name_long"</span>: <span class="st">"n"</span>})</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>world_agg <span class="op">=</span> pd.merge(world_agg3a, world_agg3b, on<span class="op">=</span><span class="st">'continent'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>…</p>
 </section>
@@ -1242,7 +1246,7 @@
 </div>
 <p>Join by <code>"name_long"</code> column…</p>
 <div class="cell" data-execution_count="21">
-<div class="sourceCode" id="cb20"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>world_coffee <span class="op">=</span> pd.merge(world, coffee_data, on <span class="op">=</span> <span class="st">"name_long"</span>, how <span class="op">=</span> <span class="st">"left"</span>)</span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>world_coffee <span class="op">=</span> pd.merge(world, coffee_data, on<span class="op">=</span><span class="st">"name_long"</span>, how<span class="op">=</span><span class="st">"left"</span>)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>world_coffee</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="21">
 <div>
@@ -1339,8 +1343,8 @@
 </div>
 <p>Plot…</p>
 <div class="cell" data-execution_count="22">
-<div class="sourceCode" id="cb21"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color <span class="op">=</span> <span class="st">"white"</span>, edgecolor <span class="op">=</span> <span class="st">"lightgrey"</span>)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>world_coffee.plot(ax <span class="op">=</span> base, column <span class="op">=</span> <span class="st">"coffee_production_2017"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>world_coffee.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">"coffee_production_2017"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="03-attribute-operations_files/figure-html/cell-23-output-1.png" width="429" height="221"></p>
 </div>
@@ -1360,7 +1364,8 @@
 </div>
 <p>Split column…</p>
 <div class="cell" data-execution_count="25">
-<div class="sourceCode" id="cb24"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>world2[[<span class="st">"continent"</span>, <span class="st">"region_un"</span>]] <span class="op">=</span> world2[<span class="st">"con_reg"</span>].<span class="bu">str</span>.split(<span class="st">":"</span>, expand<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>world2[[<span class="st">"continent"</span>, <span class="st">"region_un"</span>]] <span class="op">=</span> world2[<span class="st">"con_reg"</span>] <span class="op">\</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">str</span>.split(<span class="st">":"</span>, expand<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Rename…</p>
 <div class="cell" data-execution_count="26">
