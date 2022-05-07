@@ -15,6 +15,7 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Packages...
 
 ```{python}
+import shapely.geometry
 import geopandas as gpd
 ```
 
@@ -223,10 +224,27 @@ axes[2].set_title("Rotate");
 
 ### Type transformations
 
-...
+Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. The `shapely` package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.geometry.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
+
+Let's create a `"MultiPoint"` to illustrate how geometry casting works on `shapely` geometry objects:
 
 ```{python}
+multipoint = shapely.geometry.MultiPoint([(1,1), (3,3), (3,1)])
+multipoint
+```
 
+A `"LineString"` can be created using `shapely.geometry.LineString` from a `list` of points. Consequently, a `"MultiPoint"` can be converted to a `"LineString"` by extracting the individual points into a `list`, then passing them to `shapely.geometry.LineString`:
+
+```{python}
+linestring = shapely.geometry.LineString(list(multipoint.geoms))
+linestring
+```
+
+A `"Polygon"` can also be created using funtion `shapely.geometry.Polygon`, which acceps accepts a sequence of points. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.geometry.Polygon` is able to complete the last coordinate automatically. Therefore:
+
+```{python}
+polygon = shapely.geometry.Polygon(list(multipoint.geoms))
+polygon
 ```
 
 ## Geometric operations on raster data {#geo-ras}
