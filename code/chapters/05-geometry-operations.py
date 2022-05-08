@@ -203,7 +203,7 @@ linestring
 polygon = shapely.geometry.Polygon(list(multipoint.geoms))
 polygon
 
-# The source `"MultiPoint"` geometry, and the derived `"LineString"` and `"Polygon"` geometries in @fig-casting1.
+# The source `"MultiPoint"` geometry, and the derived `"LineString"` and `"Polygon"` geometries are shown in @fig-casting1. Note that we convert the `shapely` geometries to `GeoSeries` for easier multi-panel plotting:
 
 # +
 #| label: fig-casting1
@@ -220,12 +220,18 @@ axes[2].set_title("Polygon");
 
 # Conversion from multipoint to linestring is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from multipoint or linestring to polygon is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 #
-# The above transformations can be reversed as follows:
+# Our `"LineString"` geometry can be converted bact to a `"MultiPoint"` geometry by passing its coordinates directly to `shapely.geometry.MultiPoint`:
 
-# +
+# 'LineString' -> 'MultiPoint'
+shapely.geometry.MultiPoint(linestring.coords)
+
+# The `"Polygon"` (exterior) coordinates can be passed to `shapely.geometry.MultiPoint` as well:
+
+# 'Polygon' -> 'MultiPoint'
+shapely.geometry.MultiPoint(polygon.exterior.coords)
+
 # ...
-# -
-
+#
 # ## Geometric operations on raster data {#geo-ras}
 #
 # ### Geometric intersections
