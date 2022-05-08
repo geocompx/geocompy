@@ -7,7 +7,10 @@ jobs:
   bookdown:
     name: Convert
     runs-on: ubuntu-latest
-    container: geocompr/geocompr:geocompy
+    # See https://stackoverflow.com/questions/68578638
+    container: 
+      image: geocompr/geocompr:geocompy
+      options: --user root
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -23,3 +26,4 @@ jobs:
           git add *.py
           git commit -m 'Re-build .ipynb and .py files' || echo "No changes to commit"
           git push origin || echo "No changes to commit"
+          
