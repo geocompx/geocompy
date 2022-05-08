@@ -19,9 +19,7 @@
 #| echo: false
 import pandas as pd
 import matplotlib.pyplot as plt
-pd.set_option("display.max_rows", 4)
-pd.set_option("display.max_columns", 6)
-pd.options.display.max_rows = 10
+pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
 plt.rcParams["figure.figsize"] = (5, 5)

@@ -19,15 +19,14 @@
 #| echo: false
 import pandas as pd
 import matplotlib.pyplot as plt
-pd.set_option("display.max_rows", 4)
-pd.set_option("display.max_columns", 6)
-pd.options.display.max_rows = 10
+pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
 plt.rcParams["figure.figsize"] = (5, 5)
 
 # Packages...
 
+import shapely.geometry
 import geopandas as gpd
 
 # Sample data...
@@ -87,23 +86,32 @@ axes[2].set_title("Simplified (w/ topojson)");
 
 # ### Centroids
 #
-# Centroids...
+# Centroid operations identify the center of geographic objects. Like statistical measures of central tendency (including mean and median definitions of 'average'), there are many ways to define the geographic center of an object. All of them create single point representations of more complex vector objects.
+#
+# The most commonly used centroid operation is the geographic centroid. This type of centroid operation (often referred to as 'the centroid') represents the center of mass in a spatial object (think of balancing a plate on your finger). Geographic centroids have many uses, for example to create a simple point representation of complex geometries, or to estimate distances between polygons. Centroids of the geometries in a `GeoSeries` or a `GeoDataFrame` are accessible through the `.centroid` property, as demonstrated in the code below, which generates the geographic centroids of regions in New Zealand and tributaries to the River Seine, illustrated with black points in Figure ....
 
 nz_centroid = nz.centroid
 seine_centroid = seine.centroid
 
-# Point on surface...
+# Sometimes the geographic centroid falls outside the boundaries of their parent objects (think of a doughnut). In such cases point on surface operations can be used to guarantee the point will be in the parent object (e.g., for labeling irregular multipolygon objects such as island states), as illustrated by the red points in Figure .... Notice that these red points always lie on their parent objects. They were created with the `representative_point` method, as follows:
 
 nz_pos = nz.representative_point()
 seine_pos = seine.representative_point()
 
-base = nz.plot(color="white", edgecolor="lightgrey")
-nz_centroid.plot(ax=base, color="None", edgecolor="black")
-nz_pos.plot(ax=base, color="None", edgecolor="red");
+# The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surface:
 
-base = seine.plot(color="grey")
-seine_centroid.plot(ax=base, color="None", edgecolor="black")
-seine_pos.plot(ax=base, color="None", edgecolor="red");
+# +
+#| label: fig-centroid-pnt-on-surface
+#| fig-cap: "Centroids (black) and points on surface red of New Zealand and Seine datasets."
+
+fig, axes = plt.subplots(ncols=2)
+base = nz.plot(ax=axes[0], color="white", edgecolor="lightgrey")
+nz_centroid.plot(ax=axes[0], color="None", edgecolor="black")
+nz_pos.plot(ax=axes[0], color="None", edgecolor="red");
+base = seine.plot(ax=axes[1], color="grey")
+seine_centroid.plot(ax=axes[1], color="None", edgecolor="black")
+seine_pos.plot(ax=axes[1], color="None", edgecolor="red");
+# -
 
 # ### Buffers
 #
@@ -178,7 +186,34 @@ axes[2].set_title("Rotate");
 
 # ### Type transformations
 #
+# Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. The `shapely` package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.geometry.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
+#
+# Let's create a `"MultiPoint"` to illustrate how geometry casting works on `shapely` geometry objects:
+
+multipoint = shapely.geometry.MultiPoint([(1,1), (3,3), (5,1)])
+multipoint
+
+# A `"LineString"` can be created using `shapely.geometry.LineString` from a `list` of points. Consequently, a `"MultiPoint"` can be converted to a `"LineString"` by extracting the individual points into a `list`, then passing them to `shapely.geometry.LineString`:
+
+linestring = shapely.geometry.LineString(list(multipoint.geoms))
+linestring
+
+# A `"Polygon"` can also be created using funtion `shapely.geometry.Polygon`, which acceps accepts a sequence of points. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.geometry.Polygon` is able to complete the last coordinate automatically. Therefore:
+
+polygon = shapely.geometry.Polygon(list(multipoint.geoms))
+polygon
+
+# The source `"MultiPoint"` geometry, and the derived `"LineString"` and `"Polygon"` geometries are shown below:
+#
+# plot...
+#
+# Conversion from multipoint to linestring is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from multipoint or linestring to polygon is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
+#
+# The above transformations can be reversed as follows:
+
+# +
 # ...
+# -
 
 # ## Geometric operations on raster data {#geo-ras}
 #
