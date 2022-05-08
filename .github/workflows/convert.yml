@@ -1,37 +1,22 @@
 on:
   push:
     branches:
-      main
+      [main]
 name: Convert
 jobs:
   bookdown:
-    name: Convert-Book
+    name: Convert
     runs-on: ubuntu-latest
     container: geocompr/geocompr:geocompy
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - name: Push
+      - name: Convert-and-push
         run: |
           pip3 install jupytext
           # Aim: convert .qmd files to .ipynb and .py files, see convert.sh
           ./convert.sh
-    - name: Commit files
-      run: |
-        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git commit -m "Add changes" -a
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
-     - name: Push changes
-       uses: ad-m/github/-push-action@master
-       with:
-         github_token: ${{ secrets.GITHUB_TOKEN }}
-         branch: ${{ github.ref }}
           # git config user.name github-actions
           # git config user.email github-actions@github.com
           # git add *.ipynb
