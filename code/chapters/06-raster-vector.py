@@ -142,8 +142,46 @@ axes[2].set_title("Crop");
 #
 # ## Rasterization
 #
+# ...
+#
 # ## Spatial vectorization
+#
+# Spatial vectorization is the counterpart of rasterization (Section ...), but in the opposite direction. It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons.
+#
+# There are three standard methods to convert a raster to a vector layer:
+#
+# * Raster to polygons
+# * Raster to points
+# * Raster to contours
+#
+# The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon. The second method, raster to points, has the additional step of calculating polygon centroids. The third method, raster to contours, is somewhat unrelated. Let us demonstrate the three in the given order.
+#
 
 src = rasterio.open("data/grain.tif")
 
+# To polygons...
+#
+# FIGURE 6.9: Illustration of vectorization of raster (left) into polygons (dissolve = FALSE; center) and aggregated polygons (dissolve = TRUE; right). 
+#
+
+src = rasterio.open("data/elev.tif")
+
+# To points...
+
+src = rasterio.open("data/dem.tif")
+
+# To contours...
+#
+# ...
+#
+# Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (isotherms) for example. We will use a real-world digital elevation model (DEM) because the artificial raster elev produces parallel lines (task for the reader: verify this and explain why this happens). Contour lines can be created with the terra function as.contour(), which is itself a wrapper around filled.contour(), as demonstrated below (not shown):
+#
+# Contours can also be added to existing plots with functions such as contour(), rasterVis::contourplot() or tmap::tm_iso(). As illustrated in Figure 6.8, isolines can be labelled.
+#
+# The final type of vectorization involves conversion of rasters to polygons. This can be done with terra::as.polygons(), which converts each raster cell into a polygon consisting of five coordinates, all of which are stored in memory (explaining why rasters are often fast compared with vectors!).
+#
+# This is illustrated below by converting the grain object into polygons and subsequently dissolving borders between polygons with the same attribute values (also see the dissolve argument in as.polygons()).
+#
+#
+#
 # ## Exercises
