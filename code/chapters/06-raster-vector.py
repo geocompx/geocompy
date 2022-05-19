@@ -168,7 +168,7 @@ src = rasterio.open("data/elev.tif")
 
 # To points...
 
-src = rasterio.open("data/dem.tif")
+src = rasterio.open("data/elev.tif")
 
 # To contours...
 #
