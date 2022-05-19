@@ -77,6 +77,7 @@ else:
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall(".")
 
+
 gdf = gpd.read_file("data/world.gpkg")
 
 # The result is a `GeoDataFrame`:
