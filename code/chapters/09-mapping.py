@@ -12,24 +12,29 @@
 #     name: python3
 # ---
 
-# # Making maps with Python {#adv-map}
+# # Making maps with Python {#map-making}
 #
 # ## Introduction
 #
+# Geopandas explore has been used in previous chapters.
+#
+# <!-- Decision of whether to use static or interactive. -->
+# <!-- Flow diagram? -->
 #
 # ## Static maps
 #
-# ### tmap basics
-# ### Map objects
-# ### Aesthetics
-# ### Color settings
-# ### Layouts
 # ### Faceted maps
-# ### Inset maps
+# ### Exporting maps as images
 #
-# ## Animated maps
+# <!-- ## Animated maps -->
 # ## Interactive maps
-# ## Mapping applications
-# ## Other mapping packages
+#
+# - When are interactive maps useful
+#
+# ### Publishing interactive maps
+#
+# <!-- ## Mapping applications
+#
+# Streamlit? -->
 #
 # ## Exercises
