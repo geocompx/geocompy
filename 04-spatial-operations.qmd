@@ -25,6 +25,7 @@ import numpy as np
 import geopandas as gpd
 import rasterio
 from rasterio.plot import show
+import scipy.ndimage
 ```
 
 Let us load the sample data for this chapter:
@@ -103,29 +104,45 @@ non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
 
 ...
 
+
+
 ### DE-9IM strings
 
 ...
+
+
 
 ### Spatial joining
 
 ...
 
+
+
 ### Non-overlapping joins
 
 ...
+
+
+
 
 ### Spatial aggregation
 
 ...
 
+
+
 ### Joining incongruent layers
 
 ...
 
+
+
 ### Distance relations
 
 ...
+
+
+
 
 ## Spatial operations on raster data {#spatial-ras}
 
@@ -148,7 +165,7 @@ Raster objects can also be subset with another raster object, as demonstrated in
 Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in Figure .... To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster. For example, let us read the `elev.tif` raster array: 
 
 ```{python}
-elev = src_elev.read()
+elev = src_elev.read(1)
 elev
 ```
 
@@ -189,10 +206,23 @@ elev
 
 These operations are in fact Boolean local operations, since we compare cell-wise two rasters. The next subsection explores these and related operations in more detail.
 
-
 ### Map algebra
 
-...
+The term ‘map algebra’ was coined in the late 1970s to describe a “set of conventions, capabilities, and techniques” for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994). In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.
+
+Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage “raster is faster but vector is corrector”. The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the header). For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
+
+This is the way that map algebra works with the terra package. First, the headers of the raster datasets are queried and (in cases where map algebra operations work on more than one dataset) checked to ensure the datasets are compatible. Second, map algebra retains the so-called one-to-one locational correspondence, meaning that cells cannot move. This differs from matrix algebra, in which values change position, for example when multiplying or dividing matrices.
+
+Map algebra (or cartographic modeling with raster data) divides raster operations into four subclasses (Tomlin 1990), with each working on one or several grids simultaneously:
+
+* Local or per-cell operations
+* Focal or neighborhood operations. Most often the output cell value is the result of a 3 x 3 input cell block
+* Zonal operations are similar to focal operations, but the surrounding pixel grid on which new values are computed can have irregular sizes and shapes
+* Global or per-raster operations; that means the output cell derives its value potentially from one or several entire rasters
+
+This typology classifies map algebra operations by the number of cells used for each pixel processing step and the type of the output. For the sake of completeness, we should mention that raster operations can also be classified by discipline such as terrain, hydrological analysis, or image classification. The following sections explain how each type of map algebra operations can be used, with reference to worked examples.
+
 
 ### Local operations
 
@@ -200,7 +230,7 @@ These operations are in fact Boolean local operations, since we compare cell-wis
 First, we need to read raster values:
 
 ```{python}
-elev = src_elev.read()
+elev = src_elev.read(1)
 elev
 ```
 
@@ -245,7 +275,7 @@ axes[1].set_title("Reclassified");
 
 The calculation of the normalized difference vegetation index (NDVI) is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between -1 and 1; positive values indicate the presence of living plants (mostly > 0.2). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula:
 
-$NDVI=\frac{NIR+Red} {NIR-Red}$
+$$NDVI=\frac{NIR+Red} {NIR-Red}$$
 
 Let's calculate NDVI for the multispectral satellite file of the Zion National Park.
 
@@ -285,7 +315,70 @@ axes[1].set_title("NDVI");
 
 ### Focal operations
 
-...
+While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. The neighborhood (also named kernel, filter or moving window) under consideration is typically of size 3-by-3 cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (Figure ...). Other names for this operation are spatial filtering and convolution (Burrough, McDonnell, and Lloyd 2015).
+
+In Python, the `scipy.ndimage` package has a comprehensive collection of [functions](https://docs.scipy.org/doc/scipy/reference/ndimage.html#filters) to perform filtering of `numpy` arrays, such as:
+
+* `minimum_filter`
+* `maximum_filter`
+* `uniform_filter` (i.e., mean filter)
+* `median_filter`
+etc.
+
+In this group of functions, we define the shape of the moving window with either one of:
+
+* `size`—a single number or tuple, implying a filter of those dimensions
+* `footprint`—a boolean array, representing both the window shape and the identity of elements being included
+
+In addition to specific built-in filters, 
+
+* `convolve` applies the sum function after multiplying by a custom `weights` array
+* `generic_filter` makes it possible to pass any custom function, where the user can specify any type of custom window-based calculatio.
+
+For example, here we apply the minimum filter with window size of `3` on `elev`: 
+
+```{python}
+elev
+```
+
+```{python}
+elev_min = scipy.ndimage.minimum_filter(elev, size=3)
+elev_min
+```
+
+Special care should be given to the edge pixels. How should they be calculated? `scipy.ndimage` gives several options through the `mode` parameter:
+
+* `reflect` (the default)
+* `constant`
+* `nearest`
+* `mirror`
+* `wrap`
+
+Sometimes artificially extending raster edges is considered unsuitable. In other words, we may wish the resulting raster to contain pixel values with "complete" windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations). There is no specific option *not* to extent edges in `scipy.ndimage`. However, to get the same effect, the edges of the filtered array can be assigned with `nan`, in a number of rows and columns according to filter size. For example, when using a filter of `size=3`, the first "layer" of pixels may be assigned with `nan`, reflecting the fact that these pixels have incomplete 3*3 neighborhoods:
+
+```{python}
+elev_min[:, [0, -1]] = np.nan
+elev_min[[0, -1], :] = np.nan
+elev_min
+```
+
+We can quickly check if the output meets our expectations. In our example, the minimum value has to be always the upper left corner of the moving window (remember we have created the input raster by row-wise incrementing the cell values by one starting at the upper left corner). 
+
+Focal functions or filters play a dominant role in image processing. Low-pass or smoothing filters use the mean function to remove extremes. In the case of categorical data, we can replace the mean with the mode, which is the most common value. By contrast, high-pass filters accentuate features. The line detection Laplace and Sobel filters might serve as an example here. 
+
+Terrain processing, the calculation of topographic characteristics such as slope, aspect and flow directions, relies on focal functions. The `TerrainAttribute` function from package `richdem` can be used to calculate common [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute), specified through the `attrib` argument, namely:
+
+* `slope_riserun` 	Horn (1981) doi: 10.1109/PROC.1981.11918
+* `slope_percentage` 	Horn (1981) doi: 10.1109/PROC.1981.11918
+* `slope_degrees` 	Horn (1981) doi: 10.1109/PROC.1981.11918
+* `slope_radians` 	Horn (1981) doi: 10.1109/PROC.1981.11918
+* `aspect` 	Horn (1981) doi: 10.1109/PROC.1981.11918
+* `curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
+* `planform_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
+* `profile_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
+
+
+
 
 ### Zonal operations
 
