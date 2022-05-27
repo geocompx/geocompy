@@ -265,7 +265,8 @@
 <div class="sourceCode" id="cb1"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.plot <span class="im">import</span> show</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.plot <span class="im">import</span> show</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.ndimage</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let us load the sample data for this chapter:</p>
 <div class="cell" data-execution_count="4">
@@ -366,15 +367,15 @@
 </div>
 <p>Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in Figure …. To do that, we “erase” the values in the array of one raster, according to another corresponding “mask” raster. For example, let us read the <code>elev.tif</code> raster array:</p>
 <div class="cell" data-execution_count="12">
-<div class="sourceCode" id="cb11"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read()</span>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="12">
-<pre><code>array([[[ 1.,  2.,  3.,  4.,  5.,  6.],
-        [ 7.,  8.,  9., 10., 11., 12.],
-        [13., 14., 15., 16., 17., 18.],
-        [19., 20., 21., 22., 23., 24.],
-        [25., 26., 27., 28., 29., 30.],
-        [31., 32., 33., 34., 35., 36.]]], dtype=float32)</code></pre>
+<pre><code>array([[ 1.,  2.,  3.,  4.,  5.,  6.],
+       [ 7.,  8.,  9., 10., 11., 12.],
+       [13., 14., 15., 16., 17., 18.],
+       [19., 20., 21., 22., 23., 24.],
+       [25., 26., 27., 28., 29., 30.],
+       [31., 32., 33., 34., 35., 36.]], dtype=float32)</code></pre>
 </div>
 </div>
 <p>and create a correspinding random mask:</p>
@@ -383,12 +384,12 @@
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> np.random.choice([<span class="va">True</span>, <span class="va">False</span>], elev.shape)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>mask</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="13">
-<pre><code>array([[[False, False,  True,  True, False, False],
-        [False, False, False,  True,  True, False],
-        [ True, False, False,  True,  True, False],
-        [ True,  True,  True, False,  True,  True],
-        [False,  True,  True,  True, False,  True],
-        [ True,  True, False, False, False, False]]])</code></pre>
+<pre><code>array([[False, False,  True,  True, False, False],
+       [False, False, False,  True,  True, False],
+       [ True, False, False,  True,  True, False],
+       [ True,  True,  True, False,  True,  True],
+       [False,  True,  True,  True, False,  True],
+       [ True,  True, False, False, False, False]])</code></pre>
 </div>
 </div>
 <p>In the code chunk above, we have created a mask object called <code>mask</code> with values randomly assigned to <code>True</code> and <code>False</code>. Next, we want to keep those values of <code>elev</code> which are <code>False</code> in <code>mask</code> (i.e., they are <em>not</em> masked). In other words, we want to mask <code>elev</code> with <code>mask</code>. The result is stored in a copy named <code>elev1</code>:</p>
@@ -397,12 +398,12 @@
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>elev1[mask] <span class="op">=</span> np.nan</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>elev1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="14">
-<pre><code>array([[[ 1.,  2., nan, nan,  5.,  6.],
-        [ 7.,  8.,  9., nan, nan, 12.],
-        [nan, 14., 15., nan, nan, 18.],
-        [nan, nan, nan, 22., nan, nan],
-        [25., nan, nan, nan, 29., nan],
-        [nan, nan, 33., 34., 35., 36.]]], dtype=float32)</code></pre>
+<pre><code>array([[ 1.,  2., nan, nan,  5.,  6.],
+       [ 7.,  8.,  9., nan, nan, 12.],
+       [nan, 14., 15., nan, nan, 18.],
+       [nan, nan, nan, 22., nan, nan],
+       [25., nan, nan, nan, 29., nan],
+       [nan, nan, 33., 34., 35., 36.]], dtype=float32)</code></pre>
 </div>
 </div>
 <p>The result is shown in figure…</p>
@@ -423,45 +424,55 @@
 <div class="sourceCode" id="cb18"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>elev[elev <span class="op">&lt;</span> <span class="dv">20</span>] <span class="op">=</span> np.nan</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="16">
-<pre><code>array([[[nan, nan, nan, nan, nan, nan],
-        [nan, nan, nan, nan, nan, nan],
-        [nan, nan, nan, nan, nan, nan],
-        [nan, 20., 21., 22., 23., 24.],
-        [25., 26., 27., 28., 29., 30.],
-        [31., 32., 33., 34., 35., 36.]]], dtype=float32)</code></pre>
+<pre><code>array([[nan, nan, nan, nan, nan, nan],
+       [nan, nan, nan, nan, nan, nan],
+       [nan, nan, nan, nan, nan, nan],
+       [nan, 20., 21., 22., 23., 24.],
+       [25., 26., 27., 28., 29., 30.],
+       [31., 32., 33., 34., 35., 36.]], dtype=float32)</code></pre>
 </div>
 </div>
 <p>These operations are in fact Boolean local operations, since we compare cell-wise two rasters. The next subsection explores these and related operations in more detail.</p>
 </section>
 <section id="map-algebra" class="level3" data-number="4.4.2">
 <h3 data-number="4.4.2" class="anchored" data-anchor-id="map-algebra"><span class="header-section-number">4.4.2</span> Map algebra</h3>
-<p>…</p>
+<p>The term ‘map algebra’ was coined in the late 1970s to describe a “set of conventions, capabilities, and techniques” for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994). In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.</p>
+<p>Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage “raster is faster but vector is corrector”. The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the header). For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.</p>
+<p>This is the way that map algebra works with the terra package. First, the headers of the raster datasets are queried and (in cases where map algebra operations work on more than one dataset) checked to ensure the datasets are compatible. Second, map algebra retains the so-called one-to-one locational correspondence, meaning that cells cannot move. This differs from matrix algebra, in which values change position, for example when multiplying or dividing matrices.</p>
+<p>Map algebra (or cartographic modeling with raster data) divides raster operations into four subclasses (Tomlin 1990), with each working on one or several grids simultaneously:</p>
+<ul>
+<li>Local or per-cell operations</li>
+<li>Focal or neighborhood operations. Most often the output cell value is the result of a 3 x 3 input cell block</li>
+<li>Zonal operations are similar to focal operations, but the surrounding pixel grid on which new values are computed can have irregular sizes and shapes</li>
+<li>Global or per-raster operations; that means the output cell derives its value potentially from one or several entire rasters</li>
+</ul>
+<p>This typology classifies map algebra operations by the number of cells used for each pixel processing step and the type of the output. For the sake of completeness, we should mention that raster operations can also be classified by discipline such as terrain, hydrological analysis, or image classification. The following sections explain how each type of map algebra operations can be used, with reference to worked examples.</p>
 </section>
 <section id="local-operations" class="level3" data-number="4.4.3">
 <h3 data-number="4.4.3" class="anchored" data-anchor-id="local-operations"><span class="header-section-number">4.4.3</span> Local operations</h3>
 <p>First, we need to read raster values:</p>
 <div class="cell" data-execution_count="17">
-<div class="sourceCode" id="cb20"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read()</span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="17">
-<pre><code>array([[[ 1.,  2.,  3.,  4.,  5.,  6.],
-        [ 7.,  8.,  9., 10., 11., 12.],
-        [13., 14., 15., 16., 17., 18.],
-        [19., 20., 21., 22., 23., 24.],
-        [25., 26., 27., 28., 29., 30.],
-        [31., 32., 33., 34., 35., 36.]]], dtype=float32)</code></pre>
+<pre><code>array([[ 1.,  2.,  3.,  4.,  5.,  6.],
+       [ 7.,  8.,  9., 10., 11., 12.],
+       [13., 14., 15., 16., 17., 18.],
+       [19., 20., 21., 22., 23., 24.],
+       [25., 26., 27., 28., 29., 30.],
+       [31., 32., 33., 34., 35., 36.]], dtype=float32)</code></pre>
 </div>
 </div>
 <p>Now, any element-wise array operation can be applied. For example:</p>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode" id="cb22"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">+</span> elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display" data-execution_count="18">
-<pre><code>array([[[ 2.,  4.,  6.,  8., 10., 12.],
-        [14., 16., 18., 20., 22., 24.],
-        [26., 28., 30., 32., 34., 36.],
-        [38., 40., 42., 44., 46., 48.],
-        [50., 52., 54., 56., 58., 60.],
-        [62., 64., 66., 68., 70., 72.]]], dtype=float32)</code></pre>
+<pre><code>array([[ 2.,  4.,  6.,  8., 10., 12.],
+       [14., 16., 18., 20., 22., 24.],
+       [26., 28., 30., 32., 34., 36.],
+       [38., 40., 42., 44., 46., 48.],
+       [50., 52., 54., 56., 58., 60.],
+       [62., 64., 66., 68., 70., 72.]], dtype=float32)</code></pre>
 </div>
 </div>
 <p>Here are few more examples:</p>
@@ -498,7 +509,7 @@
 </div>
 </div>
 <p>The calculation of the normalized difference vegetation index (NDVI) is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between -1 and 1; positive values indicate the presence of living plants (mostly &gt; 0.2). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula:</p>
-<p><span class="math inline">\(NDVI=\frac{NIR+Red} {NIR-Red}\)</span></p>
+<p><span class="math display">\[NDVI=\frac{NIR+Red} {NIR-Red}\]</span></p>
 <p>Let’s calculate NDVI for the multispectral satellite file of the Zion National Park.</p>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode" id="cb27"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>multi_rast <span class="op">=</span> src_multi_rast.read()</span>
@@ -533,7 +544,83 @@
 </section>
 <section id="focal-operations" class="level3" data-number="4.4.4">
 <h3 data-number="4.4.4" class="anchored" data-anchor-id="focal-operations"><span class="header-section-number">4.4.4</span> Focal operations</h3>
-<p>…</p>
+<p>While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. The neighborhood (also named kernel, filter or moving window) under consideration is typically of size 3-by-3 cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (Figure …). Other names for this operation are spatial filtering and convolution (Burrough, McDonnell, and Lloyd 2015).</p>
+<p>In Python, the <code>scipy.ndimage</code> package has a comprehensive collection of <a href="https://docs.scipy.org/doc/scipy/reference/ndimage.html#filters">functions</a> to perform filtering of <code>numpy</code> arrays, such as:</p>
+<ul>
+<li><code>minimum_filter</code></li>
+<li><code>maximum_filter</code></li>
+<li><code>uniform_filter</code> (i.e., mean filter)</li>
+<li><code>median_filter</code> etc.</li>
+</ul>
+<p>In this group of functions, we define the shape of the moving window with either one of:</p>
+<ul>
+<li><code>size</code>—a single number or tuple, implying a filter of those dimensions</li>
+<li><code>footprint</code>—a boolean array, representing both the window shape and the identity of elements being included</li>
+</ul>
+<p>In addition to specific built-in filters,</p>
+<ul>
+<li><code>convolve</code> applies the sum function after multiplying by a custom <code>weights</code> array</li>
+<li><code>generic_filter</code> makes it possible to pass any custom function, where the user can specify any type of custom window-based calculatio.</li>
+</ul>
+<p>For example, here we apply the minimum filter with window size of <code>3</code> on <code>elev</code>:</p>
+<div class="cell" data-execution_count="26">
+<div class="sourceCode" id="cb31"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="26">
+<pre><code>array([[ 1.,  2.,  3.,  4.,  5.,  6.],
+       [ 7.,  8.,  9., 10., 11., 12.],
+       [13., 14., 15., 16., 17., 18.],
+       [19., 20., 21., 22., 23., 24.],
+       [25., 26., 27., 28., 29., 30.],
+       [31., 32., 33., 34., 35., 36.]], dtype=float32)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="27">
+<div class="sourceCode" id="cb33"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>elev_min <span class="op">=</span> scipy.ndimage.minimum_filter(elev, size<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>elev_min</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="27">
+<pre><code>array([[ 1.,  1.,  2.,  3.,  4.,  5.],
+       [ 1.,  1.,  2.,  3.,  4.,  5.],
+       [ 7.,  7.,  8.,  9., 10., 11.],
+       [13., 13., 14., 15., 16., 17.],
+       [19., 19., 20., 21., 22., 23.],
+       [25., 25., 26., 27., 28., 29.]], dtype=float32)</code></pre>
+</div>
+</div>
+<p>Special care should be given to the edge pixels. How should they be calculated? <code>scipy.ndimage</code> gives several options through the <code>mode</code> parameter:</p>
+<ul>
+<li><code>reflect</code> (the default)</li>
+<li><code>constant</code></li>
+<li><code>nearest</code></li>
+<li><code>mirror</code></li>
+<li><code>wrap</code></li>
+</ul>
+<p>Sometimes artificially extending raster edges is considered unsuitable. In other words, we may wish the resulting raster to contain pixel values with “complete” windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations). There is no specific option <em>not</em> to extent edges in <code>scipy.ndimage</code>. However, to get the same effect, the edges of the filtered array can be assigned with <code>nan</code>, in a number of rows and columns according to filter size. For example, when using a filter of <code>size=3</code>, the first “layer” of pixels may be assigned with <code>nan</code>, reflecting the fact that these pixels have incomplete 3*3 neighborhoods:</p>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode" id="cb35"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>elev_min[:, [<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>]] <span class="op">=</span> np.nan</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>elev_min[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>elev_min</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="28">
+<pre><code>array([[nan, nan, nan, nan, nan, nan],
+       [nan,  1.,  2.,  3.,  4., nan],
+       [nan,  7.,  8.,  9., 10., nan],
+       [nan, 13., 14., 15., 16., nan],
+       [nan, 19., 20., 21., 22., nan],
+       [nan, nan, nan, nan, nan, nan]], dtype=float32)</code></pre>
+</div>
+</div>
+<p>We can quickly check if the output meets our expectations. In our example, the minimum value has to be always the upper left corner of the moving window (remember we have created the input raster by row-wise incrementing the cell values by one starting at the upper left corner).</p>
+<p>Focal functions or filters play a dominant role in image processing. Low-pass or smoothing filters use the mean function to remove extremes. In the case of categorical data, we can replace the mean with the mode, which is the most common value. By contrast, high-pass filters accentuate features. The line detection Laplace and Sobel filters might serve as an example here.</p>
+<p>Terrain processing, the calculation of topographic characteristics such as slope, aspect and flow directions, relies on focal functions. The <code>TerrainAttribute</code> function from package <code>richdem</code> can be used to calculate common <a href="https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute">metrics</a>, specified through the <code>attrib</code> argument, namely:</p>
+<ul>
+<li><code>slope_riserun</code> Horn (1981) doi: 10.1109/PROC.1981.11918</li>
+<li><code>slope_percentage</code> Horn (1981) doi: 10.1109/PROC.1981.11918</li>
+<li><code>slope_degrees</code> Horn (1981) doi: 10.1109/PROC.1981.11918</li>
+<li><code>slope_radians</code> Horn (1981) doi: 10.1109/PROC.1981.11918</li>
+<li><code>aspect</code> Horn (1981) doi: 10.1109/PROC.1981.11918</li>
+<li><code>curvature</code> Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107</li>
+<li><code>planform_curvature</code> Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107</li>
+<li><code>profile_curvature</code> Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107</li>
+</ul>
 </section>
 <section id="zonal-operations" class="level3" data-number="4.4.5">
 <h3 data-number="4.4.5" class="anchored" data-anchor-id="zonal-operations"><span class="header-section-number">4.4.5</span> Zonal operations</h3>
