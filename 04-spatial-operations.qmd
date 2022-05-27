@@ -1,3 +1,7 @@
+---
+jupyter: python3
+---
+
 # Spatial data operations {#spatial-operations}
 
 ## Prerequisites
@@ -127,7 +131,64 @@ non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
 
 ### Spatial subsetting
 
+The previous chapter (Section ...) demonstrated how to retrieve values associated with specific cell IDs or row and column combinations. Raster objects can also be extracted by location (coordinates) and other spatial objects. To use coordinates for subsetting, we can use the `.sample` method of a `rasterio` file connection object, combined with a list of coordinate tuples. The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of 0.1, 0.1 in `elev`. The resutned object is a *generator*; in case we want all values at once we can apply `list`. The result is `16`:
+
+```{python}
+list(src_elev.sample([(0.1, 0.1)]))
+```
+
+Raster objects can also be subset with another raster object, as demonstrated in the code chunk below:
+
 ...
+
+```{python}
+# ...
+```
+
+Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in Figure .... To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster. For example, let us read the `elev.tif` raster array: 
+
+```{python}
+elev = src_elev.read()
+elev
+```
+
+and create a correspinding random mask:
+
+```{python}
+np.random.seed(1)
+mask = np.random.choice([True, False], elev.shape)
+mask
+```
+
+In the code chunk above, we have created a mask object called `mask` with values randomly assigned to `True` and `False`. Next, we want to keep those values of `elev` which are `False` in `mask` (i.e., they are *not* masked). In other words, we want to mask `elev` with `mask`. The result is stored in a copy named `elev1`:
+
+```{python}
+elev1 = elev.copy()
+elev1[mask] = np.nan
+elev1
+```
+
+The result is shown in figure...
+
+```{python}
+fig, axes = plt.subplots(ncols=3, figsize=(9,5))
+show(elev, ax=axes[0])
+show(mask, ax=axes[1])
+show(elev1, ax=axes[2])
+axes[0].set_title("Original")
+axes[1].set_title("Mask")
+axes[2].set_title("Result");
+```
+
+The above approach can be also used to replace some values (e.g., expected to be wrong) with `nan`:
+
+```{python}
+elev[elev < 20] = np.nan
+elev
+```
+
+These operations are in fact Boolean local operations, since we compare cell-wise two rasters. The next subsection explores these and related operations in more detail.
+
 
 ### Map algebra
 
@@ -243,3 +304,4 @@ axes[1].set_title("NDVI");
 ...
 
 ## Exercises
+
