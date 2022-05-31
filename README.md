@@ -34,6 +34,12 @@ Activate the new environment with
 conda activate geocompy # the default name of the environment
 ```
 
+Update all packages to the latest versions as follows:
+
+```sh
+conda update --all
+```
+
 Reproduce a live preview of the book with the following command, which reqires that you have installed [quarto](https://quarto.org/):
 
 ```sh

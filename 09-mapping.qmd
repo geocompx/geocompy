@@ -10,11 +10,26 @@
 <!-- Flow diagram? -->
 
 ```{python}
+#| echo: false
+#| label: getdata
+from pathlib import Path
+data_path = Path("data")
+if data_path.is_dir():
+  pass
+  # print("path exists") # directory exists
+else:
+  print("Attempting to get and unzip the data")
+  import requests, zipfile, io
+  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/data.zip")
+  z = zipfile.ZipFile(io.BytesIO(r.content))
+  z.extractall(".")
+```
+
+```{python}
 import matplotlib as mpl
 import geopandas as gpd
 nz = gpd.read_file("data/nz.gpkg") 
 ```
-
 
 ## Static maps
 
@@ -23,8 +38,10 @@ nz = gpd.read_file("data/nz.gpkg")
 - Scary matplotlib code here...
 
 ```{python}
-nz.plot(color="grey")
-nz.plot(color="none", edgecolor="blue")
+#| layout-ncol: 3
+nz.plot(color="grey");
+nz.plot(color="none", edgecolor="blue");
+nz.plot(color="grey", edgecolor="blue");
 ```
 
 <!-- # Add fill layer to nz shape
