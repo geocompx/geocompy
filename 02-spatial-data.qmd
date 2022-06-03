@@ -22,6 +22,25 @@ We focus on the two most comprehensive and fundamental packages, namely:
 
 ## Vector data
 
+The geographic vector data model is based on points located within a coordinate reference system (CRS). Points can represent self-standing features (e.g., the location of a bus stop) or they can be linked together to form more complex geometries such as lines and polygons. Most point geometries contain only two dimensions (3-dimensional CRSs contain an additional $z$ value, typically representing height above sea level).
+
+In this system, London, for example, can be represented by the coordinates `(-0.1, 51.5)`. This means that its location is -0.1 degrees east and 51.5 degrees north of the origin. The origin in this case is at 0 degrees longitude (the Prime Meridian) and 0 degree latitude (the Equator) in a geographic ('lon/lat') CRS (Figure ..., left panel). The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000, 180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS. This can be verified visually: slightly more than 5 'boxes'---square areas bounded by the gray grid lines 100 $km$ in width---separate the point representing London from the origin (Figure 2.1, right panel).
+
+The location of National Grid's origin, in the sea beyond South West Peninsular, ensures that most locations in the UK have positive Easting and Northing values. There is more to CRSs, as described in Sections ... and ... but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing distance from an origin, usually in $x$ then $y$ dimensions.
+
+...
+FIGURE ...: Illustration of vector (point) data in which location of London (the red X) is represented with reference to an origin (the blue circle). The left plot represents a geographic CRS with an origin at 0° longitude and latitude. The right plot represents a projected CRS with an origin located in the sea west of the South West Peninsula.
+
+`geopandas` provides classes for geographic vector data and a consistent command-line interface to important low level libraries for geocomputation:
+
+*  GDAL, for reading, writing and manipulating a wide range of geographic data formats, covered in Chapter 8
+*  PROJ, a powerful library for coordinate system transformations, which underlies the content covered in Chapter 7
+*  GEOS, a planar geometry engine for operations such as calculating buffers and centroids on data with a projected CRS, covered in Chapter 5
+
+Nowadays, we take it for granted, however, only the tight integration with different geographic libraries makes reproducible geocomputation possible in the first place.
+
+This section introduces `geopandas` classes in preparation for subsequent chapters (Chapters 5 and 8 cover the GEOS and GDAL interface, respectively).
+
 ### Introduction
 
 When introducing the packages for working with vector layers in Python, we are going to go from the complex class (vector layer), through the intermediate (geometry column), to the simple (geometry).
@@ -476,7 +495,17 @@ src.crs
 
 ## Units
 
-...
+An important feature of CRSs is that they contain information about spatial units. Clearly, it is vital to know whether a house's measurements are in feet or meters, and the same applies to maps. It is good cartographic practice to add a scale bar or some other distance indicator onto maps to demonstrate the relationship between distances on the page or screen and distances on the ground. Likewise, it is important to formally specify the units in which the geometry data or cells are measured to provide context, and ensure that subsequent calculations are done in context.
+
+Python spatial data structures in `geopandas` and `rasterio` do not natively support the concept of measurement. The coordinates of a vector layer or a raster are plain numbers, referring to an arbitrary plane. For example, according to the `.transform` matrix of `srtm.tif` we can see that the raster resolution is `0.000833` and that the CRS is WGS84 (EPSG: `4326`). We may know (or can find out) that the units of WGS84 are decimal degrees. However, that information is not encoded in any numeric calculation.
+
+```{python}
+src.meta
+```
+
+Consequently, we need to be aware of the CRS units---typically decimal degrees in a geographic CRS, or $m$ in a projected CRS, but there are exceptions---we are working with. Geometric calculations such as length, area, or distance, return plain numbers, in the same units of the CRS (such as $m$ or $m^2$). It is up to the user to figure out which units the result is given in, and to treat the result accordingly. For example, if the area output was in $m$ and we need the result in $km^2$, then we need to divide the result by $1000^2$. 
+
+
 
 ## Exercises
 
