@@ -20,6 +20,17 @@ We focus on the two most comprehensive and fundamental packages, namely:
 * **rasterio** --- a spatial-oriented package, focused on "simple" raster formats (such as GeoTIFF), representing a raster using a combination of a `numpy` array, and a metadata object (`dict`) specifying the spatial referencing of the array
 * **xarray** --- A general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster format (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`
 
+This chapter will provide brief explanations of the fundamental geographic data models: vector and raster. We will introduce the theory behind each data model and the disciplines in which they predominate, before demonstrating their implementation in Python.
+
+The vector data model represents the world using points, lines and polygons. These have discrete, well-defined borders, meaning that vector datasets usually have a high level of precision (but not necessarily accuracy as we will see in Section ...). The raster data model divides the surface up into cells of constant size. Raster datasets are the basis of background images used in web-mapping and have been a vital source of geographic data since the origins of aerial photography and satellite-based remote sensing devices. Rasters aggregate spatially specific features to a given resolution, meaning that they are consistent over space and scalable (many worldwide raster datasets are available).
+
+Which to use? The answer likely depends on your domain of application:
+
+* Vector data tends to dominate the social sciences because human settlements tend to have discrete borders
+* Raster dominates many environmental sciences because of the reliance on remote sensing data
+
+There is much overlap in some fields and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data. Furthermore, it is possible to convert between the two forms (see Section ...). Whether your work involves more use of vector or raster datasets, it is worth understanding the underlying data model before using them, as discussed in subsequent chapters. This book mostly uses `geopandas` and `rasterio` packages to work with vector data and raster datasets, respectively.
+
 ## Vector data
 
 The geographic vector data model is based on points located within a coordinate reference system (CRS). Points can represent self-standing features (e.g., the location of a bus stop) or they can be linked together to form more complex geometries such as lines and polygons. Most point geometries contain only two dimensions (3-dimensional CRSs contain an additional $z$ value, typically representing height above sea level).
@@ -170,6 +181,50 @@ gdf["geometry"].type.value_counts()
 ```
 
 In this case, we see that the `gdf` layer contains only `"MultiPolygon"` geometries.
+
+### The Simple Features standard?
+
+Geometries are the basic building blocks of vector layers. Although the Simple Features standard defines about 20 types of geometries, we will focus on the seven most commonly used types: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` and `GEOMETRYCOLLECTION`. Find the whole list of possible feature types in the PostGIS manual.
+
+Generally, well-known binary (WKB) or well-known text (WKT) are the standard encoding for simple feature geometries. WKB representations are usually hexadecimal strings easily readable for computers. This is why GIS and spatial databases use WKB to transfer and store geometry objects. WKT, on the other hand, is a human-readable text markup description of simple features. Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
+
+The basis for each geometry type is the point. A point is simply a coordinate in 2D, 3D or 4D space such as (see left panel in Figure ...):
+
+```text
+POINT (5 2)
+```
+
+A linestring is a sequence of points with a straight line connecting the points, for example (see middle panel in Figure ...):
+
+```text
+LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)
+```
+
+A polygon is a sequence of points that form a closed, non-intersecting ring. Closed means that the first and the last point of a polygon have the same coordinates (see right panel in Figure ...).
+
+```text
+POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5))
+```
+
+Illustration of point, linestring and polygon geometries...
+FIGURE ...: Illustration of point, linestring and polygon geometries...
+
+So far we have created geometries with only one geometric entity per feature. However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type:
+
+```text
+MULTIPOINT (5 2, 1 3, 3 4, 3 2)
+MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))
+MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5), (0 2, 1 2, 1 3, 0 3, 0 2)))
+```
+
+Illustration of multi* geometries...
+FIGURE ...: Illustration of multi* geometries...
+
+Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings (see Figure ...):
+
+```text
+GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
+```
 
 ### Geometries
 
@@ -504,8 +559,6 @@ src.meta
 ```
 
 Consequently, we need to be aware of the CRS units---typically decimal degrees in a geographic CRS, or $m$ in a projected CRS, but there are exceptions---we are working with. Geometric calculations such as length, area, or distance, return plain numbers, in the same units of the CRS (such as $m$ or $m^2$). It is up to the user to figure out which units the result is given in, and to treat the result accordingly. For example, if the area output was in $m$ and we need the result in $km^2$, then we need to divide the result by $1000^2$. 
-
-
 
 ## Exercises
 
