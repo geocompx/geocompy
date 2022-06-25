@@ -21,11 +21,13 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Packages...
 
 ```{python}
-import numpy as np
 import geopandas as gpd
+import numpy as np
+import os
 import rasterio
-from rasterio.plot import show
 import scipy.ndimage
+
+from rasterio.plot import show
 ```
 
 Let us load the sample data for this chapter:
@@ -37,9 +39,7 @@ data_path = Path("data")
 file_path = Path("data/landsat.tif")
 if not file_path.exists():
   if not data_path.is_dir():
-     os
      os.mkdir(data_path)
-  import os
   print("Attempting to get the data")
   import requests
   r = requests.get("https://github.com/geocompr/py/releases/download/0.1/landsat.tif")  
@@ -71,8 +71,7 @@ Spatial subsetting...
 
 ```{python}
 canterbury = nz[nz["Name"] == "Canterbury"]
-sel = nz_height.intersects(canterbury["geometry"].iloc[0])
-canterbury_height = nz_height[sel]
+canterbury_height = nz_height.overlay(canterbury, how='intersection')
 ```
 
 Plot...
@@ -85,8 +84,7 @@ canterbury_height.plot(ax=base, color="None", edgecolor="red");
 Spatial subsetting 2...
 
 ```{python}
-sel = nz_height.disjoint(canterbury["geometry"].iloc[0])
-non_canterbury_height = nz_height[sel]
+non_canterbury_height = nz_height.overlay(canterbury, how='difference')
 ```
 
 Plot...
