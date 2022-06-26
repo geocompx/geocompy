@@ -102,7 +102,7 @@ DF1 = pd.read_csv(BUFFER, low_memory=False)
 DATA = DF1[['Longitude', 'Latitude']].values
 POINTS = gpd.GeoSeries.from_xy(*DATA.T, crs='WGS84')
 NaPTAN = gpd.GeoDataFrame(data=DF1, geometry=POINTS)
-NaPTAN = NaPTAN.to_crs(CRS).dropna(how='all', axis=1)
+NaPTAN = NaPTAN.dropna(how='all', axis=1)
 
 NaPTAN['TIPLOC'] = ''
 
@@ -141,7 +141,7 @@ FIELDS = ['ATCOCode', 'CommonName', 'ShortCommonName', 'LocalityName',
 STATIONS = STATIONS[FIELDS]
 
 # Write to GeoJSON
-STATIONS.to_crs(CRS).to_file('stations.geojson', driver='GeoJSON')
+STATIONS.to_file('stations.geojson', driver='GeoJSON')
 # Write file to GeoPackage
 STATIONS.to_crs(CRS).to_file('stations.gpkg', driver='GPKG', layer='stations')
 
