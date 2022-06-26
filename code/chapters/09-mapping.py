@@ -75,7 +75,6 @@ nz.plot(color="none", edgecolor="blue")
 #
 # ### GeoPandas explore
 import io
-import geopandas as gp
 import pandas as pd
 import requests
 
@@ -101,8 +100,8 @@ URI='https://multiple-la-generator-dot-dft-add-naptan-prod.ew.r.appspot.com/v1/a
 BUFFER = get_databuffer(URI)
 DF1 = pd.read_csv(BUFFER, low_memory=False)
 DATA = DF1[['Longitude', 'Latitude']].values
-POINTS = gp.GeoSeries.from_xy(*DATA.T, crs='WGS84')
-NaPTAN = gp.GeoDataFrame(data=DF1, geometry=POINTS)
+POINTS = gpd.GeoSeries.from_xy(*DATA.T, crs='WGS84')
+NaPTAN = gpd.GeoDataFrame(data=DF1, geometry=POINTS)
 NaPTAN = NaPTAN.to_crs(CRS).dropna(how='all', axis=1)
 
 NaPTAN['TIPLOC'] = ''
