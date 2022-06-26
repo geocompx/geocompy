@@ -1,7 +1,9 @@
 FROM continuumio/miniconda3
 
 # See https://pythonspeed.com/articles/conda-docker-image-size/
-COPY environment.yml .
+# RUN environment.yml .
+RUN wget https://github.com/geocompr/py/raw/main/environment.yml
+
 RUN conda env create -f environment.yml
 
 # ENTRYPOINT ["conda", "run", "-n", "geocompy", \
