@@ -408,23 +408,26 @@ list(polygon.exterior.coords)
 
 ### Introduction
 
-As mentioned above, working with rasters in Python is less organized around one comprehensive package (such as the case for vector layers and **geopandas**).
-Instead, there are several packages providing alternative (subsets of methods) of working with raster data. 
+As mentioned above, working with rasters in Python is less organized around one comprehensive package (compared to the case for vector layers and **geopandas**).
+Instead, several packages provide alternative subsets of method for working with raster data. 
 
 The two most notable approaches for working with rasters in Python are provided by the **rasterio** and **xarray** packages.
 As we will see shortly, they differ in their scope and underlying data models. 
 Specifically, **rasterio** represents rasters as **numpy** arrays associated with a separate object holding the spatial metadata.
 The **xarray** package, however, represents rasters with the native `DataArray` object, which is an extension of **numpy** array designed to hold axis labels and attributes, in the same object, together with the array of raster values.
 
-Both packages are not comprehensive in the same way as **geopandas** is. For example, when working with **rasterio**, on the one hand, more packages may be needed to accomplish (commonly used) tasks such as zonal statistics (package `rasterstats`) or calculating topographic indices (package `richdem`). On the other hand, **xarray** was extended to accommodate spatial operators missing from the core package itself, with the **rioxarray** and **xarray-spatial** packages.
+Both packages are not exhaustive in the same way as **geopandas** is. 
+For example, when working with **rasterio**, on the one hand, more packages may be needed to accomplish common tasks such as zonal statistics (package **rasterstats**) or calculating topographic indices (package **richdem**). 
+On the other hand, **xarray** was extended to accommodate spatial operators missing from the core package itself, with the **rioxarray** and **xarray-spatial** packages.
 
 In the following two sections, we introduce the two well-established packages, **rasterio** and **xarray**, which form the basis for most raster functionality in Python. 
 Using any of the add-on packages, or the extensions, should be straightforward, once the reader is familiar with the basics.
 
 ### Using **rasterio**
 
-To work with the **rasterio** package, we first need to import it. We also import **numpy**, since (as we will see shortly), the underlying raster data are stored in **numpy** arrays.
-To effectively work with those we therefore expose all **numpy** functions.
+To work with the **rasterio** package, we first need to import it.
+We also import **numpy**, since the underlying raster data are stored in **numpy** arrays.
+To effectively work with those, we expose all **numpy** functions.
 Finally, we import the `show` function from the `rasterio.plot` sub-module for quick visualization of rasters.
 
 ```{python}
@@ -435,16 +438,16 @@ import subprocess
 ```
 
 Rasters are typically imported from existing files.
-When working with **rasterio**, "importing" a raster is actually a two-step process:
+When working with **rasterio**, importing a raster is actually a two-step process:
 
-* First, we open a raster file "connection", using `rasterio.open`
+* First, we open a raster file "connection" using `rasterio.open`
 * Second, we read raster values from the connection using the `.read` method
 
-This kind of separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file.
+This separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file.
 The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size. 
-Accordingly, the second step (`.read`) is selective. For example, we may want to read just one raster band rather than reading all band.
+Accordingly, the second step (`.read`) is selective. For example, we may want to read just one raster band rather than reading all bands.
 
-In the first step, to create a file connection, we pass a file path to the `rasterio.open` function. 
+In the first step, we pass a file path to the `rasterio.open` function to create a file connection. 
 For this example, we use a single-band raster representing elevation in Zion National Park:
 
 ```{python}
@@ -489,14 +492,15 @@ Importantly, we can read:
 * A subset of layers, passing a `list` of indices (as in `.read([1,2])`)
 * All layers (as in `.read()`)
 
-Note that the layer indices start from `1` contrary to the Python convention of the first index being `0`. 
+Note that the layer indices start from `1`, contrary to the Python convention of the first index being `0`. 
 
 The resulting object is a **numpy** array, with either two or three dimensions:
 
-* *Three* dimensions, when reading all layers or more than one layer (e.g., `.read()` or `.read([1,2])`). In such case, the dimensions pattern is `(layers, rows, columns)`
+* *Three* dimensions, when reading more than one layer (e.g., `.read()` or `.read([1,2])`). 
+In such case, the dimensions pattern is `(layers, rows, columns)`
 * *Two* dimensions, when reading one specific layer (e.g., `.read(1)`)
 
-For example, let us read the first (and only) layer from the `srtm.tif` raster, using the file connection object `src`:
+For example, let's read the first (and only) layer from the `srtm.tif` raster, using the file connection object `src`:
 
 ```{python}
 s = src.read(1)
@@ -508,7 +512,6 @@ The result `s` is a two-dimensional `numpy` array.
 ### Using `xarray`
 
 ...
-
 
 ```{python}
 import xarray as xr
@@ -533,25 +536,55 @@ x["tem"].plot(col="time", col_wrap=4)
 
 ## Coordinate Reference Systems
 
-Vector and raster spatial data types share concepts intrinsic to spatial data. Perhaps the most fundamental of these is the Coordinate Reference System (CRS), which defines how the spatial elements of the data relate to the surface of the Earth (or other bodies). CRSs are either geographic or projected, as introduced at the beginning of this chapter (see ...). This section explains each type, laying the foundations for Chapter 7, which provides a deep dive into setting, transforming and querying CRSs.
+Vector and raster spatial data types share concepts intrinsic to spatial data. 
+Perhaps the most fundamental of these is the Coordinate Reference System (CRS), which defines how the spatial elements of the data relate to the surface of the Earth (or other bodies).
+CRSs are either geographic or projected, as introduced at the beginning of this chapter (see ...).
+This section explains each type, laying the foundations for Chapter 7, which provides a deep dive into setting, transforming, and querying CRSs.
 
 ### Geographic coordinate systems
 
-Geographic coordinate systems identify any location on the Earth's surface using two values — longitude and latitude (see left panel of Figure ...). Longitude is location in the East-West direction in angular distance from the Prime Meridian plane. Latitude is angular distance North or South of the equatorial plane. Distances in geographic CRSs are therefore not measured in meters. This has important consequences, as demonstrated in Section 7.
+Geographic coordinate systems identify any location on the Earth's surface using two values — longitude and latitude (see left panel of Figure ...). Longitude is a location in the East-West direction in angular distance from the Prime Meridian plane, while latitude is an angular distance North or South of the equatorial plane.
+Distances in geographic CRSs are therefore not measured in meters. 
+This has important consequences, as demonstrated in Section 7.
 
-The surface of the Earth in geographic coordinate systems is represented by a spherical or ellipsoidal surface. Spherical models assume that the Earth is a perfect sphere of a given radius — they have the advantage of simplicity but, at the same time, they are inaccurate: the Earth is not a sphere! Ellipsoidal models are defined by two parameters: the equatorial radius and the polar radius. These are suitable because the Earth is compressed: the equatorial radius is around 11.5 km longer than the polar radius (Maling 1992...).
+A spherical or ellipsoidal surface represents the surface of the Earth in geographic coordinate systems. 
+Spherical models assume that the Earth is a perfect sphere of a given radius — they have the advantage of simplicity, but, at the same time, they are inaccurate: the Earth is not a sphere!
+Ellipsoidal models are defined by two parameters: the equatorial radius and the polar radius. 
+These are suitable because the Earth is compressed: the equatorial radius is around 11.5 km longer than the polar radius (Maling 1992...).
 
-Ellipsoids are part of a wider component of CRSs: the datum. This contains information on what ellipsoid to use and the precise relationship between the Cartesian coordinates and location on the Earth's surface. There are two types of datum — geocentric (such as WGS84) and local (such as NAD83). You can see examples of these two types of datums in Figure .... Black lines represent a geocentric datum, whose center is located in the Earth's center of gravity and is not optimized for a specific location. In a local datum, shown as a purple dashed line, the ellipsoidal surface is shifted to align with the surface at a particular location. These allow local variations in Earth's surface, for example due to large mountain ranges, to be accounted for in a local CRS. This can be seen in Figure ..., where the local datum is fitted to the area of Philippines, but is misaligned with most of the rest of the planet's surface. Both datums in Figure ... are put on top of a geoid - a model of global mean sea level.
+Ellipsoids are part of a broader component of CRSs: the datum. 
+This contains information on what ellipsoid to use and the precise relationship between the Cartesian coordinates and location on the Earth's surface.
+There are two types of datum — geocentric (such as WGS84) and local (such as NAD83). 
+You can see examples of these two types of datums in Figure .... 
+Black lines represent a geocentric datum, whose center is located in the Earth's center of gravity and is not optimized for a specific location.
+In a local datum, shown as a purple dashed line, the ellipsoidal surface is shifted to align with the surface at a particular location. 
+These allow local variations on Earth's surface, such as large mountain ranges, to be accounted for in a local CRS. 
+This can be seen in Figure ..., where the local datum is fitted to the area of Philippines, but is misaligned with most of the rest of the planet's surface. Both datums in Figure ... are put on top of a geoid - a model of global mean sea level.
 
 ### Projected coordinate reference systems
 
-All projected CRSs are based on a geographic CRS, described in the previous section, and rely on map projections to convert the three-dimensional surface of the Earth into Easting and Northing (x and y) values in a projected CRS. Projected CRSs are based on Cartesian coordinates on an implicitly flat surface (right panel of Figure ...). They have an origin, x and y axes, and a linear unit of measurement such as meters.
+All projected CRSs are based on a geographic CRS, described in the previous section, and rely on map projections to convert the three-dimensional surface of the Earth into Easting and Northing (x and y) values in a projected CRS.
+Projected CRSs are based on Cartesian coordinates on an implicitly flat surface (right panel of Figure ...). 
+They have an origin, x and y axes, and a linear unit of measurement such as meters.
 
-This transition cannot be done without adding some deformations. Therefore, some properties of the Earth's surface are distorted in this process, such as area, direction, distance, and shape. A projected coordinate system can preserve only one or two of those properties. Projections are often named based on a property they preserve: equal-area preserves area, azimuthal preserve direction, equidistant preserve distance, and conformal preserve local shape.
+This transition cannot be done without adding some deformations. 
+Therefore, some properties of the Earth's surface are distorted in this process, such as area, direction, distance, and shape. 
+A projected coordinate system can preserve only one or two of those properties.
+Projections are often named based on a property they preserve: equal-area preserves area, azimuthal preserves direction, equidistant preserves distance, and conformal preserves local shape.
 
-There are three main groups of projection types - conic, cylindrical, and planar (azimuthal). In a conic projection, the Earth's surface is projected onto a cone along a single line of tangency or two lines of tangency. Distortions are minimized along the tangency lines and rise with the distance from those lines in this projection. Therefore, it is the best suited for maps of mid-latitude areas. A cylindrical projection maps the surface onto a cylinder. This projection could also be created by touching the Earth's surface along a single line of tangency or two lines of tangency. Cylindrical projections are used most often when mapping the entire world. A planar projection projects data onto a flat surface touching the globe at a point or along a line of tangency. It is typically used in mapping polar regions. 
+There are three main groups of projection types - conic, cylindrical, and planar (azimuthal). 
+In a conic projection, the Earth's surface is projected onto a cone along a single line of tangency or two lines of tangency.
+Distortions are minimized along the tangency lines and rise with the distance from those lines in this projection.
+Therefore, it is best suited for maps of mid-latitude areas. 
+A cylindrical projection maps the surface onto a cylinder.
+This projection could also be created by touching the Earth's surface along a single line of tangency or two lines of tangency.
+Cylindrical projections are used most often when mapping the entire world. 
+A planar projection projects data onto a flat surface touching the globe at a point or along a line of tangency.
+It is typically used in mapping polar regions. 
 
-Like most open-source geospatial software, the `geopandas` and `rasterio` packages use the PROJ software, for CRS definition and calculations. The `pyproj` package is a low-level interface to PROJ. Using its functions, we can examine the list of supported projections:
+Like most open-source geospatial software, the **geopandas** and **rasterio** packages use the PROJ software for CRS definition and calculations. 
+The **pyproj** package is a low-level interface to PROJ. 
+Using its functions, we can examine the list of supported projections:
 
 ```{python}
 import pyproj
@@ -563,11 +596,13 @@ epsg_codes[:5]  ## print first five
 pyproj.CRS.from_epsg(4326)  ## Printout of WGS84 CRS (EPSG:4326)
 ```
 
-A quick summary of different projections, their types, properties, and suitability can be found in “Map Projections” (1993) and at <https://www.geo-projections.com/>. We will expand on CRSs and explain how to project from one CRS to another in Chapter 7. For now, it is sufficient to know:
+A quick summary of different projections, their types, properties, and suitability can be found in “Map Projections” (1993) and at <https://www.geo-projections.com/>.
+We will expand on CRSs and explain how to project from one CRS to another in Chapter 7. 
+But, for now, it is sufficient to know:
 
 * That coordinate systems are a key component of geographic objects
-* Knowing which CRS your data is in, and whether it is in geographic (lon/lat) or projected (typically meters), is important and has consequences for how R handles spatial and geometry operations
-* CRSs of `geopandas` (vector layer or geometry column) and `rasterio` (raster) objects can be queried with the `.crs` property
+* Knowing which CRS your data is in, and whether it is in geographic (lon/lat) or projected (typically meters), is important and has consequences for how Python handles spatial and geometry operations
+* CRSs of **geopandas** (vector layer or geometry column) and **rasterio** (raster) objects can be queried with the `.crs` property
 
 Here is a demonstration of the last bullet point:
 
@@ -581,15 +616,25 @@ src.crs
 
 ## Units
 
-An important feature of CRSs is that they contain information about spatial units. Clearly, it is vital to know whether a house's measurements are in feet or meters, and the same applies to maps. It is good cartographic practice to add a scale bar or some other distance indicator onto maps to demonstrate the relationship between distances on the page or screen and distances on the ground. Likewise, it is important to formally specify the units in which the geometry data or cells are measured to provide context, and ensure that subsequent calculations are done in context.
+An essential feature of CRSs is that they contain information about spatial units.
+Clearly, it is vital to know whether a house's measurements are in feet or meters, and the same applies to maps.
+It is a good cartographic practice to add a scale bar or some other distance indicator onto maps to demonstrate the relationship between distances on the page or screen and distances on the ground. 
+Likewise, it is important to formally specify the units in which the geometry data or cells are measured to provide context and ensure that subsequent calculations are done in context.
 
-Python spatial data structures in `geopandas` and `rasterio` do not natively support the concept of measurement. The coordinates of a vector layer or a raster are plain numbers, referring to an arbitrary plane. For example, according to the `.transform` matrix of `srtm.tif` we can see that the raster resolution is `0.000833` and that the CRS is WGS84 (EPSG: `4326`). We may know (or can find out) that the units of WGS84 are decimal degrees. However, that information is not encoded in any numeric calculation.
+Python spatial data structures in **geopandas** and **rasterio** do not natively support the concept of measurement.
+The coordinates of a vector layer or a raster are plain numbers, referring to an arbitrary plane.
+For example, according to the `.transform` matrix of `srtm.tif` we can see that the raster resolution is `0.000833` and that its CRS is WGS84 (EPSG: `4326`). 
+We may know (or can find out) that the units of WGS84 are decimal degrees. 
+However, that information is not encoded in any numeric calculation.
 
 ```{python}
 src.meta
 ```
 
-Consequently, we need to be aware of the CRS units---typically decimal degrees in a geographic CRS, or $m$ in a projected CRS, but there are exceptions---we are working with. Geometric calculations such as length, area, or distance, return plain numbers, in the same units of the CRS (such as $m$ or $m^2$). It is up to the user to figure out which units the result is given in, and to treat the result accordingly. For example, if the area output was in $m$ and we need the result in $km^2$, then we need to divide the result by $1000^2$. 
+Consequently, we need to be aware of the CRS units---typically decimal degrees in a geographic CRS, or $m$ in a projected CRS, but there are exceptions---we are working with.
+Geometric calculations such as length, area, or distance, return plain numbers in the same units of the CRS (such as $m$ or $m^2$). 
+It is up to the user to determine which units the result is given in and treat the result accordingly. 
+For example, if the area output was in $m^2$ and we need the result in $km^2$, then we need to divide the result by $1000^2$. 
 
 ## Exercises
 
