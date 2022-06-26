@@ -155,14 +155,13 @@ axes[2].set_title("Crop");
 # * Raster to contours
 #
 # The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon. The second method, raster to points, has the additional step of calculating polygon centroids. The third method, raster to contours, is somewhat unrelated. Let us demonstrate the three in the given order.
-#
 
 src = rasterio.open("data/grain.tif")
 
-# To polygons...
+# To polygons... ...
+#
 #
 # FIGURE 6.9: Illustration of vectorization of raster (left) into polygons (dissolve = FALSE; center) and aggregated polygons (dissolve = TRUE; right). 
-#
 
 src = rasterio.open("data/elev.tif")
 
@@ -185,3 +184,4 @@ src = rasterio.open("data/elev.tif")
 #
 #
 # ## Exercises
+#

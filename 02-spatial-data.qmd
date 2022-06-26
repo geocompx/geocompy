@@ -20,7 +20,37 @@ We focus on the two most comprehensive and fundamental packages, namely:
 * **rasterio** --- a spatial-oriented package, focused on "simple" raster formats (such as GeoTIFF), representing a raster using a combination of a `numpy` array, and a metadata object (`dict`) specifying the spatial referencing of the array
 * **xarray** --- A general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster format (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`
 
+This chapter will provide brief explanations of the fundamental geographic data models: vector and raster. We will introduce the theory behind each data model and the disciplines in which they predominate, before demonstrating their implementation in Python.
+
+The vector data model represents the world using points, lines and polygons. These have discrete, well-defined borders, meaning that vector datasets usually have a high level of precision (but not necessarily accuracy as we will see in Section ...). The raster data model divides the surface up into cells of constant size. Raster datasets are the basis of background images used in web-mapping and have been a vital source of geographic data since the origins of aerial photography and satellite-based remote sensing devices. Rasters aggregate spatially specific features to a given resolution, meaning that they are consistent over space and scalable (many worldwide raster datasets are available).
+
+Which to use? The answer likely depends on your domain of application:
+
+* Vector data tends to dominate the social sciences because human settlements tend to have discrete borders
+* Raster dominates many environmental sciences because of the reliance on remote sensing data
+
+There is much overlap in some fields and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data. Furthermore, it is possible to convert between the two forms (see Section ...). Whether your work involves more use of vector or raster datasets, it is worth understanding the underlying data model before using them, as discussed in subsequent chapters. This book mostly uses `geopandas` and `rasterio` packages to work with vector data and raster datasets, respectively.
+
 ## Vector data
+
+The geographic vector data model is based on points located within a coordinate reference system (CRS). Points can represent self-standing features (e.g., the location of a bus stop) or they can be linked together to form more complex geometries such as lines and polygons. Most point geometries contain only two dimensions (3-dimensional CRSs contain an additional $z$ value, typically representing height above sea level).
+
+In this system, London, for example, can be represented by the coordinates `(-0.1, 51.5)`. This means that its location is -0.1 degrees east and 51.5 degrees north of the origin. The origin in this case is at 0 degrees longitude (the Prime Meridian) and 0 degree latitude (the Equator) in a geographic ('lon/lat') CRS (Figure ..., left panel). The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000, 180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS. This can be verified visually: slightly more than 5 'boxes'---square areas bounded by the gray grid lines 100 $km$ in width---separate the point representing London from the origin (Figure 2.1, right panel).
+
+The location of National Grid's origin, in the sea beyond South West Peninsular, ensures that most locations in the UK have positive Easting and Northing values. There is more to CRSs, as described in Sections ... and ... but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing distance from an origin, usually in $x$ then $y$ dimensions.
+
+...
+FIGURE ...: Illustration of vector (point) data in which location of London (the red X) is represented with reference to an origin (the blue circle). The left plot represents a geographic CRS with an origin at 0° longitude and latitude. The right plot represents a projected CRS with an origin located in the sea west of the South West Peninsula.
+
+`geopandas` provides classes for geographic vector data and a consistent command-line interface to important low level libraries for geocomputation:
+
+*  GDAL, for reading, writing and manipulating a wide range of geographic data formats, covered in Chapter 8
+*  PROJ, a powerful library for coordinate system transformations, which underlies the content covered in Chapter 7
+*  GEOS, a planar geometry engine for operations such as calculating buffers and centroids on data with a projected CRS, covered in Chapter 5
+
+Nowadays, we take it for granted, however, only the tight integration with different geographic libraries makes reproducible geocomputation possible in the first place.
+
+This section introduces `geopandas` classes in preparation for subsequent chapters (Chapters 5 and 8 cover the GEOS and GDAL interface, respectively).
 
 ### Introduction
 
@@ -36,8 +66,7 @@ The third class is defined in package **shapely**, which deals with individual g
 ### Vector layers
 
 The typical data structure for vector data is a vector layer.
-There are several methods to work with vector layers in Python, ranging from low-level (e.g., **fiona**) to high-level (**geopandas**).
-In this book, we focus on **geopandas**.
+There are several methods to work with vector layers in Python, ranging from low-level (e.g., **osgeo**, **fiona**) to high-level (**geopandas**). In this book, we focus on **geopandas**.
 
 Before we begin, we need to import the **geopandas** package, conventionally as `gpd`:
 
@@ -52,7 +81,7 @@ import pandas as pd
 pd.set_option("display.max_rows", 4)
 ```
 
-Most often, we import an existing vector layer from a file, such as a Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file. 
+Most often, we import an existing vector layer from a file, such as a Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file. For example, the following expression imports a GeoPackage file `data/world.gpkg` into a `GeoDataFrame` named `gdf`:
 
 ```{python}
 #| echo: false
@@ -60,15 +89,14 @@ Most often, we import an existing vector layer from a file, such as a Shapefile 
 from pathlib import Path
 data_path = Path("data")
 if data_path.is_dir():
-  print("path exists") # directory exists
+  pass
+  # print("path exists") # directory exists
 else:
   print("Attempting to get and unzip the data")
   import requests, zipfile, io
   r = requests.get("https://github.com/geocompr/py/releases/download/0.1/data.zip")
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall(".")
-
-  
 ```
 
 ```{python}
@@ -82,7 +110,7 @@ type(gdf)
 ```
 
 The `GeoDataFrame` class is an extension of the `DataFrame` class. 
-Thus, we can treat a vector layer as a table and process it using the ordinary, i.e., non-spatial, **pandas** methods.
+Thus, we can treat a vector layer as a table, and process it using the ordinary, i.e., non-spatial, **pandas** methods.
 For example, the following expression creates a subset with just the country name and the geometry (see below):
 
 ```{python}
@@ -90,7 +118,7 @@ gdf = gdf[["name_long", "geometry"]]
 gdf
 ```
 
-The following expression creates a subset based on a condition, including just `"Egypt"`:
+The following expression creates a subset based on a condition, such as equality of the `"name_long"` column to the string `"Egypt"`:
 
 ```{python}
 gdf[gdf["name_long"] == "Egypt"]
@@ -99,26 +127,27 @@ gdf[gdf["name_long"] == "Egypt"]
 Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method, as follows:
 
 ```{python}
-gdf.plot()
+gdf.plot();
 ```
 
-or using `.hvplot` to get an interactive plot:
+or using `.explore` to get an interactive plot:
 
 ```{python}
+gdf.explore()
+```
+
+```{python}
+# (Alternative)
 # import hvplot.pandas
 # gdf.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
-```
-
-This way, we can also add background tiles:
-
-```{python}
+#This way, we can also add background tiles:
 # gdf.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
 ```
 
 ### Geometry columns
 
 One of the columns in a `GeoDataFrame` is a geometry column, of class `GeoSeries`.
-The geometry column contains the geometric part of the vector layer, e.g., the `POLYGON` or `MULTIPOLYGON` geometries of the 177 countries in `gdf`:
+The geometry column contains the geometric part of the vector layer, e.g., the `"MultiPolygon"` geometries of the 177 countries in `gdf`:
 
 ```{python}
 gdf["geometry"]
@@ -126,15 +155,15 @@ gdf["geometry"]
 
 The geometry column also contains the spatial reference information, if any (see below).
 
-Many of the spatial operators, such as calculating the centroid, buffer, or bounding box of each feature, in fact involve just the geometry. 
-Therefore, for example, the following expressions give exactly the same result, a `GeoSeries` with country bounding boxes:
+Many of the spatial operators, such as calculating the centroid, buffer, or bounding box of each feature, in fact involve just the geometry. Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the geometry column `GeoSeries`. 
+For example, the following expressions give exactly the same result, a `GeoSeries` with country centroids:
 
 ```{python}
-gdf.bounds
+gdf.centroid
 ```
 
 ```{python}
-gdf["geometry"].bounds
+gdf["geometry"].centroid
 ```
 
 Another useful property of the geometry column is the geometry type (see below). 
@@ -151,7 +180,51 @@ To summarize the occurrence of different geometry types in a geometry column, we
 gdf["geometry"].type.value_counts()
 ```
 
-In this case, we see that the `gdf` layer contains `Polygon` and `MultiPolygon` geometries.
+In this case, we see that the `gdf` layer contains only `"MultiPolygon"` geometries.
+
+### The Simple Features standard
+
+Geometries are the basic building blocks of vector layers. Although the Simple Features standard defines about 20 types of geometries, we will focus on the seven most commonly used types: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` and `GEOMETRYCOLLECTION`. Find the whole list of possible feature types in the PostGIS manual.
+
+Generally, well-known binary (WKB) or well-known text (WKT) are the standard encoding for simple feature geometries. WKB representations are usually hexadecimal strings easily readable for computers. This is why GIS and spatial databases use WKB to transfer and store geometry objects. WKT, on the other hand, is a human-readable text markup description of simple features. Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
+
+The basis for each geometry type is the point. A point is simply a coordinate in 2D, 3D or 4D space such as (see left panel in Figure ...):
+
+```text
+POINT (5 2)
+```
+
+A linestring is a sequence of points with a straight line connecting the points, for example (see middle panel in Figure ...):
+
+```text
+LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)
+```
+
+A polygon is a sequence of points that form a closed, non-intersecting ring. Closed means that the first and the last point of a polygon have the same coordinates (see right panel in Figure ...).
+
+```text
+POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5))
+```
+
+Illustration of point, linestring and polygon geometries...
+FIGURE ...: Illustration of point, linestring and polygon geometries...
+
+So far we have created geometries with only one geometric entity per feature. However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type:
+
+```text
+MULTIPOINT (5 2, 1 3, 3 4, 3 2)
+MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))
+MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5), (0 2, 1 2, 1 3, 0 3, 0 2)))
+```
+
+Illustration of multi* geometries...
+FIGURE ...: Illustration of multi* geometries...
+
+Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings (see Figure ...):
+
+```text
+GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
+```
 
 ### Geometries
 
@@ -180,19 +253,19 @@ from shapely.geometry import Point
 Creating a point object is as simple as:
 
 ```{python}
-point = Point(5,2)
+point = Point(5, 2)
 point
 ```
 
-Then, we use the `wkt.loads` (stands for "load a WKT *s*tring") to transform a WKT string to a `shapely` geometry object. 
-Here is an example of a `POINT` geometry:
+Alternatively, we can use the `wkt.loads` (stands for "load a WKT *s*tring") to transform a WKT string to a `shapely` geometry object. 
+Here is an example of a `"Point"` geometry:
 
 ```{python}
 point = wkt.loads("POINT (5 2)")
 point
 ```
 
-Here is an example of a `MULTIPOINT` geometry:
+Here is an example of a `"MultiPoint"` geometry:
 
 ```{python}
 from shapely.geometry import MultiPoint
@@ -205,7 +278,7 @@ multipoint = wkt.loads("MULTIPOINT ((5 2), (1 3), (3 4), (3 2))")
 multipoint
 ```
 
-Here is an example of a `LINESTRING` geometry:
+Here is an example of a `"LineString"` geometry:
 
 ```{python}
 from shapely.geometry import LineString
@@ -218,7 +291,7 @@ linestring = wkt.loads("LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)")
 linestring
 ```
 
-Here is an example of a `MULTILINESTRING` geometry:
+Here is an example of a `"MultiLineString"` geometry:
 
 ```{python}
 from shapely.geometry import MultiLineString
@@ -231,12 +304,12 @@ multilinestring = wkt.loads("MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2
 multilinestring
 ```
 
-Here is an example of a `POLYGON` geometry:
+Here is an example of a `"Polygon"` geometry:
 
 ```{python}
 from shapely.geometry import Polygon
-linestring = Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
-linestring
+polygon = Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
+polygon
 ```
 
 ```{python}
@@ -244,7 +317,7 @@ polygon = wkt.loads("POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5), (2 4, 3 4, 3 3, 2 3, 2 
 polygon
 ```
 
-Here is an example of a `MULTIPOLYGON` geometry:
+Here is an example of a `"MultiPolygon"` geometry:
 
 ```{python}
 from shapely.geometry import MultiPolygon
@@ -258,7 +331,7 @@ multipolygon = wkt.loads("MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5)), ((0 2, 1 2,
 multipolygon
 ```
 
-And, finally, here is an example of a `GEOMETRYCOLLECTION` geometry:
+And, finally, here is an example of a `"GeometryCollection"` geometry:
 
 ```{python}
 from shapely.geometry import GeometryCollection
@@ -279,8 +352,6 @@ For example, the following expression calculates the difference between the buff
 multipolygon.buffer(0.2).difference(multipolygon)
 ```
 
-Internally, many spatial operations on a geometry column (or a vector layer) are basically iterations where the operator is applied on all geometries, one by one, to return a new geometry column (or layer) with the combined results.
-
 As demonstrated above, a `shapely` geometry object is automatically evaluated to a small image of the geometry (when using an interface capable of displaying it, such as a Jupyter Notebook). 
 To print the WKT string instead, we can use the `print` function:
 
@@ -288,7 +359,7 @@ To print the WKT string instead, we can use the `print` function:
 print(linestring)
 ```
 
-We can determine the geometry type using the `.geom_type` property, which is a `string`:
+We can determine the geometry type using the `.geom_type` property, which returns a `string`:
 
 ```{python}
 linestring.geom_type
@@ -401,6 +472,8 @@ s = src.read(1)
 s
 ```
 
+The result `s` is a two-dimensional `numpy` array.
+
 ### Using `xarray`
 
 ...
@@ -429,6 +502,44 @@ x["tem"].plot(col="time", col_wrap=4)
 
 ## Coordinate Reference Systems
 
+Vector and raster spatial data types share concepts intrinsic to spatial data. Perhaps the most fundamental of these is the Coordinate Reference System (CRS), which defines how the spatial elements of the data relate to the surface of the Earth (or other bodies). CRSs are either geographic or projected, as introduced at the beginning of this chapter (see ...). This section explains each type, laying the foundations for Chapter 7, which provides a deep dive into setting, transforming and querying CRSs.
+
+### Geographic coordinate systems
+
+Geographic coordinate systems identify any location on the Earth's surface using two values — longitude and latitude (see left panel of Figure ...). Longitude is location in the East-West direction in angular distance from the Prime Meridian plane. Latitude is angular distance North or South of the equatorial plane. Distances in geographic CRSs are therefore not measured in meters. This has important consequences, as demonstrated in Section 7.
+
+The surface of the Earth in geographic coordinate systems is represented by a spherical or ellipsoidal surface. Spherical models assume that the Earth is a perfect sphere of a given radius — they have the advantage of simplicity but, at the same time, they are inaccurate: the Earth is not a sphere! Ellipsoidal models are defined by two parameters: the equatorial radius and the polar radius. These are suitable because the Earth is compressed: the equatorial radius is around 11.5 km longer than the polar radius (Maling 1992...).
+
+Ellipsoids are part of a wider component of CRSs: the datum. This contains information on what ellipsoid to use and the precise relationship between the Cartesian coordinates and location on the Earth's surface. There are two types of datum — geocentric (such as WGS84) and local (such as NAD83). You can see examples of these two types of datums in Figure .... Black lines represent a geocentric datum, whose center is located in the Earth's center of gravity and is not optimized for a specific location. In a local datum, shown as a purple dashed line, the ellipsoidal surface is shifted to align with the surface at a particular location. These allow local variations in Earth's surface, for example due to large mountain ranges, to be accounted for in a local CRS. This can be seen in Figure ..., where the local datum is fitted to the area of Philippines, but is misaligned with most of the rest of the planet's surface. Both datums in Figure ... are put on top of a geoid - a model of global mean sea level.
+
+### Projected coordinate reference systems
+
+All projected CRSs are based on a geographic CRS, described in the previous section, and rely on map projections to convert the three-dimensional surface of the Earth into Easting and Northing (x and y) values in a projected CRS. Projected CRSs are based on Cartesian coordinates on an implicitly flat surface (right panel of Figure ...). They have an origin, x and y axes, and a linear unit of measurement such as meters.
+
+This transition cannot be done without adding some deformations. Therefore, some properties of the Earth's surface are distorted in this process, such as area, direction, distance, and shape. A projected coordinate system can preserve only one or two of those properties. Projections are often named based on a property they preserve: equal-area preserves area, azimuthal preserve direction, equidistant preserve distance, and conformal preserve local shape.
+
+There are three main groups of projection types - conic, cylindrical, and planar (azimuthal). In a conic projection, the Earth's surface is projected onto a cone along a single line of tangency or two lines of tangency. Distortions are minimized along the tangency lines and rise with the distance from those lines in this projection. Therefore, it is the best suited for maps of mid-latitude areas. A cylindrical projection maps the surface onto a cylinder. This projection could also be created by touching the Earth's surface along a single line of tangency or two lines of tangency. Cylindrical projections are used most often when mapping the entire world. A planar projection projects data onto a flat surface touching the globe at a point or along a line of tangency. It is typically used in mapping polar regions. 
+
+Like most open-source geospatial software, the `geopandas` and `rasterio` packages use the PROJ software, for CRS definition and calculations. The `pyproj` package is a low-level interface to PROJ. Using its functions, we can examine the list of supported projections:
+
+```{python}
+import pyproj
+epsg_codes = pyproj.get_codes('EPSG', 'CRS')  ## List of supported EPSG codes
+epsg_codes[:5]  ## print first five
+```
+
+```{python}
+pyproj.CRS.from_epsg(4326)  ## Printout of WGS84 CRS (EPSG:4326)
+```
+
+A quick summary of different projections, their types, properties, and suitability can be found in “Map Projections” (1993) and at <https://www.geo-projections.com/>. We will expand on CRSs and explain how to project from one CRS to another in Chapter 7. For now, it is sufficient to know:
+
+* That coordinate systems are a key component of geographic objects
+* Knowing which CRS your data is in, and whether it is in geographic (lon/lat) or projected (typically meters), is important and has consequences for how R handles spatial and geometry operations
+* CRSs of `geopandas` (vector layer or geometry column) and `rasterio` (raster) objects can be queried with the `.crs` property
+
+Here is a demonstration of the last bullet point:
+
 ```{python}
 gdf.crs
 ```
@@ -436,6 +547,18 @@ gdf.crs
 ```{python}
 src.crs
 ```
+
+## Units
+
+An important feature of CRSs is that they contain information about spatial units. Clearly, it is vital to know whether a house's measurements are in feet or meters, and the same applies to maps. It is good cartographic practice to add a scale bar or some other distance indicator onto maps to demonstrate the relationship between distances on the page or screen and distances on the ground. Likewise, it is important to formally specify the units in which the geometry data or cells are measured to provide context, and ensure that subsequent calculations are done in context.
+
+Python spatial data structures in `geopandas` and `rasterio` do not natively support the concept of measurement. The coordinates of a vector layer or a raster are plain numbers, referring to an arbitrary plane. For example, according to the `.transform` matrix of `srtm.tif` we can see that the raster resolution is `0.000833` and that the CRS is WGS84 (EPSG: `4326`). We may know (or can find out) that the units of WGS84 are decimal degrees. However, that information is not encoded in any numeric calculation.
+
+```{python}
+src.meta
+```
+
+Consequently, we need to be aware of the CRS units---typically decimal degrees in a geographic CRS, or $m$ in a projected CRS, but there are exceptions---we are working with. Geometric calculations such as length, area, or distance, return plain numbers, in the same units of the CRS (such as $m$ or $m^2$). It is up to the user to figure out which units the result is given in, and to treat the result accordingly. For example, if the area output was in $m$ and we need the result in $km^2$, then we need to divide the result by $1000^2$. 
 
 ## Exercises
 

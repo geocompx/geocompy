@@ -50,8 +50,7 @@
 # ### Vector layers
 #
 # The typical data structure for vector data is a vector layer.
-# There are several methods to work with vector layers in Python, ranging from low-level (e.g., **fiona**) to high-level (**geopandas**).
-# In this book, we focus on **geopandas**.
+# There are several methods to work with vector layers in Python, ranging from low-level (e.g., **osgeo**, **fiona**) to high-level (**geopandas**). In this book, we focus on **geopandas**.
 #
 # Before we begin, we need to import the **geopandas** package, conventionally as `gpd`:
 
@@ -69,7 +68,8 @@ pd.set_option("display.max_rows", 4)
 from pathlib import Path
 data_path = Path("data")
 if data_path.is_dir():
-  print("path exists") # directory exists
+  pass
+  # print("path exists") # directory exists
 else:
   print("Attempting to get and unzip the data")
   import requests, zipfile, io
@@ -96,18 +96,17 @@ gdf[gdf["name_long"] == "Egypt"]
 
 # Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method, as follows:
 
-gdf.plot()
+gdf.plot();
 
-# or using `.hvplot` to get an interactive plot:
+# or using `.explore` to get an interactive plot:
+
+gdf.explore()
 
 # +
+# (Alternative)
 # import hvplot.pandas
 # gdf.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
-# -
-
-# This way, we can also add background tiles:
-
-# +
+#This way, we can also add background tiles:
 # gdf.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
 # -
 
@@ -335,6 +334,8 @@ src.meta
 s = src.read(1)
 s
 
+# The result `s` is a two-dimensional `numpy` array.
+#
 # ### Using `xarray`
 #
 # ...

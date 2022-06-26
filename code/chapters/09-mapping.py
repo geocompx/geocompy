@@ -23,6 +23,20 @@
 # <!-- Decision of whether to use static or interactive. -->
 # <!-- Flow diagram? -->
 
+#| echo: false
+#| label: getdata
+from pathlib import Path
+data_path = Path("data")
+if data_path.is_dir():
+  pass
+  # print("path exists") # directory exists
+else:
+  print("Attempting to get and unzip the data")
+  import requests, zipfile, io
+  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/data.zip")
+  z = zipfile.ZipFile(io.BytesIO(r.content))
+  z.extractall(".")
+
 import matplotlib as mpl
 import geopandas as gpd
 nz = gpd.read_file("data/nz.gpkg") 

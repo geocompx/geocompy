@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import rasterio
 import rasterio.mask
+import rasterstats
 from rasterio.plot import show
 ```
 
@@ -135,9 +136,12 @@ out_image_crop, out_transform_crop = rasterio.mask.mask(
 )
 ```
 
-Figure ... shows the original raster, and the cropped and masked results.
+@fig-raster-crop shows the original raster, and the cropped and masked results.
 
 ```{python}
+#| label: fig-raster-crop
+#| fig-cap: Raster masking and cropping
+
 fig, axes = plt.subplots(ncols=3, figsize=(9,5))
 show(src_srtm, ax=axes[0])
 zion.plot(ax=axes[0], color="none", edgecolor="black")
@@ -152,13 +156,116 @@ axes[2].set_title("Crop");
 
 ## Raster extraction
 
-From points...
+Raster extraction is the process of identifying and returning the values associated with a 'target' raster at specific locations, based on a (typically vector) geographic 'selector' object. The reverse of raster extraction — assigning raster cell values based on vector objects — is rasterization, described in Section ...
 
-From line...
+In the following examples, we use a third-party package called `rasterstats`, which is specifically aimed at extracting raster values: 
 
-From polygon (srtm)...
+* to *points*, via the `rasterstats.point_query` function, or 
+* to *polygons*, via the `rasterstats.zonal_stats` function.
+
+### Extraction to points
+
+The basic example is of extracting the value of a raster cell at specific points. For this purpose, we will use `zion_points`, which contain a sample of 30 locations within the Zion National Park (Figure ...). The following expression extracts elevation values from `srtm`:
+
+```{python}
+result = rasterstats.point_query(
+    zion_points, 
+    src_srtm.read(1), 
+    nodata = src_srtm.nodata, 
+    affine = src_srtm.transform,
+    interpolate='nearest'
+)
+```
+
+The resulting object is a `list` of raster values, corresponding to `zion_points`:
+
+```{python}
+result[:5]
+```
+
+To create a `DataFrame` with points' IDs (one value per vector's row) and related `srtm` values for each point, we need to assign it:
+
+```{python}
+zion_points['elev'] = result
+zion_points
+```
+
+### Extraction to lines
+
+Raster extraction also works with line selectors. Then, it extracts one value for each raster cell touched by a line. However, the line extraction approach is not recommended to obtain values along the transects as it is hard to get the correct distance between each pair of extracted raster values.
+
+In this case, a better approach is to split the line into many points and then extract the values for these points. To demonstrate this, the code below creates zion_transect, a straight line going from northwest to southeast of the Zion National Park, illustrated in Figure 6.3(A) (see Section 2.2 for a recap on the vector data model):
+
+zion_transect = cbind(c(-113.2, -112.9), c(37.45, 37.2)) |>
+  st_linestring() |> 
+  st_sfc(crs = crs(srtm)) |>
+  st_sf(geometry = _)
+
+The utility of extracting heights from a linear selector is illustrated by imagining that you are planning a hike. The method demonstrated below provides an ‘elevation profile’ of the route (the line does not need to be straight), useful for estimating how long it will take due to long climbs.
+
+The first step is to add a unique id for each transect. Next, with the st_segmentize() function we can add points along our line(s) with a provided density (dfMaxLength) and convert them into points with st_cast().
+
+zion_transect$id = 1:nrow(zion_transect)
+zion_transect = st_segmentize(zion_transect, dfMaxLength = 250)
+zion_transect = st_cast(zion_transect, "POINT")
+
+Now, we have a large set of points, and we want to derive a distance between the first point in our transects and each of the subsequent points. In this case, we only have one transect, but the code, in principle, should work on any number of transects:
+
+zion_transect = zion_transect |> 
+  group_by(id) |> 
+  mutate(dist = st_distance(geometry)[, 1]) 
+
+Finally, we can extract elevation values for each point in our transects and combine this information with our main object.
+
+zion_elev = terra::extract(srtm, vect(zion_transect))
+zion_transect = cbind(zion_transect, zion_elev)
+
+The resulting zion_transect can be used to create elevation profiles, as illustrated in Figure 6.3(B).
+
+### Extraction to polygons
+
+The final type of geographic vector object for raster extraction is polygons. Like lines, polygons tend to return many raster values per polygon. Typically, we generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. The generation of raster summary statistics, by polygons, is demonstrated in the code below, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon), again using `rasterstats`:
+
+```{python}
+rasterstats.zonal_stats(
+    zion, 
+    src_srtm.read(1), 
+    nodata = src_srtm.nodata, 
+    affine = src_srtm.transform, 
+    stats = ['mean', 'min', 'max']
+)
+```
+
+The results provide useful summaries, for example that the maximum height in the park is around 2,661 meters above see level (other summary statistics, such as standard deviation, can also be calculated in this way). Because there is only one polygon in the example a data frame with a single row is returned; however, the method works when multiple selector polygons are used.
+
+Note the `stats` argument, where we determine what type of statistics are calculated per polygon. Possible values other than `"mean"`, `"min"`, `"max"` are:
+
+* `"count"`—The number of valid (i.e., excluding "No Data") pixels
+* `"nodata"`—The number of pixels with "No Data"
+* `"majority"`—The most frequently occurring value
+* `"median"`—The median value
+
+See the [documentation](https://pythonhosted.org/rasterstats/manual.html#statistics) for the complete list. Additionally, the `zonal_stats` function accepts user-defined functions for calculating any custom statistics.
 
 From polygon (nlcd)...
+
+The similar approach works for counting occurrences of categorical raster values within polygons. This is illustrated with a land cover dataset (nlcd) from the spDataLarge package in Figure 6.4(B), and demonstrated in the code below:
+
+nlcd = rast(system.file("raster/nlcd.tif", package = "spDataLarge"))
+zion2 = st_transform(zion, st_crs(nlcd))
+zion_nlcd = terra::extract(nlcd, vect(zion2))
+zion_nlcd |> 
+  group_by(ID, levels) |>
+  count()
+#> # A tibble: 7 × 3
+#> # Groups:   ID, levels [7]
+#>      ID levels         n
+#>   <dbl> <fct>      <int>
+#> 1     1 Developed   4205
+#> 2     1 Barren     98285
+#> 3     1 Forest    298299
+#> 4     1 Shrubland 203701
+#> # … with 3 more rows
 
 ## Rasterization
 
