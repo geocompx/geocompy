@@ -74,6 +74,78 @@ nz.plot(color="none", edgecolor="blue")
 # - Panel: allows you to create applications/dashboards
 #
 # ### GeoPandas explore
+import io
+import geopandas as gp
+import pandas as pd
+import requests
+
+pd.set_option('display.max_columns', None)
+
+CRS = 'EPSG:32630'
+
+def get_databuffer(uri, encoding='utf-8'):
+    """Download data from URI and returns as an StringIO buffer"""
+    r = requests.get(uri, timeout=10)
+    return io.StringIO(str(r.content, encoding))
+
+def download_data(uri, filepath='./NaPTAN.csv'):
+    """Download data from URI and returns save to file system """
+    with open(filepath, 'wb') as fout:
+        data = requests.get(uri)
+        fout.write(data.content)
+    return True
+
+# NaPTAN data service
+URI='https://multiple-la-generator-dot-dft-add-naptan-prod.ew.r.appspot.com/v1/access-nodes?dataFormat=csv'
+
+BUFFER = get_databuffer(URI)
+DF1 = pd.read_csv(BUFFER, low_memory=False)
+DATA = DF1[['Longitude', 'Latitude']].values
+POINTS = gp.GeoSeries.from_xy(*DATA.T, crs='WGS84')
+NaPTAN = gp.GeoDataFrame(data=DF1, geometry=POINTS)
+NaPTAN = NaPTAN.to_crs(CRS).dropna(how='all', axis=1)
+
+NaPTAN['TIPLOC'] = ''
+
+# Heavy railway stations
+IDX1 = NaPTAN['StopType'] == 'RLY'
+NaPTAN.loc[IDX1, 'TIPLOC'] = NaPTAN['ATCOCode'].str[4:]
+
+# Ferrys
+IDX1 = NaPTAN['StopType'] == 'FER'
+NaPTAN.loc[IDX1, 'TIPLOC'] = NaPTAN['ATCOCode'].str[4:]
+
+# Metro and trams
+IDX1 = NaPTAN['StopType'] == 'MET'
+NaPTAN.loc[IDX1, 'TIPLOC'] = NaPTAN['ATCOCode'].str[6:]
+
+URI='https://www.nationalrail.co.uk/station_codes%20(07-12-2020).csv'
+BUFFER = get_databuffer(URI)
+DATA = pd.read_csv(BUFFER, low_memory=False)
+DATA.columns = ['Station Name', 'CRS'] * 4
+CRScode = pd.concat([DATA.iloc[:, 0:2], DATA.iloc[:, 2:4], DATA.iloc[:, 4:6], DATA.iloc[:, 6:]])
+CRScode = CRScode.dropna().reset_index(drop=True)
+CRScode = CRScode.set_index('Station Name')
+
+# Ignore all locations other than heavy and light rail, or ferry locations
+IDX1 = NaPTAN['StopType'].isin(['RLY', 'FER', 'MET'])
+
+# Add CRS codes to train stations
+STATIONS = NaPTAN[IDX1].join(CRScode, on='LocalityName')
+STATIONS['Status'] = STATIONS['Status'].fillna(STATIONS['Modification'])
+STATIONS = STATIONS.dropna(how='all', axis=1).reset_index().fillna('')
+
+FIELDS = ['ATCOCode', 'CommonName', 'ShortCommonName', 'LocalityName',
+          'StopType', 'Status', 'TIPLOC', 'CRS', 'geometry']
+
+# Clean up data-frame columns
+STATIONS = STATIONS[FIELDS]
+
+# Write to GeoJSON
+STATIONS.to_crs(CRS).to_file('stations.geojson', driver='GeoJSON')
+# Write file to GeoPackage
+STATIONS.to_crs(CRS).to_file('stations.gpkg', driver='GPKG', layer='stations')
+
 # ### Layers
 # ### Publishing interactive maps
 # ### Linking geographic and non-geographic visualisations
