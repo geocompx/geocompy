@@ -20,37 +20,54 @@ We focus on the two most comprehensive and fundamental packages, namely:
 * **rasterio** --- a spatial-oriented package, focused on "simple" raster formats (such as GeoTIFF), representing a raster using a combination of a `numpy` array, and a metadata object (`dict`) specifying the spatial referencing of the array
 * **xarray** --- A general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster format (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`
 
-This chapter will provide brief explanations of the fundamental geographic data models: vector and raster. We will introduce the theory behind each data model and the disciplines in which they predominate, before demonstrating their implementation in Python.
+This chapter will briefly explain the fundamental geographic data models: vector and raster. 
+Before demonstrating their implementation in Python, we will introduce the theory behind each data model and the disciplines in which they predominate.
 
-The vector data model represents the world using points, lines and polygons. These have discrete, well-defined borders, meaning that vector datasets usually have a high level of precision (but not necessarily accuracy as we will see in Section ...). The raster data model divides the surface up into cells of constant size. Raster datasets are the basis of background images used in web-mapping and have been a vital source of geographic data since the origins of aerial photography and satellite-based remote sensing devices. Rasters aggregate spatially specific features to a given resolution, meaning that they are consistent over space and scalable (many worldwide raster datasets are available).
+The vector data model represents the world using points, lines, and polygons. 
+These have discrete, well-defined borders, meaning that vector datasets usually have a high level of precision (but not necessarily accuracy, as we will see in Section ...).
+The raster data model divides the surface up into cells of constant size.
+Raster datasets are the basis of background images used in web-mapping and have been a vital source of geographic data since the origins of aerial photography and satellite-based remote sensing devices.
+Rasters aggregate spatially specific features to a given resolution, meaning that they are consistent over space and scalable (many worldwide raster datasets are available).
 
 Which to use? The answer likely depends on your domain of application:
 
 * Vector data tends to dominate the social sciences because human settlements tend to have discrete borders
 * Raster dominates many environmental sciences because of the reliance on remote sensing data
 
-There is much overlap in some fields and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data. Furthermore, it is possible to convert between the two forms (see Section ...). Whether your work involves more use of vector or raster datasets, it is worth understanding the underlying data model before using them, as discussed in subsequent chapters. This book mostly uses `geopandas` and `rasterio` packages to work with vector data and raster datasets, respectively.
+There is much overlap in some fields, and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data. 
+Furthermore, it is possible to convert between the two forms (see Section ...). 
+Whether your work involves more use of vector or raster datasets, it is worth understanding the underlying data model before using them, as discussed in subsequent chapters. 
+This book mostly uses **geopandas** and **rasterio** packages to work with vector data and raster datasets, respectively.
 
 ## Vector data
 
-The geographic vector data model is based on points located within a coordinate reference system (CRS). Points can represent self-standing features (e.g., the location of a bus stop) or they can be linked together to form more complex geometries such as lines and polygons. Most point geometries contain only two dimensions (3-dimensional CRSs contain an additional $z$ value, typically representing height above sea level).
+The geographic vector data model is based on points located within a coordinate reference system (CRS). 
+Points can represent self-standing features (e.g., the location of a bus stop), or they can be linked together to form more complex geometries such as lines and polygons. 
+Most point geometries contain only two dimensions (3-dimensional CRSs contain an additional $z$ value, typically representing height above sea level).
 
-In this system, London, for example, can be represented by the coordinates `(-0.1, 51.5)`. This means that its location is -0.1 degrees east and 51.5 degrees north of the origin. The origin in this case is at 0 degrees longitude (the Prime Meridian) and 0 degree latitude (the Equator) in a geographic ('lon/lat') CRS (Figure ..., left panel). The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000, 180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS. This can be verified visually: slightly more than 5 'boxes'---square areas bounded by the gray grid lines 100 $km$ in width---separate the point representing London from the origin (Figure 2.1, right panel).
+In this system, London, for example, can be represented by the coordinates `(-0.1, 51.5)`. 
+This means that its location is -0.1 degrees east and 51.5 degrees north of the origin.
+The origin, in this case, is at 0 degrees longitude (the Prime Meridian) and 0 degree latitude (the Equator) in a geographic ('lon/lat') CRS (Figure ..., left panel).
+The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000, 180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS. 
+This can be verified visually: slightly more than 5 'boxes'---square areas bounded by the gray grid lines 100 $km$ in width---separate the point representing London from the origin (Figure 2.1, right panel).
 
-The location of National Grid's origin, in the sea beyond South West Peninsular, ensures that most locations in the UK have positive Easting and Northing values. There is more to CRSs, as described in Sections ... and ... but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing distance from an origin, usually in $x$ then $y$ dimensions.
+The location of National Grid's origin, in the sea beyond South West Peninsular, ensures that most locations in the UK have positive Easting and Northing values.
+There is more to CRSs, as described in Sections ... and ... but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing the distance from an origin, usually in $x$ then $y$ dimensions.
 
 ...
-FIGURE ...: Illustration of vector (point) data in which location of London (the red X) is represented with reference to an origin (the blue circle). The left plot represents a geographic CRS with an origin at 0° longitude and latitude. The right plot represents a projected CRS with an origin located in the sea west of the South West Peninsula.
+FIGURE ...: Illustration of vector (point) data in which location of London (the red X) is represented with reference to an origin (the blue circle). 
+The left plot represents a geographic CRS with an origin at 0° longitude and latitude. 
+The right plot represents a projected CRS with an origin located in the sea west of the South West Peninsula.
 
-`geopandas` provides classes for geographic vector data and a consistent command-line interface to important low level libraries for geocomputation:
+**geopandas** provides classes for geographic vector data and a consistent command-line interface to important low-level libraries for geocomputation:
 
-*  GDAL, for reading, writing and manipulating a wide range of geographic data formats, covered in Chapter 8
+*  GDAL, for reading, writing, and manipulating a wide range of geographic data formats, covered in Chapter 8
 *  PROJ, a powerful library for coordinate system transformations, which underlies the content covered in Chapter 7
 *  GEOS, a planar geometry engine for operations such as calculating buffers and centroids on data with a projected CRS, covered in Chapter 5
 
 Nowadays, we take it for granted, however, only the tight integration with different geographic libraries makes reproducible geocomputation possible in the first place.
 
-This section introduces `geopandas` classes in preparation for subsequent chapters (Chapters 5 and 8 cover the GEOS and GDAL interface, respectively).
+This section introduces **geopandas** classes in preparation for subsequent chapters (Chapters 5 and 8 cover the GEOS and GDAL interface, respectively).
 
 ### Introduction
 
@@ -74,14 +91,15 @@ Before we begin, we need to import the **geopandas** package, conventionally as 
 import geopandas as gpd
 ```
 
-We will also limit the maximum number of printed rows to four, to save space, using the `"display.max_rows"` option of **pandas**:
+We also limit the maximum number of printed rows to four, to save space, using the `"display.max_rows"` option of **pandas**:
 
 ```{python}
 import pandas as pd
 pd.set_option("display.max_rows", 4)
 ```
 
-Most often, we import an existing vector layer from a file, such as a Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file. For example, the following expression imports a GeoPackage file `data/world.gpkg` into a `GeoDataFrame` named `gdf`:
+Most often, we import an existing vector layer from a file, such as an ESRI Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file.
+For example, the following line of code imports a GeoPackage file `data/world.gpkg` into a `GeoDataFrame` named `gdf`:
 
 ```{python}
 #| echo: false
@@ -103,7 +121,7 @@ else:
 gdf = gpd.read_file("data/world.gpkg")
 ```
 
-The result is a `GeoDataFrame`:
+The result is a `GeoDataFrame` with 177 rows (features) and 11 columns:
 
 ```{python}
 type(gdf)
@@ -137,6 +155,7 @@ gdf.explore()
 ```
 
 ```{python}
+#| echo: false
 # (Alternative)
 # import hvplot.pandas
 # gdf.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
@@ -155,14 +174,17 @@ gdf["geometry"]
 
 The geometry column also contains the spatial reference information, if any (see below).
 
-Many of the spatial operators, such as calculating the centroid, buffer, or bounding box of each feature, in fact involve just the geometry. Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the geometry column `GeoSeries`. 
-For example, the following expressions give exactly the same result, a `GeoSeries` with country centroids:
+Many of the spatial operators, such as calculating the centroid, buffer, or bounding box of each feature, in fact involve just the geometry.
+Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the geometry column `GeoSeries`. 
+For example, the following expressions give exactly the same result, a `GeoSeries` with country centroids (results not shown):
 
 ```{python}
+#| eval: false
 gdf.centroid
 ```
 
 ```{python}
+#| eval: false
 gdf["geometry"].centroid
 ```
 
@@ -184,11 +206,18 @@ In this case, we see that the `gdf` layer contains only `"MultiPolygon"` geometr
 
 ### The Simple Features standard
 
-Geometries are the basic building blocks of vector layers. Although the Simple Features standard defines about 20 types of geometries, we will focus on the seven most commonly used types: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` and `GEOMETRYCOLLECTION`. Find the whole list of possible feature types in the PostGIS manual.
+Geometries are the basic building blocks of vector layers. 
+Although the Simple Features standard defines about 20 types of geometries, we will focus on the seven most commonly used types: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` and `GEOMETRYCOLLECTION`. 
+Find the whole list of possible feature types in the PostGIS manual.
 
-Generally, well-known binary (WKB) or well-known text (WKT) are the standard encoding for simple feature geometries. WKB representations are usually hexadecimal strings easily readable for computers. This is why GIS and spatial databases use WKB to transfer and store geometry objects. WKT, on the other hand, is a human-readable text markup description of simple features. Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
+Generally, well-known binary (WKB) or well-known text (WKT) are the standard encodings for simple feature geometries.
+WKB representations are usually hexadecimal strings easily readable for computers. 
+This is why GIS and spatial databases use WKB to transfer and store geometry objects. 
+WKT, on the other hand, is a human-readable text markup description of simple features.
+Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
 
-The basis for each geometry type is the point. A point is simply a coordinate in 2D, 3D or 4D space such as (see left panel in Figure ...):
+The basis for each geometry type is the point. 
+A point is simply a coordinate in 2D, 3D, or 4D space such as (see the left panel in Figure ...):
 
 ```text
 POINT (5 2)
@@ -209,7 +238,8 @@ POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5))
 Illustration of point, linestring and polygon geometries...
 FIGURE ...: Illustration of point, linestring and polygon geometries...
 
-So far we have created geometries with only one geometric entity per feature. However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type:
+So far we have created geometries with only one geometric entity per feature. 
+However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type:
 
 ```text
 MULTIPOINT (5 2, 1 3, 3 4, 3 2)
@@ -235,7 +265,7 @@ For example, here is one specific geometry selected by implicit index (that of C
 gdf["geometry"].iloc[3]
 ```
 
-and here is a specific geometry selected based on the `"name_long"` attribute:
+We can also select a specific geometry based on the `"name_long"` attribute:
 
 ```{python}
 gdf[gdf["name_long"] == "Egypt"]["geometry"].iloc[0]
@@ -243,7 +273,8 @@ gdf[gdf["name_long"] == "Egypt"]["geometry"].iloc[0]
 
 The **shapely** package is compatible with the Simple Features standard.
 Accordingly, seven types of geometries are supported.
-The following section demonstrates creating a `shapely` geometry of each type, from scratch or using a `string` in the WKT format as input. To do so , we need to import the `shapely.wkt` module and geometry types:
+The following section demonstrates creating a `shapely` geometry of each type, from scratch or using a `string` in the WKT format as input.
+To do so, we need to import the `shapely.wkt` module and geometry types:
 
 ```{python}
 import shapely.wkt as wkt
@@ -346,7 +377,7 @@ geometrycollection
 ```
 
 `shapely` geometries act as atomic units of vector data, as spatial operations on a geometry return a single new geometry.
-For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.1`) and itself:
+For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.2`) and itself:
 
 ```{python}
 multipolygon.buffer(0.2).difference(multipolygon)
@@ -366,7 +397,7 @@ linestring.geom_type
 ```
 
 Finally, it is important to note that raw coordinates of `shapely` geometries are accessible through a combination of the `.coords`, `.geoms`, `.exterior`, and `.interiors`, properties (depending on the geometry type). 
-These access methods are useful for when we need to develop our own spatial operators for specific tasks. 
+These access methods are helpful when we need to develop our own spatial operators for specific tasks. 
 For example, the following expression returns the coordinates of the `polygon` geometry exterior (note that the returned object is iterable, thus enclosed in a `list` to return all coordinates at once):
 
 ```{python}
