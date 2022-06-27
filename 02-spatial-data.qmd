@@ -91,11 +91,11 @@ Before we begin, we need to import the **geopandas** package, conventionally as 
 import geopandas as gpd
 ```
 
-We also limit the maximum number of printed rows to four, to save space, using the `"display.max_rows"` option of **pandas**:
+We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**:
 
 ```{python}
 import pandas as pd
-pd.set_option("display.max_rows", 4)
+pd.set_option('display.max_rows', 4)
 ```
 
 Most often, we import an existing vector layer from a file, such as an ESRI Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file.
@@ -105,20 +105,20 @@ For example, the following line of code imports a GeoPackage file `data/world.gp
 #| echo: false
 #| label: getdata
 from pathlib import Path
-data_path = Path("data")
+data_path = Path('data')
 if data_path.is_dir():
   pass
-  # print("path exists") # directory exists
+  # print('path exists') # directory exists
 else:
-  print("Attempting to get and unzip the data")
+  print('Attempting to get and unzip the data')
   import requests, zipfile, io
-  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/data.zip")
+  r = requests.get('https://github.com/geocompr/py/releases/download/0.1/data.zip')
   z = zipfile.ZipFile(io.BytesIO(r.content))
-  z.extractall(".")
+  z.extractall('.')
 ```
 
 ```{python}
-gdf = gpd.read_file("data/world.gpkg")
+gdf = gpd.read_file('data/world.gpkg')
 ```
 
 The result is a `GeoDataFrame` with 177 rows (features) and 11 columns:
@@ -132,14 +132,14 @@ Thus, we can treat a vector layer as a table, and process it using the ordinary,
 For example, the following expression creates a subset with just the country name and the geometry (see below):
 
 ```{python}
-gdf = gdf[["name_long", "geometry"]]
+gdf = gdf[['name_long', 'geometry']]
 gdf
 ```
 
-The following expression creates a subset based on a condition, such as equality of the `"name_long"` column to the string `"Egypt"`:
+The following expression creates a subset based on a condition, such as equality of the `'name_long'` column to the string `'Egypt'`:
 
 ```{python}
-gdf[gdf["name_long"] == "Egypt"]
+gdf[gdf['name_long'] == 'Egypt']
 ```
 
 Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method, as follows:
@@ -166,10 +166,10 @@ gdf.explore()
 ### Geometry columns
 
 One of the columns in a `GeoDataFrame` is a geometry column, of class `GeoSeries`.
-The geometry column contains the geometric part of the vector layer, e.g., the `"MultiPolygon"` geometries of the 177 countries in `gdf`:
+The geometry column contains the geometric part of the vector layer, e.g., the `'MultiPolygon'` geometries of the 177 countries in `gdf`:
 
 ```{python}
-gdf["geometry"]
+gdf['geometry']
 ```
 
 The geometry column also contains the spatial reference information, if any (see below).
@@ -185,7 +185,7 @@ gdf.centroid
 
 ```{python}
 #| eval: false
-gdf["geometry"].centroid
+gdf['geometry'].centroid
 ```
 
 Another useful property of the geometry column is the geometry type (see below). 
@@ -193,16 +193,16 @@ Note that the types of geometries contained in a geometry column (and, thus, a v
 Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value:
 
 ```{python}
-gdf["geometry"].type
+gdf['geometry'].type
 ```
 
 To summarize the occurrence of different geometry types in a geometry column, we can use the **pandas** method called `value_counts`:
 
 ```{python}
-gdf["geometry"].type.value_counts()
+gdf['geometry'].type.value_counts()
 ```
 
-In this case, we see that the `gdf` layer contains only `"MultiPolygon"` geometries.
+In this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
 
 ### The Simple Features standard
 
@@ -262,13 +262,13 @@ Each element in the geometry column is a geometry object, of class `shapely`.
 For example, here is one specific geometry selected by implicit index (that of Canada):
 
 ```{python}
-gdf["geometry"].iloc[3]
+gdf['geometry'].iloc[3]
 ```
 
-We can also select a specific geometry based on the `"name_long"` attribute:
+We can also select a specific geometry based on the `'name_long'` attribute:
 
 ```{python}
-gdf[gdf["name_long"] == "Egypt"]["geometry"].iloc[0]
+gdf[gdf['name_long'] == 'Egypt']['geometry'].iloc[0]
 ```
 
 The **shapely** package is compatible with the Simple Features standard.
@@ -289,14 +289,14 @@ point
 ```
 
 Alternatively, we can use the `wkt.loads` (stands for "load a WKT *s*tring") to transform a WKT string to a `shapely` geometry object. 
-Here is an example of a `"Point"` geometry:
+Here is an example of a `'Point'` geometry:
 
 ```{python}
-point = wkt.loads("POINT (5 2)")
+point = wkt.loads('POINT (5 2)')
 point
 ```
 
-Here is an example of a `"MultiPoint"` geometry:
+Here is an example of a `'MultiPoint'` geometry:
 
 ```{python}
 from shapely.geometry import MultiPoint
@@ -304,7 +304,7 @@ multipoint = MultiPoint([(5,2), (1,3), (3,4), (3,2)])
 multipoint
 ```
 
-Here is an example of a `"LineString"` geometry:
+Here is an example of a `'LineString'` geometry:
 
 ```{python}
 from shapely.geometry import LineString
@@ -312,7 +312,7 @@ linestring = LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
 linestring
 ```
 
-Here is an example of a `"MultiLineString"` geometry:
+Here is an example of a `'MultiLineString'` geometry:
 
 ```{python}
 from shapely.geometry import MultiLineString
@@ -320,7 +320,7 @@ linestring = MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)
 linestring
 ```
 
-Here is an example of a `"Polygon"` geometry:
+Here is an example of a `'Polygon'` geometry:
 
 ```{python}
 from shapely.geometry import Polygon
@@ -328,7 +328,7 @@ polygon = Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2
 polygon
 ```
 
-Here is an example of a `"MultiPolygon"` geometry:
+Here is an example of a `'MultiPolygon'` geometry:
 
 ```{python}
 from shapely.geometry import MultiPolygon
@@ -337,7 +337,7 @@ multipolygon = MultiPolygon([Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]),
 multipolygon
 ```
 
-And, finally, here is an example of a `"GeometryCollection"` geometry:
+And, finally, here is an example of a `'GeometryCollection'` geometry:
 
 ```{python}
 from shapely.geometry import GeometryCollection
@@ -421,7 +421,7 @@ In the first step, we pass a file path to the `rasterio.open` function to create
 For this example, we use a single-band raster representing elevation in Zion National Park:
 
 ```{python}
-src = rasterio.open("data/srtm.tif")
+src = rasterio.open('data/srtm.tif')
 ```
 
 To get a first impression of the raster values, we can plot it using the `show` function:
@@ -490,18 +490,18 @@ import xarray as xr
 Reading [source](https://crudata.uea.ac.uk/cru/data//temperature/):
 
 ```{python}
-x = xr.open_dataset("data/absolute_v5.nc")
+x = xr.open_dataset('data/absolute_v5.nc')
 x
 ```
 
 ```{python}
-x["tem"]
+x['tem']
 ```
 
 Plot:
 
 ```{python}
-x["tem"].plot(col="time", col_wrap=4)
+x['tem'].plot(col='time', col_wrap=4)
 ```
 
 ## Coordinate Reference Systems
