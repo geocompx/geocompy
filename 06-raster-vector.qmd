@@ -32,6 +32,7 @@ and load the sample data:
 
 ```{python}
 src_srtm = rasterio.open("data/srtm.tif")
+src_nlcd = rasterio.open("data/nlcd.tif")
 zion = gpd.read_file("data/zion.gpkg")
 zion_points = gpd.read_file("data/zion_points.gpkg")
 ```
@@ -247,25 +248,38 @@ Note the `stats` argument, where we determine what type of statistics are calcul
 
 See the [documentation](https://pythonhosted.org/rasterstats/manual.html#statistics) for the complete list. Additionally, the `zonal_stats` function accepts user-defined functions for calculating any custom statistics.
 
-From polygon (nlcd)...
+To count occurrences of categorical raster values within polygons, we can use masking (see Section...) combined with `np.unique`, as follows:
 
-The similar approach works for counting occurrences of categorical raster values within polygons. This is illustrated with a land cover dataset (nlcd) from the spDataLarge package in Figure 6.4(B), and demonstrated in the code below:
+```{python}
+out_image, out_transform = rasterio.mask.mask(
+    src_nlcd, 
+    zion['geometry'].to_crs(src_nlcd.crs), 
+    crop=False, 
+    nodata=9999
+)
+counts = np.unique(out_image, return_counts=True)
+```
 
-nlcd = rast(system.file("raster/nlcd.tif", package = "spDataLarge"))
-zion2 = st_transform(zion, st_crs(nlcd))
-zion_nlcd = terra::extract(nlcd, vect(zion2))
-zion_nlcd |> 
-  group_by(ID, levels) |>
-  count()
-#> # A tibble: 7 × 3
-#> # Groups:   ID, levels [7]
-#>      ID levels         n
-#>   <dbl> <fct>      <int>
-#> 1     1 Developed   4205
-#> 2     1 Barren     98285
-#> 3     1 Forest    298299
-#> 4     1 Shrubland 203701
-#> # … with 3 more rows
+According to the result, for example, pixel value `2` ("Developed" class) appears in `4205` pixels within the Zion polygon:
+
+```{python}
+counts
+```
+
+Raster to polygon extraction is illustrated in @fig-raster-extract-to-polygon.
+
+```{python}
+#| label: fig-raster-extract-to-polygon
+#| fig-cap: Area used for continuous (left) and categorical (right) raster extraction.
+
+fig, axes = plt.subplots(ncols=2, figsize=(7,5))
+show(src_srtm, ax=axes[0])
+zion.plot(ax=axes[0], color='none', edgecolor='black')
+show(src_nlcd, ax=axes[1], cmap='Set3')
+zion.to_crs(src_nlcd.crs).plot(ax=axes[1], color='none', edgecolor='black')
+axes[0].set_title('Continuous data extraction')
+axes[1].set_title('Categorical data extraction');
+```
 
 ## Rasterization
 
