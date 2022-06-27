@@ -78,7 +78,7 @@ As we will see, the three classes are hierarchical, meaning that the complex enc
 * A geometry column (class `GeoSeries`) is composed of individual geometries (class `shapely`)
 
 The first two classes (`GeoDataFrame` and `GeoSeries`) are defined in package **geopandas**.
-The third class is defined in package **shapely**, which deals with individual geometries, and comprises on of the dependencies of the **geopandas** package.
+The third class is defined in package **shapely**, which deals with individual geometries, and is a main dependency of the **geopandas** package.
 
 ### Vector layers
 
@@ -304,21 +304,11 @@ multipoint = MultiPoint([(5,2), (1,3), (3,4), (3,2)])
 multipoint
 ```
 
-```{python}
-multipoint = wkt.loads("MULTIPOINT ((5 2), (1 3), (3 4), (3 2))")
-multipoint
-```
-
 Here is an example of a `"LineString"` geometry:
 
 ```{python}
 from shapely.geometry import LineString
 linestring = LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
-linestring
-```
-
-```{python}
-linestring = wkt.loads("LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)")
 linestring
 ```
 
@@ -330,21 +320,11 @@ linestring = MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)
 linestring
 ```
 
-```{python}
-multilinestring = wkt.loads("MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))")
-multilinestring
-```
-
 Here is an example of a `"Polygon"` geometry:
 
 ```{python}
 from shapely.geometry import Polygon
 polygon = Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
-polygon
-```
-
-```{python}
-polygon = wkt.loads("POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5), (2 4, 3 4, 3 3, 2 3, 2 4))")
 polygon
 ```
 
@@ -357,11 +337,6 @@ multipolygon = MultiPolygon([Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]),
 multipolygon
 ```
 
-```{python}
-multipolygon = wkt.loads("MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5)), ((0 2, 1 2, 1 3, 0 3, 0 2)))")
-multipolygon
-```
-
 And, finally, here is an example of a `"GeometryCollection"` geometry:
 
 ```{python}
@@ -369,11 +344,6 @@ from shapely.geometry import GeometryCollection
 multipoint = GeometryCollection([MultiPoint([(5,2), (1,3), (3,4), (3,2)]),
                                  MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])])
 multipoint
-```
-
-```{python}
-geometrycollection = wkt.loads("GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))")
-geometrycollection
 ```
 
 `shapely` geometries act as atomic units of vector data, as spatial operations on a geometry return a single new geometry.
@@ -619,7 +589,7 @@ src.crs
 An essential feature of CRSs is that they contain information about spatial units.
 Clearly, it is vital to know whether a house's measurements are in feet or meters, and the same applies to maps.
 It is a good cartographic practice to add a scale bar or some other distance indicator onto maps to demonstrate the relationship between distances on the page or screen and distances on the ground. 
-Likewise, it is important to formally specify the units in which the geometry data or cells are measured to provide context and ensure that subsequent calculations are done in context.
+Likewise, it is important for the user to be aware of the units in which the geometry coordinates are, to ensure that subsequent calculations are done in the right context.
 
 Python spatial data structures in **geopandas** and **rasterio** do not natively support the concept of measurement.
 The coordinates of a vector layer or a raster are plain numbers, referring to an arbitrary plane.
@@ -631,7 +601,7 @@ However, that information is not encoded in any numeric calculation.
 src.meta
 ```
 
-Consequently, we need to be aware of the CRS units---typically decimal degrees in a geographic CRS, or $m$ in a projected CRS, but there are exceptions---we are working with.
+Consequently, we need to be aware of the CRS units we are working with. Typically, these are decimal degrees, in a geographic CRS, or $m$, in a projected CRS, although there are exceptions.
 Geometric calculations such as length, area, or distance, return plain numbers in the same units of the CRS (such as $m$ or $m^2$). 
 It is up to the user to determine which units the result is given in and treat the result accordingly. 
 For example, if the area output was in $m^2$ and we need the result in $km^2$, then we need to divide the result by $1000^2$. 
