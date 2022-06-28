@@ -287,9 +287,16 @@ axes[1].set_title('Categorical data extraction');
 
 Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in Chapter 2 the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.
 
-The `rasterio` package contains the `rasterio.features.rasterize` function for doing this work. To make it happen, we need to have the "template" grid definition, i.e., the "template" raster defining the extent, resolution and CRS of the output, in the form of `out_shape` (the dimensions) and `transform` (the transform). In case we have an existing template raster, we simply need to query its `out_shape` and `transform`. In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate the `out_shape` and `transform` (see next example).
+The `rasterio` package contains the `rasterio.features.rasterize` function for doing this work. To make it happen, we need to have the "template" grid definition, i.e., the "template" raster defining the extent, resolution and CRS of the output, in the form of `out_shape` (the dimensions) and `transform` (the transform). In case we have an existing template raster, we simply need to query its `out_shape` and `transform`. In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate the `out_shape` and `transform` (see next example). 
 
-The geographic resolution of the input raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.
+Furthermore, the `rasterio.features.rasterize` function requires the input shapes in the form for a generator of `(geom, value)` tuples, where:
+
+* `geom` is the given geometry (`shapely`)
+* `value` is the value to be "burned" into pixels coinciding with the geometry (`int` or `float`)
+
+Again, this will be made clear in the next example.
+
+The geographic resolution of the "template" raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.
 
 To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London is illustrated in @fig-rasterize-points) and spatial resolution of 1000 meters. First, we obtain the vector layer:
 
@@ -311,7 +318,7 @@ transform = rasterio.transform.from_origin(west=bounds[0], north=bounds[3], xsiz
 transform
 ```
 
-To calculate the `out_shape`, we divide the x- and y-axis extent by the resolution:
+To calculate the `out_shape`, we divide the x-axis and y-axis extent by the resolution:
 
 ```{python}
 rows = math.ceil((bounds[3] - bounds[1]) / res)
@@ -322,7 +329,13 @@ shape
 
 Now, we can rasterize. Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel "activation" method, and the function applied when there is more than one match.
 
-To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of `1` to all pixels where at least one point falls in:
+To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of `1` to all pixels where at least one point falls in. To transform the point `GeoDataFrame` into a generator of `shapely` geometries and the (fixed) values, we use the following expression:
+
+```{python}
+((g, 1) for g in cycle_hire_osm_projected['geometry'].to_list())
+```
+
+Therefore, the rasterizing expression is:
 
 ```{python}
 ch_raster1 = rasterio.features.rasterize(
@@ -330,6 +343,12 @@ ch_raster1 = rasterio.features.rasterize(
     out_shape=shape,
     transform=transform
 )
+```
+
+The result is a `numpy` array with the burned values of `1`, and `0` in unaffected "pixels":
+
+```{python}
+ch_raster1
 ```
 
 Here is the code to illustrate the input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it (@fig-rasterize-points):
