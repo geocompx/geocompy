@@ -368,11 +368,14 @@ Here is the resulting array of counts:
 ch_raster2
 ```
 
-The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell. The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what's the capacity in each grid cell? To calculate that, we must sum the field (`"capacity"`) rather than the fixed values of `1`. This requires using an expanded generator of geometries and values, as follows:
+The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell. The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what's the capacity in each grid cell? To calculate that, we must sum the field (`"capacity"`) rather than the fixed values of `1`. This requires using an expanded generator of geometries and values, where we (1) extract both geometries and attribute values, and (2) filter out "No Data" values, as follows:
 
 ```{python}
 ch_raster3 = rasterio.features.rasterize(
-    ((g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']].to_numpy().tolist()),
+    ((g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']] \
+        .dropna(subset='capacity')
+        .to_numpy() \
+        .tolist()),
     out_shape=shape,
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
