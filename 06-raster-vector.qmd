@@ -26,6 +26,7 @@ import rasterio
 import rasterio.mask
 import rasterstats
 from rasterio.plot import show
+import math
 ```
 
 and load the sample data:
@@ -273,7 +274,7 @@ Raster to polygon extraction is illustrated in @fig-raster-extract-to-polygon.
 #| label: fig-raster-extract-to-polygon
 #| fig-cap: Area used for continuous (left) and categorical (right) raster extraction.
 
-fig, axes = plt.subplots(ncols=2, figsize=(7,5))
+fig, axes = plt.subplots(ncols=2, figsize=(6,4))
 show(src_srtm, ax=axes[0])
 zion.plot(ax=axes[0], color='none', edgecolor='black')
 show(src_nlcd, ax=axes[1], cmap='Set3')
@@ -290,10 +291,61 @@ The `rasterio` package contains the `rasterio.features.rasterize` function for d
 
 The geographic resolution of the input raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.
 
-To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London is illustrated in Figure ...) and spatial resolution of 1000 meters. First, we obtain the vector layer:
+To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London is illustrated in @fig-rasterize-points) and spatial resolution of 1000 meters. First, we obtain the vector layer:
 
 ```{python}
 cycle_hire_osm_projected = cycle_hire_osm.to_crs(27700)
+cycle_hire_osm_projected
+```
+
+Next, we need to calculate the `out_shape` and `transform` of out template raster. To calculate the transform, we combine the top-left corner of the `cycle_hire_osm_projected` bounding box with the required resolution (e.g., 1000 $m$):
+
+```{python}
+bounds = cycle_hire_osm_projected.total_bounds
+bounds
+```
+
+```{python}
+res = 1000
+transform = rasterio.transform.from_origin(west=bounds[0], north=bounds[3], xsize=res, ysize=res)
+transform
+```
+
+To calculate the `out_shape`, we divide the x- and y-axis extent by the resolution:
+
+```{python}
+rows = math.ceil((bounds[3] - bounds[1]) / res)
+cols = math.ceil((bounds[2] - bounds[0]) / res)
+shape = (rows, cols)
+shape
+```
+
+Now, we can rasterize. Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel "activation" method, and the function applied when there is more than one match.
+
+To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of `1` to all pixels where at least one point falls in:
+
+```{python}
+ch_raster1 = rasterio.features.rasterize(
+    ((g, 1) for g in cycle_hire_osm_projected['geometry'].to_list()),
+    out_shape=shape,
+    transform=transform
+)
+```
+
+Here is the code to illustrate the input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it (@fig-rasterize-points):
+
+```{python}
+#| label: fig-rasterize-points
+#| fig-cap: Examples of point rasterization.
+
+fig, axes = plt.subplots(2, 2, figsize=(9,9))
+cycle_hire_osm_projected.plot(ax=axes[0][0], column='capacity', legend=True)
+show(ch_raster1, transform=transform, ax=axes[0][1])
+cycle_hire_osm_projected.plot(ax=axes[0][1], color='none', edgecolor='black')
+# show(ch_raster2, transform=transform, ax=axes[2])
+# show(ch_raster3, transform=transform, ax=axes[3])
+axes[0][0].set_title('Points')
+axes[0][1].set_title('Presence/Absence');
 ```
 
 ## Spatial vectorization
