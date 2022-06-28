@@ -368,6 +368,24 @@ Here is the resulting array of counts:
 ch_raster2
 ```
 
+The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell. The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what's the capacity in each grid cell? To calculate that, we must sum the field (`"capacity"`) rather than the fixed values of `1`. This requires using an expanded generator of geometries and values, as follows:
+
+```{python}
+ch_raster3 = rasterio.features.rasterize(
+    ((g, v) for g, v in cycle_hire_osm_projected[['capacity', 'geometry']].to_numpy().tolist()),
+    out_shape=shape,
+    transform=transform,
+    merge_alg=rasterio.enums.MergeAlg.add
+)
+```
+
+Here is the resulting array of summed `capacity`:
+
+```{python}
+ch_raster3
+```
+
+
 Here is the code to illustrate the input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it (@fig-rasterize-points):
 
 ```{python}
@@ -378,9 +396,11 @@ fig, axes = plt.subplots(2, 2, figsize=(9,9))
 cycle_hire_osm_projected.plot(ax=axes[0][0], column='capacity', legend=True)
 show(ch_raster1, transform=transform, ax=axes[0][1])
 show(ch_raster2, transform=transform, ax=axes[1][0])
-# show(ch_raster3, transform=transform, ax=axes[1][1])
+show(ch_raster3, transform=transform, ax=axes[1][1])
 axes[0][0].set_title('Points')
-axes[0][1].set_title('Presence/Absence');
+axes[0][1].set_title('Presence/Absence')
+axes[1][0].set_title('Count')
+axes[1][1].set_title('Aggregated capacity');
 ```
 
 ## Spatial vectorization
