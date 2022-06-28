@@ -351,6 +351,23 @@ The result is a `numpy` array with the burned values of `1`, and `0` in unaffect
 ch_raster1
 ```
 
+To count the number of stations, we can use the fixed value of `1` combined with the `merge_alg=rasterio.enums.MergeAlg.add`, which means that multiple values burned into the same pixel are *summed*, rather than replaced keeping last (the default):
+
+```{python}
+ch_raster2 = rasterio.features.rasterize(
+    ((g, 1) for g in cycle_hire_osm_projected['geometry'].to_list()),
+    out_shape=shape,
+    transform=transform,
+    merge_alg=rasterio.enums.MergeAlg.add
+)
+```
+
+Here is the resulting array of counts:
+
+```{python}
+ch_raster2
+```
+
 Here is the code to illustrate the input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it (@fig-rasterize-points):
 
 ```{python}
@@ -360,9 +377,8 @@ Here is the code to illustrate the input point layer `cycle_hire_osm_projected` 
 fig, axes = plt.subplots(2, 2, figsize=(9,9))
 cycle_hire_osm_projected.plot(ax=axes[0][0], column='capacity', legend=True)
 show(ch_raster1, transform=transform, ax=axes[0][1])
-cycle_hire_osm_projected.plot(ax=axes[0][1], color='none', edgecolor='black')
-# show(ch_raster2, transform=transform, ax=axes[2])
-# show(ch_raster3, transform=transform, ax=axes[3])
+show(ch_raster2, transform=transform, ax=axes[1][0])
+# show(ch_raster3, transform=transform, ax=axes[1][1])
 axes[0][0].set_title('Points')
 axes[0][1].set_title('Presence/Absence');
 ```
