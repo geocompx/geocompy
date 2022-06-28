@@ -110,7 +110,14 @@ Todo: help wanted
 
 ### Reproduce the book in a Docker container with IPython notebook
 
-Todo: help wanted
+```bash
+docker pull geocompr/geocompr:conda
+# Remove the --rm below for a persistent image
+docker run --rm -it geocompr/geocompr:conda
+firefox localhost:8784 # or your browser of choice
+# docker kill geocompy # stop the image
+```
+
 
 ### Reproduce the book in a Docker container with RStudio IDE
 

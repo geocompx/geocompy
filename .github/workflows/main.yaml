@@ -7,14 +7,16 @@ jobs:
   bookdown:
     name: Render-Book
     runs-on: ubuntu-latest
-    container: geocompr/geocompr:geocompy
+    container: geocompr/geocompr:conda
+    defaults:
+      run:
+        shell: bash -l {0}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       - name: Render
         run: |
-          pip3 install branca folium mapclassify rasterstats pygeos
           quarto render
           ls docs
       - name: Deploy
