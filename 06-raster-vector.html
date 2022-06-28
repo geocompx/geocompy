@@ -580,7 +580,13 @@
 <h2 data-number="6.5" class="anchored" data-anchor-id="rasterization"><span class="header-section-number">6.5</span> Rasterization</h2>
 <p>Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in Chapter 2 the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.</p>
 <p>The <code>rasterio</code> package contains the <code>rasterio.features.rasterize</code> function for doing this work. To make it happen, we need to have the “template” grid definition, i.e., the “template” raster defining the extent, resolution and CRS of the output, in the form of <code>out_shape</code> (the dimensions) and <code>transform</code> (the transform). In case we have an existing template raster, we simply need to query its <code>out_shape</code> and <code>transform</code>. In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate the <code>out_shape</code> and <code>transform</code> (see next example).</p>
-<p>The geographic resolution of the input raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.</p>
+<p>Furthermore, the <code>rasterio.features.rasterize</code> function requires the input shapes in the form for a generator of <code>(geom, value)</code> tuples, where:</p>
+<ul>
+<li><code>geom</code> is the given geometry (<code>shapely</code>)</li>
+<li><code>value</code> is the value to be “burned” into pixels coinciding with the geometry (<code>int</code> or <code>float</code>)</li>
+</ul>
+<p>Again, this will be made clear in the next example.</p>
+<p>The geographic resolution of the “template” raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.</p>
 <p>To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data <code>cycle_hire_osm_projected</code> (a dataset on cycle hire points in London is illustrated in <a href="#fig-rasterize-points">Figure&nbsp;<span>6.3</span></a>) and spatial resolution of 1000 meters. First, we obtain the vector layer:</p>
 <div class="cell" data-execution_count="23">
 <div class="sourceCode" id="cb31"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected <span class="op">=</span> cycle_hire_osm.to_crs(<span class="dv">27700</span>)</span>
@@ -687,7 +693,7 @@
        0.0, -1000.0, 184971.40854297992)</code></pre>
 </div>
 </div>
-<p>To calculate the <code>out_shape</code>, we divide the x- and y-axis extent by the resolution:</p>
+<p>To calculate the <code>out_shape</code>, we divide the x-axis and y-axis extent by the resolution:</p>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode" id="cb36"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> math.ceil((bounds[<span class="dv">3</span>] <span class="op">-</span> bounds[<span class="dv">1</span>]) <span class="op">/</span> res)</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> math.ceil((bounds[<span class="dv">2</span>] <span class="op">-</span> bounds[<span class="dv">0</span>]) <span class="op">/</span> res)</span>
@@ -698,24 +704,48 @@
 </div>
 </div>
 <p>Now, we can rasterize. Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel “activation” method, and the function applied when there is more than one match.</p>
-<p>To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of <code>1</code> to all pixels where at least one point falls in:</p>
+<p>To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of <code>1</code> to all pixels where at least one point falls in. To transform the point <code>GeoDataFrame</code> into a generator of <code>shapely</code> geometries and the (fixed) values, we use the following expression:</p>
 <div class="cell" data-execution_count="27">
-<div class="sourceCode" id="cb38"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>ch_raster1 <span class="op">=</span> rasterio.features.rasterize(</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected[<span class="st">'geometry'</span>].to_list()),</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>transform</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected[<span class="st">'geometry'</span>].to_list())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="27">
+<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7f10ac8ff5f0&gt;</code></pre>
+</div>
+</div>
+<p>Therefore, the rasterizing expression is:</p>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode" id="cb40"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>ch_raster1 <span class="op">=</span> rasterio.features.rasterize(</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected[<span class="st">'geometry'</span>].to_list()),</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>transform</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The result is a <code>numpy</code> array with the burned values of <code>1</code>, and <code>0</code> in unaffected “pixels”:</p>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode" id="cb41"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>ch_raster1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display" data-execution_count="29">
+<pre><code>array([[0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+       [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+       [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+       [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1],
+       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+       [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+       [0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+       [0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+       [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+       [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=uint8)</code></pre>
+</div>
 </div>
 <p>Here is the code to illustrate the input point layer <code>cycle_hire_osm_projected</code> and the three variants of rasterizing it (<a href="#fig-rasterize-points">Figure&nbsp;<span>6.3</span></a>):</p>
-<div class="cell" data-execution_count="28">
-<div class="sourceCode" id="cb39"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">9</span>))</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">0</span>], column<span class="op">=</span><span class="st">'capacity'</span>, legend<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>show(ch_raster1, transform<span class="op">=</span>transform, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>])</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>], color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="co"># show(ch_raster2, transform=transform, ax=axes[2])</span></span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="co"># show(ch_raster3, transform=transform, ax=axes[3])</span></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">0</span>].set_title(<span class="st">'Points'</span>)</span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">1</span>].set_title(<span class="st">'Presence/Absence'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode" id="cb43"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">9</span>))</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">0</span>], column<span class="op">=</span><span class="st">'capacity'</span>, legend<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>show(ch_raster1, transform<span class="op">=</span>transform, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>])</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>], color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="co"># show(ch_raster2, transform=transform, ax=axes[2])</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="co"># show(ch_raster3, transform=transform, ax=axes[3])</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">0</span>].set_title(<span class="st">'Points'</span>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">1</span>].set_title(<span class="st">'Presence/Absence'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div id="fig-rasterize-points" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -736,17 +766,17 @@
 <li>Raster to contours</li>
 </ul>
 <p>The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon. The second method, raster to points, has the additional step of calculating polygon centroids. The third method, raster to contours, is somewhat unrelated. Let us demonstrate the three in the given order.</p>
-<div class="cell" data-execution_count="29">
-<div class="sourceCode" id="cb40"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/grain.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="31">
+<div class="sourceCode" id="cb44"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/grain.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To polygons… …</p>
 <p>FIGURE 6.9: Illustration of vectorization of raster (left) into polygons (dissolve = FALSE; center) and aggregated polygons (dissolve = TRUE; right).</p>
-<div class="cell" data-execution_count="30">
-<div class="sourceCode" id="cb41"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/elev.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="32">
+<div class="sourceCode" id="cb45"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/elev.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To points…</p>
-<div class="cell" data-execution_count="31">
-<div class="sourceCode" id="cb42"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/elev.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="33">
+<div class="sourceCode" id="cb46"><pre class="sourceCode python cell-code code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/elev.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To contours…</p>
 <p>…</p>
