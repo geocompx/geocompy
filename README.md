@@ -4,8 +4,6 @@
 
 <https://geocompr.github.io/py/>
 
-## Setup
-
 Broadly, the book can be reproduced after following three steps
 
 1. Install Quarto https://quarto.org/docs/get-started/
@@ -14,16 +12,23 @@ Broadly, the book can be reproduced after following three steps
 
 Detailed instructions are provided below.
 
-### Reproduce the book with conda installation
+## Reproduce the book in Binder
 
-#### Installation on Windows
+To reproduce this book you can simply click on the link below to see the code running in your web browser (see details of how this works at [mybinder.org](https://mybinder.org/)):
+
+[![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb)
+
+
+## Reproduce the book with conda installation
+
+### Installation on Windows
 
 * Install [miniconda](https://docs.conda.io/en/latest/miniconda.html) either by:
   - Downloading and running the .exe link manually, or
   - With the [command](https://community.chocolatey.org/packages/miniconda3) `choco install miniconda3` from a PowerShell terminal after installing [Chocolatey](https://chocolatey.org/install)
 * Open the Anaconda Prompt (or a fresh PowerShell terminal after running the command [`conda init powershell`](https://github.com/conda/conda/issues/8428#issuecomment-474867193) from the Anaconda prompt), navigate to the above-mentioned working directory, and then run:
 
-#### Installation on Mac/Linux
+### Installation on Mac/Linux
 
 Install conda, e.g. with the following commands in a Linux terminal:
 
@@ -46,7 +51,7 @@ Miniconda3 will now be installed into this location:
   - Or specify a different location below
 ```
 
-#### Create and activate conda environment
+### Create and activate conda environment
 
 After installing conda you should be able to run the `conda create env` command above from bash to install the dependencies.
 
@@ -61,7 +66,7 @@ Activate the new environment with
 conda activate geocompy # the default name of the environment
 ```
 
-#### Serving a local version of the book with quarto
+### Serving a local version of the book with quarto
 
 Reproduce a live preview of the book with the following command, which reqires that you have installed [quarto](https://quarto.org/):
 
@@ -69,7 +74,7 @@ Reproduce a live preview of the book with the following command, which reqires t
 quarto preview # generate live preview of the book
 ```
 
-#### Reproducing chapters with jupyter
+### Reproducing chapters with jupyter
 
 * Open the Jupyter Notebook of any of chapters using a command such as:
 
@@ -77,7 +82,7 @@ quarto preview # generate live preview of the book
 jupyter notebook 02-spatial-data.ipynb
 ```
 
-#### Updating packages/environments with conda
+### Updating packages/environments with conda
 
 <details>
 
@@ -108,11 +113,12 @@ conda env remove -n geocompy
 
 </details>
 
-### Installing packages with pip
+## Installing packages with pip
 
 For Linux, use your preferred package manager to install the packages used in the book (`geopandas`, `rasterio`, etc.) as specified in each chapter, as well as the Jupyter Notebook interface. For example, using `pip` to install the Jupyter Notebook package is as follows:
 
 ```sh
+
 pip install jupyter-book
 ```
 
@@ -122,15 +128,26 @@ Then, navigate to the above-mentioned working directory, and open the Jupyter No
 jupyter notebook 02-spatial-data.ipynb
 ```
 
-### Reproduce the book in a Docker container with VSCode IDE
+You should see something like this: 
 
-Todo: help wanted
+![](https://user-images.githubusercontent.com/1825120/176920562-d2e7f9af-84b4-4352-8a50-9d9946084c66.png)
 
-### Reproduce the book in a Docker container with IPython notebook
+See documentation on running and developing Python code in a Jupyter notebook at [docs.jupyter.org](https://docs.jupyter.org/en/latest/).
 
-Todo: help wanted
+<!-- ## Reproduce the book in a Docker container with VSCode IDE -->
 
-### Reproduce the book in a Docker container with RStudio IDE
+<!-- Todo: help wanted -->
+
+<!-- ## Reproduce the book in a Docker container
+
+Note: experimental.
+
+```
+docker run -it -p 8888:8888 -v $(pwd):/root geocompr/geocompr:conda
+jupyter 
+```
+
+## Reproduce the book in a Docker container with RStudio IDE
 
 ```bash
 docker pull geocompr/geocompr:python
@@ -143,20 +160,6 @@ firefox localhost:8784 # or your browser of choice
 
 After opening the relevant project running `quarto preview` in the system shell in browser-based IDE opened by the command above, you should see something like this where you can run code and even modify the book and see changes with the previou command.
 
-![](https://user-images.githubusercontent.com/1825120/156414301-bfe622c5-1290-4f85-8a21-08d2a6d77df1.png)
+![](https://user-images.githubusercontent.com/1825120/156414301-bfe622c5-1290-4f85-8a21-08d2a6d77df1.png) -->
 
-### Reproduce the book in Binder
-
-Todo: help wanted
-
-```{bash, eval=FALSE, echo=FALSE}
-# Todo: improve these instructions before showing these system commands
-# To reproduce the book you need Python and and geo packages installed
-# Install them through a framework such as Conda (recommended) or pip3 as follows:
-pip3 install geopandas rasterio rioxarray jupyter matplotlib netcdf4 h5netcdf 
-# install quarto...
-quarto preview
-
-# Run the book code on Docker:
-```
 
