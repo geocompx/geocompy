@@ -106,8 +106,8 @@ import pandas as pd
 pd.set_option('display.max_rows', 4)
 ```
 
-Most often, we import an existing vector layer from a file, such as an ESRI Shapefile (`.shp`) or a GeoPackage (`.gpkg`) file.
-For example, the following line of code imports a GeoPackage file `data/world.gpkg` into a `GeoDataFrame` named `gdf`:
+Projects often start by importing an existing vector layer saved as an ESRI Shapefile (`.shp`), a GeoPackage (`.gpkg`) file, or other geographic file format.
+The function `read_file()` in the following line of code imports a GeoPackage file named `world.gpkg` located in the `data` directory of Python's working directory into a `GeoDataFrame` named `gdf`:
 
 ```{python}
 #| echo: false
@@ -129,15 +129,18 @@ else:
 gdf = gpd.read_file('data/world.gpkg')
 ```
 
-The result is a `GeoDataFrame` with 177 rows (features) and 11 columns:
+As  result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code chunk:
 
 ```{python}
+#| label: typegdf
 type(gdf)
+gdf.shape
 ```
 
-The `GeoDataFrame` class is an extension of the `DataFrame` class. 
-Thus, we can treat a vector layer as a table, and process it using the ordinary, i.e., non-spatial, **pandas** methods.
-For example, the following expression creates a subset with just the country name and the geometry (see below):
+The `GeoDataFrame` class is an extension of the `DataFrame` class from the popular **pandas** package. 
+This means we can treat a vector layer as a table, and process it using the ordinary, i.e., non-spatial, established function methods.
+For example, standard data frame subsetting methods can be used.
+The code below creates a subset of the `gdf` dataset containing only the country name and the geometry:
 
 ```{python}
 gdf = gdf[['name_long', 'geometry']]
@@ -173,18 +176,19 @@ gdf.explore()
 
 ### Geometry columns
 
-One of the columns in a `GeoDataFrame` is a geometry column, of class `GeoSeries`.
-The geometry column contains the geometric part of the vector layer, e.g., the `'MultiPolygon'` geometries of the 177 countries in `gdf`:
+A vital column in a `GeoDataFrame` is the geometry column, of class `GeoSeries`.
+The geometry column contains the geometric part of the vector layer.
+In the case of the `gdf` object, the geometry column contains `'MultiPolygon'`s  associated with each country:
 
 ```{python}
 gdf['geometry']
 ```
 
-The geometry column also contains the spatial reference information, if any (see below).
+The geometry column also contains the spatial reference information, if any.
 
-Many of the spatial operators, such as calculating the centroid, buffer, or bounding box of each feature, in fact involve just the geometry.
-Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the geometry column `GeoSeries`. 
-For example, the following expressions give exactly the same result, a `GeoSeries` with country centroids (results not shown):
+Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
+Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
+The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids (results not shown):
 
 ```{python}
 #| eval: false
@@ -196,7 +200,9 @@ gdf.centroid
 gdf['geometry'].centroid
 ```
 
-Another useful property of the geometry column is the geometry type (see below). 
+<!-- Note: the attribute data is lost in the first example, right? Worth stating that? (RL 2022-07) -->
+
+Another useful property of the geometry column is the geometry type, as shown in the following code chunk. 
 Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same.
 Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value:
 
@@ -211,27 +217,32 @@ gdf['geometry'].type.value_counts()
 ```
 
 In this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
+It is possible to have multiple geometry types in a single `GeoDataFrame`.
 
 ### The Simple Features standard
 
 Geometries are the basic building blocks of vector layers. 
 Although the Simple Features standard defines about 20 types of geometries, we will focus on the seven most commonly used types: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` and `GEOMETRYCOLLECTION`. 
 Find the whole list of possible feature types in the PostGIS manual.
+<!-- TODO: add a hyperlink -->
 
-Generally, well-known binary (WKB) or well-known text (WKT) are the standard encodings for simple feature geometries.
+Well-known binary (WKB) and well-known text (WKT) are the standard encodings for simple feature geometries.
+<!-- TODO: add reference or at least link to OGC document on this? -->
 WKB representations are usually hexadecimal strings easily readable for computers. 
 This is why GIS and spatial databases use WKB to transfer and store geometry objects. 
 WKT, on the other hand, is a human-readable text markup description of simple features.
 Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
 
-The basis for each geometry type is the point. 
-A point is simply a coordinate in 2D, 3D, or 4D space such as (see the left panel in Figure ...):
+The foundation of each geometry type is the point. 
+A point is simply a coordinate in 2D, 3D, or 4D space such as:
+<!-- TODO: (see the left panel in Figure ...): -->
 
 ```text
 POINT (5 2)
 ```
 
-A linestring is a sequence of points with a straight line connecting the points, for example (see middle panel in Figure ...):
+A linestring is a sequence of points with a straight line connecting the points, for example:
+<!-- TODO: (see middle panel in Figure ...): -->
 
 ```text
 LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)
@@ -243,11 +254,11 @@ A polygon is a sequence of points that form a closed, non-intersecting ring. Clo
 POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5))
 ```
 
-Illustration of point, linestring and polygon geometries...
-FIGURE ...: Illustration of point, linestring and polygon geometries...
+<!-- TODO: Illustration of point, linestring and polygon geometries...
+FIGURE ...: Illustration of point, linestring and polygon geometries... -->
 
 So far we have created geometries with only one geometric entity per feature. 
-However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type:
+However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type, as illustrated below:
 
 ```text
 MULTIPOINT (5 2, 1 3, 3 4, 3 2)
@@ -255,10 +266,11 @@ MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))
 MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5), (0 2, 1 2, 1 3, 0 3, 0 2)))
 ```
 
-Illustration of multi* geometries...
-FIGURE ...: Illustration of multi* geometries...
+<!-- TODO: Illustration of multi* geometries...
+FIGURE ...: Illustration of multi* geometries... -->
 
-Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings (see Figure ...):
+Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings:
+<!-- TODO: (see Figure ...): -->
 
 ```text
 GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
