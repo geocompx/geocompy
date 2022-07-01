@@ -80,8 +80,16 @@ quarto preview # generate live preview of the book
 * Open the Jupyter Notebook of any of chapters using a command such as:
 
 ```sh
+cd ipynb
+# jupyter notebook . # open a notebook showing all chapters
 jupyter notebook 02-spatial-data.ipynb
 ```
+
+You should see something like this: 
+
+![](https://user-images.githubusercontent.com/1825120/176920562-d2e7f9af-84b4-4352-8a50-9d9946084c66.png)
+
+See documentation on running and developing Python code in a Jupyter notebook at [docs.jupyter.org](https://docs.jupyter.org/en/latest/).
 
 ### Updating packages/environments with conda
 
@@ -116,6 +124,8 @@ conda env remove -n geocompy
 
 ## Installing packages with pip
 
+<details>
+
 For Linux, use your preferred package manager to install the packages used in the book (`geopandas`, `rasterio`, etc.) as specified in each chapter, as well as the Jupyter Notebook interface. For example, using `pip` to install the Jupyter Notebook package is as follows:
 
 ```sh
@@ -123,17 +133,7 @@ For Linux, use your preferred package manager to install the packages used in th
 pip install jupyter-book
 ```
 
-Then, navigate to the above-mentioned working directory, and open the Jupyter Notebook of any of chapters using a command such as:
-
-```sh
-jupyter notebook 02-spatial-data.ipynb
-```
-
-You should see something like this: 
-
-![](https://user-images.githubusercontent.com/1825120/176920562-d2e7f9af-84b4-4352-8a50-9d9946084c66.png)
-
-See documentation on running and developing Python code in a Jupyter notebook at [docs.jupyter.org](https://docs.jupyter.org/en/latest/).
+</details>
 
 <!-- ## Reproduce the book in a Docker container with VSCode IDE -->
 
