@@ -14,49 +14,23 @@ Broadly, the book can be reproduced after following three steps
 
 Detailed instructions are provided below.
 
-### Reproduce the book locally
+### Reproduce the book with conda installation
 
-For Windows, follow these steps:
+#### Installation on Windows
 
 * Install [miniconda](https://docs.conda.io/en/latest/miniconda.html) either by:
   - Downloading and running the .exe link manually, or
   - With the [command](https://community.chocolatey.org/packages/miniconda3) `choco install miniconda3` from a PowerShell terminal after installing [Chocolatey](https://chocolatey.org/install)
 * Open the Anaconda Prompt (or a fresh PowerShell terminal after running the command [`conda init powershell`](https://github.com/conda/conda/issues/8428#issuecomment-474867193) from the Anaconda prompt), navigate to the above-mentioned working directory, and then run:
 
-```sh
- # Warning may take several (10+) minutes to install the dependencies:
-conda env create -f environment.yml
-```
+#### Installation on Mac/Linux
 
-Activate the new environment with
-
-```sh
-conda activate geocompy # the default name of the environment
-```
-
-Update all packages to the latest versions as follows:
-
-```sh
-conda update --all
-```
-
-Reproduce a live preview of the book with the following command, which reqires that you have installed [quarto](https://quarto.org/):
-
-```sh
-quarto preview # generate live preview of the book
-```
-
-* Open the Jupyter Notebook of any of chapters using a command such as:
-
-```sh
-jupyter notebook 02-spatial-data.ipynb
-```
-
-The above steps should also work on Linux and Mac operating systems.
 Install conda, e.g. with the following commands in a Linux terminal:
 
 ```bash
-bash wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.11.0-Linux-x86_64.sh
+wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh
+chmod +x Miniconda3-py39_4.12.0-Linux-x86_64.sh
+./Miniconda3-py39_4.12.0-Linux-x86_64.sh
 ```
 You should see prompts like this:
 
@@ -72,19 +46,47 @@ Miniconda3 will now be installed into this location:
   - Or specify a different location below
 ```
 
-After that you should be able to run the `conda create env` command above from bash to install the dependencies.
+#### Create and activate conda environment
 
-For Linux, use your preferred package manager to install the packages used in the book (`geopandas`, `rasterio`, etc.) as specified in each chapter, as well as the Jupyter Notebook interface. For example, using `pip` to install the Jupyter Notebook package is as follows:
+After installing conda you should be able to run the `conda create env` command above from bash to install the dependencies.
 
 ```sh
-pip install jupyter-book
+ # Warning may take several (10+) minutes to install the dependencies:
+conda env create -f environment.yml
 ```
 
-Then, navigate to the above-mentioned working directory, and open the Jupyter Notebook of any of chapters using a command such as:
+Activate the new environment with
+
+```sh
+conda activate geocompy # the default name of the environment
+```
+
+#### Serving a local version of the book with quarto
+
+Reproduce a live preview of the book with the following command, which reqires that you have installed [quarto](https://quarto.org/):
+
+```sh
+quarto preview # generate live preview of the book
+```
+
+#### Reproducing chapters with jupyter
+
+* Open the Jupyter Notebook of any of chapters using a command such as:
 
 ```sh
 jupyter notebook 02-spatial-data.ipynb
 ```
+
+#### Updating packages/environments with conda
+
+<details>
+
+Update all packages to the latest versions as follows:
+
+```sh
+conda update --all
+```
+
 
 You can also install individual packages with:
 
@@ -102,6 +104,22 @@ If you ever want to remove the environment, which is called `geocompy` by defaul
 
 ```sh
 conda env remove -n geocompy
+```
+
+</details>
+
+### Installing packages with pip
+
+For Linux, use your preferred package manager to install the packages used in the book (`geopandas`, `rasterio`, etc.) as specified in each chapter, as well as the Jupyter Notebook interface. For example, using `pip` to install the Jupyter Notebook package is as follows:
+
+```sh
+pip install jupyter-book
+```
+
+Then, navigate to the above-mentioned working directory, and open the Jupyter Notebook of any of chapters using a command such as:
+
+```sh
+jupyter notebook 02-spatial-data.ipynb
 ```
 
 ### Reproduce the book in a Docker container with VSCode IDE
