@@ -1,0 +1,23 @@
+on:
+  push:
+    branches:
+      [main]
+name: Render
+jobs:
+  bookdown:
+    name: conda
+    runs-on: ubuntu-latest
+    container: geocompr/geocompr:conda
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Render
+        # https://stackoverflow.com/questions/61915607
+        run: |
+          quarto render
+          ls docs
+          
