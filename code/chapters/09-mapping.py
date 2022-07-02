@@ -155,7 +155,7 @@ FIELDS = ['ATCOCode', 'CommonName', 'ShortCommonName', 'LocalityName',
 # Clean up data-frame columns
 STATIONS = STATIONS[FIELDS]
 
-YORKSHIRE = gpd.read_file('data/yorkshire.geojson').iloc[0, 0]
+YORKSHIRE = gpd.read_file('data/yorkshire.json').iloc[0, 0]
 IDX = STATIONS.within(YORKSHIRE)
 
 STATIONS = STATIONS[IDX]
