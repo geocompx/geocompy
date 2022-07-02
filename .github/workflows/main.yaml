@@ -5,7 +5,7 @@ on:
 name: Render
 jobs:
   bookdown:
-    name: Render-Book
+    name: GH-Pages
     runs-on: ubuntu-latest
     container: geocompr/geocompr:conda
     defaults:
@@ -21,17 +21,10 @@ jobs:
           conda activate geocompy
           quarto render
           ls docs
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v1.2
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          publish-dir: './docs'
-          production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions"
-          enable-pull-request-comment: false
-          enable-commit-comment: true
-          overwrites-pull-request-comment: true
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        timeout-minutes: 1
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
+          commit_message: 'Deploy commit: ${{ github.event.head_commit.message }}'
