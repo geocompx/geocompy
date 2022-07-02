@@ -135,6 +135,37 @@ pip install jupyter-book
 
 </details>
 
+## Updating the .py and .ipynb files
+
+The Python scripts and IPython notebook files stored in the [code](code) and [ipynb](ipynb) folders are generated from the .qmd files.
+To regenerate them, you can use the following commands, to generate .ipynb and .py files for local versions of Chapter 2, for example:
+
+```bash
+quarto convert 02-spatial-data.qmd # generate .ipynb file
+jupytext --to py *.ipynb # generate .py files .ipynb files
+```
+
+Do this for all chapters with the following bash script in the repo:
+
+```bash
+./convert.sh
+```
+
+## Updating .py and .ipynb files with GitHub Actions
+
+We have set-up a GitHub Action to do this automatically: every commit message that contains the text string 'convert' will create and push updated .ipynb and .py files.
+
+## Executing the .py and .ipynb files
+
+Running the code chunks in the .qmd files in an IDE such as VSCode or directly with quarto is the main way code in this book is designed to be run interactively, but you can also execute the .py and .ipynb files directly.
+To run the code for chapter 2, for example, you can run one of the following commands from your system shell:
+
+```bash
+python code/chapters/02-spatial-data.py # currently requires manual intervention to complete, see #71
+ipython ipynb/02-spatial-data.ipynb # currently requires manual intervention to complete, see #71
+bash ./run-code.sh # run all .python files
+```
+
 <!-- ## Reproduce the book in a Docker container with VSCode IDE -->
 
 <!-- Todo: help wanted -->
