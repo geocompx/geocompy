@@ -47,8 +47,10 @@ nz = gpd.read_file("data/nz.gpkg")
 # - First example: NZ with fill and borders
 # - Scary matplotlib code here...
 
-nz.plot(color="grey")
-nz.plot(color="none", edgecolor="blue")
+#| layout-ncol: 3
+nz.plot(color="grey");
+nz.plot(color="none", edgecolor="blue");
+nz.plot(color="grey", edgecolor="blue");
 
 # <!-- # Add fill layer to nz shape
 # tm_shape(nz) +

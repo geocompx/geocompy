@@ -37,9 +37,15 @@ nz = gpd.read_file("data/nz.gpkg")
 
 # ## Introduction
 #
-# ## Geometric operations on vector data {#geo-vec}
+# So far the book has explained the structure of geographic datasets (Chapter 2), and how to manipulate them based on their non-geographic attributes (Chapter 3) and spatial relations (Chapter 4). This chapter focusses on manipulating the geographic elements of geographic objects, for example by simplifying and converting vector geometries, cropping raster datasets, and converting vector objects into rasters and from rasters into vectors. After reading it---and attempting the exercises at the end---you should understand and have control over the geometry column in sf objects and the extent and geographic location of pixels represented in rasters in relation to other geographic objects.
 #
-# ### Simplification
+# @sec-geo-vec covers transforming vector geometries with 'unary' and 'binary' operations. Unary operations work on a single geometry in isolation, including simplification (of lines and polygons), the creation of buffers and centroids, and shifting/scaling/rotating single geometries using 'affine transformations' (@sec-simplification to @sec-affine-transformations). Binary transformations modify one geometry based on the shape of another, including clipping and geometry unions, covered in @sec-clipping and @sec-geometry-unions, respectively. Type transformations (from a polygon to a line, for example) are demonstrated in Section @sec-type-transformations.
+#
+# @sec-geo-ras covers geometric transformations on raster objects. This involves changing the size and number of the underlying pixels, and assigning them new values. It teaches how to change the resolution (also called raster aggregation and disaggregation), the extent and the origin of a raster. These operations are especially useful if one would like to align raster datasets from diverse sources. Aligned raster objects share a one-to-one correspondence between pixels, allowing them to be processed using map algebra operations, described in Section 4.3.2. The final Section 6 connects vector and raster objects. It shows how raster values can be 'masked' and 'extracted' by vector geometries. Importantly it shows how to 'polygonize' rasters and 'rasterize' vector datasets, making the two data models more interchangeable.
+#
+# ## Geometric operations on vector data {#sec-geo-vec}
+#
+# ### Simplification {#sec-simplification}
 #
 # Simplify...
 
@@ -128,7 +134,7 @@ seine_buff_50km.plot(ax=axes[1], color="None", edgecolor=["red", "green", "blue"
 axes[0].set_title("5 km buffer")
 axes[1].set_title("50 km buffer");
 
-# ### Affine transformations
+# ### Affine transformations {#sec-affine-transformations}
 #
 # Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function. According to the [documentation](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates:
 #
@@ -172,7 +178,7 @@ axes[0].set_title("Shift")
 axes[1].set_title("Scale")
 axes[2].set_title("Rotate");
 
-# ### Clipping
+# ### Clipping {#sec-clipping}
 #
 # ...
 
@@ -180,11 +186,11 @@ axes[2].set_title("Rotate");
 #
 # ...
 
-# ### Geometry unions
+# ### Geometry unions {#sec-geometry-unions}
 #
 # ...
 
-# ### Type transformations
+# ### Type transformations {#sec-type-transformations}
 #
 # Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. The `shapely` package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.geometry.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
 #
@@ -232,7 +238,7 @@ shapely.geometry.MultiPoint(polygon.exterior.coords)
 
 # ...
 #
-# ## Geometric operations on raster data {#geo-ras}
+# ## Geometric operations on raster data {#sec-geo-ras}
 #
 # ### Geometric intersections
 #
