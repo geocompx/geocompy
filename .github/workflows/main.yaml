@@ -7,20 +7,29 @@ jobs:
   bookdown:
     name: Render-Book
     runs-on: ubuntu-latest
-    container: geocompr/geocompr:geocompy
+    container: geocompr/geocompr:conda
+    defaults:
+      run:
+        shell: bash -l {0}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       - name: Render
         run: |
-          pip3 install branca folium mapclassify rasterstats pygeos
           quarto render
           ls docs
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v1.2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-          publish_branch: gh-pages
-          commit_message: 'Deploy commit: ${{ github.event.head_commit.message }}'
+          publish-dir: './docs'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
+          enable-pull-request-comment: false
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 1
