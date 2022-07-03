@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Railway Stations in GB</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Cache-control" content="No-Cache">
+        <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico"/>
+	<link rel="stylesheet"
+	      href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+	      integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ==" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+                integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ==" crossorigin=""/>
+                crossorigin=""></script>
+        <script src="http://d3js.org/d3.v7.min.js"></script>
+        <div id="map" style="width: 1340px; height: 780px"></div>
+    </head>
+    <body>
+        <div id='map'></div>
+        <script type="text/javascript">
+          var radius = 6;
+          var weight = 1;
+          var linewidth = 2;
+          var log2 = Math.log(2.0);
+          var minZoom = 3;
+          var maxZoom = 18;
+          var map = L.map('map').setView([54.533, -2.53], 6);
+          L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              maxZoom: maxZoom,
+              minZoom: minZoom,
+              attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' + '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+              id: 'osm.standard'
+          }).addTo(map);
+          d3.json("stations.geojson").then(function(d) {
+              function get_colour(p) {
+                  var fail = "#00FF00";
+		  switch(p.StopType) {
+                  case "MET":
+                      return "#41B6C4";
+		  case "FER":
+                      return "#225EA8";
+		  default:
+		      switch(p.Status) {
+		      case "active":
+			  return "#0C2C84";
+		      case "inactive":
+			  return "#FFFFCC";
+		      }
+		  }
+                  return fail;
+              }
+              function onEachFeature(feature, layer) {
+                  var this_feature = feature.properties;
+                  var popupContent;
+                  if (this_feature.LocalityName)
+                      popupContent = this_feature.LocalityName;
+                  const lookup = {
+		      "ATCOCode": "ATCO",
+		      "CRS": "CRS",
+		      "CommonName": "Name",		     
+		      "StopType": "Type",
+		      "TIPLOC": "TIPLOC",
+		      "Status": "Status",
+		  }
+		  const types = {"RLY": "Rail",
+				 "FER": "Ferry",
+				 "MET": "Metro"};
+		  this_feature["StopType"] = types[this_feature["StopType"]];
+                  var k = Object.keys(this_feature);
+                  for (var i = 0; i < k.length; i++) {
+                      if (k[i] in lookup & k[i] in this_feature & this_feature[k[i]] != "")
+                          popupContent += '<br>' + lookup[k[i]] + ': ' + this_feature[k[i]];
+                  }
+                  layer.bindPopup(popupContent);
+              }
+              L.geoJSON(d, {
+                  style: function(feature) {
+                      var c = get_colour(feature.properties);
+                      switch (feature.geometry.type) {
+                      case 'Point':
+                          return {
+                              color: c,
+                              radius: radius,
+                              weight: weight,
+                              opacity: 1.0,
+                              fillOpacity: 0.4
+                          };
+                      default:
+                          return {
+                              colour: c,
+                              weight: weight
+                          };
+                      }
+                  },
+                  onEachFeature: onEachFeature,
+                  pointToLayer: function(feature, latlng) {
+                      return L.circleMarker(latlng, {
+                          opacity: 1,
+                          fillOpacity: 0.8
+                      });
+                  }
+              }).addTo(map);
+          });
+          </script>
+    </body>
+</html>
