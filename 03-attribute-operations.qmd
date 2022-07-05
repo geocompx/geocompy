@@ -224,27 +224,34 @@ world_agg = pd.merge(world_agg3a, world_agg3b, on='continent')
 
 ### Vector attribute joining {#sec-vector-attribute-joining}
 
-Join by attribute...
+Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared 'key' variable. `pandas` has a function named `pd.merge` for joining tables or vector layers based on common column(s). The `pd.merge` function follows conventions used in the database language SQL (Grolemund and Wickham 2016). Using `pd.merge` to join non-spatial datasets to vector layers is the focus of this section. The `pd.merge` function works the same on tables (`DataFrame`) and vector layer (`GeoDataFrame`) objects, the only important difference being the presence of the geometry column (which is not involved in the join operation anyway). The result of data joins can be either a `DataFrame` or a `GeoDataFrame` object, depending on the inputs. The most common type of attribute join on spatial data takes a `GeoDataFrame` object as the first argument and adds columns to it from a `DataFrame` specified as the second argument.
+
+To demonstrate joins, we will combine data on coffee production with the `world` dataset. The coffee data is in a `DataFrame` called `coffee_data` imported from a CSV file. It has 3 columns: 
+
+* `name_long` names major coffee-producing nations
+* `coffee_production_2016` and `coffee_production_2017` contain estimated values for coffee production in units of 60-kg bags in each year. 
 
 ```{python}
 coffee_data = pd.read_csv('data/coffee_data.csv')
 coffee_data
 ```
 
-Join by `'name_long'` column...
+A left join, which preserves the first dataset, merges `world` with `coffee_data`, based on the common `'name_long'` column:
 
 ```{python}
 world_coffee = pd.merge(world, coffee_data, on='name_long', how='left')
 world_coffee
 ```
 
-Plot... 
+The result is a `GeoDataFrame` object identical to the original `world` object, but with two new variables (`coffee_production_2016` and `coffee_production_2017`) on coffee production. This can be plotted as a map, as illustrated in @fig-join-coffee-production:
 
 ```{python}
+#| label: fig-join-coffee-production
+#| fig-cap: World coffee production (thousand 60-kg bags) by country, 2017. Source: International Coffee Organization. 
+
 base = world.plot(color='white', edgecolor='lightgrey')
 world_coffee.plot(ax=base, column='coffee_production_2017');
 ```
-
 
 ### Creating attributes and removing spatial information
 
