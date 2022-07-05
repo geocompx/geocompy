@@ -5,9 +5,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.8
+#       jupytext_version: 1.13.7
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
@@ -122,6 +122,8 @@ pd.set_option('display.max_rows', 4)
 #| echo: false
 #| label: getdata
 from pathlib import Path
+import os
+import shutil
 data_path = Path('data')
 if data_path.is_dir():
   pass
@@ -132,6 +134,17 @@ else:
   r = requests.get('https://github.com/geocompr/py/releases/download/0.1/data.zip')
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall('.')
+data_path = Path('data/cycle_hire_osm.gpkg')
+if data_path.is_file():
+  pass
+  # print('path exists') # directory exists
+else:
+  print('Attempting to move data')
+  r = requests.get('https://github.com/geocompr/py/archive/refs/heads/main.zip')
+  z = zipfile.ZipFile(io.BytesIO(r.content))
+  z.extractall('.')
+  file_names = os.listdir(source_dir)
+  shutil.copytree('py-main/data', 'data', dirs_exist_ok=True) 
 
 gdf = gpd.read_file('data/world.gpkg')
 
