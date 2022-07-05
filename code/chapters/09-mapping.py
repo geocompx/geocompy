@@ -5,9 +5,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.8
+#       jupytext_version: 1.13.7
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
@@ -47,8 +47,10 @@ nz = gpd.read_file("data/nz.gpkg")
 # - First example: NZ with fill and borders
 # - Scary matplotlib code here...
 
-nz.plot(color="grey")
-nz.plot(color="none", edgecolor="blue")
+#| layout-ncol: 3
+nz.plot(color="grey");
+nz.plot(color="none", edgecolor="blue");
+nz.plot(color="grey", edgecolor="blue");
 
 # <!-- # Add fill layer to nz shape
 # tm_shape(nz) +

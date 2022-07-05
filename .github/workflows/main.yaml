@@ -5,16 +5,23 @@ on:
 name: Render
 jobs:
   bookdown:
-    name: Render-Book
+    name: GH-Pages
     runs-on: ubuntu-latest
-    container: geocompr/geocompr:geocompy
+    container: geocompr/geocompr:conda
+    defaults:
+      run:
+        shell: bash -l {0}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       - name: Render
         run: |
-          pip3 install branca folium mapclassify
+          conda env list
+          conda activate geocompy
+          # test code:
+          ./convert.sh
+          ./run-code.sh
           quarto render
           ls docs
       - name: Deploy

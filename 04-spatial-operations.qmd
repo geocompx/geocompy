@@ -21,11 +21,13 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Packages...
 
 ```{python}
-import numpy as np
 import geopandas as gpd
+import numpy as np
+import os
 import rasterio
-from rasterio.plot import show
 import scipy.ndimage
+
+from rasterio.plot import show
 ```
 
 Let us load the sample data for this chapter:
@@ -37,9 +39,7 @@ data_path = Path("data")
 file_path = Path("data/landsat.tif")
 if not file_path.exists():
   if not data_path.is_dir():
-     os
      os.mkdir(data_path)
-  import os
   print("Attempting to get the data")
   import requests
   r = requests.get("https://github.com/geocompr/py/releases/download/0.1/landsat.tif")  
@@ -50,6 +50,7 @@ if not file_path.exists():
 ```{python}
 nz = gpd.read_file("data/nz.gpkg")
 nz_height = gpd.read_file("data/nz_height.gpkg")
+world = gpd.read_file('data/world.gpkg')
 src_elev = rasterio.open("data/elev.tif")
 src_multi_rast = rasterio.open("data/landsat.tif")
 ```
@@ -60,33 +61,31 @@ src_multi_rast = rasterio.open("data/landsat.tif")
 
 ### Spatial subsetting
 
-Plot...
+Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object. Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of sf data frames can be created with square bracket ([) operator using the syntax x[y, , op = st_intersects], where x is an sf object from which a subset of rows will be returned, y is the ‘subsetting object’ and , op = st_intersects is an optional argument that specifies the topological relation (also known as the binary predicate) used to do the subsetting. The default topological relation used when an op argument is not provided is st_intersects(): the command x[y, ] is identical to x[y, , op = st_intersects] shown above but not x[y, , op = st_disjoint] (the meaning of these and other topological relations is described in the next section). The filter() function from the tidyverse can also be used but this approach is more verbose, as we will see in the examples below.
 
-```{python}
-base = nz.plot(color="white", edgecolor="lightgrey")
-nz_height.plot(ax=base, color="None", edgecolor="red");
-```
-
-Spatial subsetting...
+To demonstrate spatial subsetting, we will use the nz and nz_height datasets in the spData package, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset), in a projected coordinate system. The following code chunk creates an object representing Canterbury, then uses spatial subsetting to return all high points in the region:
 
 ```{python}
 canterbury = nz[nz["Name"] == "Canterbury"]
-sel = nz_height.intersects(canterbury["geometry"].iloc[0])
+sel = nz_height.intersects(canterbury['geometry'].iloc[0])
 canterbury_height = nz_height[sel]
 ```
 
-Plot...
-
 ```{python}
-base = nz.plot(color="white", edgecolor="lightgrey")
+#| label: fig-spatial-subset
+#| fig-cap: Spatial subsetting of points by intersection with polygon
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+base = nz.plot(color="white", edgecolor="lightgrey", ax=axes[0])
+nz_height.plot(ax=base, color="None", edgecolor="red")
+base = nz.plot(color="white", edgecolor="lightgrey", ax=axes[1])
 canterbury_height.plot(ax=base, color="None", edgecolor="red");
 ```
 
 Spatial subsetting 2...
 
 ```{python}
-sel = nz_height.disjoint(canterbury["geometry"].iloc[0])
-non_canterbury_height = nz_height[sel]
+non_canterbury_height = nz_height.overlay(canterbury, how='difference')
 ```
 
 Plot...
@@ -104,7 +103,36 @@ non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
 
 ...
 
+```{python}
+from shapely.geometry import Point, LineString, Polygon
+points = gpd.GeoSeries([Point(0.2,0.1), Point(0.7,0.2), Point(0.4,0.8)])
+line = LineString([(0.4,0.2), (1,0.5)])
+poly = Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)])
 
+p = gpd.GeoSeries(poly).plot(color='yellow')
+p = gpd.GeoSeries(line).plot(ax=p, color='red')
+points.plot(ax=p)
+```
+
+```{python}
+points.intersects(poly)
+```
+
+```{python}
+points.within(poly)
+```
+
+```{python}
+points.touches(poly)
+```
+
+```{python}
+points.disjoint(poly)
+```
+
+```{python}
+points.distance(poly) < 0.2
+```
 
 ### DE-9IM strings
 
@@ -114,7 +142,51 @@ non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
 
 ### Spatial joining
 
-...
+Joining two non-spatial datasets relies on a shared 'key' variable, as described in @sec-vector-attribute-joining. Spatial data joining applies the same concept, but instead relies on spatial relations, described in the previous section. As with attribute data, joining adds new columns to the target object (the argument x in joining functions), from a source object (y).
+
+The process is illustrated by the following example: imagine you have ten points randomly distributed across the Earth's surface and you ask, for the points that are on land, which countries are they in? Implementing this idea in a reproducible example will build your geographic data handling skills and show how spatial joins work. The starting point is to create points that are randomly scattered over the Earth's surface:
+
+```{python}
+np.random.seed(11)  ## set seed for reproducibility
+bb = world.total_bounds  ## the world's bounds
+x = np.random.uniform(low=bb[0], high=bb[2], size=10)
+y = np.random.uniform(low=bb[1], high=bb[3], size=10)
+random_points = gpd.points_from_xy(x, y, crs=4326)
+random_points = gpd.GeoSeries(random_points)
+random_points = gpd.GeoDataFrame({'geometry': random_points})
+random_points
+```
+
+The scenario illustrated in @fig-spatial-join shows that the `random_points` object (top left) lacks attribute data, while the world (top right) has attributes, including country names shown for a sample of countries in the legend. Spatial joins are implemented with `gpd.sjoin`, as illustrated in the code chunk below. The output is the `random_joined` object which is illustrated in @fig-spatial-join (bottom left). Before creating the joined dataset, we use spatial subsetting to create world_random, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of @fig-spatial-join).
+
+```{python}
+# Subset
+world_random = world[world.intersects(random_points.unary_union)]
+world_random
+```
+
+```{python}
+# Spatial join
+random_joined = gpd.sjoin(random_points, world, how='left')
+random_joined
+```
+
+```{python}
+#| label: fig-spatial-join
+#| fig-cap: >-
+#|   Illustration of a spatial join. A new attribute variable is added to random
+#|   points (top left) from source world object (top right) resulting in the data
+#|   represented in the final panel.
+
+fig, axes = plt.subplots(2, 2, figsize=(9, 5))
+base = world.plot(color="white", edgecolor="lightgrey", ax=axes[0][0])
+random_points.plot(ax=base, color="None", edgecolor="red")
+base = world.plot(color="white", edgecolor="lightgrey", ax=axes[0][1])
+world_random.plot(ax=base, column='name_long')
+base = world.plot(color="white", edgecolor="lightgrey", ax=axes[1][0])
+random_joined.geometry.plot(ax=base, color='grey');
+random_joined.plot(ax=base, column='name_long', legend=True);
+```
 
 
 
@@ -399,3 +471,4 @@ Terrain processing, the calculation of topographic characteristics such as slope
 ## Exercises
 
 * Write a function which accepts and array and an `int` specifying the number of rows/columns to erase along an array edges. The function needs to return the modified array with `nan` values along its edges.
+
