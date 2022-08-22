@@ -341,15 +341,26 @@ nz = spData::nz
 waldo::compare(sf::st_crs(nz), sf::st_crs(nz_elev))
 library(sf)
 plot(nz)
+nz_elev_transformed = sf::st_transform(nz_elev, sf::st_crs(nz))
+stars::write_stars(nz_elev_transformed, "data/nz_elev.tif")
 -->
 <p>You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers as follows:</p>
+<!-- 
+Source:
+https://gis.stackexchange.com/questions/294072/how-can-i-superimpose-a-geopandas-dataframe-on-a-raster-plot
+-->
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> pyplot.subplots(figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">15</span>))</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>nz_transformed <span class="op">=</span> nz.to_crs(<span class="dv">4326</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># nz_transformed = nz.to_crs(4326)</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev_read, ax<span class="op">=</span>ax)<span class="op">;</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>nz_transformed.plot(ax<span class="op">=</span>ax, facecolor<span class="op">=</span><span class="st">'blue'</span>, edgecolor<span class="op">=</span><span class="st">'r'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># nz_transformed.plot(ax=ax, facecolor='blue', edgecolor='r');</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>pyplot.xticks([])</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>pyplot.yticks([])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>([], [])</code></pre>
+</div>
 <div class="cell-output cell-output-display">
-<p><img src="09-mapping_files/figure-html/cell-6-output-1.png" width="658" height="1150"></p>
+<p><img src="09-mapping_files/figure-html/cell-6-output-2.png" width="876" height="1133"></p>
 </div>
 </div>
 <section id="palettes" class="level3" data-number="9.2.1">
@@ -374,66 +385,66 @@ plot(nz)
 <p>An interactive map is an important way to understand and interpret complex geographical information. A good interactive map enables movement across the map area, change the area of interest and provide additional context or text information. In this section we will look an interactive map based of national public transport access nodes (NaPTAN), the UK Department for Transport repository of public transport point-of-interest in England, Scotland and Wales consisting of: - bus stops and railway stations - tram, metro and underground stops - airports and ferry terminals</p>
 <p>We will show how to create this may restricted to railway stations, tram stops and ferry terminals in Yorkshire. This will also match data to the National Rail customer reservation code (CRS) and timing point location (TIPLOC) attributes used in the the national rail timetable.</p>
 <p>In the first code block we define a function <code>get_databuffer</code> that uses the <code>requests</code> library to download the NaPTAN data-set in CSV format to a <code>StringIO</code> buffer.</p>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> io</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> requests</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_databuffer(uri, encoding<span class="op">=</span><span class="st">'UTF-8'</span>):</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Download data from URI and returns as an StringIO buffer"""</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> requests.get(uri, timeout<span class="op">=</span><span class="dv">10</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> io.StringIO(<span class="bu">str</span>(r.content, encoding))</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># NaPTAN data service</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>URI<span class="op">=</span><span class="st">'https://multiple-la-generator-dot-dft-add-naptan-prod.ew.r.appspot.com/v1/access-nodes?dataFormat=csv'</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>BUFFER <span class="op">=</span> get_databuffer(URI)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> io</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> requests</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_databuffer(uri, encoding<span class="op">=</span><span class="st">'UTF-8'</span>):</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Download data from URI and returns as an StringIO buffer"""</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> requests.get(uri, timeout<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> io.StringIO(<span class="bu">str</span>(r.content, encoding))</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># NaPTAN data service</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>URI<span class="op">=</span><span class="st">'https://multiple-la-generator-dot-dft-add-naptan-prod.ew.r.appspot.com/v1/access-nodes?dataFormat=csv'</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>BUFFER <span class="op">=</span> get_databuffer(URI)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>We then read the in-memory string-buffer into a <code>Panda</code> data-frame, treating the buffer as if it were a CSV file. We then extract the location data into a <code>numpy</code> two-dimensional array.</p>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>DF1 <span class="op">=</span> pd.read_csv(BUFFER, low_memory<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>DATA <span class="op">=</span> DF1[[<span class="st">'Longitude'</span>, <span class="st">'Latitude'</span>]].values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>We then convert the <span class="math inline">\(transposed data-array\)</span> into a <code>GeoSeries</code> and use this to create a <code>GeoDataFrame</code>. Which we then tidy by dropping any columns that only contain invalid (<code>pd.NA</code>) values.</p>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>POINTS <span class="op">=</span> gpd.points_from_xy(<span class="op">*</span>DATA.T, crs<span class="op">=</span><span class="st">'WGS84'</span>)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>NaPTAN <span class="op">=</span> gpd.GeoDataFrame(data<span class="op">=</span>DF1, geometry<span class="op">=</span>POINTS)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>NaPTAN <span class="op">=</span> NaPTAN.dropna(how<span class="op">=</span><span class="st">'all'</span>, axis<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The next step is to create the timing-point <code>TIPLOC</code> data based on the <code>StopType</code> and a subset of the <code>ATCOCode</code> columns.</p>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>NaPTAN[<span class="st">'TIPLOC'</span>] <span class="op">=</span> <span class="st">''</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Heavy railway stations</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>] <span class="op">==</span> <span class="st">'RLY'</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>NaPTAN.loc[IDX1, <span class="st">'TIPLOC'</span>] <span class="op">=</span> NaPTAN[<span class="st">'ATCOCode'</span>].<span class="bu">str</span>[<span class="dv">4</span>:]</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>DF1 <span class="op">=</span> pd.read_csv(BUFFER, low_memory<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>DATA <span class="op">=</span> DF1[[<span class="st">'Longitude'</span>, <span class="st">'Latitude'</span>]].values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>We then convert the <span class="math inline">\(transposed data-array\)</span> into a <code>GeoSeries</code> and use this to create a <code>GeoDataFrame</code>. Which we then tidy by dropping any columns that only contain invalid (<code>pd.NA</code>) values.</p>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>POINTS <span class="op">=</span> gpd.points_from_xy(<span class="op">*</span>DATA.T, crs<span class="op">=</span><span class="st">'WGS84'</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>NaPTAN <span class="op">=</span> gpd.GeoDataFrame(data<span class="op">=</span>DF1, geometry<span class="op">=</span>POINTS)</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Ferrys</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>] <span class="op">==</span> <span class="st">'FER'</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>NaPTAN.loc[IDX1, <span class="st">'TIPLOC'</span>] <span class="op">=</span> NaPTAN[<span class="st">'ATCOCode'</span>].<span class="bu">str</span>[<span class="dv">4</span>:]</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Metro and trams</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>] <span class="op">==</span> <span class="st">'MET'</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>NaPTAN.loc[IDX1, <span class="st">'TIPLOC'</span>] <span class="op">=</span> NaPTAN[<span class="st">'ATCOCode'</span>].<span class="bu">str</span>[<span class="dv">6</span>:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>NaPTAN <span class="op">=</span> NaPTAN.dropna(how<span class="op">=</span><span class="st">'all'</span>, axis<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The next step is to create the timing-point <code>TIPLOC</code> data based on the <code>StopType</code> and a subset of the <code>ATCOCode</code> columns.</p>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>NaPTAN[<span class="st">'TIPLOC'</span>] <span class="op">=</span> <span class="st">''</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Heavy railway stations</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>] <span class="op">==</span> <span class="st">'RLY'</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>NaPTAN.loc[IDX1, <span class="st">'TIPLOC'</span>] <span class="op">=</span> NaPTAN[<span class="st">'ATCOCode'</span>].<span class="bu">str</span>[<span class="dv">4</span>:]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Ferrys</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>] <span class="op">==</span> <span class="st">'FER'</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>NaPTAN.loc[IDX1, <span class="st">'TIPLOC'</span>] <span class="op">=</span> NaPTAN[<span class="st">'ATCOCode'</span>].<span class="bu">str</span>[<span class="dv">4</span>:]</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Metro and trams</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>] <span class="op">==</span> <span class="st">'MET'</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>NaPTAN.loc[IDX1, <span class="st">'TIPLOC'</span>] <span class="op">=</span> NaPTAN[<span class="st">'ATCOCode'</span>].<span class="bu">str</span>[<span class="dv">6</span>:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>We extract the heavy and light rail, or ferry locationsFrom the 435,298 rows in the NaPTAN data-frame.</p>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>].isin([<span class="st">'RLY'</span>, <span class="st">'FER'</span>, <span class="st">'MET'</span>])</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>STATIONS <span class="op">=</span> NaPTAN[IDX1]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>IDX1 <span class="op">=</span> NaPTAN[<span class="st">'StopType'</span>].isin([<span class="st">'RLY'</span>, <span class="st">'FER'</span>, <span class="st">'MET'</span>])</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>STATIONS <span class="op">=</span> NaPTAN[IDX1]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Filter columns and drop points within Yorkshire.</p>
 <div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>FIELDS <span class="op">=</span> [<span class="st">'ATCOCode'</span>, <span class="st">'CommonName'</span>, <span class="st">'ShortCommonName'</span>, <span class="st">'LocalityName'</span>,</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">'StopType'</span>, <span class="st">'Status'</span>, <span class="st">'TIPLOC'</span>, <span class="st">'geometry'</span>]</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean up data-frame columns</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>STATIONS <span class="op">=</span> STATIONS[FIELDS]</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>YORKSHIRE <span class="op">=</span> gpd.read_file(<span class="st">'data/yorkshire.json'</span>).iloc[<span class="dv">0</span>, <span class="dv">0</span>]</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>IDX <span class="op">=</span> STATIONS.within(YORKSHIRE)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>STATIONS <span class="op">=</span> STATIONS[IDX]</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Write to GeoJSON</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>STATIONS.to_file(<span class="st">'stations.geojson'</span>, driver<span class="op">=</span><span class="st">'GeoJSON'</span>)</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Write file to GeoPackage</span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>OUTPUT <span class="op">=</span> STATIONS.copy()</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>CRS <span class="op">=</span> <span class="st">'EPSG:32630'</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>OUTPUT[<span class="st">'geometry'</span>] <span class="op">=</span> OUTPUT[<span class="st">'geometry'</span>].to_crs(CRS)</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>OUTPUT.to_file(<span class="st">'stations.gpkg'</span>, driver<span class="op">=</span><span class="st">'GPKG'</span>, layer<span class="op">=</span><span class="st">'stations'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>FIELDS <span class="op">=</span> [<span class="st">'ATCOCode'</span>, <span class="st">'CommonName'</span>, <span class="st">'ShortCommonName'</span>, <span class="st">'LocalityName'</span>,</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">'StopType'</span>, <span class="st">'Status'</span>, <span class="st">'TIPLOC'</span>, <span class="st">'geometry'</span>]</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean up data-frame columns</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>STATIONS <span class="op">=</span> STATIONS[FIELDS]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>YORKSHIRE <span class="op">=</span> gpd.read_file(<span class="st">'data/yorkshire.json'</span>).iloc[<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>IDX <span class="op">=</span> STATIONS.within(YORKSHIRE)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>STATIONS <span class="op">=</span> STATIONS[IDX]</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Write to GeoJSON</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>STATIONS.to_file(<span class="st">'stations.geojson'</span>, driver<span class="op">=</span><span class="st">'GeoJSON'</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Write file to GeoPackage</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>OUTPUT <span class="op">=</span> STATIONS.copy()</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>CRS <span class="op">=</span> <span class="st">'EPSG:32630'</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>OUTPUT[<span class="st">'geometry'</span>] <span class="op">=</span> OUTPUT[<span class="st">'geometry'</span>].to_crs(CRS)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>OUTPUT.to_file(<span class="st">'stations.gpkg'</span>, driver<span class="op">=</span><span class="st">'GPKG'</span>, layer<span class="op">=</span><span class="st">'stations'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>/opt/conda/envs/geocompy/lib/python3.9/site-packages/pygeos/predicates.py:906: RuntimeWarning: invalid value encountered in within
   return lib.within(a, b, **kwargs)</code></pre>
