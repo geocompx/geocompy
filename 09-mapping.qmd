@@ -64,6 +64,7 @@ As covered in Chapter 2, you can plot raster datasets as follows:
 nz_elev = rasterio.open('data/nz_elev.tif')
 nz_elev_read = nz_elev.read(1)
 pyplot.imshow(nz_elev_read);
+nz_elev.crs
 ```
 
 
@@ -77,6 +78,8 @@ library(sf)
 plot(nz)
 nz_elev_transformed = sf::st_transform(nz_elev, sf::st_crs(nz))
 stars::write_stars(nz_elev_transformed, "data/nz_elev.tif")
+nz_transformed = sf::st_transform(nz, sf::st_crs(nz_elev))
+sf::st_write(nz_transformed, "nz_transformed.gpkg")
 -->
 
 
@@ -88,12 +91,18 @@ https://gis.stackexchange.com/questions/294072/how-can-i-superimpose-a-geopandas
 -->
 
 ```{python}
+nz_transformed = gpd.read_file('nz_transformed.gpkg')
+
+# Plot nz_transformed
+nz_transformed.plot(facecolor='none', edgecolor='r'); # works
+
+# Plot nz_elev:
+rasterio.plot.show(nz_elev_read);
+
+# Plot combined
 fig, ax = pyplot.subplots(figsize=(15, 15))
-# nz_transformed = nz.to_crs(4326)
 rasterio.plot.show(nz_elev_read, ax=ax);
-# nz_transformed.plot(ax=ax, facecolor='blue', edgecolor='r');
-pyplot.xticks([])
-pyplot.yticks([])
+nz_transformed.plot(ax=ax, facecolor='none', edgecolor='r'); # fails
 ```
 
 
