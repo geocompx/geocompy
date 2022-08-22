@@ -5,9 +5,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.7
+#       jupytext_version: 1.14.1
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -143,8 +143,14 @@ else:
   r = requests.get('https://github.com/geocompr/py/archive/refs/heads/main.zip')
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall('.')
-  file_names = os.listdir(source_dir)
   shutil.copytree('py-main/data', 'data', dirs_exist_ok=True) 
+data_path = Path('output')
+if data_path.is_dir():
+  pass
+  # print('path exists') # directory exists
+else:
+  print('Attempting to move data')
+  shutil.copytree('py-main/output', 'output', dirs_exist_ok=True) 
 
 gdf = gpd.read_file('data/world.gpkg')
 

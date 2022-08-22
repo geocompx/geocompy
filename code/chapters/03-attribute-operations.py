@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.13.8
+#       jupytext_version: 1.14.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -104,7 +104,11 @@ world.loc[:, 'name_long':'pop']
 x = np.array([1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0], dtype=bool)
 world.iloc[:, x]
 
-# We can remove specific columns using the `.drop` method and `axis=1` (i.e., columns):
+# We can remove a specific row by id use the `.drop` method:
+
+world.drop([2, 3, 5])
+
+# Or remove specific columns using the `.drop` method and `axis=1` (i.e., columns):
 
 world.drop(['name_long', 'continent'], axis=1)
 
@@ -126,11 +130,11 @@ world[['name_long', 'pop']].rename(columns={'pop': 'population'})
 #
 # A demonstration of the utility of using logical vectors for subsetting is shown in the code chunk below. This creates a new object, small_countries, containing nations whose surface area is smaller than 10,000 km^2^:
 
-i_small = world['area_km2'] < 10000  ## a logical 'Series'
-small_countries = world[i_small]
+idx_small = world['area_km2'] < 10000  ## a logical 'Series'
+small_countries = world[idx_small]
 small_countries
 
-# The intermediary `i_small` (short for index representing small countries) is a boolean `Series` that can be used to subset the seven smallest countries in the world by surface area. A more concise command, which omits the intermediary object, generates the same result:
+# The intermediary `idx_small` (short for index representing small countries) is a boolean `Series` that can be used to subset the seven smallest countries in the world by surface area. A more concise command, which omits the intermediary object, generates the same result:
 
 small_countries = world[world['area_km2'] < 10000]
 
@@ -139,6 +143,12 @@ small_countries = world[world['area_km2'] < 10000]
 world[world['continent'] == 'Asia']  \
     .loc[:, ['name_long', 'continent']]  \
     .iloc[0:5, :]
+
+# We can also combine indexes
+
+idx_small = world['area_km2'] < 10000
+idx_asia = world['continent'] == 'Asia'
+world.loc[idx_small & idx_asia, ['name_long', 'continent', 'area_km2']]
 
 # ### Vector attribute aggregation
 #
@@ -186,21 +196,41 @@ world_agg = pd.merge(world_agg3a, world_agg3b, on='continent')
 #
 # ### Vector attribute joining {#sec-vector-attribute-joining}
 #
-# Join by attribute...
+# Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared 'key' variable. `pandas` has a function named `pd.merge` for joining tables or vector layers based on common column(s). The `pd.merge` function follows conventions used in the database language SQL (Grolemund and Wickham 2016). Using `pd.merge` to join non-spatial datasets to vector layers is the focus of this section. The `pd.merge` function works the same on tables (`DataFrame`) and vector layer (`GeoDataFrame`) objects, the only important difference being the presence of the geometry column (which is not involved in the join operation anyway). The result of data joins can be either a `DataFrame` or a `GeoDataFrame` object, depending on the inputs. The most common type of attribute join on spatial data takes a `GeoDataFrame` object as the first argument and adds columns to it from a `DataFrame` specified as the second argument.
+#
+# To demonstrate joins, we will combine data on coffee production with the `world` dataset. The coffee data is in a `DataFrame` called `coffee_data` imported from a CSV file. It has 3 columns: 
+#
+# * `name_long` names major coffee-producing nations
+# * `coffee_production_2016` and `coffee_production_2017` contain estimated values for coffee production in units of 60-kg bags in each year. 
 
 coffee_data = pd.read_csv('data/coffee_data.csv')
 coffee_data
 
-# Join by `'name_long'` column...
+# A left join, which preserves the first dataset, merges `world` with `coffee_data`, based on the common `'name_long'` column:
 
 world_coffee = pd.merge(world, coffee_data, on='name_long', how='left')
 world_coffee
 
-# Plot... 
+# The result is a `GeoDataFrame` object identical to the original `world` object, but with two new variables (`coffee_production_2016` and `coffee_production_2017`) on coffee production. This can be plotted as a map, as illustrated in @fig-join-coffee-production:
+
+# +
+#| label: fig-join-coffee-production
+#| fig-cap: World coffee production (thousand 60-kg bags) by country in 2017 (source International Coffee Organization).
 
 base = world.plot(color='white', edgecolor='lightgrey')
 world_coffee.plot(ax=base, column='coffee_production_2017');
+# -
 
+# For joining to work, a 'key variable' must be supplied in both datasets. In this case, both `world_coffee` and world objects contained a variable called `name_long`. By default `pd.merge` uses all variables with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example. 
+#
+# In case where variable names are not the same, you need to rename (using `.rename`) them so that it is, then proceed with the join.
+#
+# Note that the result `world_coffee` has the same number of rows as the original dataset `world`. Although there are only 47 rows of data in `coffee_data`, all 177 country records are kept intact in `world_coffee`: rows in the original dataset with no match are assigned `np.nan` values for the new coffee production variables. This is characteristic of a lift join (specified with `how='left'`) and is what we typically want to do. 
+#
+# What if we only want to keep countries that have a match in the key variable? In that case an inner join can be used:
+#
+#
+#
 # ### Creating attributes and removing spatial information
 #
 # Calculate new column...
@@ -226,6 +256,12 @@ world2.rename(columns={'name_long': 'name'})
 
 new_names =['i', 'n', 'c', 'r', 's', 't', 'a', 'p', 'l', 'gP', 'geom']
 world.columns = new_names
+
+# Reordering columns, for example reverse alphabetical order...
+
+names = sorted(world.columns, reverse=True)
+world2 = world[names]
+world2
 
 # Dropping geometry...
 
