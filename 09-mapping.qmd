@@ -30,6 +30,7 @@ import matplotlib as mpl
 from matplotlib import pyplot
 import geopandas as gpd
 import rasterio
+import rasterio.plot
 nz = gpd.read_file("data/nz.gpkg")
 ```
 
@@ -57,10 +58,35 @@ tm_shape(nz) +
   tm_fill() +
   tm_borders()  -->
 
+As covered in Chapter 2, you can plot raster datasets as follows:
+
 ```{python}
 nz_elev = rasterio.open('data/nz_elev.tif')
-pyplot.imshow(nz_elev.read(1));
+nz_elev_read = nz_elev.read(1)
+pyplot.imshow(nz_elev_read);
 ```
+
+```{r}
+#| eval: false
+#| echo: false
+nz_elev = stars::read_stars("data/nz_elev.tif")
+sf::st_crs(nz_elev)
+nz = spData::nz
+waldo::compare(sf::st_crs(nz), sf::st_crs(nz_elev))
+library(sf)
+plot(nz)
+```
+
+You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers as follows:
+
+```{python}
+fig, ax = pyplot.subplots(figsize=(15, 15))
+rasterio.plot.show(nz_elev_read, ax=ax)
+nz_transformed = nz.to_crs(4326)
+nz_transformed.plot(ax=ax, facecolor='blue', edgecolor='r')
+
+```
+
 
 ### Palettes
 ### Layers
