@@ -75,16 +75,25 @@ nz = spData::nz
 waldo::compare(sf::st_crs(nz), sf::st_crs(nz_elev))
 library(sf)
 plot(nz)
+nz_elev_transformed = sf::st_transform(nz_elev, sf::st_crs(nz))
+stars::write_stars(nz_elev_transformed, "data/nz_elev.tif")
 -->
 
 
 You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers as follows:
 
+<!-- 
+Source:
+https://gis.stackexchange.com/questions/294072/how-can-i-superimpose-a-geopandas-dataframe-on-a-raster-plot
+-->
+
 ```{python}
 fig, ax = pyplot.subplots(figsize=(15, 15))
-nz_transformed = nz.to_crs(4326)
+# nz_transformed = nz.to_crs(4326)
 rasterio.plot.show(nz_elev_read, ax=ax);
-nz_transformed.plot(ax=ax, facecolor='blue', edgecolor='r');
+# nz_transformed.plot(ax=ax, facecolor='blue', edgecolor='r');
+pyplot.xticks([])
+pyplot.yticks([])
 ```
 
 
