@@ -27,7 +27,7 @@ else:
 
 ```{python}
 import matplotlib as mpl
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 import geopandas as gpd
 import rasterio
 import rasterio.plot
@@ -62,10 +62,8 @@ As covered in Chapter 2, you can plot raster datasets as follows:
 
 ```{python}
 nz_elev = rasterio.open('data/nz_elev.tif')
-nz_elev_read = nz_elev.read(1)
-pyplot.imshow(nz_elev_read);
+rasterio.plot.show(nz_elev);
 ```
-
 
 <!--
 In R:
@@ -82,7 +80,7 @@ sf::st_write(nz_transformed, "nz_transformed.gpkg")
 -->
 
 
-You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers as follows (note: you need to use the ):
+You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers as follows:
 
 <!-- 
 Source:
@@ -90,18 +88,9 @@ https://gis.stackexchange.com/questions/294072/how-can-i-superimpose-a-geopandas
 -->
 
 ```{python}
-nz_transformed = gpd.read_file('https://github.com/geocompr/py/releases/download/0.1/nz_transformed.gpkg')
-
-# Plot nz_transformed
-nz_transformed.plot(facecolor='none', edgecolor='r'); # works
-
-# Plot nz_elev:
-rasterio.plot.show(nz_elev_read);
-
-# Plot combined
-fig, ax = pyplot.subplots(figsize=(15, 15))
-rasterio.plot.show(nz_elev_read, ax=ax, transform=nz_elev.transform);
-nz_transformed.plot(ax=ax, facecolor='none', edgecolor='r'); # fails
+fig, ax = pyplot.subplots(figsize=(5, 5))
+rasterio.plot.show(nz_elev, ax=ax)
+nz_transformed.plot(ax=ax, facecolor='none', edgecolor='r');
 ```
 
 
