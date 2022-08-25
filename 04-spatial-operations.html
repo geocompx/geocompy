@@ -703,7 +703,121 @@ dtype: bool</code></pre>
 </section>
 <section id="spatial-aggregation" class="level3" data-number="4.3.6">
 <h3 data-number="4.3.6" class="anchored" data-anchor-id="spatial-aggregation"><span class="header-section-number">4.3.6</span> Spatial aggregation</h3>
-<p>…</p>
+<p>As with attribute data aggregation, spatial data aggregation condenses data: aggregated outputs have fewer rows than non-aggregated inputs. Statistical aggregating functions, such as mean, average, or sum, summarise multiple values of a variable, and return a single value per grouping variable. Section … demonstrated how the <code>.groupby</code> method, combined with summary functions such as <code>.sum</code>, condense data based on attribute variables. This section shows how grouping by spatial objects can be acheived using spatial joins combined with non-spatial aggregation.</p>
+<p>Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region: it is the geometry of the source (<code>nz</code>, in this case) that defines how values in the target object (<code>nz_height</code>) are grouped. This can be done in two steps. First, we “attach” the region classification of each point, using spatial join. Note that just one distinct attribute (such as <code>Name</code> in this case) is sufficient for our purposes:</p>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>gpd.sjoin(nz_height, nz[[<span class="st">'Name'</span>, <span class="st">'geometry'</span>]], how<span class="op">=</span><span class="st">'left'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="19">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>t50_fid</th>
+      <th>elevation</th>
+      <th>geometry</th>
+      <th>index_right</th>
+      <th>Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2353944</td>
+      <td>2723</td>
+      <td>POINT (1204142.603 5049971.287)</td>
+      <td>12</td>
+      <td>Southland</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2354404</td>
+      <td>2820</td>
+      <td>POINT (1234725.325 5048309.302)</td>
+      <td>11</td>
+      <td>Otago</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2354405</td>
+      <td>2830</td>
+      <td>POINT (1235914.511 5048745.117)</td>
+      <td>11</td>
+      <td>Otago</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2369113</td>
+      <td>3033</td>
+      <td>POINT (1259701.635 5076570.049)</td>
+      <td>9</td>
+      <td>West Coast</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2362630</td>
+      <td>2749</td>
+      <td>POINT (1378169.600 5158491.453)</td>
+      <td>10</td>
+      <td>Canterbury</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>96</th>
+      <td>2408394</td>
+      <td>2797</td>
+      <td>POINT (1821014.190 5647970.666)</td>
+      <td>7</td>
+      <td>Manawatu-Wanganui</td>
+    </tr>
+    <tr>
+      <th>97</th>
+      <td>2408395</td>
+      <td>2757</td>
+      <td>POINT (1820642.909 5648331.194)</td>
+      <td>7</td>
+      <td>Manawatu-Wanganui</td>
+    </tr>
+    <tr>
+      <th>98</th>
+      <td>2408397</td>
+      <td>2751</td>
+      <td>POINT (1820659.873 5649488.235)</td>
+      <td>2</td>
+      <td>Waikato</td>
+    </tr>
+    <tr>
+      <th>99</th>
+      <td>2408406</td>
+      <td>2720</td>
+      <td>POINT (1822262.592 5650428.656)</td>
+      <td>2</td>
+      <td>Waikato</td>
+    </tr>
+    <tr>
+      <th>100</th>
+      <td>2408411</td>
+      <td>2732</td>
+      <td>POINT (1822492.184 5650492.304)</td>
+      <td>2</td>
+      <td>Waikato</td>
+    </tr>
+  </tbody>
+</table>
+<p>101 rows × 5 columns</p>
+</div>
+</div>
+</div>
+<p>Second, …</p>
 </section>
 <section id="joining-incongruent-layers" class="level3" data-number="4.3.7">
 <h3 data-number="4.3.7" class="anchored" data-anchor-id="joining-incongruent-layers"><span class="header-section-number">4.3.7</span> Joining incongruent layers</h3>
@@ -719,20 +833,20 @@ dtype: bool</code></pre>
 <section id="spatial-subsetting-1" class="level3" data-number="4.4.1">
 <h3 data-number="4.4.1" class="anchored" data-anchor-id="spatial-subsetting-1"><span class="header-section-number">4.4.1</span> Spatial subsetting</h3>
 <p>The previous chapter (Section …) demonstrated how to retrieve values associated with specific cell IDs or row and column combinations. Raster objects can also be extracted by location (coordinates) and other spatial objects. To use coordinates for subsetting, we can use the <code>.sample</code> method of a <code>rasterio</code> file connection object, combined with a list of coordinate tuples. The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of 0.1, 0.1 in <code>elev</code>. The resutned object is a <em>generator</em>; in case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>
-<div class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">list</span>(src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="19">
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">list</span>(src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
 <pre><code>[array([16.], dtype=float32)]</code></pre>
 </div>
 </div>
 <p>Raster objects can also be subset with another raster object, as demonstrated in the code chunk below:</p>
 <p>…</p>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ...</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ...</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in Figure …. To do that, we “erase” the values in the array of one raster, according to another corresponding “mask” raster. For example, let us read the <code>elev.tif</code> raster array:</p>
-<div class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="21">
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
 <pre><code>array([[ 1.,  2.,  3.,  4.,  5.,  6.],
        [ 7.,  8.,  9., 10., 11., 12.],
        [13., 14., 15., 16., 17., 18.],
@@ -742,11 +856,11 @@ dtype: bool</code></pre>
 </div>
 </div>
 <p>and create a correspinding random mask:</p>
-<div class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">1</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> np.random.choice([<span class="va">True</span>, <span class="va">False</span>], elev.shape)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>mask</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="22">
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">1</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> np.random.choice([<span class="va">True</span>, <span class="va">False</span>], elev.shape)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>mask</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
 <pre><code>array([[False, False,  True,  True, False, False],
        [False, False, False,  True,  True, False],
        [ True, False, False,  True,  True, False],
@@ -756,11 +870,11 @@ dtype: bool</code></pre>
 </div>
 </div>
 <p>In the code chunk above, we have created a mask object called <code>mask</code> with values randomly assigned to <code>True</code> and <code>False</code>. Next, we want to keep those values of <code>elev</code> which are <code>False</code> in <code>mask</code> (i.e., they are <em>not</em> masked). In other words, we want to mask <code>elev</code> with <code>mask</code>. The result is stored in a copy named <code>elev1</code>:</p>
-<div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>elev1 <span class="op">=</span> elev.copy()</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>elev1[mask] <span class="op">=</span> np.nan</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>elev1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="23">
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>elev1 <span class="op">=</span> elev.copy()</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>elev1[mask] <span class="op">=</span> np.nan</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>elev1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
 <pre><code>array([[ 1.,  2., nan, nan,  5.,  6.],
        [ 7.,  8.,  9., nan, nan, 12.],
        [nan, 14., 15., nan, nan, 18.],
@@ -770,23 +884,23 @@ dtype: bool</code></pre>
 </div>
 </div>
 <p>The result is shown in figure…</p>
-<div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>show(elev, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>show(mask, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>show(elev1, ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Mask"</span>)</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Result"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>show(elev, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>show(mask, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>show(elev1, ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Mask"</span>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Result"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="04-spatial-operations_files/figure-html/cell-25-output-1.png" width="707" height="258"></p>
+<p><img src="04-spatial-operations_files/figure-html/cell-26-output-1.png" width="707" height="258"></p>
 </div>
 </div>
 <p>The above approach can be also used to replace some values (e.g., expected to be wrong) with <code>nan</code>:</p>
-<div class="cell" data-execution_count="25">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>elev[elev <span class="op">&lt;</span> <span class="dv">20</span>] <span class="op">=</span> np.nan</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="25">
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>elev[elev <span class="op">&lt;</span> <span class="dv">20</span>] <span class="op">=</span> np.nan</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
 <pre><code>array([[nan, nan, nan, nan, nan, nan],
        [nan, nan, nan, nan, nan, nan],
        [nan, nan, nan, nan, nan, nan],
@@ -814,10 +928,10 @@ dtype: bool</code></pre>
 <section id="local-operations" class="level3" data-number="4.4.3">
 <h3 data-number="4.4.3" class="anchored" data-anchor-id="local-operations"><span class="header-section-number">4.4.3</span> Local operations</h3>
 <p>First, we need to read raster values:</p>
-<div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="26">
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="27">
 <pre><code>array([[ 1.,  2.,  3.,  4.,  5.,  6.],
        [ 7.,  8.,  9., 10., 11., 12.],
        [13., 14., 15., 16., 17., 18.],
@@ -827,9 +941,9 @@ dtype: bool</code></pre>
 </div>
 </div>
 <p>Now, any element-wise array operation can be applied. For example:</p>
-<div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">+</span> elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="27">
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">+</span> elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="28">
 <pre><code>array([[ 2.,  4.,  6.,  8., 10., 12.],
        [14., 16., 18., 20., 22., 24.],
        [26., 28., 30., 32., 34., 36.],
@@ -839,61 +953,61 @@ dtype: bool</code></pre>
 </div>
 </div>
 <p>Here are few more examples:</p>
-<div class="cell" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>show(elev <span class="op">+</span> elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>show(elev <span class="op">**</span> <span class="dv">2</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>show(np.log(elev), ax<span class="op">=</span>axes[<span class="dv">2</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>show(elev <span class="op">&gt;</span> <span class="dv">5</span>, ax<span class="op">=</span>axes[<span class="dv">3</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"elev+elev"</span>)</span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"elev ** 2"</span>)</span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"np.log(elev)"</span>)</span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">3</span>].set_title(<span class="st">"elev &gt; 5"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>show(elev <span class="op">+</span> elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>show(elev <span class="op">**</span> <span class="dv">2</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>show(np.log(elev), ax<span class="op">=</span>axes[<span class="dv">2</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>show(elev <span class="op">&gt;</span> <span class="dv">5</span>, ax<span class="op">=</span>axes[<span class="dv">3</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"elev+elev"</span>)</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"elev ** 2"</span>)</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"np.log(elev)"</span>)</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">3</span>].set_title(<span class="st">"elev &gt; 5"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="04-spatial-operations_files/figure-html/cell-29-output-1.png" width="707" height="207"></p>
+<p><img src="04-spatial-operations_files/figure-html/cell-30-output-1.png" width="707" height="207"></p>
 </div>
 </div>
 <p>Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges 0–12, 12–24 and 24–36 are reclassified to take values 1, 2 and 3, respectively…</p>
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>recl <span class="op">=</span> elev.copy()</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">0</span>)  <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">12</span>)] <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">12</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">24</span>)] <span class="op">=</span> <span class="dv">2</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">24</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">36</span>)] <span class="op">=</span> <span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>recl <span class="op">=</span> elev.copy()</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">0</span>)  <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">12</span>)] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">12</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">24</span>)] <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">24</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">36</span>)] <span class="op">=</span> <span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Plot…</p>
-<div class="cell" data-execution_count="30">
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>show(elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>show(recl, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Reclassified"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>show(elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>show(recl, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Reclassified"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="04-spatial-operations_files/figure-html/cell-31-output-1.png" width="707" height="366"></p>
+<p><img src="04-spatial-operations_files/figure-html/cell-32-output-1.png" width="707" height="366"></p>
 </div>
 </div>
 <p>The calculation of the normalized difference vegetation index (NDVI) is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between -1 and 1; positive values indicate the presence of living plants (mostly &gt; 0.2). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula:</p>
 <p><span class="math display">\[NDVI=\frac{NIR-Red} {NIR+Red}\]</span></p>
 <p>Let’s calculate NDVI for the multispectral satellite file of the Zion National Park.</p>
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>multi_rast <span class="op">=</span> src_multi_rast.read()</span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>nir <span class="op">=</span> multi_rast[<span class="dv">3</span>,:,:]</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>red <span class="op">=</span> multi_rast[<span class="dv">2</span>,:,:]</span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> (nir<span class="op">-</span>red)<span class="op">/</span>(nir<span class="op">+</span>red)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>multi_rast <span class="op">=</span> src_multi_rast.read()</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>nir <span class="op">=</span> multi_rast[<span class="dv">3</span>,:,:]</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>red <span class="op">=</span> multi_rast[<span class="dv">2</span>,:,:]</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> (nir<span class="op">-</span>red)<span class="op">/</span>(nir<span class="op">+</span>red)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Convert values &gt;1 to “No Data”:</p>
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>ndvi[ndvi<span class="op">&gt;</span><span class="dv">1</span>] <span class="op">=</span> np.nan</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>ndvi[ndvi<span class="op">&gt;</span><span class="dv">1</span>] <span class="op">=</span> np.nan</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>When plotting an RGB image using the <code>show</code> function, the function assumes that:</p>
 <ul>
 <li>Values are in the range <code>[0,1]</code> for floats, or <code>[0,255]</code> for integers (otherwise clipped)</li>
 <li>The order of bands is RGB</li>
 </ul>
 <p>To “prepare” the multi-band raster for <code>show</code>, we therefore reverse the order of bands (which is originally BGR+NIR), and divided by the maximum to set the maximum value at <code>1</code>:</p>
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>multi_rast_rgb <span class="op">=</span> multi_rast[(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), :, :]<span class="op">/</span>multi_rast.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>multi_rast_rgb <span class="op">=</span> multi_rast[(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), :, :]<span class="op">/</span>multi_rast.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Plot…</p>
-<div class="cell" data-execution_count="34">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>show(multi_rast_rgb, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"RdYlGn"</span>)</span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>show(ndvi, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">"Greens"</span>)</span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"RGB image"</span>)</span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"NDVI"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>show(multi_rast_rgb, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"RdYlGn"</span>)</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>show(ndvi, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">"Greens"</span>)</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"RGB image"</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"NDVI"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="04-spatial-operations_files/figure-html/cell-35-output-1.png" width="720" height="431"></p>
+<p><img src="04-spatial-operations_files/figure-html/cell-36-output-1.png" width="720" height="431"></p>
 </div>
 </div>
 </section>
@@ -918,9 +1032,9 @@ dtype: bool</code></pre>
 <li><code>generic_filter</code> makes it possible to pass any custom function, where the user can specify any type of custom window-based calculatio.</li>
 </ul>
 <p>For example, here we apply the minimum filter with window size of <code>3</code> on <code>elev</code>:</p>
-<div class="cell" data-execution_count="35">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="35">
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="36">
 <pre><code>array([[ 1.,  2.,  3.,  4.,  5.,  6.],
        [ 7.,  8.,  9., 10., 11., 12.],
        [13., 14., 15., 16., 17., 18.],
@@ -929,10 +1043,10 @@ dtype: bool</code></pre>
        [31., 32., 33., 34., 35., 36.]], dtype=float32)</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="36">
-<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>elev_min <span class="op">=</span> scipy.ndimage.minimum_filter(elev, size<span class="op">=</span><span class="dv">3</span>)</span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>elev_min</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="36">
+<div class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>elev_min <span class="op">=</span> scipy.ndimage.minimum_filter(elev, size<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>elev_min</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="37">
 <pre><code>array([[ 1.,  1.,  2.,  3.,  4.,  5.],
        [ 1.,  1.,  2.,  3.,  4.,  5.],
        [ 7.,  7.,  8.,  9., 10., 11.],
@@ -950,11 +1064,11 @@ dtype: bool</code></pre>
 <li><code>wrap</code></li>
 </ul>
 <p>Sometimes artificially extending raster edges is considered unsuitable. In other words, we may wish the resulting raster to contain pixel values with “complete” windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations). There is no specific option <em>not</em> to extent edges in <code>scipy.ndimage</code>. However, to get the same effect, the edges of the filtered array can be assigned with <code>nan</code>, in a number of rows and columns according to filter size. For example, when using a filter of <code>size=3</code>, the first “layer” of pixels may be assigned with <code>nan</code>, reflecting the fact that these pixels have incomplete 3*3 neighborhoods:</p>
-<div class="cell" data-execution_count="37">
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>elev_min[:, [<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>]] <span class="op">=</span> np.nan</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>elev_min[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>elev_min</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="37">
+<div class="cell" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>elev_min[:, [<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>]] <span class="op">=</span> np.nan</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>elev_min[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>elev_min</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="38">
 <pre><code>array([[nan, nan, nan, nan, nan, nan],
        [nan,  1.,  2.,  3.,  4., nan],
        [nan,  7.,  8.,  9., 10., nan],
