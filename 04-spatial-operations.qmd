@@ -173,7 +173,7 @@ random_joined
 
 ```{python}
 #| label: fig-spatial-join
-#| fig-cap: "Illustration of a spatial join. A new attribute variable is added to random points (top left) from source world object (top right) resulting in the data represented in the final panel."
+#| fig-cap: Illustration of a spatial join. A new attribute variable is added to random points (top left) from source world object (top right) resulting in the data represented in the final panel.
 
 fig, axes = plt.subplots(2, 2, figsize=(9, 5))
 base = world.plot(color="white", edgecolor="lightgrey", ax=axes[0][0])
@@ -185,18 +185,22 @@ random_joined.geometry.plot(ax=base, color='grey');
 random_joined.plot(ax=base, column='name_long', legend=True);
 ```
 
-
-
 ### Non-overlapping joins
 
 ...
 
-
-
-
 ### Spatial aggregation
 
-...
+As with attribute data aggregation, spatial data aggregation condenses data: aggregated outputs have fewer rows than non-aggregated inputs. Statistical aggregating functions, such as mean, average, or sum, summarise multiple values of a variable, and return a single value per grouping variable. Section ... demonstrated how the `.groupby` method, combined with summary functions such as `.sum`, condense data based on attribute variables. This section shows how grouping by spatial objects can be acheived using spatial joins combined with non-spatial aggregation.
+
+
+Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region: it is the geometry of the source (`nz`, in this case) that defines how values in the target object (`nz_height`) are grouped. This can be done in two steps. First, we "attach" the region classification of each point, using spatial join. Note that just one distinct attribute (such as `Name` in this case) is sufficient for our purposes:
+
+```{python}
+gpd.sjoin(nz_height, nz[['Name', 'geometry']], how='left')
+```
+
+Second, ...
 
 
 
