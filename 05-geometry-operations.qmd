@@ -1,3 +1,7 @@
+---
+jupyter: python3
+---
+
 # Geometry operations {#geometric-operations}
 
 ## Prerequisites
@@ -17,6 +21,7 @@ Packages...
 ```{python}
 import shapely.geometry
 import geopandas as gpd
+import topojson as tp
 ```
 
 Sample data...
@@ -85,7 +90,6 @@ us_states_simp1.plot();
 ```
 
 ```{python}
-import topojson as tp
 topo = tp.Topology(us_states2163, prequantize=False)
 us_states_simp2 = topo.toposimplify(100000).to_gdf()
 ```
@@ -122,7 +126,7 @@ The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surf
 
 ```{python}
 #| label: fig-centroid-pnt-on-surface
-#| fig-cap: "Centroids (black) and points on surface red of New Zealand and Seine datasets."
+#| fig-cap: Centroids (black) and points on surface red of New Zealand and Seine datasets.
 
 fig, axes = plt.subplots(ncols=2)
 base = nz.plot(ax=axes[0], color="white", edgecolor="lightgrey")
@@ -206,26 +210,51 @@ axes[2].set_title("Rotate");
 
 ### Clipping {#sec-clipping}
 
-...
+Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features.
+
+Clipping can only apply to features more complex than points: lines, polygons and their 'multi' equivalents. To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (Figure ...).
 
 ```{python}
+x = shapely.geometry.Point((0, 0)).buffer(1)
+y = shapely.geometry.Point((1, 0)).buffer(1)
+shapely.geometry.GeometryCollection([x, y])
+```
 
+Imagine you want to select not one circle or the other, but the space covered by both x and y. This can be done using the `.intersection` method from `shapely`, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (Figure ...).
+
+```{python}
+x.intersection(y)
 ```
 
 ### Subsetting and clipping
 
 ...
 
-```{python}
-
-```
-
 ### Geometry unions {#sec-geometry-unions}
 
-...
+As we saw in Section ..., spatial aggregation can silently dissolve the geometries of touching polygons in the same group. This is demonstrated in the code chunk below in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method:
 
 ```{python}
+regions = us_states.dissolve(by='REGION', aggfunc='sum').reset_index()
+regions
+```
 
+The result is shown in Figure ...:
+
+```{python}
+fig, axes = plt.subplots(ncols=2, figsize=(10, 2.5))
+us_states.plot(ax=axes[0], column='total_pop_15', legend=True)
+regions.plot(ax=axes[1], column='total_pop_15', legend=True)
+axes[0].set_title('State')
+axes[1].set_title('Region');
+```
+
+What is going on in terms of the geometries? Behind the scenes, both `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method. This is demonstrated in the code chunk below which creates a united western US:
+
+```{python}
+us_west = us_states[us_states['REGION'] == 'West']
+us_west_union = us_west['geometry'].unary_union
+us_west_union
 ```
 
 ### Type transformations {#sec-type-transformations}
@@ -257,7 +286,7 @@ The source `"MultiPoint"` geometry, and the derived `"LineString"` and `"Polygon
 
 ```{python}
 #| label: fig-casting1
-#| fig-cap: "Examples of linestring and polygon casted from a multipoint geometry."
+#| fig-cap: Examples of linestring and polygon casted from a multipoint geometry.
 
 fig, axes = plt.subplots(ncols=3, figsize=(9,5))
 gpd.GeoSeries(multipoint).plot(ax=axes[0])
@@ -292,33 +321,17 @@ shapely.geometry.MultiPoint(polygon.exterior.coords)
 
 ...
 
-```{python}
-
-```
-
 ### Extent and origin
 
 ...
-
-```{python}
-
-```
 
 ### Aggregation and disaggregation
 
 ...
 
-```{python}
-
-```
-
 ### Resampling
 
 ...
-
-```{python}
-
-```
 
 ## Exercises
 
