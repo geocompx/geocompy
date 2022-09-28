@@ -2,9 +2,14 @@
 docker pull ubuntu:22.04
 docker run -it  -v $(pwd):/home/geo ubuntu:22.04 /bin/bash
 apt update
-apt install software-properties-common -y
-apt install python
-python3
-python -m ensurepip --upgrade
-sudo apt install pip
+apt -y upgrade
+apt install -y python3-pip
+apt install -y git
+apt-get install libgdal-dev libgeos-dev libproj-dev -y
+
+cd /home/geo
+ls
+pip install git+https://github.com/blaze/datashape
+pip install -r requirements.txt
+
 
