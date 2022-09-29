@@ -255,14 +255,17 @@ base = co.iloc[[1]].plot(color='none')
 nz_height.iloc[1:3, :].plot(ax=base);
 ```
 
-
-
-
 ## Spatial operations on raster data {#spatial-ras}
 
 ### Spatial subsetting
 
-The previous chapter (Section ...) demonstrated how to retrieve values associated with specific cell IDs or row and column combinations. Raster objects can also be extracted by location (coordinates) and other spatial objects. To use coordinates for subsetting, we can use the `.sample` method of a `rasterio` file connection object, combined with a list of coordinate tuples. The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of 0.1, 0.1 in `elev`. The resutned object is a *generator*; in case we want all values at once we can apply `list`. The result is `16`:
+The previous chapter (Section @sec-manipulating-raster-objects) demonstrated how to retrieve values associated with specific cell IDs or row and column combinations. Raster objects can also be extracted by location (coordinates) and other spatial objects. To use coordinates for subsetting, we can use the `.sample` method of a `rasterio` file connection object, combined with a list of coordinate tuples. The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of 0.1, 0.1 in `elev`. The returned object is a *generator*: 
+
+```{python}
+src_elev.sample([(0.1, 0.1)])
+```
+
+In case we want all values at once we can apply `list`. The result is `16`:
 
 ```{python}
 list(src_elev.sample([(0.1, 0.1)]))
@@ -322,7 +325,7 @@ These operations are in fact Boolean local operations, since we compare cell-wis
 
 ### Map algebra
 
-The term ‘map algebra’ was coined in the late 1970s to describe a “set of conventions, capabilities, and techniques” for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994). In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.
+The term 'map algebra' was coined in the late 1970s to describe a "set of conventions, capabilities, and techniques" for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994). In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.
 
 Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage “raster is faster but vector is corrector”. The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the header). For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
 
