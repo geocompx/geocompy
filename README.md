@@ -2,6 +2,7 @@
 
 [![Render](https://github.com/geocompr/py/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompr/py/actions/workflows/main.yaml)
 [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 
 <https://geocompr.github.io/py/>
 
