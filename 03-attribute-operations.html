@@ -238,14 +238,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#vector-attribute-manipulation" id="toc-vector-attribute-manipulation" class="nav-link" data-scroll-target="#vector-attribute-manipulation"> <span class="header-section-number">3.3</span> Vector attribute manipulation</a>
   <ul class="collapse">
   <li><a href="#sec-vector-attribute-subsetting" id="toc-sec-vector-attribute-subsetting" class="nav-link" data-scroll-target="#sec-vector-attribute-subsetting"> <span class="header-section-number">3.3.1</span> Vector attribute subsetting</a></li>
-  <li><a href="#vector-attribute-aggregation" id="toc-vector-attribute-aggregation" class="nav-link" data-scroll-target="#vector-attribute-aggregation"> <span class="header-section-number">3.3.2</span> Vector attribute aggregation</a></li>
+  <li><a href="#sec-vector-attribute-aggregation" id="toc-sec-vector-attribute-aggregation" class="nav-link" data-scroll-target="#sec-vector-attribute-aggregation"> <span class="header-section-number">3.3.2</span> Vector attribute aggregation</a></li>
   <li><a href="#sec-vector-attribute-joining" id="toc-sec-vector-attribute-joining" class="nav-link" data-scroll-target="#sec-vector-attribute-joining"> <span class="header-section-number">3.3.3</span> Vector attribute joining</a></li>
-  <li><a href="#creating-attributes-and-removing-spatial-information" id="toc-creating-attributes-and-removing-spatial-information" class="nav-link" data-scroll-target="#creating-attributes-and-removing-spatial-information"> <span class="header-section-number">3.3.4</span> Creating attributes and removing spatial information</a></li>
+  <li><a href="#sec-creating-attributes-and-removing-spatial-information" id="toc-sec-creating-attributes-and-removing-spatial-information" class="nav-link" data-scroll-target="#sec-creating-attributes-and-removing-spatial-information"> <span class="header-section-number">3.3.4</span> Creating attributes and removing spatial information</a></li>
   </ul></li>
   <li><a href="#sec-manipulating-raster-objects" id="toc-sec-manipulating-raster-objects" class="nav-link" data-scroll-target="#sec-manipulating-raster-objects"> <span class="header-section-number">3.4</span> Manipulating raster objects</a>
   <ul class="collapse">
   <li><a href="#raster-subsetting" id="toc-raster-subsetting" class="nav-link" data-scroll-target="#raster-subsetting"> <span class="header-section-number">3.4.1</span> Raster subsetting</a></li>
-  <li><a href="#summarizing-raster-objects" id="toc-summarizing-raster-objects" class="nav-link" data-scroll-target="#summarizing-raster-objects"> <span class="header-section-number">3.4.2</span> Summarizing raster objects</a></li>
+  <li><a href="#sec-summarizing-raster-objects" id="toc-sec-summarizing-raster-objects" class="nav-link" data-scroll-target="#sec-summarizing-raster-objects"> <span class="header-section-number">3.4.2</span> Summarizing raster objects</a></li>
   </ul></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"> <span class="header-section-number">3.5</span> Exercises</a></li>
   </ul>
@@ -295,7 +295,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="introduction" class="level2" data-number="3.2">
 <h2 data-number="3.2" class="anchored" data-anchor-id="introduction"><span class="header-section-number">3.2</span> Introduction</h2>
-<p>…</p>
+<p>Attribute data is non-spatial information associated with geographic (geometry) data. A bus stop provides a simple example: its position would typically be represented by latitude and longitude coordinates (geometry data), in addition to its name. The Elephant &amp; Castle / New Kent Road stop in London, for example has coordinates of <code>-0.098</code> degrees longitude and <code>51.495</code> degrees latitude which can be represented as <code>POINT (-0.098 51.495)</code> in the Simple Feature representation described in Chapter <span class="citation" data-cites="spatial-class">@spatial-class</span>. Attributes such as the name attribute of the <code>POINT</code> feature (to use Simple Features terminology) are the topic of this chapter.</p>
+<p>Another example is the elevation value (attribute) for a specific grid cell in raster data. Unlike the vector data model, the raster data model stores the coordinate of the grid cell indirectly, meaning the distinction between attribute and spatial information is less clear. To illustrate the point, think of a pixel in the 3rd row and the 4th column of a raster matrix. Its spatial location is defined by its index in the matrix: move from the origin four cells in the x direction (typically east and right on maps) and three cells in the y direction (typically south and down). The raster’s resolution defines the distance for each x- and y-step which is specified in a header. The header is a vital component of raster datasets which specifies how pixels relate to geographic coordinates (see also Chapter <span class="citation" data-cites="spatial-operations">@spatial-operations</span>).</p>
+<p>This teaches how to manipulate geographic objects based on attributes such as the names of bus stops in a vector dataset and elevations of pixels in a raster dataset. For vector data, this means techniques such as subsetting and aggregation (see Sections <a href="#sec-vector-attribute-subsetting"><span>Section&nbsp;3.3.1</span></a> and <a href="#sec-vector-attribute-aggregation"><span>Section&nbsp;3.3.2</span></a>). Sections <a href="#sec-vector-attribute-joining"><span>Section&nbsp;3.3.3</span></a> and <a href="#sec-creating-attributes-and-removing-spatial-information"><span>Section&nbsp;3.3.4</span></a> demonstrate how to join data onto simple feature objects using a shared ID and how to create new variables, respectively. Each of these operations has a spatial equivalent: <code>[</code> operator for subsetting a <code>(Geo)DataFrame</code> using a boolean <code>Series</code>, for example, is applicable both for subsetting objects based on their attribute and spatial relations derived using methods such as <code>.intersects</code>; you can also join attributes in two geographic datasets using spatial joins. This is good news: skills developed in this chapter are cross-transferable. Chapter <span class="citation" data-cites="spatial-operations">@spatial-operations</span> extends the methods presented here to the spatial world.</p>
+<p>After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in Section <a href="#sec-manipulating-raster-objects"><span>Section&nbsp;3.4</span></a>, which demonstrates how to create raster layers containing continuous and categorical attributes and extracting cell values from one or more layer (raster subsetting). Section <a href="#sec-summarizing-raster-objects"><span>Section&nbsp;3.4.2</span></a> provides an overview of ‘global’ raster operations which can be used to summarize entire raster datasets.</p>
 </section>
 <section id="vector-attribute-manipulation" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="vector-attribute-manipulation"><span class="header-section-number">3.3</span> Vector attribute manipulation</h2>
@@ -1183,8 +1186,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 </div>
 </section>
-<section id="vector-attribute-aggregation" class="level3" data-number="3.3.2">
-<h3 data-number="3.3.2" class="anchored" data-anchor-id="vector-attribute-aggregation"><span class="header-section-number">3.3.2</span> Vector attribute aggregation</h3>
+<section id="sec-vector-attribute-aggregation" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="sec-vector-attribute-aggregation"><span class="header-section-number">3.3.2</span> Vector attribute aggregation</h3>
 <p>Aggregation involves summarizing data with one or more <em>grouping variables</em>, typically from columns in the table to be aggregated (geographic aggregation is covered in the next chapter). An example of attribute aggregation is calculating the number of people per continent based on country-level data (one row per country). The <code>world</code> dataset contains the necessary ingredients: the columns <code>pop</code> and <code>continent</code>, the population and the grouping variable, respectively. The aim is to find the <code>sum()</code> of country populations for each continent, resulting in a smaller data frame (aggregation is a form of data reduction and can be a useful early step when working with large datasets). This can be done with a combination of <code>.groupby</code> and <code>.sum</code>:</p>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>world_agg1 <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'pop'</span>]].groupby(<span class="st">'continent'</span>).<span class="bu">sum</span>()</span>
@@ -1521,8 +1524,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Note that the result <code>world_coffee</code> has the same number of rows as the original dataset <code>world</code>. Although there are only 47 rows of data in <code>coffee_data</code>, all 177 country records are kept intact in <code>world_coffee</code>: rows in the original dataset with no match are assigned <code>np.nan</code> values for the new coffee production variables. This is characteristic of a lift join (specified with <code>how='left'</code>) and is what we typically want to do.</p>
 <p>What if we only want to keep countries that have a match in the key variable? In that case an inner join can be used:</p>
 </section>
-<section id="creating-attributes-and-removing-spatial-information" class="level3" data-number="3.3.4">
-<h3 data-number="3.3.4" class="anchored" data-anchor-id="creating-attributes-and-removing-spatial-information"><span class="header-section-number">3.3.4</span> Creating attributes and removing spatial information</h3>
+<section id="sec-creating-attributes-and-removing-spatial-information" class="level3" data-number="3.3.4">
+<h3 data-number="3.3.4" class="anchored" data-anchor-id="sec-creating-attributes-and-removing-spatial-information"><span class="header-section-number">3.3.4</span> Creating attributes and removing spatial information</h3>
 <p>Calculate new column…</p>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world.copy()</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>world2[<span class="st">'pop_dens'</span>] <span class="op">=</span> world2[<span class="st">'pop'</span>] <span class="op">/</span> world2[<span class="st">'area_km2'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1881,8 +1884,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 </div>
 </section>
-<section id="summarizing-raster-objects" class="level3" data-number="3.4.2">
-<h3 data-number="3.4.2" class="anchored" data-anchor-id="summarizing-raster-objects"><span class="header-section-number">3.4.2</span> Summarizing raster objects</h3>
+<section id="sec-summarizing-raster-objects" class="level3" data-number="3.4.2">
+<h3 data-number="3.4.2" class="anchored" data-anchor-id="sec-summarizing-raster-objects"><span class="header-section-number">3.4.2</span> Summarizing raster objects</h3>
 <p>Global summaries of raster values can be calculated by applying <code>numpy</code> summary functions—such as <code>np.mean</code>—on the array with raster values. For example:</p>
 <div class="cell" data-execution_count="36">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>np.mean(elev)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
