@@ -1,3 +1,7 @@
+---
+jupyter: python3
+---
+
 # Attribute data operations {#attr}
 
 ## Prerequisites
@@ -49,7 +53,13 @@ src_multi_rast = rasterio.open('data/landsat.tif')
 
 ## Introduction
 
-...
+Attribute data is non-spatial information associated with geographic (geometry) data. A bus stop provides a simple example: its position would typically be represented by latitude and longitude coordinates (geometry data), in addition to its name. The Elephant & Castle / New Kent Road stop in London, for example has coordinates of `-0.098` degrees longitude and `51.495` degrees latitude which can be represented as `POINT (-0.098 51.495)` in the Simple Feature representation described in Chapter @spatial-class. Attributes such as the name attribute of the `POINT` feature (to use Simple Features terminology) are the topic of this chapter.
+
+Another example is the elevation value (attribute) for a specific grid cell in raster data. Unlike the vector data model, the raster data model stores the coordinate of the grid cell indirectly, meaning the distinction between attribute and spatial information is less clear. To illustrate the point, think of a pixel in the 3rd row and the 4th column of a raster matrix. Its spatial location is defined by its index in the matrix: move from the origin four cells in the x direction (typically east and right on maps) and three cells in the y direction (typically south and down). The raster's resolution defines the distance for each x- and y-step which is specified in a header. The header is a vital component of raster datasets which specifies how pixels relate to geographic coordinates (see also Chapter @spatial-operations).
+
+This teaches how to manipulate geographic objects based on attributes such as the names of bus stops in a vector dataset and elevations of pixels in a raster dataset. For vector data, this means techniques such as subsetting and aggregation (see Sections @sec-vector-attribute-subsetting and @sec-vector-attribute-aggregation). Sections @sec-vector-attribute-joining and @sec-creating-attributes-and-removing-spatial-information demonstrate how to join data onto simple feature objects using a shared ID and how to create new variables, respectively. Each of these operations has a spatial equivalent: `[` operator for subsetting a `(Geo)DataFrame` using a boolean `Series`, for example, is applicable both for subsetting objects based on their attribute and spatial relations derived using methods such as `.intersects`; you can also join attributes in two geographic datasets using spatial joins. This is good news: skills developed in this chapter are cross-transferable. Chapter @spatial-operations extends the methods presented here to the spatial world.
+
+After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in Section @sec-manipulating-raster-objects, which demonstrates how to create raster layers containing continuous and categorical attributes and extracting cell values from one or more layer (raster subsetting). Section @sec-summarizing-raster-objects provides an overview of 'global' raster operations which can be used to summarize entire raster datasets.
 
 ## Vector attribute manipulation
 
@@ -170,7 +180,7 @@ idx_asia = world['continent'] == 'Asia'
 world.loc[idx_small & idx_asia, ['name_long', 'continent', 'area_km2']]
 ```
 
-### Vector attribute aggregation
+### Vector attribute aggregation {#sec-vector-attribute-aggregation}
 
 Aggregation involves summarizing data with one or more *grouping variables*, typically from columns in the table to be aggregated (geographic aggregation is covered in the next chapter). An example of attribute aggregation is calculating the number of people per continent based on country-level data (one row per country). The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller data frame (aggregation is a form of data reduction and can be a useful early step when working with large datasets). This can be done with a combination of `.groupby` and `.sum`:
 
@@ -247,7 +257,7 @@ The result is a `GeoDataFrame` object identical to the original `world` object, 
 
 ```{python}
 #| label: fig-join-coffee-production
-#| fig-cap: "World coffee production, thousand 60-kg bags by country, in 2017 (source: International Coffee Organization)."
+#| fig-cap: 'World coffee production, thousand 60-kg bags by country, in 2017 (source: International Coffee Organization).'
 
 base = world.plot(color='white', edgecolor='lightgrey')
 world_coffee.plot(ax=base, column='coffee_production_2017');
@@ -261,9 +271,7 @@ Note that the result `world_coffee` has the same number of rows as the original 
 
 What if we only want to keep countries that have a match in the key variable? In that case an inner join can be used:
 
-
-
-### Creating attributes and removing spatial information
+### Creating attributes and removing spatial information {#sec-creating-attributes-and-removing-spatial-information}
 
 Calculate new column...
 
@@ -313,7 +321,7 @@ Dropping geometry...
 pd.DataFrame(world.drop(columns='geom'))
 ```
 
-## Manipulating raster objects
+## Manipulating raster objects {#sec-manipulating-raster-objects}
 
 ### Raster subsetting
 
@@ -344,7 +352,7 @@ elev[0, 0:2] = 0
 elev
 ```
 
-### Summarizing raster objects
+### Summarizing raster objects {#sec-summarizing-raster-objects}
 
 Global summaries of raster values can be calculated by applying `numpy` summary functions---such as `np.mean`---on the array with raster values. For example:
 
@@ -375,5 +383,4 @@ plt.hist(x);
 ```
 
 ## Exercises
-
 
