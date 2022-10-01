@@ -433,7 +433,10 @@ axes[1].set_title("NDVI");
 
 ### Focal operations
 
-While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. The neighborhood (also named kernel, filter or moving window) under consideration is typically of size 3-by-3 cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (Figure ...). Other names for this operation are spatial filtering and convolution (Burrough, McDonnell, and Lloyd 2015).
+While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. 
+The neighborhood (also named kernel, filter or moving window) under consideration is typically of size 3-by-3 cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. 
+A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (Figure ...). 
+Other names for this operation are spatial filtering and convolution (Burrough, McDonnell, and Lloyd 2015).
 
 In Python, the `scipy.ndimage` package has a comprehensive collection of [functions](https://docs.scipy.org/doc/scipy/reference/ndimage.html#filters) to perform filtering of `numpy` arrays, such as:
 
@@ -472,7 +475,11 @@ Special care should be given to the edge pixels. How should they be calculated? 
 * `mirror`
 * `wrap`
 
-Sometimes artificially extending raster edges is considered unsuitable. In other words, we may wish the resulting raster to contain pixel values with "complete" windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations). There is no specific option *not* to extent edges in `scipy.ndimage`. However, to get the same effect, the edges of the filtered array can be assigned with `nan`, in a number of rows and columns according to filter size. For example, when using a filter of `size=3`, the first "layer" of pixels may be assigned with `nan`, reflecting the fact that these pixels have incomplete 3*3 neighborhoods:
+Sometimes artificially extending raster edges is considered unsuitable. 
+In other words, we may wish the resulting raster to contain pixel values with "complete" windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations). 
+There is no specific option *not* to extent edges in `scipy.ndimage`. 
+However, to get the same effect, the edges of the filtered array can be assigned with `nan`, in a number of rows and columns according to filter size. 
+For example, when using a filter of `size=3`, the first "layer" of pixels may be assigned with `nan`, reflecting the fact that these pixels have incomplete 3*3 neighborhoods:
 
 ```{python}
 elev_min[:, [0, -1]] = np.nan
@@ -480,11 +487,15 @@ elev_min[[0, -1], :] = np.nan
 elev_min
 ```
 
-We can quickly check if the output meets our expectations. In our example, the minimum value has to be always the upper left corner of the moving window (remember we have created the input raster by row-wise incrementing the cell values by one starting at the upper left corner). 
+We can quickly check if the output meets our expectations. 
+In our example, the minimum value has to be always the upper left corner of the moving window (remember we have created the input raster by row-wise incrementing the cell values by one starting at the upper left corner). 
 
-Focal functions or filters play a dominant role in image processing. Low-pass or smoothing filters use the mean function to remove extremes. In the case of categorical data, we can replace the mean with the mode, which is the most common value. By contrast, high-pass filters accentuate features. The line detection Laplace and Sobel filters might serve as an example here. 
+Focal functions or filters play a dominant role in image processing. Low-pass or smoothing filters use the mean function to remove extremes. 
+In the case of categorical data, we can replace the mean with the mode, which is the most common value. 
+By contrast, high-pass filters accentuate features. The line detection Laplace and Sobel filters might serve as an example here. 
 
-Terrain processing, the calculation of topographic characteristics such as slope, aspect and flow directions, relies on focal functions. The `TerrainAttribute` function from package `richdem` can be used to calculate common [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute), specified through the `attrib` argument, namely:
+Terrain processing, the calculation of topographic characteristics such as slope, aspect and flow directions, relies on focal functions. 
+The `TerrainAttribute` function from package `richdem` can be used to calculate common [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute), specified through the `attrib` argument, namely:
 
 * `slope_riserun` 	Horn (1981) doi: 10.1109/PROC.1981.11918
 * `slope_percentage` 	Horn (1981) doi: 10.1109/PROC.1981.11918
@@ -497,7 +508,11 @@ Terrain processing, the calculation of topographic characteristics such as slope
 
 ### Zonal operations
 
-Just like focal operations, zonal operations apply an aggregation function to multiple raster cells. However, a second raster, usually with categorical values, defines the zonal filters (or 'zones') in the case of zonal operations, as opposed to a predefined neighborhood window in the case of focal operation presented in the previous section. Consequently, raster cells defining the zonal filter do not necessarily have to be neighbors. Our grain size raster is a good example, as illustrated in the right panel of Figure 3.2: different grain sizes are spread irregularly throughout the raster. Finally, the result of a zonal operation is a summary table grouped by zone which is why this operation is also known as zonal statistics in the GIS world. This is in contrast to focal operations which return a raster object.
+Just like focal operations, zonal operations apply an aggregation function to multiple raster cells. 
+However, a second raster, usually with categorical values, defines the zonal filters (or 'zones') in the case of zonal operations, as opposed to a predefined neighborhood window in the case of focal operation presented in the previous section. 
+Consequently, raster cells defining the zonal filter do not necessarily have to be neighbors. 
+Our grain size raster is a good example, as illustrated in the right panel of Figure 3.2: different grain sizes are spread irregularly throughout the raster. 
+Finally, the result of a zonal operation is a summary table grouped by zone which is why this operation is also known as zonal statistics in the GIS world. This is in contrast to focal operations which return a raster object.
 
 To demonstrate, let us get back to the `grain` and `elev` rasters (Figure 3.2). To calculate zonal statistics, we use the arrays with raster values. The `elev` array was already imported earlier:
 
@@ -533,8 +548,6 @@ z
 ```
 
 This returns the statistics for each category, here the mean elevation for each grain size class. For example, the mean elevation in pixels characterized by grain size `0` is `14.8`, and so on.
-
-
 
 ### Global operations and distances
 
