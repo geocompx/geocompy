@@ -53,6 +53,7 @@ nz_height = gpd.read_file("data/nz_height.gpkg")
 world = gpd.read_file('data/world.gpkg')
 src_elev = rasterio.open("data/elev.tif")
 src_multi_rast = rasterio.open("data/landsat.tif")
+src_grain = rasterio.open('data/grain.tif')
 ```
 
 ## Introduction
@@ -494,12 +495,46 @@ Terrain processing, the calculation of topographic characteristics such as slope
 * `planform_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
 * `profile_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
 
-
-
-
 ### Zonal operations
 
-...
+Just like focal operations, zonal operations apply an aggregation function to multiple raster cells. However, a second raster, usually with categorical values, defines the zonal filters (or 'zones') in the case of zonal operations, as opposed to a predefined neighborhood window in the case of focal operation presented in the previous section. Consequently, raster cells defining the zonal filter do not necessarily have to be neighbors. Our grain size raster is a good example, as illustrated in the right panel of Figure 3.2: different grain sizes are spread irregularly throughout the raster. Finally, the result of a zonal operation is a summary table grouped by zone which is why this operation is also known as zonal statistics in the GIS world. This is in contrast to focal operations which return a raster object.
+
+To demonstrate, let us get back to the `grain` and `elev` rasters (Figure 3.2). To calculate zonal statistics, we use the arrays with raster values. The `elev` array was already imported earlier:
+
+```{python}
+elev
+```
+
+The `grain` array is imported here using `.read`:
+
+```{python}
+grain = src_grain.read(1)
+grain
+```
+
+Our interntion is to calculate the average (or any other summary function, for that matter) of *elevation* in each zone defined by *grain* values. First, we can obtain the unique values defining the zones using `np.unique`: 
+
+```{python}
+np.unique(grain)
+```
+
+Now, we can use [dictionary conprehension](https://stackoverflow.com/questions/14507591/python-dictionary-comprehension) to "split" the `elev` array into separate one-dimensional arrays with values per `grain` group, with keys being the unique `grain` values:
+
+```{python}
+z = {i: elev[grain == i] for i in np.unique(grain)}
+z
+```
+
+At this stage, we can expand the dictionary comprehension expression to calculate the mean elevation associated with each grain size class. Instead of placing the elevation values (`elev[grain==i]`) into the dictionary values, we place their mean (`elev[grain==i].mean()`):
+
+```{python}
+z = {i: elev[grain == i].mean() for i in np.unique(grain)}
+z
+```
+
+This returns the statistics for each category, here the mean elevation for each grain size class. For example, the mean elevation in pixels characterized by grain size `0` is `14.8`, and so on.
+
+
 
 ### Global operations and distances
 
