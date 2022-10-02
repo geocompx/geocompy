@@ -1,3 +1,7 @@
+---
+jupyter: python3
+---
+
 # Geographic data in Python {#spatial-class}
 
 ## Introduction
@@ -143,7 +147,6 @@ if data_path.is_dir():
 else:
   print('Attempting to move data')
   shutil.copytree('py-main/output', 'output', dirs_exist_ok=True) 
-
 ```
 
 ```{python}
@@ -195,7 +198,7 @@ gdf.explore()
 # gdf.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
 ```
 
-### Geometry columns
+### Geometry columns {#sec-geometry-columns}
 
 A vital column in a `GeoDataFrame` is the geometry column, of class `GeoSeries`.
 The geometry column contains the geometric part of the vector layer.
@@ -209,15 +212,13 @@ The geometry column also contains the spatial reference information, if any.
 
 Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
 Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
-The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids (results not shown):
+The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids:
 
 ```{python}
-#| eval: false
 gdf.centroid
 ```
 
 ```{python}
-#| eval: false
 gdf['geometry'].centroid
 ```
 
@@ -297,7 +298,7 @@ Finally, a geometry collection can contain any combination of geometries includi
 GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
 ```
 
-### Geometries
+### Geometries {#sec-geometries}
 
 Each element in the geometry column is a geometry object, of class `shapely`.
 For example, here is one specific geometry selected by implicit index (that of Canada):
@@ -412,6 +413,75 @@ For example, the following expression returns the coordinates of the `polygon` g
 list(polygon.exterior.coords)
 ```
 
+### Vector layer from scratch
+
+In the previous sections we started with a vector layer (`GeoDataFrame`), from an existing Shapefile, and "decomposed" it to extract the geometry column (`GeoSeries`, @sec-geometry-columns) and separate geometries (`shapely`, see @sec-geometries).
+In this section we will demonstrate the opposite process, constructing a `GeoDataFrame` from `shapely` geometries, combined into a `GeoSeries`.
+This will:
+
+* help you better understand the structure of a `GeoDataFrame`, and
+* may come in handy when you will need to programmatically construct simple vector layers, such as a line between two given points, etc.
+
+Vector layers consist of two main parts: geometries and non-geographic attributes. Figure ... shows how a `GeoDataFrame` object is created – geometries come from a `GeoSeries` object, while attributes are taken from `Series` objects. 
+
+(Figure such as https://geocompr.robinlovelace.net/spatial-class.html#fig:02-sfdiagram)
+
+Non-geographic attributes represent the name of the feature or other attributes such as measured values, groups, and other things. To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2017. This example contains a geometry (the coordinates), and three attributes with three different classes (place name, temperature and date). Objects of class `GeoDataFrame` represent such data by combining the attributes (`Series`) with the simple feature geometry column (`GeoSeries`). First, we create a point geometry, which we know how to do from @sec-geometries:
+
+```{python}
+lnd_point = shapely.geometry.Point(0.1, 51.5)
+lnd_point
+```
+
+Next, we create a `GeoSeries` (of length 1), containing the point. Note that a `GeoSeries` stores a CRS definition, in this case WGS84 (defined using its EPSG code `4326`). Also note that the `shapely` geometries go into a `list`, to illustrate that there can be more than one (unlike in this example):
+
+```{python}
+lnd_geom = gpd.GeoSeries([lnd_point], crs = 4326)
+lnd_geom
+```
+
+Next, we combine the `GeoSeries` with other attributes into a `dict`. The geometry column is a `GeoSeries`, named `geometry`. The other attributes (if any) may be defined using `list` or `Series` objects. Here, for simplicity, we use the `list` option for defining the three attributes `name`, `temperature`, and `date`. Again, note that the `list` can be of length >1, in case we are creating a layer with more than one feature:
+
+```{python}
+d = {
+  'name': ['London'],
+  'temperature': [25],
+  'date': ['2017-06-21'],
+  'geometry': lnd_geom
+}
+```
+
+Finally, the `dict` can be coverted to a `GeoDataFrame`:
+
+```{python}
+lnd_layer = gpd.GeoDataFrame(d)
+lnd_layer
+```
+
+What just happened? First, the coordinates were used to create the simple feature geometry (`shapely`). Second, the geometry was converted into a simple feature geometry column (`GeoSeries`), with a CRS. Third, attributes were combined with `GeoSeries`. This results in an `GeoDataFrame` object, named `lnd_layer`.
+
+Just to illustrate how does creating a layer with more than one feature looks like, here is an example where we create a layer with two points, London and Paris:
+
+```{python}
+lnd_point = shapely.geometry.Point(0.1, 51.5)
+paris_point = shapely.geometry.Point(2.3, 48.9)
+towns_geom = gpd.GeoSeries([lnd_point, paris_point], crs = 4326)
+d = {
+  'name': ['London', 'Paris'],
+  'temperature': [25, 27],
+  'date': ['2017-06-21', '2017-06-21'],
+  'geometry': towns_geom
+}
+towns_layer = gpd.GeoDataFrame(d)
+towns_layer
+```
+
+The following expression creates an interactive map with the result:
+
+```{python}
+towns_layer.explore()
+```
+
 ## Raster data
 
 ### Introduction
@@ -515,6 +585,13 @@ s
 ```
 
 The result `s` is a two-dimensional `numpy` array.
+
+### Raster from scratch
+
+In this section, we are going to demonstrate creation of rasters from scratch. We are going to create two small rasters, `elev` and `grain`, which we are going to use in examples later on in the book. Unlike creating a vector layer, creating a raster from scratch is rarely needed in practive because aligning a raster with the right spatial extent is difficult to do programmatically (GIS software is a better fit for the job). Nevertheless, the examples will be useful to become more familiar with the `rasterio` data structures.
+
+To complete...
+
 
 ## Coordinate Reference Systems
 
