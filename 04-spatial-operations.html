@@ -250,7 +250,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#spatial-ras" id="toc-spatial-ras" class="nav-link" data-scroll-target="#spatial-ras"> <span class="header-section-number">4.4</span> Spatial operations on raster data</a>
   <ul class="collapse">
   <li><a href="#spatial-subsetting-1" id="toc-spatial-subsetting-1" class="nav-link" data-scroll-target="#spatial-subsetting-1"> <span class="header-section-number">4.4.1</span> Spatial subsetting</a></li>
-  <li><a href="#map-algebra" id="toc-map-algebra" class="nav-link" data-scroll-target="#map-algebra"> <span class="header-section-number">4.4.2</span> Map algebra</a></li>
+  <li><a href="#sec-map-algebra" id="toc-sec-map-algebra" class="nav-link" data-scroll-target="#sec-map-algebra"> <span class="header-section-number">4.4.2</span> Map algebra</a></li>
   <li><a href="#local-operations" id="toc-local-operations" class="nav-link" data-scroll-target="#local-operations"> <span class="header-section-number">4.4.3</span> Local operations</a></li>
   <li><a href="#focal-operations" id="toc-focal-operations" class="nav-link" data-scroll-target="#focal-operations"> <span class="header-section-number">4.4.4</span> Focal operations</a></li>
   <li><a href="#zonal-operations" id="toc-zonal-operations" class="nav-link" data-scroll-target="#zonal-operations"> <span class="header-section-number">4.4.5</span> Zonal operations</a></li>
@@ -984,7 +984,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="26">
-<pre><code>&lt;generator object sample_gen at 0x7f172d59d540&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7fa98b04d4d0&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>
@@ -1066,8 +1066,8 @@ dtype: float64</code></pre>
 </div>
 <p>These operations are in fact Boolean local operations, since we compare cell-wise two rasters. The next subsection explores these and related operations in more detail.</p>
 </section>
-<section id="map-algebra" class="level3" data-number="4.4.2">
-<h3 data-number="4.4.2" class="anchored" data-anchor-id="map-algebra"><span class="header-section-number">4.4.2</span> Map algebra</h3>
+<section id="sec-map-algebra" class="level3" data-number="4.4.2">
+<h3 data-number="4.4.2" class="anchored" data-anchor-id="sec-map-algebra"><span class="header-section-number">4.4.2</span> Map algebra</h3>
 <p>The term ‘map algebra’ was coined in the late 1970s to describe a “set of conventions, capabilities, and techniques” for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994). In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.</p>
 <p>Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage “raster is faster but vector is corrector”. The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the header). For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.</p>
 <p>This is the way that map algebra works with the terra package. First, the headers of the raster datasets are queried and (in cases where map algebra operations work on more than one dataset) checked to ensure the datasets are compatible. Second, map algebra retains the so-called one-to-one locational correspondence, meaning that cells cannot move. This differs from matrix algebra, in which values change position, for example when multiplying or dividing matrices.</p>
