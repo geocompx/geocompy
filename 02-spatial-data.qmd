@@ -500,7 +500,7 @@ On the other hand, **xarray** was extended to accommodate spatial operators miss
 
 In the following two sections, we introduce the **rasterio**, which is the raster-related package we are going to work with through the rest of the book. 
 
-### Using **rasterio**
+### Using **rasterio** {#sec-using-rasterio}
 
 To work with the **rasterio** package, we first need to import it.
 We also import **numpy**, since the underlying raster data are stored in **numpy** arrays.
@@ -590,8 +590,105 @@ The result `s` is a two-dimensional `numpy` array.
 
 In this section, we are going to demonstrate creation of rasters from scratch. We are going to create two small rasters, `elev` and `grain`, which we are going to use in examples later on in the book. Unlike creating a vector layer, creating a raster from scratch is rarely needed in practive because aligning a raster with the right spatial extent is difficult to do programmatically (GIS software is a better fit for the job). Nevertheless, the examples will be useful to become more familiar with the `rasterio` data structures.
 
-To complete...
+A raster is basically an array combined with georeferencing information, namely:
 
+* A transformation matrix (linking pixel indices with coordinates)
+* A CRS definition
+
+Therefore, to create a raster, we first need to have an array with the values, then supplement it with the georeferencing information. Let's create the arrays `elev` and `grain`. The `elev` array is a 6 by 6 array with sequential values from 1 to 36. It can be created as follows:
+
+```{python}
+elev = np.arange(1, 37, dtype=np.uint8).reshape(6, 6)
+elev
+```
+
+The `grain` array represents a categorical raster with values `0`, `1`, `2`, corresponding to categories "clay", "silt", "sand", respectively. We will create if from a specific arrangement of pixel values, as follows:
+
+```{python}
+v = [1, 0, 1, 2, 2, 2, 0, 2, 0, 0, 2, 1, 0, 2, 2, 0, 0, 2, 0, 0, 1, 1,
+       1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 2, 2, 0, 2]
+grain = np.array(v, dtype=np.uint8).reshape(6, 6)
+grain
+```
+
+Note that in both cases we are using the `uint8` (unsigned integer in 8 bits, i.e., `0-255`) data type, which is minimally sufficient to represent all possible values of the given rasters. This is the recommended approach for a minimal memory footprint.
+
+What is missing is the raster transform (see @sec-using-rasterio). In this case, since the rasters are arbitrary, we also set up an arbitrary transformation matrix, where:
+
+* the origin ($x_{min}$, $y_{max}$) is at `-1.5,1.5`, and
+* and resolution ($delta_{x}$, $delta_{y}$) is `0.5,-0.5`.
+
+In terms of code, we do that as follows, using `rasterio.transform.from_origin`:
+
+```{python}
+new_transform = rasterio.transform.from_origin(west=-1.5, north=1.5, xsize=0.5, ysize=0.5)
+new_transform
+```
+
+Note that, confusingly, $delta_{y}$ is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is eventuially negative (`-0.5`)! 
+
+The raster can now be protted in its coordinate system, passing the array along with the transformation matrix to `show`:
+
+```{python}
+show(elev, transform=new_transform);
+```
+
+The `grain` raster can be plotted the same way, as we are going to use the same transformation matrix for it as well:
+
+```{python}
+show(grain, transform=new_transform);
+```
+
+At this point, we can work with the raster using `rasterio`:
+
+* Passing the transformation matrix wherever true raster pixel coordinates are important (such as in function `show` above)
+* Keeping in mind that any other layer we use in the analysis is in the same CRS of those coordinates
+
+Finally, to export the raster for permanent storage, along with the CRS definition, we need to go through the following steps:
+
+* Create a raster file connection (where we set the transform and the CRS, among other settings)
+* Write the array with raster values into the connection
+* Close the connection
+
+In the case of `elev`, we do it as follows:
+
+```{python}
+new_dataset = rasterio.open(
+    'output/elev.tif', 'w', 
+    driver = 'GTiff',
+    height = elev.shape[0],
+    width = elev.shape[1],
+    count = 1,
+    dtype = elev.dtype,
+    crs = 4326,
+    transform = new_transform
+)
+new_dataset.write(elev, 1)
+new_dataset.close()
+```
+
+Note that the CRS we (arbitrarily) set for the `elev` raster is WGS84, defined using `crs=4326` according to the EPSG code.
+
+Here is how we export the `grain` raster as well, using almost the exact same code section just with `elev` replaced with `grain`:
+
+```{python}
+new_dataset = rasterio.open(
+    'output/grain.tif', 'w', 
+    driver = 'GTiff',
+    height = grain.shape[0],
+    width = grain.shape[1],
+    count = 1,
+    dtype = grain.dtype,
+    crs = 4326,
+    transform = new_transform
+)
+new_dataset.write(grain, 1)
+new_dataset.close()
+```
+
+Don't worry if the raster export code is unclear. We will elaborate on the details of raster output in @read-write.
+
+Note that the transform matrices and dimensions of `elev` and `grain` are identical. This means that the rasters are overlapping, and can be combined into one two-band raster, combined in raster algebra operations (@sec-map-algebra), etc.
 
 ## Coordinate Reference Systems
 
