@@ -1,4 +1,40 @@
+---
+jupyter: python3
+---
+
 # Reprojecting geographic data {#reproj-geo-data}
+
+## Prerequisites
+
+```{python}
+#| echo: false
+import pandas as pd
+import matplotlib.pyplot as plt
+pd.options.display.max_rows = 6
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams['figure.figsize'] = (5, 5)
+```
+
+Let's import the required packages:
+
+```{python}
+import numpy as np
+import geopandas as gpd
+import rasterio
+import rasterio.warp
+from rasterio.plot import show
+```
+
+and load the sample data:
+
+```{python}
+src_srtm = rasterio.open('data/srtm.tif')
+src_nlcd = rasterio.open('data/nlcd.tif')
+zion = gpd.read_file('data/zion.gpkg')
+world = gpd.read_file('data/world.gpkg')
+```
+
 
 ## Introduction
 
@@ -12,10 +48,138 @@
 
 ## Which CRS to use?
 
-## Reprojecting vector geometries
+## Reprojecting vector geometries {#sec-reprojecting-vector-geometries}
 
 ## Reprojecting raster geometries
+
+The projection concepts described in the previous section apply equally to rasters. However, there are important differences in reprojection of vectors and rasters: transforming a vector object involves changing the coordinates of every vertex but this does not apply to raster data. Rasters are composed of rectangular cells of the same size (expressed by map units, such as degrees or meters), so it is usually impracticable to transform coordinates of pixels separately. Raster reprojection involves creating a new raster object, often with a different number of columns and rows than the original. The attributes must subsequently be re-estimated, allowing the new pixels to be 'filled' with appropriate values. In other words, raster reprojection can be thought of as two separate spatial operations: a vector reprojection of the raster extent to another CRS (@sec-reprojecting-vector-geometries), and computation of new pixel values through resampling (@sec-raster-resampling). Thus in most cases when both raster and vector data are used, it is better to avoid reprojecting rasters and reproject vectors instead.
+
+:::{.callout-note}
+Reprojection of the regular rasters is also known as warping. Additionally, there is a second similar operation called "transformation". Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry. For example, it could convert the input raster (a regular grid) into a curvilinear grid. The `rasterio`, like common raster file formats (such as GeoTIFF), does not support curvilinear grids (?).
+:::
+
+The raster reprojection process is done using two functions from the `rasterio.warp` sub-package:
+
+* `rasterio.warp.calculate_default_transform`
+* `rasterio.warp.reproject`
+
+The first function, `calculate_default_transform`, is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds. Alternatively, the destination transformation matrix can be obtained from an existing raster. This is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (@sec-raster-local-operations). The second function `rasterio.warp.reproject` then actually calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear). 
+
+Let’s take a look at two examples of raster transformation: using categorical and continuous data. Land cover data are usually represented by categorical maps. The `nlcd.tif` file provides information for a small area in Utah, USA obtained from National Land Cover Database 2011 in the NAD83 / UTM zone 12N CRS, as shown in the output of the code chunk below (only first line of output shown). We already created a connection to the `nlcd.tif` file, named `src_nlcd`:
+
+```{python}
+src_nlcd
+```
+
+Recall that the raster transformation matrix and dimensions are accessible from the file connection as follows. This information will be required to calculate the destination transformation matrix (hereby printed collectively in a `tuple`):
+
+```{python}
+src_nlcd.transform, src_nlcd.width, src_nlcd.height
+```
+
+First, let's define the destination CRS. In this case, we choose WGS84 (EPSG code `4326`):
+
+```{python}
+dst_crs = 'EPSG:4326'
+```
+
+Now, we are ready to claculate the destination raster transformation matrix (`dst_transform`), and the destination dimensions (`dst_width`, `dst_height`), as follows: 
+
+```{python}
+dst_transform, dst_width, dst_height = rasterio.warp.calculate_default_transform(
+    src_nlcd.crs,
+    dst_crs,
+    src_nlcd.width,
+    src_nlcd.height,
+    *src_nlcd.bounds
+)
+dst_transform, dst_width, dst_height
+```
+
+Note that `*`, in `*src_nlcd.bounds`, is used to unpack `src_nlcd.bounds` to four separate arguments, which `calculate_default_transform` requires:
+
+```{python}
+src_nlcd.bounds
+```
+
+Next, we will create the metadata file used for writing the reprojected raster to file. For convenience, we are taking the metadata of the source raster (`src_nlcd.meta`), making a copy (`dst_kwargs`), and then updating those specific properties that need to be changed. Note that the reprojection process typically creates "No Data" pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be "filled" to get back a rectangular extent. We need to specify a "No Data" value of our choice, if there is none, or use the existing source raster setting, such as `255` in this case:
+
+```{python}
+dst_kwargs = src_nlcd.meta.copy()
+dst_kwargs.update({
+    'crs': dst_crs,
+    'transform': dst_transform,
+    'width': dst_width,
+    'height': dst_height
+})
+dst_kwargs
+```
+
+We are ready to create the reprojected raster. Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once. It is also possible to reproject into an in-memory `ndarray` object, see the [documentation](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject).
+
+To write the reprojected raster, we first create a destination file connection `dst_nlcd`, pointing at the output file path of our choice (`output/nlcd_4326.tif`), using the updated metadata object created earlier (`dst_kwargs`):
+
+```{python}
+dst_nlcd = rasterio.open('output/nlcd_4326.tif', 'w', **dst_kwargs)
+```
+
+Then, we use the `rasterio.warp.reproject` function to calculate and write the reprojection result into the `dst_nlcd` file connection. Note that the `source` and `destination` accept a "band" object, created using `rasterio.band`. In this case, there is just one band. If there were more bands, we would have to repeat the procedure for each band, using `i` instead of `1` inside a [loop](https://rasterio.readthedocs.io/en/latest/topics/reproject.html#reprojecting-a-geotiff-dataset):
+
+```{python}
+rasterio.warp.reproject(
+    source=rasterio.band(src_nlcd, 1),
+    destination=rasterio.band(dst_nlcd, 1),
+    src_transform=src_nlcd.transform,
+    src_crs=src_nlcd.crs,
+    dst_transform=dst_transform,
+    dst_crs=dst_crs,
+    resampling=rasterio.warp.Resampling.nearest
+)
+```
+
+Finally, we close the file connection so that the data are actually written:
+
+```{python}
+dst_nlcd.close()
+```
+
+Many properties of the new object differ from the previous one, including the number of columns and rows (and therefore number of cells), resolution (transformed from meters into degrees), and extent, as summarized again below (note that the number of categories increases from 8 to 9 because of the addition of NA values, not because a new category has been created — the land cover classes are preserved).
+
+```{python}
+src_nlcd.meta
+```
+
+```{python}
+src_nlcd_4326 = rasterio.open('output/nlcd_4326.tif')
+src_nlcd_4326.meta
+```
+
+Examining the unique raster values tells us that the new raster has the same categories, plus the value `255` representing "No Data":
+
+```{python}
+np.unique(src_nlcd.read(1))
+```
+
+```{python}
+np.unique(src_nlcd_4326.read(1))
+```
+
+```{python}
+#| label: fig-raster-reproject-nlcd
+#| fig-cap: Reprojecting a categorical raster using nearest neighbor resampling
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+show(src_nlcd, ax=axes[0], cmap='Set3')
+show(src_nlcd_4326, ax=axes[1], cmap='Set3')
+axes[0].set_title('Original (EPSG:26912)')
+axes[1].set_title('Reprojected (EPSG:4326)');
+```
+
+Bilinear `srtm.tif` example...
+
+
 
 ## Custom map projections
 
 ## Exercises
+
