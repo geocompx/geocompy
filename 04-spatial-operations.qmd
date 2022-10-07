@@ -295,10 +295,11 @@ mask = np.random.choice([True, False], elev.shape)
 mask
 ```
 
-In the code chunk above, we have created a mask object called `mask` with values randomly assigned to `True` and `False`. Next, we want to keep those values of `elev` which are `False` in `mask` (i.e., they are *not* masked). In other words, we want to mask `elev` with `mask`. The result is stored in a copy named `elev1`:
+In the code chunk above, we have created a mask object called `mask` with values randomly assigned to `True` and `False`. Next, we want to keep those values of `elev` which are `False` in `mask` (i.e., they are *not* masked). In other words, we want to mask `elev` with `mask`. The result is stored in a copy named `elev1`. To be able to store `np.nan` in the raster, we also need to convert it to float (see @sec-summarizing-raster-objects):
 
 ```{python}
 elev1 = elev.copy()
+elev1 = elev1.astype('float64')
 elev1[mask] = np.nan
 elev1
 ```
@@ -365,7 +366,7 @@ elev + elev
 
 ```{python}
 #| label: fig-raster-local-operations
-#| fig-cap: "Examples of different local operations of the elev raster object: adding two rasters, squaring, applying logarithmic transformation, and performing a logical operation."
+#| fig-cap: 'Examples of different local operations of the elev raster object: adding two rasters, squaring, applying logarithmic transformation, and performing a logical operation.'
 
 fig, axes = plt.subplots(ncols=4, figsize=(9,5))
 show(elev + elev, ax=axes[0], cmap="Oranges")
@@ -391,7 +392,7 @@ The reclassified result is shown in @fig-raster-reclassify.
 
 ```{python}
 #| label: fig-raster-reclassify
-#| fig-cap: Reclassifying a continuous raster into three categories. 
+#| fig-cap: Reclassifying a continuous raster into three categories.
 
 fig, axes = plt.subplots(ncols=2, figsize=(9,5))
 show(elev, ax=axes[0], cmap="Oranges")
@@ -434,7 +435,7 @@ The result is shown in @fig-raster-ndvi.
 
 ```{python}
 #| label: fig-raster-ndvi
-#| fig-cap: RGB image (left) and NDVI values (right) calculated for the example satellite file of the Zion National Park. 
+#| fig-cap: RGB image (left) and NDVI values (right) calculated for the example satellite file of the Zion National Park.
 
 fig, axes = plt.subplots(ncols=2, figsize=(9,5))
 show(multi_rast_rgb, ax=axes[0], cmap="RdYlGn")
