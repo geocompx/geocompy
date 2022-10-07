@@ -35,7 +35,6 @@ zion = gpd.read_file('data/zion.gpkg')
 world = gpd.read_file('data/world.gpkg')
 ```
 
-
 ## Introduction
 
 ## Coordinate Reference Systems
@@ -52,7 +51,13 @@ world = gpd.read_file('data/world.gpkg')
 
 ## Reprojecting raster geometries
 
-The projection concepts described in the previous section apply equally to rasters. However, there are important differences in reprojection of vectors and rasters: transforming a vector object involves changing the coordinates of every vertex but this does not apply to raster data. Rasters are composed of rectangular cells of the same size (expressed by map units, such as degrees or meters), so it is usually impracticable to transform coordinates of pixels separately. Raster reprojection involves creating a new raster object, often with a different number of columns and rows than the original. The attributes must subsequently be re-estimated, allowing the new pixels to be 'filled' with appropriate values. In other words, raster reprojection can be thought of as two separate spatial operations: a vector reprojection of the raster extent to another CRS (@sec-reprojecting-vector-geometries), and computation of new pixel values through resampling (@sec-raster-resampling). Thus in most cases when both raster and vector data are used, it is better to avoid reprojecting rasters and reproject vectors instead.
+The projection concepts described in the previous section apply equally to rasters. 
+However, there are important differences in reprojection of vectors and rasters: transforming a vector object involves changing the coordinates of every vertex but this does not apply to raster data. 
+Rasters are composed of rectangular cells of the same size (expressed by map units, such as degrees or meters), so it is usually impracticable to transform coordinates of pixels separately. 
+Raster reprojection involves creating a new raster object, often with a different number of columns and rows than the original. 
+The attributes must subsequently be re-estimated, allowing the new pixels to be 'filled' with appropriate values. 
+In other words, raster reprojection can be thought of as two separate spatial operations: a vector reprojection of the raster extent to another CRS (@sec-reprojecting-vector-geometries), and computation of new pixel values through resampling (@sec-raster-resampling). 
+Thus in most cases when both raster and vector data are used, it is better to avoid reprojecting rasters and reproject vectors instead.
 
 :::{.callout-note}
 Reprojection of the regular rasters is also known as warping. Additionally, there is a second similar operation called "transformation". Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry. For example, it could convert the input raster (a regular grid) into a curvilinear grid. The `rasterio`, like common raster file formats (such as GeoTIFF), does not support curvilinear grids (?).
@@ -63,9 +68,13 @@ The raster reprojection process is done using two functions from the `rasterio.w
 * `rasterio.warp.calculate_default_transform`
 * `rasterio.warp.reproject`
 
-The first function, `calculate_default_transform`, is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds. Alternatively, the destination transformation matrix can be obtained from an existing raster. This is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (@sec-raster-local-operations). The second function `rasterio.warp.reproject` then actually calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear). 
+The first function, `calculate_default_transform`, is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds. 
+Alternatively, the destination transformation matrix can be obtained from an existing raster; this is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (@sec-raster-local-operations) (see below). 
+The second function `rasterio.warp.reproject` then actually calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear). 
 
-Let’s take a look at two examples of raster transformation: using categorical and continuous data. Land cover data are usually represented by categorical maps. The `nlcd.tif` file provides information for a small area in Utah, USA obtained from National Land Cover Database 2011 in the NAD83 / UTM zone 12N CRS, as shown in the output of the code chunk below (only first line of output shown). We already created a connection to the `nlcd.tif` file, named `src_nlcd`:
+Let's take a look at two examples of raster transformation: using categorical and continuous data. 
+Land cover data are usually represented by categorical maps. The `nlcd.tif` file provides information for a small area in Utah, USA obtained from National Land Cover Database 2011 in the NAD83 / UTM zone 12N CRS, as shown in the output of the code chunk below (only first line of output shown). 
+We already created a connection to the `nlcd.tif` file, named `src_nlcd`:
 
 ```{python}
 src_nlcd
@@ -175,9 +184,106 @@ axes[0].set_title('Original (EPSG:26912)')
 axes[1].set_title('Reprojected (EPSG:4326)');
 ```
 
-Bilinear `srtm.tif` example...
+The above example, where we automatically calculate the destination grid, is appropriate when there are no specific requirements for the raster spatial properties, but rather we just wish to preserve the raster values as much as possible (this the extent and resolution are as similar as possible to the source). 
+In other situations, however, we need to reproject a raster into a specific "template", so that it corresponds, for instance, with other rasters we use in the analysis. 
+In the following code section, we reproject the `nlcd.tif` raster, again, buit this time using the `nlcd_4326.tif` reprojection result as the "template" to demonstrate this alternative workflow.
 
+First, we create a connection to our "template" raster to read its metadata:
 
+```{python}
+template = rasterio.open('output/nlcd_4326.tif')
+template.meta
+```
+
+Then, we create a write-mode connection to our destination raster, using this metadata, meaning that as the resampling result is going to have identical metadata as the "template":
+
+```{python}
+dst_nlcd_2 = rasterio.open('output/nlcd_4326_2.tif', 'w', **template.meta)
+```
+
+Now, we can resample and write the result:
+
+```{python}
+rasterio.warp.reproject(
+    source=rasterio.band(src_nlcd, 1),
+    destination=rasterio.band(dst_nlcd_2, 1),
+    src_transform=src_nlcd.transform,
+    src_crs=src_nlcd.crs,
+    dst_transform=dst_nlcd_2.transform,
+    dst_crs=dst_nlcd_2.crs,
+    resampling=rasterio.warp.Resampling.nearest
+)
+```
+
+```{python}
+dst_nlcd_2.close()
+```
+
+Naturally, in this case, the outputs `nlcd_4326.tif` and `nlcd_4326_2.tif` are identical, as we used the same "template" and the same source data: 
+
+```{python}
+d = rasterio.open('output/nlcd_4326.tif').read(1) == rasterio.open('output/nlcd_4326_2.tif').read(1)
+d
+```
+
+```{python}
+np.all(d)
+```
+
+The difference is that in the first example we calculate the template automatically, using `rasterio.warp.calculate_default_transform`, while in the second example we used an existing raster as the "template".
+
+Importantly, when the template raster has much more "coarse" resolution than the source raster, the:
+
+* `rasterio.warp.Resampling.average` (for continuous rasters), or 
+* `rasterio.warp.Resampling.mode` (for categorical rasters)
+
+resampling method should be used, instead of `rasterio.warp.Resampling.nearest`. Otherwise, much of the data will be lost, as the "nearest" method can capture one pixel value only for each destination raster pixel. 
+
+Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure. This is demonstrated below with `srtm.tif` from the Shuttle Radar Topography Mission (SRTM), which represents height in meters above sea level (elevation) with the WGS84 CRS.
+
+We will reproject this dataset into a projected CRS, but not with the nearest neighbor method which is appropriate for categorical data. Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster. The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight. The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method. The code is practically the same, except for changing the source and destination file names, and replacing `nearest` with `bilinear`:
+
+```{python}
+dst_crs = 'EPSG:32612'
+dst_transform, dst_width, dst_height = rasterio.warp.calculate_default_transform(
+    src_srtm.crs,
+    dst_crs,
+    src_srtm.width,
+    src_srtm.height,
+    *src_srtm.bounds
+)
+dst_kwargs = src_srtm.meta.copy()
+dst_kwargs.update({
+    'crs': dst_crs,
+    'transform': dst_transform,
+    'width': dst_width,
+    'height': dst_height
+})
+dst_srtm = rasterio.open('output/srtm_32612.tif', 'w', **dst_kwargs)
+rasterio.warp.reproject(
+    source=rasterio.band(src_srtm, 1),
+    destination=rasterio.band(dst_srtm, 1),
+    src_transform=src_srtm.transform,
+    src_crs=src_srtm.crs,
+    dst_transform=dst_transform,
+    dst_crs=dst_crs,
+    resampling=rasterio.warp.Resampling.bilinear
+)
+dst_srtm.close()
+```
+
+@fig-raster-reproject-srtm shows the input and the reprojected SRTM rasters.
+
+```{python}
+#| label: fig-raster-reproject-srtm
+#| fig-cap: Reprojecting a continuous raster using bilinear resampling
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+show(src_srtm, ax=axes[0])
+show(rasterio.open('output/srtm_32612.tif'), ax=axes[1])
+axes[0].set_title('Original (EPSG:26912)')
+axes[1].set_title('Reprojected (EPSG:4326)');
+```
 
 ## Custom map projections
 
