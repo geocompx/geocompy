@@ -322,8 +322,10 @@ axes[2].set_title("Result");
 The above approach can be also used to replace some values (e.g., expected to be wrong) with `nan`:
 
 ```{python}
-elev[elev < 20] = np.nan
-elev
+elev1 = elev.copy()
+elev1 = elev1.astype('float64')
+elev1[elev1 < 20] = np.nan
+elev1
 ```
 
 These operations are in fact Boolean local operations, since we compare cell-wise two rasters. The next subsection explores these and related operations in more detail.
@@ -493,11 +495,12 @@ Special care should be given to the edge pixels. How should they be calculated? 
 
 Sometimes artificially extending raster edges is considered unsuitable. 
 In other words, we may wish the resulting raster to contain pixel values with "complete" windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations). 
-There is no specific option *not* to extent edges in `scipy.ndimage`. 
+There is no specific option *not* to extend edges in `scipy.ndimage`. 
 However, to get the same effect, the edges of the filtered array can be assigned with `nan`, in a number of rows and columns according to filter size. 
 For example, when using a filter of `size=3`, the first "layer" of pixels may be assigned with `nan`, reflecting the fact that these pixels have incomplete 3*3 neighborhoods:
 
 ```{python}
+elev_min = elev_min.astype('float')
 elev_min[:, [0, -1]] = np.nan
 elev_min[[0, -1], :] = np.nan
 elev_min
