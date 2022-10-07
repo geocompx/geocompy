@@ -984,7 +984,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="26">
-<pre><code>&lt;generator object sample_gen at 0x7fdc417c54d0&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f6c2a0cd540&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>
@@ -1082,6 +1082,7 @@ dtype: float64</code></pre>
 </section>
 <section id="sec-raster-local-operations" class="level3" data-number="4.4.3">
 <h3 data-number="4.4.3" class="anchored" data-anchor-id="sec-raster-local-operations"><span class="header-section-number">4.4.3</span> Local operations</h3>
+<p>Local operations comprise all cell-by-cell operations in one or several layers. Raster algebra is a classical use case of local operations - this includes adding or subtracting values from a raster, squaring and multipling rasters. Raster algebra also allows logical operations such as finding all raster cells that are greater than a specific value (5 in our example below). Local operations are applied using the <code>numpy</code> array operations syntax, as demonstrated below:</p>
 <p>First, we need to read raster values:</p>
 <div class="cell" data-execution_count="34">
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
@@ -1107,7 +1108,7 @@ dtype: float64</code></pre>
        [62., 64., 66., 68., 70., 72.]], dtype=float32)</code></pre>
 </div>
 </div>
-<p>Here are few more examples:</p>
+<p><a href="#fig-raster-local-operations">Figure&nbsp;<span>4.3</span></a> demonstrates a few more examples.</p>
 <div class="cell" data-execution_count="36">
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>show(elev <span class="op">+</span> elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
@@ -1119,15 +1120,20 @@ dtype: float64</code></pre>
 <span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"np.log(elev)"</span>)</span>
 <span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">3</span>].set_title(<span class="st">"elev &gt; 5"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="04-spatial-operations_files/figure-html/cell-37-output-1.png" width="707" height="207"></p>
+<div id="fig-raster-local-operations" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-spatial-operations_files/figure-html/fig-raster-local-operations-output-1.png" width="707" height="207" class="figure-img"></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 4.3: Examples of different local operations of the elev raster object: adding two rasters, squaring, applying logarithmic transformation, and performing a logical operation.</figcaption><p></p>
+</figure>
 </div>
 </div>
-<p>Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges 0–12, 12–24 and 24–36 are reclassified to take values 1, 2 and 3, respectively…</p>
+</div>
+<p>Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges 0–12, 12–24 and 24–36 are reclassified to take values 1, 2 and 3, respectively.</p>
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>recl <span class="op">=</span> elev.copy()</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">0</span>)  <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">12</span>)] <span class="op">=</span> <span class="dv">1</span></span>
 <span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">12</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">24</span>)] <span class="op">=</span> <span class="dv">2</span></span>
 <span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">24</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">36</span>)] <span class="op">=</span> <span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Plot…</p>
+<p>The reclassified result is shown in <a href="#fig-raster-reclassify">Figure&nbsp;<span>4.4</span></a>.</p>
 <div class="cell" data-execution_count="38">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>show(elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"Oranges"</span>)</span>
@@ -1135,7 +1141,12 @@ dtype: float64</code></pre>
 <span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
 <span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Reclassified"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="04-spatial-operations_files/figure-html/cell-39-output-1.png" width="707" height="366"></p>
+<div id="fig-raster-reclassify" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-spatial-operations_files/figure-html/fig-raster-reclassify-output-1.png" width="707" height="366" class="figure-img"></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 4.4: Reclassifying a continuous raster into three categories.</figcaption><p></p>
+</figure>
+</div>
 </div>
 </div>
 <p>The calculation of the normalized difference vegetation index (NDVI) is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between -1 and 1; positive values indicate the presence of living plants (mostly &gt; 0.2). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula:</p>
@@ -1153,8 +1164,8 @@ dtype: float64</code></pre>
 <li>The order of bands is RGB</li>
 </ul>
 <p>To “prepare” the multi-band raster for <code>show</code>, we therefore reverse the order of bands (which is originally BGR+NIR), and divided by the maximum to set the maximum value at <code>1</code>:</p>
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>multi_rast_rgb <span class="op">=</span> multi_rast[(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), :, :]<span class="op">/</span>multi_rast.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Plot…</p>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>multi_rast_rgb <span class="op">=</span> multi_rast[(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), :, :] <span class="op">/</span> multi_rast.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The result is shown in <a href="#fig-raster-ndvi">Figure&nbsp;<span>4.5</span></a>.</p>
 <div class="cell" data-execution_count="42">
 <div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
 <span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>show(multi_rast_rgb, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">"RdYlGn"</span>)</span>
@@ -1162,7 +1173,12 @@ dtype: float64</code></pre>
 <span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"RGB image"</span>)</span>
 <span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"NDVI"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="04-spatial-operations_files/figure-html/cell-43-output-1.png" width="720" height="431"></p>
+<div id="fig-raster-ndvi" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-spatial-operations_files/figure-html/fig-raster-ndvi-output-1.png" width="720" height="431" class="figure-img"></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 4.5: RGB image (left) and NDVI values (right) calculated for the example satellite file of the Zion National Park.</figcaption><p></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
