@@ -324,7 +324,7 @@ Note
 <li><code>rasterio.warp.calculate_default_transform</code></li>
 <li><code>rasterio.warp.reproject</code></li>
 </ul>
-<p>The first function, <code>calculate_default_transform</code>, is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds. Alternatively, the destination transformation matrix can be obtained from an existing raster. This is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (<a href="04-spatial-operations.html#sec-raster-local-operations"><span>Section&nbsp;4.4.3</span></a>). The second function <code>rasterio.warp.reproject</code> then actually calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear).</p>
+<p>The first function, <code>calculate_default_transform</code>, is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds. Alternatively, the destination transformation matrix can be obtained from an existing raster; this is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (<a href="04-spatial-operations.html#sec-raster-local-operations"><span>Section&nbsp;4.4.3</span></a>) (see below). The second function <code>rasterio.warp.reproject</code> then actually calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear).</p>
 <p>Let’s take a look at two examples of raster transformation: using categorical and continuous data. Land cover data are usually represented by categorical maps. The <code>nlcd.tif</code> file provides information for a small area in Utah, USA obtained from National Land Cover Database 2011 in the NAD83 / UTM zone 12N CRS, as shown in the output of the code chunk below (only first line of output shown). We already created a connection to the <code>nlcd.tif</code> file, named <code>src_nlcd</code>:</p>
 <div class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>src_nlcd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -470,7 +470,114 @@ Note
 </div>
 </div>
 </div>
-<p>Bilinear <code>srtm.tif</code> example…</p>
+<p>The above example, where we automatically calculate the destination grid, is appropriate when there are no specific requirements for the raster spatial properties, but rather we just wish to preserve the raster values as much as possible (this the extent and resolution are as similar as possible to the source). In other situations, however, we need to reproject a raster into a specific “template”, so that it corresponds, for instance, with other rasters we use in the analysis. In the following code section, we reproject the <code>nlcd.tif</code> raster, again, buit this time using the <code>nlcd_4326.tif</code> reprojection result as the “template” to demonstrate this alternative workflow.</p>
+<p>First, we create a connection to our “template” raster to read its metadata:</p>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>template <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>template.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<pre><code>{'driver': 'GTiff',
+ 'dtype': 'uint8',
+ 'nodata': 255.0,
+ 'width': 1244,
+ 'height': 1246,
+ 'count': 1,
+ 'crs': CRS.from_epsg(4326),
+ 'transform': Affine(0.0003150638330703061, 0.0, -113.24138992561787,
+        0.0, -0.0003150638330703061, 37.51912769147348)}</code></pre>
+</div>
+</div>
+<p>Then, we create a write-mode connection to our destination raster, using this metadata, meaning that as the resampling result is going to have identical metadata as the “template”:</p>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>template.meta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now, we can resample and write the result:</p>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_nlcd, <span class="dv">1</span>),</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_nlcd_2, <span class="dv">1</span>),</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_nlcd.transform,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_nlcd.crs,</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_nlcd_2.transform,</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_nlcd_2.crs,</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.warp.Resampling.nearest</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326_2.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1246, 1244)),
+ Affine(0.0003150638330703061, 0.0, -113.24138992561787,
+        0.0, -0.0003150638330703061, 37.51912769147348))</code></pre>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Naturally, in this case, the outputs <code>nlcd_4326.tif</code> and <code>nlcd_4326_2.tif</code> are identical, as we used the same “template” and the same source data:</p>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>).read(<span class="dv">1</span>) <span class="op">==</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>).read(<span class="dv">1</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>d</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<pre><code>array([[ True,  True,  True, ...,  True,  True,  True],
+       [ True,  True,  True, ...,  True,  True,  True],
+       [ True,  True,  True, ...,  True,  True,  True],
+       ...,
+       [ True,  True,  True, ...,  True,  True,  True],
+       [ True,  True,  True, ...,  True,  True,  True],
+       [ True,  True,  True, ...,  True,  True,  True]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>np.<span class="bu">all</span>(d)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
+<pre><code>True</code></pre>
+</div>
+</div>
+<p>The difference is that in the first example we calculate the template automatically, using <code>rasterio.warp.calculate_default_transform</code>, while in the second example we used an existing raster as the “template”.</p>
+<p>Importantly, when the template raster has much more “coarse” resolution than the source raster, the:</p>
+<ul>
+<li><code>rasterio.warp.Resampling.average</code> (for continuous rasters), or</li>
+<li><code>rasterio.warp.Resampling.mode</code> (for categorical rasters)</li>
+</ul>
+<p>resampling method should be used, instead of <code>rasterio.warp.Resampling.nearest</code>. Otherwise, much of the data will be lost, as the “nearest” method can capture one pixel value only for each destination raster pixel.</p>
+<p>Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure. This is demonstrated below with <code>srtm.tif</code> from the Shuttle Radar Topography Mission (SRTM), which represents height in meters above sea level (elevation) with the WGS84 CRS.</p>
+<p>We will reproject this dataset into a projected CRS, but not with the nearest neighbor method which is appropriate for categorical data. Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster. The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight. The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method. The code is practically the same, except for changing the source and destination file names, and replacing <code>nearest</code> with <code>bilinear</code>:</p>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>dst_crs <span class="op">=</span> <span class="st">'EPSG:32612'</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height <span class="op">=</span> rasterio.warp.calculate_default_transform(</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    src_srtm.crs,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    dst_crs,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    src_srtm.width,</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    src_srtm.height,</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>src_srtm.bounds</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_srtm.meta.copy()</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'crs'</span>: dst_crs,</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: dst_transform,</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: dst_width,</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: dst_height</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>dst_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_srtm, <span class="dv">1</span>),</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_srtm, <span class="dv">1</span>),</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_srtm.transform,</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_srtm.crs,</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_crs,</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.warp.Resampling.bilinear</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>dst_srtm.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="#fig-raster-reproject-srtm">Figure&nbsp;<span>7.2</span></a> shows the input and the reprojected SRTM rasters.</p>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>show(src_srtm, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>show(rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>), ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original (EPSG:26912)'</span>)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Reprojected (EPSG:4326)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-raster-reproject-srtm" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="07-reproj_files/figure-html/fig-raster-reproject-srtm-output-1.png" width="736" height="431" class="figure-img"></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 7.2: Reprojecting a continuous raster using bilinear resampling</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
 </section>
 <section id="custom-map-projections" class="level2" data-number="7.10">
 <h2 data-number="7.10" class="anchored" data-anchor-id="custom-map-projections"><span class="header-section-number">7.10</span> Custom map projections</h2>
