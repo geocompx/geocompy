@@ -547,11 +547,11 @@ As we will see shortly, they differ in their scope and underlying data models.
 Specifically, **rasterio** represents rasters as **numpy** arrays associated with a separate object holding the spatial metadata.
 The **xarray** package, however, represents rasters with the native `DataArray` object, which is an extension of **numpy** array designed to hold axis labels and attributes, in the same object, together with the array of raster values.
 
-Both packages are not exhaustive in the same way as **geopandas** is. 
+Both packages are not exhaustive in the same way **geopandas** is. 
 For example, when working with **rasterio**, on the one hand, more packages may be needed to accomplish common tasks such as zonal statistics (package **rasterstats**) or calculating topographic indices (package **richdem**). 
 On the other hand, **xarray** was extended to accommodate spatial operators missing from the core package itself, with the **rioxarray** and **xarray-spatial** packages.
 
-In the following two sections, we introduce the **rasterio**, which is the raster-related package we are going to work with through the rest of the book. 
+In the following two sections, we introduce **rasterio**, which is the raster-related package we are going to work with through the rest of the book. 
 
 ### Using **rasterio** {#sec-using-rasterio}
 
@@ -577,20 +577,21 @@ This separation is analogous to basic Python functions for reading from files, s
 The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size. 
 Accordingly, the second step (`.read`) is selective. For example, we may want to read just one raster band rather than reading all bands.
 
-In the first step, we pass a file path to the `rasterio.open` function to create a file connection. 
+In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection. 
 For this example, we use a single-band raster representing elevation in Zion National Park:
 
 ```{python}
 src = rasterio.open('data/srtm.tif')
+src
 ```
 
-To get a first impression of the raster values, we can plot it using the `show` function:
+To get a first impression of the raster values, we can plot the raster using the `show` function:
 
 ```{python}
 show(src);
 ```
 
-The "connection" object contains the raster metadata, that is, all of the information other than the raster values.
+The `DatasetReader` contains the raster metadata, that is, all of the information other than the raster values.
 Let us examine it:
 
 ```{python}
@@ -615,7 +616,7 @@ Affine(delta_x, 0.0, x_min,
 
 Note that, by convention, raster y-axis origin is set to the maximum value ($y_{max}$) rather than the minimum, and, accordingly, the y-axis resolution ($delta_{y}$) is negative. 
 
-The `.read` method of a raster file connection object is used to read the last but not least piece of information: the raster values.
+Finally, the `.read` method of the `DatasetReader` is used to read the actual raster values.
 Importantly, we can read:
 
 * A particular layer, passing a numeric index (as in `.read(1)`)
@@ -680,7 +681,7 @@ new_transform
 
 Note that, confusingly, $delta_{y}$ is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is eventuially negative (`-0.5`)! 
 
-The raster can now be protted in its coordinate system, passing the array along with the transformation matrix to `show`:
+The raster can now be plotted in its coordinate system, passing the array along with the transformation matrix to `show`:
 
 ```{python}
 show(elev, transform=new_transform);
