@@ -30,19 +30,18 @@ Sample data...
 
 ```{python}
 #| echo: false
-from pathlib import Path
-data_path = Path('data')
-file_path = Path('data/landsat.tif')
-if not file_path.exists():
-  if not data_path.is_dir():
-     os
-     os.mkdir(data_path)
-  import os
+import os
+from urllib.request import urlretrieve
+
+data_path = 'data'
+if not os.path.exists(data_path):
+  os.mkdir(data_path)
+  
+file_path = 'data/landsat.tif'
+url = 'https://github.com/geocompr/py/releases/download/0.1/landsat.tif'
+if not os.path.exists(file_path):
   print('Attempting to get the data')
-  import requests
-  r = requests.get('https://github.com/geocompr/py/releases/download/0.1/landsat.tif')  
-  with open(file_path, 'wb') as f:
-    f.write(r.content)
+  urlretrieve(url, file_path)
 ```
 
 ```{python}
@@ -64,7 +63,7 @@ Its spatial location is defined by its index in the matrix: move from the origin
 The raster's resolution defines the distance for each x- and y-step which is specified in a header.
 The header is a vital component of raster datasets which specifies how pixels relate to geographic coordinates (see also Chapter @spatial-operations).
 
-This teaches how to manipulate geographic objects based on attributes such as the names of bus stops in a vector dataset and elevations of pixels in a raster dataset. 
+This chapter teaches how to manipulate geographic objects based on attributes such as the names of bus stops in a vector dataset and elevations of pixels in a raster dataset. 
 For vector data, this means techniques such as subsetting and aggregation (see @sec-vector-attribute-subsetting and @sec-vector-attribute-aggregation).
 @sec-vector-attribute-joining and @sec-creating-attributes-and-removing-spatial-information demonstrate how to join data onto simple feature objects using a shared ID and how to create new variables, respectively. 
 Each of these operations has a spatial equivalent: `[` operator for subsetting a `(Geo)DataFrame` using a boolean `Series`, for example, is applicable both for subsetting objects based on their attribute and spatial relations derived using methods such as `.intersects`; you can also join attributes in two geographic datasets using spatial joins. This is good news: skills developed in this chapter are cross-transferable.
@@ -92,17 +91,29 @@ In both cases the method is followed by square brackets, and two indices, separa
 * A `list`, as in `[0,2,4]`
 * `:`—indicating "all" indices
 
-The once exception which we are going to with subsetting by indices is when selecting columns, directly using a list, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
+An exception to this rule is selecting columns using a list, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
 
 Here are few examples of subsetting the `GeoDataFrame` of world countries.
 
-Subsetting rows by position:
+Subsetting rows by position, e.g., the first three rows:
 
 ```{python}
 world.iloc[0:3, :]
 ```
 
-Subsetting columns by position:
+which is equivalent to:
+
+```{python}
+world.iloc[:3]
+```
+
+as well as:
+
+```{python}
+world.head(3)
+```
+
+Subsetting columns by position, e.g., the first three columns:
 
 ```{python}
 world.iloc[:, 0:3]
@@ -126,14 +137,14 @@ world[['name_long', 'geometry']]
 world.loc[:, 'name_long':'pop']
 ```
 
-Subsetting by a boolean series:
+Subsetting by a list of boolean values (0 and 1 or True and False):
 
 ```{python}
-x = np.array([1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0], dtype=bool)
+x = [1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0] 
 world.iloc[:, x]
 ```
 
-We can remove a specific row by id use the `.drop` method:
+We can remove specific rows by id use the `.drop` method, e.g., dropping rows 2, 3, and 5:
 
 ```{python}
 world.drop([2, 3, 5])
@@ -145,7 +156,7 @@ Or remove specific columns using the `.drop` method and `axis=1` (i.e., columns)
 world.drop(['name_long', 'continent'], axis=1)
 ```
 
-We can rename (some of) the selected columns using the `.rename` method:
+We can rename columns using the `.rename` method:
 
 ```{python}
 world[['name_long', 'pop']].rename(columns={'pop': 'population'})
@@ -163,8 +174,7 @@ The standard **numpy** comparison operators can be used in boolean subsetting, a
 
 : Comparison operators that return Booleans (`True`/`False`). {#tbl-comparison-operators}
 
-A demonstration of the utility of using logical vectors for subsetting is shown in the code chunk below. 
-This creates a new object, `small_countries`, containing nations whose surface area is smaller than 10,000 km^2^:
+The following example demonstrates logical vectors for subsetting by creating a new `GeoDataFrame` object called `small_countries` that contains only those countries whose surface area is smaller than 10,000 km^2^:
 
 ```{python}
 idx_small = world['area_km2'] < 10000  ## a logical 'Series'
@@ -177,9 +187,10 @@ A more concise command, which omits the intermediary object, generates the same 
 
 ```{python}
 small_countries = world[world['area_km2'] < 10000]
+small_countries
 ```
 
-The various methods shown above can be chained for any combination with several subsetting steps. For example:
+The various methods shown above can be chained for any combination with several subsetting steps, e.g.:
 
 ```{python}
 world[world['continent'] == 'Asia']  \
@@ -187,7 +198,7 @@ world[world['continent'] == 'Asia']  \
     .iloc[0:5, :]
 ```
 
-We can also combine indexes
+We can also combine indexes:
 
 ```{python}
 idx_small = world['area_km2'] < 10000
@@ -197,20 +208,26 @@ world.loc[idx_small & idx_asia, ['name_long', 'continent', 'area_km2']]
 
 ### Vector attribute aggregation {#sec-vector-attribute-aggregation}
 
-Aggregation involves summarizing data with one or more *grouping variables*, typically from columns in the table to be aggregated (geographic aggregation is covered in the next chapter). An example of attribute aggregation is calculating the number of people per continent based on country-level data (one row per country).
-The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller data frame (aggregation is a form of data reduction and can be a useful early step when working with large datasets). 
-This can be done with a combination of `.groupby` and `.sum`:
+Aggregation involves summarizing data based on one or more *grouping variables* (typically values in a column;geographic aggregation is covered in the next chapter). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country).
+The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller data frame. (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). This aggregation can be achieved using a combination of `.groupby` and `.sum`:
 
 ```{python}
 world_agg1 = world[['continent', 'pop']].groupby('continent').sum()
 world_agg1
 ```
 
+If you dislike the scientific notation used by default to display the population sums, you can change the Pandas display format for float values like this: 
+
+```{python}
+pd.set_option('display.float_format', '{:.0f}'.format)
+world_agg1
+```
+
 The result is a (non-spatial) table with eight rows, one per continent, and two columns reporting the name and population of each continent.
 
-Alternatively, to include the geometry in the aggregation result, we can use the `.dissolve` method.
-That way, in addition to the summed population we also get the associated geometry per continent, i.e., the union of all countries.
-Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the summary function for non-geometry columns:
+If we want to include the geometry in the aggregation result, we can use the `.dissolve` method.
+That way, in addition to the summed population, we also get the associated geometry per continent, i.e., the union of all countries.
+Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the aggregation function for non-geometry columns:
 
 ```{python}
 world_agg2 = world[['continent', 'pop', 'geometry']] \
@@ -228,7 +245,7 @@ world_agg2
 world_agg2.plot(column='pop', legend=True);
 ```
 
-The resulting `world_agg2` object is a vector layer containing 8 features representing the continents of the world (and the open ocean). 
+The resulting `world_agg2` object is a `GeoDataFrame` containing 8 features representing the continents of the world (and the open ocean). 
 
 Other options for the `aggfunc` parameter in `.dissolve` [include](https://geopandas.org/en/stable/docs/user_guide/aggregation_with_dissolve.html):
 
@@ -240,21 +257,20 @@ Other options for the `aggfunc` parameter in `.dissolve` [include](https://geopa
 * `'mean'`
 * `'median'`
 
-Additionally, we can pass a custom function.
+Additionally, we can pass custom functions.
 
-as a more complicated example, here is how we can calculate the summed population, summed area, and count of countries, per continent. We calculate the `area_km2`+`pop` and the `name_long` (renamed to `n`) columns in two separate expressions (since we are using two different functions), then join the results. Also note that only one of the expression is a spatial aggregation, since the continent geometries are identical there is no need to calculate them twice:
+As a more complex example, here is how we can calculate the total population, area, and count of countries, per continent:
 
 ```{python}
-world_agg3a = world[['continent', 'area_km2', 'pop', 'geometry']] \
-    .dissolve(by='continent', aggfunc='sum')
-world_agg3b = world[['continent', 'name_long']] \
-    .groupby('continent') \
-    .nunique() \
-    .reset_index() \
-    .rename(columns={'name_long': 'n'})
-world_agg3 = pd.merge(world_agg3a, world_agg3b, on='continent')
+world_agg3 = world.dissolve(
+    by='continent', aggfunc={
+         "name_long": "count",
+         "pop": "sum",
+         'area_km2': "sum"
+     }).rename(columns={'name_long': 'n'})
 world_agg3
 ```
+
 
 Figure @fig-spatial-aggregation-different-functions visualizes the resulting layer (`world_agg3`) of continents with the three aggregated attributes.
 
@@ -262,7 +278,7 @@ Figure @fig-spatial-aggregation-different-functions visualizes the resulting lay
 #| label: fig-spatial-aggregation-different-functions
 #| fig-cap: 'Continent properties, calculated using spatial aggregation using different functions'
 
-fig, axes = plt.subplots(ncols=3, figsize=(9,5))
+fig, axes = plt.subplots(ncols=3, figsize=(12,3))
 world_agg3.plot(column='pop', edgecolor='black', legend=True, ax=axes[0])
 world_agg3.plot(column='area_km2', edgecolor='black', legend=True, ax=axes[1])
 world_agg3.plot(column='n', edgecolor='black', legend=True, ax=axes[2])
@@ -279,10 +295,10 @@ Let's proceed with the last result to demonstrate other table-related operations
 * keep only the 3 most populous continents. 
 
 ```{python}
-world_agg4 = world_agg3.drop('geometry', axis=1)
+world_agg4 = world_agg3.drop(columns=['geometry'])
 world_agg4['density'] = world_agg4['pop'] / world_agg4['area_km2']
 world_agg4 = world_agg4.sort_values(by='n', ascending=False)
-world_agg4 = world_agg4.iloc[:3, :]
+world_agg4 = world_agg4.head(3)
 world_agg4
 ```
 
