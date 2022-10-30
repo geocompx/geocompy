@@ -361,6 +361,14 @@ In that case an inner join can be used:
 pd.merge(world, coffee_data, on='name_long', how='inner')
 ```
 
+An alternative way to join two (Geo)DataFrames is the aptly called `join` function: 
+
+```{python}
+world.join(coffee_data.set_index('name_long'), on='name_long', how='inner')
+```
+
+Note that in this case, we need to set the index of `coffee_data` to the `name_long` values to avoid error messages.
+
 ### Creating attributes and removing spatial information {#sec-creating-attributes-and-removing-spatial-information}
 
 Calculate new column...
@@ -368,20 +376,23 @@ Calculate new column...
 ```{python}
 world2 = world.copy()
 world2['pop_dens'] = world2['pop'] / world2['area_km2']
+world2
 ```
 
-Unite columns...
+Unite / combine / concatenate string columns...
 
 ```{python}
 world2['con_reg'] = world['continent'] + ':' + world2['region_un']
 world2 = world2.drop(['continent', 'region_un'], axis=1)
+world2
 ```
 
-Split column...
+Split string column...
 
 ```{python}
 world2[['continent', 'region_un']] = world2['con_reg'] \
     .str.split(':', expand=True)
+world2
 ```
 
 Rename...
@@ -394,21 +405,22 @@ Renaming all columns...
 
 ```{python}
 new_names =['i', 'n', 'c', 'r', 's', 't', 'a', 'p', 'l', 'gP', 'geom']
-world.columns = new_names
-```
-
-Reordering columns, for example reverse alphabetical order...
-
-```{python}
-names = sorted(world.columns, reverse=True)
-world2 = world[names]
+world2.columns = new_names
 world2
 ```
 
-Dropping geometry...
+Reordering columns, e.g., reverse alphabetical order...
 
 ```{python}
-pd.DataFrame(world.drop(columns='geom'))
+names = sorted(world2.columns, reverse=True)
+world2 = world2[names]
+world2
+```
+
+Dropping geometry and converting the `GeoDataFrame` into a `DataFrame`: 
+
+```{python}
+pd.DataFrame(world2.drop(columns='geom'))
 ```
 
 ## Manipulating raster objects {#sec-manipulating-raster-objects}
@@ -422,15 +434,13 @@ elev = src_elev.read(1)
 elev
 ```
 
-Then, we can access any subset of cell values using `numpy` methods.
-For example:
+Then, we can access any subset of cell values using `numpy` methods, e.g.:
 
 ```{python}
 elev[0, 0]  ## Value at row 1, column 1
 ```
 
-Cell values can be modified by overwriting existing values in conjunction with a subsetting operation. 
-The following expression, for example, sets the upper left cell of elev to 0:
+Cell values can be modified by overwriting existing values in conjunction with a subsetting operation, e.g. to set the upper left cell of elev to 0:
 
 ```{python}
 elev[0, 0] = 0
@@ -440,14 +450,13 @@ elev
 Multiple cells can also be modified in this way:
 
 ```{python}
-elev[0, 0:2] = 0
+elev[0, 0:3] = 0
 elev
 ```
 
 ### Summarizing raster objects {#sec-summarizing-raster-objects}
 
-Global summaries of raster values can be calculated by applying `numpy` summary functions---such as `np.mean`---on the array with raster values. 
-For example:
+Global summaries of raster values can be calculated by applying `numpy` summary functions on the array with raster values, e.g. `np.mean`:
 
 ```{python}
 np.mean(elev)
@@ -461,20 +470,20 @@ elev1 = elev1.astype('float64')
 elev1
 ```
 
-Now we can insert an `np.nan` value into the array (trying to do so in the original `elev` array raises an error, try it to see for yourself):
+Now we can insert an `np.nan` value into the array. (Trying to do so in the original `elev` array raises an error, try it to see for yourself)
 
 ```{python}
 elev1[0, 2] = np.nan
 elev1
 ```
 
-Here is a demonstration of calculating a global summary, including the "No Data" value (in which case the summary value is unknown):
+With the `np.nan` value inplace, the summary value becomes unknown:
 
 ```{python}
 np.mean(elev1)
 ```
 
-and ignoring the "No Data" value(s):
+Therefore, we need to ignore the "No Data" value(s):
 
 ```{python}
 np.nanmean(elev1)
