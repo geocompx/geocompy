@@ -301,22 +301,29 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="sec-geo-vec" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="sec-geo-vec"><span class="header-section-number">5.3</span> Geometric operations on vector data</h2>
+<p>This section is about operations that in some way change the geometry of vector layers. It is more advanced than the spatial data operations presented in the previous chapter (in <a href="04-spatial-operations.html#sec-spatial-vec"><span>Section&nbsp;4.3</span></a>), because here we drill down into the geometry: the functions discussed in this section work on the geometric (<code>GeoSeries</code>) part, either as standalone object or as part of a <code>GeoDataFrame</code>.</p>
 <section id="sec-simplification" class="level3" data-number="5.3.1">
 <h3 data-number="5.3.1" class="anchored" data-anchor-id="sec-simplification"><span class="header-section-number">5.3.1</span> Simplification</h3>
-<p>Simplify…</p>
+<p>Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps. Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps. The <code>geopandas</code> package provides the <code>.simplify</code> method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count. <code>.simplify</code> uses the <code>tolerance</code> to control the level of generalization in map units (see Douglas and Peucker 1973 for details).</p>
+<p>For example, a simplified geometry of a <code>"LineString"</code> geometry, representing the river Seine and tributaries, using tolerance of <code>2000</code> meters, can created using the following command:</p>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>seine_simp <span class="op">=</span> seine.simplify(<span class="dv">2000</span>)  <span class="co"># 2000 m</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Plot:</p>
+<p>Figure <a href="#fig-simplify-lines">Figure&nbsp;<span>5.1</span></a> illustrates the input and the result of the simplification:</p>
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>seine.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>seine_simp.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Simplified (d=2000 m)"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original'</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Simplified (d=2000 m)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="05-geometry-operations_files/figure-html/cell-6-output-1.png" width="428" height="206"></p>
+<div id="fig-simplify-lines" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="05-geometry-operations_files/figure-html/fig-simplify-lines-output-1.png" width="428" height="206" class="figure-img"></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 5.1: Comparison of the original and simplified geometry of the seine object.</figcaption><p></p>
+</figure>
 </div>
 </div>
-<p>Compare number of nodes:</p>
+</div>
+<p>The resulting <code>seine_simp</code> object is a copy of the original <code>seine</code> but with fewer vertices. This is apparent, with the result being visually simpler (<a href="#fig-simplify-lines">Figure&nbsp;<span>5.1</span></a>, right) and consuming less memory than the original object, as verified below:</p>
 <div class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>sys.getsizeof(seine)       <span class="co">## Original (bytes)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -330,29 +337,29 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>168</code></pre>
 </div>
 </div>
-<p>US states example…. Transform…</p>
+<p>Simplification is also applicable for polygons. This is illustrated using <code>us_states</code>, representing the contiguous United States. As we show in <a href="07-reproj.html"><span>Chapter&nbsp;7</span></a>, GEOS assumes that the data is in a projected CRS and this could lead to unexpected results when using a geographic CRS. Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (epsg = <code>2163</code>) (on the left in Figure <a href="#fig-simplify-polygons">Figure&nbsp;<span>5.2</span></a>):</p>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>us_states2163 <span class="op">=</span> us_states.to_crs(<span class="dv">2163</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Simplify…</p>
+<p>The <code>.simplify</code> method from <code>geopandas</code> works the same way with a <code>"Polygon"</code>/<code>"MultiPolygon"</code> layer such as <code>us_states2163</code>:</p>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>us_states_simp1 <span class="op">=</span> us_states2163.simplify(<span class="dv">100000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Plot…</p>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>us_states_simp1.plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>A limitation with <code>.simplify</code> is that it simplifies objects on a per-geometry basis. This means the “topology” is lost, resulting in overlapping and “holey” areal units illustrated in Figure <a href="#fig-simplify-polygons">Figure&nbsp;<span>5.2</span></a> (middle panel). The <code>toposimplify</code> function from <code>topojson</code> provides an alternative that overcomes this issue. By <a href="https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm">default</a> it uses the Douglas-Peucker algorithm like the <code>.simplify</code> method. Another algorithm known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm (Visvalingam and Whyatt 1993), is also available in <code>toposimplify</code>. The main advanatage of <code>toposimplify</code>, however, is that it is topologically “aware”. That is, it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained. The following code chunk uses this function to simplify <code>us_states2163</code>:</p>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>topo <span class="op">=</span> tp.Topology(us_states2163, prequantize<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>us_states_simp2 <span class="op">=</span> topo.toposimplify(<span class="dv">100000</span>).to_gdf()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Figure <a href="#fig-simplify-polygons">Figure&nbsp;<span>5.2</span></a> demonstrates the two simplification methods applied to <code>us_states2163</code>.</p>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>us_states2163.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>us_states_simp1.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>us_states_simp2.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Simplified (w/ geopandas)"</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Simplified (w/ topojson)"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="05-geometry-operations_files/figure-html/cell-11-output-1.png" width="433" height="309"></p>
+<div id="fig-simplify-polygons" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="05-geometry-operations_files/figure-html/fig-simplify-polygons-output-1.png" width="718" height="218" class="figure-img"></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 5.2: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the geopandas (middle), and topojson (right), packages.</figcaption><p></p>
+</figure>
 </div>
-</div>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>topo <span class="op">=</span> tp.Topology(us_states2163, prequantize<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>us_states_simp2 <span class="op">=</span> topo.toposimplify(<span class="dv">100000</span>).to_gdf()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>us_states2163.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>us_states_simp1.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>us_states_simp2.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Simplified (w/ geopandas)"</span>)</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Simplified (w/ topojson)"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<p><img src="05-geometry-operations_files/figure-html/cell-13-output-1.png" width="718" height="218"></p>
 </div>
 </div>
 </section>
@@ -360,25 +367,25 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 data-number="5.3.2" class="anchored" data-anchor-id="centroids"><span class="header-section-number">5.3.2</span> Centroids</h3>
 <p>Centroid operations identify the center of geographic objects. Like statistical measures of central tendency (including mean and median definitions of ‘average’), there are many ways to define the geographic center of an object. All of them create single point representations of more complex vector objects.</p>
 <p>The most commonly used centroid operation is the geographic centroid. This type of centroid operation (often referred to as ‘the centroid’) represents the center of mass in a spatial object (think of balancing a plate on your finger). Geographic centroids have many uses, for example to create a simple point representation of complex geometries, or to estimate distances between polygons. Centroids of the geometries in a <code>GeoSeries</code> or a <code>GeoDataFrame</code> are accessible through the <code>.centroid</code> property, as demonstrated in the code below, which generates the geographic centroids of regions in New Zealand and tributaries to the River Seine, illustrated with black points in Figure ….</p>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>nz_centroid <span class="op">=</span> nz.centroid</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>seine_centroid <span class="op">=</span> seine.centroid</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>nz_centroid <span class="op">=</span> nz.centroid</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>seine_centroid <span class="op">=</span> seine.centroid</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Sometimes the geographic centroid falls outside the boundaries of their parent objects (think of a doughnut). In such cases point on surface operations can be used to guarantee the point will be in the parent object (e.g., for labeling irregular multipolygon objects such as island states), as illustrated by the red points in Figure …. Notice that these red points always lie on their parent objects. They were created with the <code>representative_point</code> method, as follows:</p>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>nz_pos <span class="op">=</span> nz.representative_point()</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>seine_pos <span class="op">=</span> seine.representative_point()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The centroids and points in surface are illustrated in <a href="#fig-centroid-pnt-on-surface">Figure&nbsp;<span>5.1</span></a>:</p>
-<div class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"lightgrey"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>nz_centroid.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"black"</span>)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>nz_pos.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"red"</span>)<span class="op">;</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> seine.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"grey"</span>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>seine_centroid.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"black"</span>)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>seine_pos.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"red"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>nz_pos <span class="op">=</span> nz.representative_point()</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>seine_pos <span class="op">=</span> seine.representative_point()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The centroids and points in surface are illustrated in <a href="#fig-centroid-pnt-on-surface">Figure&nbsp;<span>5.3</span></a>:</p>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"lightgrey"</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>nz_centroid.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"black"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>nz_pos.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"red"</span>)<span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> seine.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"grey"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>seine_centroid.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"black"</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>seine_pos.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span><span class="st">"red"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-centroid-pnt-on-surface" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="05-geometry-operations_files/figure-html/fig-centroid-pnt-on-surface-output-1.png" width="422" height="317" class="figure-img"></p>
-<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 5.1: Centroids (black) and points on surface red of New Zealand and Seine datasets.</figcaption><p></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 5.3: Centroids (black) and points on surface red of New Zealand and Seine datasets.</figcaption><p></p>
 </figure>
 </div>
 </div>
@@ -387,17 +394,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="buffers" class="level3" data-number="5.3.3">
 <h3 data-number="5.3.3" class="anchored" data-anchor-id="buffers"><span class="header-section-number">5.3.3</span> Buffers</h3>
 <p>Buffers…</p>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>seine_buff_5km <span class="op">=</span> seine.<span class="bu">buffer</span>(<span class="dv">5000</span>)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>seine_buff_50km <span class="op">=</span> seine.<span class="bu">buffer</span>(<span class="dv">50000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>seine_buff_5km <span class="op">=</span> seine.<span class="bu">buffer</span>(<span class="dv">5000</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>seine_buff_50km <span class="op">=</span> seine.<span class="bu">buffer</span>(<span class="dv">50000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Plot…</p>
-<div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>seine_buff_5km.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span>[<span class="st">"red"</span>, <span class="st">"green"</span>, <span class="st">"blue"</span>])</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>seine_buff_50km.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span>[<span class="st">"red"</span>, <span class="st">"green"</span>, <span class="st">"blue"</span>])</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"5 km buffer"</span>)</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"50 km buffer"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>seine_buff_5km.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span>[<span class="st">"red"</span>, <span class="st">"green"</span>, <span class="st">"blue"</span>])</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>seine_buff_50km.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"None"</span>, edgecolor<span class="op">=</span>[<span class="st">"red"</span>, <span class="st">"green"</span>, <span class="st">"blue"</span>])</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"5 km buffer"</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"50 km buffer"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="05-geometry-operations_files/figure-html/cell-18-output-1.png" width="422" height="200"></p>
+<p><img src="05-geometry-operations_files/figure-html/cell-17-output-1.png" width="422" height="200"></p>
 </div>
 </div>
 </section>
@@ -418,25 +425,25 @@ y' = d x + e y + y_\mathrm{off}
 <li><code>GeoSeries.translate(xoff=0.0, yoff=0.0, zoff=0.0)</code></li>
 </ul>
 <p>For example, <em>shifting</em> only requires the <span class="math inline">\(x_{off}\)</span> and <span class="math inline">\(y_{off}\)</span>, using <code>.translate</code>. The code below shifts the y-coordinates by 100,000 meters to the north, but leaves the x-coordinates untouched:</p>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>nz_shift <span class="op">=</span> nz[<span class="st">"geometry"</span>].translate(<span class="dv">0</span>, <span class="dv">100000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>nz_shift <span class="op">=</span> nz[<span class="st">"geometry"</span>].translate(<span class="dv">0</span>, <span class="dv">100000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Scale…</p>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>nz_scale <span class="op">=</span> nz[<span class="st">"geometry"</span>].scale(<span class="fl">0.5</span>, <span class="fl">0.5</span>, origin<span class="op">=</span><span class="st">"centroid"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>nz_scale <span class="op">=</span> nz[<span class="st">"geometry"</span>].scale(<span class="fl">0.5</span>, <span class="fl">0.5</span>, origin<span class="op">=</span><span class="st">"centroid"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Rotate…</p>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>nz_rotate <span class="op">=</span> nz[<span class="st">"geometry"</span>].rotate(<span class="op">-</span><span class="dv">30</span>, origin<span class="op">=</span><span class="st">"centroid"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>nz_rotate <span class="op">=</span> nz[<span class="st">"geometry"</span>].rotate(<span class="op">-</span><span class="dv">30</span>, origin<span class="op">=</span><span class="st">"centroid"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Plot…</p>
-<div class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"lightgrey"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>nz_shift.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"red"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"lightgrey"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>nz_scale.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"red"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>], color<span class="op">=</span><span class="st">"lightgrey"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>nz_rotate.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>], color<span class="op">=</span><span class="st">"red"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Shift"</span>)</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Scale"</span>)</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Rotate"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"lightgrey"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>nz_shift.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">"red"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"lightgrey"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>nz_scale.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">"red"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>], color<span class="op">=</span><span class="st">"lightgrey"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>nz_rotate.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>], color<span class="op">=</span><span class="st">"red"</span>, edgecolor<span class="op">=</span><span class="st">"darkgrey"</span>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Shift"</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Scale"</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Rotate"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="05-geometry-operations_files/figure-html/cell-22-output-1.png" width="719" height="383"></p>
+<p><img src="05-geometry-operations_files/figure-html/cell-21-output-1.png" width="719" height="383"></p>
 </div>
 </div>
 </section>
@@ -444,19 +451,19 @@ y' = d x + e y + y_\mathrm{off}
 <h3 data-number="5.3.5" class="anchored" data-anchor-id="sec-clipping"><span class="header-section-number">5.3.5</span> Clipping</h3>
 <p>Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features.</p>
 <p>Clipping can only apply to features more complex than points: lines, polygons and their ‘multi’ equivalents. To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (Figure …).</p>
-<div class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> shapely.geometry.Point((<span class="dv">0</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> shapely.geometry.Point((<span class="dv">1</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>shapely.geometry.GeometryCollection([x, y])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="22">
-<p><img src="05-geometry-operations_files/figure-html/cell-23-output-1.svg" class="img-fluid"></p>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> shapely.geometry.Point((<span class="dv">0</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> shapely.geometry.Point((<span class="dv">1</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>shapely.geometry.GeometryCollection([x, y])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<p><img src="05-geometry-operations_files/figure-html/cell-22-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 <p>Imagine you want to select not one circle or the other, but the space covered by both x and y. This can be done using the <code>.intersection</code> method from <code>shapely</code>, illustrated using objects named <code>x</code> and <code>y</code> which represent the left- and right-hand circles (Figure …).</p>
-<div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>x.intersection(y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="23">
-<p><img src="05-geometry-operations_files/figure-html/cell-24-output-1.svg" class="img-fluid"></p>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>x.intersection(y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<p><img src="05-geometry-operations_files/figure-html/cell-23-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 </section>
@@ -467,14 +474,14 @@ y' = d x + e y + y_\mathrm{off}
 <section id="sec-geometry-unions" class="level3" data-number="5.3.7">
 <h3 data-number="5.3.7" class="anchored" data-anchor-id="sec-geometry-unions"><span class="header-section-number">5.3.7</span> Geometry unions</h3>
 <p>As we saw in Section …, spatial aggregation can silently dissolve the geometries of touching polygons in the same group. This is demonstrated in the code chunk below in which 49 <code>us_states</code> are aggregated into 4 regions using the <code>.dissolve</code> method:</p>
-<div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>regions <span class="op">=</span> us_states.dissolve(by<span class="op">=</span><span class="st">'REGION'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>).reset_index()</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>regions</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>regions <span class="op">=</span> us_states.dissolve(by<span class="op">=</span><span class="st">'REGION'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>).reset_index()</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>regions</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/opt/conda/envs/geocompy/lib/python3.10/site-packages/geopandas/geodataframe.py:1705: FutureWarning: The default value of numeric_only in DataFrameGroupBy.sum is deprecated. In a future version, numeric_only will default to False. Either specify numeric_only or select only columns which should be valid for the function.
+<pre><code>/opt/conda/envs/geocompy/lib/python3.10/site-packages/geopandas/geodataframe.py:1676: FutureWarning: The default value of numeric_only in DataFrameGroupBy.sum is deprecated. In a future version, numeric_only will default to False. Either specify numeric_only or select only columns which should be valid for the function.
   aggregated_data = data.groupby(**groupby_kwargs).agg(aggfunc)</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="24">
+<div class="cell-output cell-output-display" data-execution_count="23">
 
 <div>
 
@@ -528,23 +535,23 @@ y' = d x + e y + y_\mathrm{off}
 </div>
 </div>
 <p>The result is shown in Figure …:</p>
-<div class="cell" data-execution_count="25">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">2.5</span>))</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>us_states.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], column<span class="op">=</span><span class="st">'total_pop_15'</span>, legend<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>regions.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], column<span class="op">=</span><span class="st">'total_pop_15'</span>, legend<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'State'</span>)</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Region'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">2.5</span>))</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>us_states.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], column<span class="op">=</span><span class="st">'total_pop_15'</span>, legend<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>regions.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], column<span class="op">=</span><span class="st">'total_pop_15'</span>, legend<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'State'</span>)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Region'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="05-geometry-operations_files/figure-html/cell-26-output-1.png" width="779" height="221"></p>
+<p><img src="05-geometry-operations_files/figure-html/cell-25-output-1.png" width="779" height="221"></p>
 </div>
 </div>
 <p>What is going on in terms of the geometries? Behind the scenes, both <code>.dissolve</code> combines the geometries and dissolve the boundaries between them using the <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union"><code>.unary_union</code></a> method. This is demonstrated in the code chunk below which creates a united western US:</p>
-<div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>us_west <span class="op">=</span> us_states[us_states[<span class="st">'REGION'</span>] <span class="op">==</span> <span class="st">'West'</span>]</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>us_west_union <span class="op">=</span> us_west[<span class="st">'geometry'</span>].unary_union</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>us_west_union</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="26">
-<p><img src="05-geometry-operations_files/figure-html/cell-27-output-1.svg" class="img-fluid"></p>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>us_west <span class="op">=</span> us_states[us_states[<span class="st">'REGION'</span>] <span class="op">==</span> <span class="st">'West'</span>]</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>us_west_union <span class="op">=</span> us_west[<span class="st">'geometry'</span>].unary_union</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>us_west_union</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<p><img src="05-geometry-operations_files/figure-html/cell-26-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 </section>
@@ -552,62 +559,62 @@ y' = d x + e y + y_\mathrm{off}
 <h3 data-number="5.3.8" class="anchored" data-anchor-id="sec-type-transformations"><span class="header-section-number">5.3.8</span> Type transformations</h3>
 <p>Transformation of geometries, from one type to another, also known as “geometry casting”, is often required to facilitate spatial analysis. The <code>shapely</code> package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the “destination” geometry (e.g., <code>shapely.geometry.LineString</code>, etc.), then reshape the input of the “source” geometry into the right form to be passed to that function.</p>
 <p>Let’s create a <code>"MultiPoint"</code> to illustrate how geometry casting works on <code>shapely</code> geometry objects:</p>
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>multipoint <span class="op">=</span> shapely.geometry.MultiPoint([(<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">3</span>,<span class="dv">3</span>), (<span class="dv">5</span>,<span class="dv">1</span>)])</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>multipoint</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
+<p><img src="05-geometry-operations_files/figure-html/cell-27-output-1.svg" class="img-fluid"></p>
+</div>
+</div>
+<p>A <code>"LineString"</code> can be created using <code>shapely.geometry.LineString</code> from a <code>list</code> of points. Consequently, a <code>"MultiPoint"</code> can be converted to a <code>"LineString"</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.geometry.LineString</code>:</p>
 <div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>multipoint <span class="op">=</span> shapely.geometry.MultiPoint([(<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">3</span>,<span class="dv">3</span>), (<span class="dv">5</span>,<span class="dv">1</span>)])</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>multipoint</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.geometry.LineString(<span class="bu">list</span>(multipoint.geoms))</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>linestring</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="27">
 <p><img src="05-geometry-operations_files/figure-html/cell-28-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
-<p>A <code>"LineString"</code> can be created using <code>shapely.geometry.LineString</code> from a <code>list</code> of points. Consequently, a <code>"MultiPoint"</code> can be converted to a <code>"LineString"</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.geometry.LineString</code>:</p>
+<p>A <code>"Polygon"</code> can also be created using funtion <code>shapely.geometry.Polygon</code>, which acceps accepts a sequence of points. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, <code>shapely.geometry.Polygon</code> is able to complete the last coordinate automatically. Therefore:</p>
 <div class="cell" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.geometry.LineString(<span class="bu">list</span>(multipoint.geoms))</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>linestring</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> shapely.geometry.Polygon(<span class="bu">list</span>(multipoint.geoms))</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>polygon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="28">
 <p><img src="05-geometry-operations_files/figure-html/cell-29-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
-<p>A <code>"Polygon"</code> can also be created using funtion <code>shapely.geometry.Polygon</code>, which acceps accepts a sequence of points. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, <code>shapely.geometry.Polygon</code> is able to complete the last coordinate automatically. Therefore:</p>
+<p>The source <code>"MultiPoint"</code> geometry, and the derived <code>"LineString"</code> and <code>"Polygon"</code> geometries are shown in <a href="#fig-casting1">Figure&nbsp;<span>5.4</span></a>. Note that we convert the <code>shapely</code> geometries to <code>GeoSeries</code> for easier multi-panel plotting:</p>
 <div class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> shapely.geometry.Polygon(<span class="bu">list</span>(multipoint.geoms))</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>polygon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="29">
-<p><img src="05-geometry-operations_files/figure-html/cell-30-output-1.svg" class="img-fluid"></p>
-</div>
-</div>
-<p>The source <code>"MultiPoint"</code> geometry, and the derived <code>"LineString"</code> and <code>"Polygon"</code> geometries are shown in <a href="#fig-casting1">Figure&nbsp;<span>5.2</span></a>. Note that we convert the <code>shapely</code> geometries to <code>GeoSeries</code> for easier multi-panel plotting:</p>
-<div class="cell" data-execution_count="30">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(multipoint).plot(ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(linestring).plot(ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(polygon).plot(ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"MultiPoint"</span>)</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"LineString"</span>)</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Polygon"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(multipoint).plot(ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(linestring).plot(ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(polygon).plot(ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"MultiPoint"</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"LineString"</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Polygon"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-casting1" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="05-geometry-operations_files/figure-html/fig-casting1-output-1.png" width="707" height="160" class="figure-img"></p>
-<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 5.2: Examples of linestring and polygon casted from a multipoint geometry.</figcaption><p></p>
+<p></p><figcaption aria-hidden="true" class="figure-caption">Figure 5.4: Examples of linestring and polygon casted from a multipoint geometry.</figcaption><p></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Conversion from multipoint to linestring is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from multipoint or linestring to polygon is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.</p>
 <p>Our <code>"LineString"</code> geometry can be converted bact to a <code>"MultiPoint"</code> geometry by passing its coordinates directly to <code>shapely.geometry.MultiPoint</code>:</p>
-<div class="cell" data-execution_count="31">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'LineString' -&gt; 'MultiPoint'</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>shapely.geometry.MultiPoint(linestring.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="31">
-<p><img src="05-geometry-operations_files/figure-html/cell-32-output-1.svg" class="img-fluid"></p>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'LineString' -&gt; 'MultiPoint'</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>shapely.geometry.MultiPoint(linestring.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="30">
+<p><img src="05-geometry-operations_files/figure-html/cell-31-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 <p>The <code>"Polygon"</code> (exterior) coordinates can be passed to <code>shapely.geometry.MultiPoint</code> as well:</p>
-<div class="cell" data-execution_count="32">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'Polygon' -&gt; 'MultiPoint'</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>shapely.geometry.MultiPoint(polygon.exterior.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="32">
-<p><img src="05-geometry-operations_files/figure-html/cell-33-output-1.svg" class="img-fluid"></p>
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'Polygon' -&gt; 'MultiPoint'</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>shapely.geometry.MultiPoint(polygon.exterior.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="31">
+<p><img src="05-geometry-operations_files/figure-html/cell-32-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 <p>…</p>
