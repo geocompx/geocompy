@@ -42,25 +42,32 @@ So far the book has explained the structure of geographic datasets (Chapter 2), 
 
 ## Geometric operations on vector data {#sec-geo-vec}
 
+This section is about operations that in some way change the geometry of vector layers. It is more advanced than the spatial data operations presented in the previous chapter (in @sec-spatial-vec), because here we drill down into the geometry: the functions discussed in this section work on the geometric (`GeoSeries`) part, either as standalone object or as part of a `GeoDataFrame`.
+
 ### Simplification {#sec-simplification}
 
-Simplify...
+Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps. Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps. The `geopandas` package provides the `.simplify` method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count. `.simplify` uses the `tolerance` to control the level of generalization in map units (see Douglas and Peucker 1973 for details). 
+
+For example, a simplified geometry of a `"LineString"` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can created using the following command:
 
 ```{python}
 seine_simp = seine.simplify(2000)  # 2000 m
 ```
 
-Plot:
+Figure @fig-simplify-lines illustrates the input and the result of the simplification:
 
 ```{python}
+#| label: fig-simplify-lines
+#| fig-cap: Comparison of the original and simplified geometry of the seine object. 
+
 fig, axes = plt.subplots(ncols=2)
 seine.plot(ax=axes[0])
 seine_simp.plot(ax=axes[1])
-axes[0].set_title("Original")
-axes[1].set_title("Simplified (d=2000 m)");
+axes[0].set_title('Original')
+axes[1].set_title('Simplified (d=2000 m)');
 ```
 
-Compare number of nodes:
+The resulting `seine_simp` object is a copy of the original `seine` but with fewer vertices. This is apparent, with the result being visually simpler (@fig-simplify-lines, right) and consuming less memory than the original object, as verified below:
 
 ```{python}
 import sys
@@ -71,30 +78,31 @@ sys.getsizeof(seine)       ## Original (bytes)
 sys.getsizeof(seine_simp)  ## Simplified (bytes)
 ```
 
-US states example.... Transform...
+Simplification is also applicable for polygons. This is illustrated using `us_states`, representing the contiguous United States. As we show in @sec-reproj-geo-data, GEOS assumes that the data is in a projected CRS and this could lead to unexpected results when using a geographic CRS. Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (epsg = `2163`) (on the left in Figure @fig-simplify-polygons):
 
 ```{python}
 us_states2163 = us_states.to_crs(2163)
 ```
 
-Simplify...
+The `.simplify` method from `geopandas` works the same way with a `"Polygon"`/`"MultiPolygon"` layer such as `us_states2163`:
 
 ```{python}
 us_states_simp1 = us_states2163.simplify(100000)
 ```
 
-Plot...
-
-```{python}
-us_states_simp1.plot();
-```
+A limitation with `.simplify` is that it simplifies objects on a per-geometry basis. This means the "topology" is lost, resulting in overlapping and "holey" areal units illustrated in Figure @fig-simplify-polygons (middle panel). The `toposimplify` function from `topojson` provides an alternative that overcomes this issue. By [default](https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm) it uses the Douglas-Peucker algorithm like the `.simplify` method. Another algorithm known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm (Visvalingam and Whyatt 1993), is also available in `toposimplify`. The main advanatage of `toposimplify`, however, is that it is topologically "aware". That is, it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained. The following code chunk uses this function to simplify `us_states2163`:
 
 ```{python}
 topo = tp.Topology(us_states2163, prequantize=False)
 us_states_simp2 = topo.toposimplify(100000).to_gdf()
 ```
 
+Figure @fig-simplify-polygons demonstrates the two simplification methods applied to `us_states2163`.
+
 ```{python}
+#| label: fig-simplify-polygons
+#| fig-cap: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the geopandas (middle), and topojson (right), packages. 
+
 fig, axes = plt.subplots(ncols=3, figsize=(9,5))
 us_states2163.plot(ax=axes[0])
 us_states_simp1.plot(ax=axes[1])
