@@ -147,21 +147,40 @@ seine_centroid.plot(ax=axes[1], color="None", edgecolor="black")
 
 ### Buffers
 
-Buffers...
+Buffers are polygons representing the area within a given distance of a geometric feature: regardless of whether the input is a point, line or polygon, the output is a polygon. Unlike simplification (which is often used for visualization and reducing file size) buffering tends to be used for geographic data analysis. How many points are within a given distance of this line? Which demographic groups are within travel distance of this new shop? These kinds of questions can be answered and visualized by creating buffers around the geographic entities of interest.
+
+@fig-buffers illustrates buffers of different sizes (5 and 50 km) surrounding the river Seine and tributaries. These buffers were created with commands below, which show that the `.buffer` method, applied to a `GeoSeries` (or `GeoDataFrame`) requires one important argument: the buffer distance, provided in the units of the CRS (in this case meters):
 
 ```{python}
 seine_buff_5km = seine.buffer(5000)
 seine_buff_50km = seine.buffer(50000)
 ```
 
-Plot...
+The 5 and 50 km buffers are visualized in @fig-buffers:
 
 ```{python}
+#| label: fig-buffers
+#| fig-cap: Buffers around the Seine dataset of 5 km (left) and 50 km (right). Note the colors, which reflect the fact that one buffer is created per geometry feature.
+
 fig, axes = plt.subplots(ncols=2)
 seine_buff_5km.plot(ax=axes[0], color="None", edgecolor=["red", "green", "blue"])
 seine_buff_50km.plot(ax=axes[1], color="None", edgecolor=["red", "green", "blue"])
 axes[0].set_title("5 km buffer")
 axes[1].set_title("50 km buffer");
+```
+
+Note that both `.centroid` and `.buffer` return a `GeoSeries` object, even when the input is a `GeoDataFrame`:
+
+```{python}
+seine_buff_5km
+```
+
+In the common scenario when the original attributes of the input features need to be retained, you can replace the existing geometry with the new `GeoSeries` as in:
+
+```{python}
+seine_buff_5km = seine.copy()
+seine_buff_5km['geometry'] = seine.buffer(5000)
+seine_buff_5km
 ```
 
 ### Affine transformations {#sec-affine-transformations}
