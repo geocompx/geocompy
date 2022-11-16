@@ -248,17 +248,23 @@ axes[2].set_title("Rotate");
 
 Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features.
 
-Clipping can only apply to features more complex than points: lines, polygons and their 'multi' equivalents. To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (Figure ...).
+Clipping can only apply to features more complex than points: lines, polygons and their 'multi' equivalents. To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (@fig-overlapping-circles).
 
 ```{python}
+#| label: fig-overlapping-circles
+#| fig-cap: Overlapping circles.
+
 x = shapely.geometry.Point((0, 0)).buffer(1)
 y = shapely.geometry.Point((1, 0)).buffer(1)
 shapely.geometry.GeometryCollection([x, y])
 ```
 
-Imagine you want to select not one circle or the other, but the space covered by both x and y. This can be done using the `.intersection` method from `shapely`, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (Figure ...).
+Imagine you want to select not one circle or the other, but the space covered by both x and y. This can be done using the `.intersection` method from `shapely`, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (@fig-intersection).
 
 ```{python}
+#| label: fig-intersection
+#| fig-cap: Overlapping circles with a gray color indicating intersection between them. 
+
 x.intersection(y)
 ```
 
@@ -268,30 +274,67 @@ x.intersection(y)
 
 ### Geometry unions {#sec-geometry-unions}
 
-As we saw in Section ..., spatial aggregation can silently dissolve the geometries of touching polygons in the same group. This is demonstrated in the code chunk below in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method:
+As we saw in @sec-vector-attribute-aggregation, spatial aggregation can silently dissolve the geometries of touching polygons in the same group. This is demonstrated in the code chunk below in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method:
 
 ```{python}
 regions = us_states.dissolve(by='REGION', aggfunc='sum').reset_index()
 regions
 ```
 
-The result is shown in Figure ...:
+The result is shown in @fig-dissolve:
 
 ```{python}
-fig, axes = plt.subplots(ncols=2, figsize=(10, 2.5))
-us_states.plot(ax=axes[0], column='total_pop_15', legend=True)
-regions.plot(ax=axes[1], column='total_pop_15', legend=True)
+#| label: fig-dissolve
+#| fig-cap: "Spatial aggregation on contiguous polygons, illustrated by aggregating the population of US states into regions, with population represented by color. Note the operation automatically dissolves boundaries between states."
+
+fig, axes = plt.subplots(ncols=2, figsize=(9, 2.5))
+us_states.plot(ax=axes[0], edgecolor='black', column='total_pop_15', legend=True)
+regions.plot(ax=axes[1], edgecolor='black', column='total_pop_15', legend=True)
 axes[0].set_title('State')
 axes[1].set_title('Region');
 ```
 
-What is going on in terms of the geometries? Behind the scenes, both `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method. This is demonstrated in the code chunk below which creates a united western US:
+What is going on in terms of the geometries? Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method per group. This is demonstrated in the code chunk below which creates a united western US using the standalone `unary_union` operation:
 
 ```{python}
 us_west = us_states[us_states['REGION'] == 'West']
 us_west_union = us_west['geometry'].unary_union
+```
+
+Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving. The result is shown in @fig-dissolve2.
+
+```{python}
+#| label: fig-dissolve2
+#| fig-cap: Western US
+
 us_west_union
 ```
+
+To dissolve two (or more) groups of a `GeoDataFrame` into one geometry, we can either use a combined condition:
+
+```{python}
+sel = (us_states['REGION'] == 'West') | (us_states['NAME'] == 'Texas')
+texas_union = us_states[sel]
+texas_union = texas_union['geometry'].unary_union
+```
+
+or concatenate the two separate subsets:
+
+```{python}
+us_west = us_states[us_states['REGION'] == 'West']
+texas = us_states[us_states['NAME'] == 'Texas']
+texas_union = pd.concat([us_west, texas]).unary_union
+```
+
+and then dissove using `.unary_union`. The result is identical in both cases, shown in @fig-dissolve3.
+
+```{python}
+#| label: fig-dissolve3
+#| fig-cap: Western US and Texas
+
+texas_union
+```
+
 
 ### Type transformations {#sec-type-transformations}
 
