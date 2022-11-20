@@ -1,7 +1,7 @@
 # geocompy
 
 [![Render](https://github.com/geocompr/py/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompr/py/actions/workflows/main.yaml)
-[![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb)
+<!-- [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb) -->
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 
 <https://geocompr.github.io/py/>
@@ -14,12 +14,32 @@ Broadly, the book can be reproduced after following three steps:
 
 Detailed instructions are provided below.
 
-## Reproduce the book in Binder
+<!-- ## Reproduce the book in Binder
 
 To reproduce this book you can simply click on the link below to see the code running in your web browser (see details of how this works at [mybinder.org](https://mybinder.org/)):
 
 [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb)
+ -->
 
+## Reproduce the book with GitHub Codespaces
+
+GitHub Codespaces is a system that allows you to run code in GitHub repositories on remote machines.
+Like Google Collab and Binder, Codespaces minimise set-up costs to almost zero by providing integrated development environments in your browser, without the need to install various dependencies described in the sections below.
+A unique advantage of codespaces is its integration with GitHub, allowing you to make changes, see how they improve the rendered content, and then push the changes back to your own fork of the book's repo.
+
+To run the book in Codespaces, click on the link below.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
+
+You should see something like this, the result of running all the code in the book by opening the terminal (e.g. with the command Ctrl+J) and entering the following command:
+
+```
+quarto preview
+```
+
+![](https://user-images.githubusercontent.com/1825120/202933280-e313c076-f188-4efd-9de1-5625eb169045.png)
+
+If you have any issues related to running the code in Codespaces let us know in the [issue tracker](https://github.com/geocompr/py/issues/114).
 
 ## Reproduce the book with conda installation
 
