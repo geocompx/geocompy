@@ -46,7 +46,7 @@ If you have any issues related to running the code in Codespaces let us know in 
 For many people the next quickest way to reproduce the book will be in a Docker container running on your local computer.
 To do this from within VS Code (recommended), you can
 
-1. Install Microsoft's official [Dev Container](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+1. Install Microsoft's official [Dev Container](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
 2. Open the folder containing the repo in VS Code and click on the 'Reopen in container' button that should appear, as shown below (you need to have Docker installed on your computer for this to work)
 
 ![](https://user-images.githubusercontent.com/1825120/202933928-eb6de086-f9a5-43cd-9932-e6ec84746d45.png)
