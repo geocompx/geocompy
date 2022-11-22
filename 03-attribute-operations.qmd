@@ -371,7 +371,7 @@ Note that in this case, we need to set the index of `coffee_data` to the `name_l
 
 ### Creating attributes and removing spatial information {#sec-creating-attributes-and-removing-spatial-information}
 
-Calculate new column...
+Often, we would like to create a new column based on already existing columns. For example, we want to calculate population density for each country. For this we need to divide a population column, here `pop`, by an area column, here `area_km2`. Note that we are working on a copy of `world` named `world2` so that we do not modify the original layer:
 
 ```{python}
 world2 = world.copy()
@@ -379,7 +379,7 @@ world2['pop_dens'] = world2['pop'] / world2['area_km2']
 world2
 ```
 
-Unite / combine / concatenate string columns...
+To paste (i.e., concatenate) together existing columns, we can use the ordinary Python string operator `+`, as if we are working with individual strings rather than `Series`. For example, we want to combine the `continent` and `region_un` columns into a new column named `con_reg`, suing `':'` as a separator. Subsequesntly, we remove the original columns using `.drop`:
 
 ```{python}
 world2['con_reg'] = world['continent'] + ':' + world2['region_un']
@@ -387,7 +387,7 @@ world2 = world2.drop(['continent', 'region_un'], axis=1)
 world2
 ```
 
-Split string column...
+The resulting sf object has a new column called `con_reg` representing the continent and region of each country, e.g., `'South America:Americas'` for Argentina and other South America countries. The opposite operation, splitting one column into multiple columns based on a separator string, is done using the `.str.split` method. As a result we go back to the previous state of two separate `continent` and `region_un` columns (only that their position is now last, since they are newly created):
 
 ```{python}
 world2[['continent', 'region_un']] = world2['con_reg'] \
@@ -395,21 +395,21 @@ world2[['continent', 'region_un']] = world2['con_reg'] \
 world2
 ```
 
-Rename...
+Renaming one or more columns can be done using the `.rename` method combined with the `columns` argument, which should be a dictionary of the form `old_name:new_name`. The following command, for example, renames the lengthy `name_long` column to simply `name`:
 
 ```{python}
 world2.rename(columns={'name_long': 'name'})
 ```
 
-Renaming all columns...
+To change all column names at once, by position, we assign a `list` of the "new" column names into the `.columns` property. The `list` must be of the same length as the number of columns (i.e., `world.shape[1]`). This is illustrated below, which outputs the same `world2` object, but with very short names:
 
 ```{python}
-new_names =['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'geom', 'i', 'j', 'k', 'l']
+new_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'geom', 'i', 'j', 'k', 'l']
 world2.columns = new_names
 world2
 ```
 
-Reordering columns, e.g., reverse alphabetical order...
+To reorder columns, we can pass a modified columns list to the subsetting operator `[`. For example, the following expressions reorder `world2` columns in reverse alphabetical order:
 
 ```{python}
 names = sorted(world2.columns, reverse=True)
@@ -417,10 +417,17 @@ world2 = world2[names]
 world2
 ```
 
-Dropping geometry and converting the `GeoDataFrame` into a `DataFrame`: 
+Each of these attribute data operations, even though they are defined in the `pandas` package and applicable to any `DataFrame`, preserve the geometry column and the `GeoDataFrame` class. Sometimes, however, it makes sense to remove the geometry, for example to speed-up aggregation or to export just the attribute data for statistical analysis. To go from `GeoDataFrame` to `DataFrame` we need to:
+
+1. Drop the geometry column
+1. Converting from `GeoDataFrame` into a `DataFrame`
+
+For example:
 
 ```{python}
-pd.DataFrame(world2.drop(columns='geom'))
+world2 = world2.drop('geom', axis=1)
+world2 = pd.DataFrame(world2)
+world2
 ```
 
 ## Manipulating raster objects {#sec-manipulating-raster-objects}
