@@ -21,6 +21,7 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Packages...
 
 ```{python}
+import shapely.geometry
 import geopandas as gpd
 import numpy as np
 import os
@@ -208,9 +209,40 @@ Second, ...
 
 ### Joining incongruent layers
 
+Spatial congruence is an important concept related to spatial aggregation. An aggregating object (which we will refer to as `y`) is congruent with the target object (`x`) if the two objects have shared borders. Often this is the case for administrative boundary data, whereby larger units---such as Middle Layer Super Output Areas (MSOAs) in the UK or districts in many other European countries---are composed of many smaller units.
+
+Incongruent aggregating objects, by contrast, do not share common borders with the target (Qiu, Zhang, and Zhou 2012). This is problematic for spatial aggregation (and other spatial operations) illustrated in @fig-nz-and-grid: aggregating the centroid of each sub-zone will not return accurate results. Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods (Tobler 1979).
+
+To demonstrate, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer:
+
+```{python}
+xmin, ymin, xmax, ymax = nz.total_bounds
+res = 100000
+cols = list(range(int(np.floor(xmin)), int(np.ceil(xmax+res)), res))
+rows = list(range(int(np.floor(ymin)), int(np.ceil(ymax+res)), res))
+rows.reverse()
+polygons = []
+for x in cols:
+    for y in rows:
+        polygons.append( shapely.geometry.Polygon([(x,y), (x+res, y), (x+res, y-res), (x, y-res)]) )
+grid = gpd.GeoDataFrame({'geometry': polygons})
+sel = grid.intersects(shapely.geometry.box(*nz.total_bounds))
+grid = grid[sel]
+```
+
+as shown in @fig-nz-and-grid.
+
+```{python}
+#| label: fig-nz-and-grid
+#| fig-cap: The nz layer and a regular grid of rectangles
+
+base = grid.plot(color='none', edgecolor='black')
+nz.plot(ax=base, column='Population', edgecolor='black', legend=True);
+```
+
+Our goal, now, is to "transfer" the `Population` attribute to the rectangular grid polygons, which is an example of a join between incongruent layers. 
+
 ...
-
-
 
 ### Distance relations
 
@@ -536,12 +568,7 @@ Finally, the result of a zonal operation is a summary table grouped by zone whic
 
 To demonstrate, let us get back to the `grain` and `elev` rasters (Figure 3.2). To calculate zonal statistics, we use the arrays with raster values. The `elev` array was already imported earlier:
 
-```{python}
-elev
-```
-
-The `grain` array is imported here using `.read`:
-
+```{python}geopandas as gpd
 ```{python}
 grain = src_grain.read(1)
 grain
