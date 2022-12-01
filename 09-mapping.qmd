@@ -116,6 +116,7 @@ We will show how to create this may restricted to railway stations, tram stops a
 In the first code block we define a function `get_databuffer` that uses the `requests` library to download the NaPTAN data-set in CSV format to a `StringIO` buffer.
 
 ```{python}
+#| eval: false
 import io
 import requests
 
@@ -130,7 +131,9 @@ BUFFER = get_databuffer(URI)
 ```
 
 We then read the in-memory string-buffer into a `Panda` data-frame, treating the buffer as if it were a CSV file. We then extract the location data into a `numpy` two-dimensional array.
+
 ```{python}
+#| eval: false
 import pandas as pd
 
 DF1 = pd.read_csv(BUFFER, low_memory=False)
@@ -139,6 +142,7 @@ DATA = DF1[['Longitude', 'Latitude']].values
 
 We then convert the $transposed data-array$ into a `GeoSeries` and use this to create a `GeoDataFrame`. Which we then tidy by dropping any columns that only contain invalid (`pd.NA`) values.
 ```{python}
+#| eval: false
 import geopandas as gpd
 
 POINTS = gpd.points_from_xy(*DATA.T, crs='WGS84')
@@ -149,6 +153,7 @@ NaPTAN = NaPTAN.dropna(how='all', axis=1)
 
 The next step is to create the timing-point `TIPLOC` data based on the `StopType` and a subset of the `ATCOCode` columns.
 ```{python}
+#| eval: false
 NaPTAN['TIPLOC'] = ''
 # Heavy railway stations
 IDX1 = NaPTAN['StopType'] == 'RLY'
@@ -165,12 +170,14 @@ NaPTAN.loc[IDX1, 'TIPLOC'] = NaPTAN['ATCOCode'].str[6:]
 
 We extract the heavy and light rail, or ferry locationsFrom the 435,298 rows in the NaPTAN data-frame.
 ```{python}
+#| eval: false
 IDX1 = NaPTAN['StopType'].isin(['RLY', 'FER', 'MET'])
 STATIONS = NaPTAN[IDX1]
 ```
 
 Filter columns and drop points within Yorkshire.
 ```{python}
+#| eval: false
 FIELDS = ['ATCOCode', 'CommonName', 'ShortCommonName', 'LocalityName',
           'StopType', 'Status', 'TIPLOC', 'geometry']
 

@@ -53,6 +53,34 @@ To do this from within VS Code (recommended), you can
 
 Edit the code in the containerised instance of VS Code that will appear 🎉
 
+## Reproduce the book with mamba
+
+To reproduce the book with the mamba package manager, first install [miniforge](https://github.com/conda-forge/miniforge#mambaforge).
+
+Install mamba with the following commands on Unix alike plateforms:
+
+```bash
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
+bash Mambaforge-$(uname)-$(uname -m).sh
+```
+After answering the questions, install dependencies with the following command:
+
+```bash
+mamba env create -f environment.yml
+```
+
+Activate the environment as follows:
+
+```bash
+mamba activate geocompy
+```
+
+and reproduce the book (requires quarto to be installed):
+
+```bash
+quarto preview
+```
+
 ## Reproduce the book with conda installation
 
 ### Installation on Windows
