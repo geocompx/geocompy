@@ -55,7 +55,7 @@ Edit the code in the containerised instance of VS Code that will appear 🎉
 
 ## Reproduce the book with mamba
 
-To reproduce the book with the mamba package manager, first install [miniforge](https://github.com/conda-forge/miniforge#mambaforge).
+To reproduce the book with the fast and efficient mamba package manager, first install [miniforge](https://github.com/conda-forge/miniforge#mambaforge).
 
 Install mamba with the following commands on Unix alike plateforms:
 
@@ -82,6 +82,8 @@ quarto preview
 ```
 
 ## Reproduce the book with conda installation
+
+<details>
 
 ### Installation on Windows
 
@@ -135,6 +137,8 @@ Reproduce a live preview of the book with the following command, which reqires t
 ```sh
 quarto preview # generate live preview of the book
 ```
+
+</details>
 
 ### Reproducing chapters with jupyter
 
