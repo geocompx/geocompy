@@ -12,8 +12,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 pd.set_option("display.max_rows", 4)
 pd.set_option("display.max_columns", 6)
-pd.options.display.max_rows = 10
-pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
 plt.rcParams["figure.figsize"] = (5, 5)
 ```
@@ -21,6 +19,7 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Packages...
 
 ```{python}
+import shapely.geometry
 import geopandas as gpd
 import numpy as np
 import os
@@ -208,9 +207,112 @@ Second, ...
 
 ### Joining incongruent layers
 
-...
+Spatial congruence is an important concept related to spatial aggregation. An aggregating object (which we will refer to as `y`) is congruent with the target object (`x`) if the two objects have shared borders. Often this is the case for administrative boundary data, whereby larger units---such as Middle Layer Super Output Areas (MSOAs) in the UK or districts in many other European countries---are composed of many smaller units.
 
+Incongruent aggregating objects, by contrast, do not share common borders with the target (Qiu, Zhang, and Zhou 2012). This is problematic for spatial aggregation (and other spatial operations) illustrated in @fig-nz-and-grid: aggregating the centroid of each sub-zone will not return accurate results. Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods (Tobler 1979).
 
+To demonstrate, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer:
+
+```{python}
+xmin, ymin, xmax, ymax = nz.total_bounds
+res = 100000
+cols = list(range(int(np.floor(xmin)), int(np.ceil(xmax+res)), res))
+rows = list(range(int(np.floor(ymin)), int(np.ceil(ymax+res)), res))
+rows.reverse()
+polygons = []
+for x in cols:
+    for y in rows:
+        polygons.append( shapely.geometry.Polygon([(x,y), (x+res, y), (x+res, y-res), (x, y-res)]) )
+grid = gpd.GeoDataFrame({'geometry': polygons}, crs=nz.crs)
+sel = grid.intersects(shapely.geometry.box(*nz.total_bounds))
+grid = grid[sel]
+grid['id'] = grid.index
+grid
+```
+
+as shown in @fig-nz-and-grid.
+
+```{python}
+#| label: fig-nz-and-grid
+#| fig-cap: The nz layer and a regular grid of rectangles
+
+base = grid.plot(color='none', edgecolor='grey')
+nz.plot(ax=base, column='Population', edgecolor='black', legend=True);
+```
+
+Our goal, now, is to "transfer" the `Population` attribute to the rectangular grid polygons, which is an example of a join between incongruent layers. To do that, we basically need to calculate--for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell. The weights in the weighted sum calculation are the ratios between the area of the coinciding "part" out of the entire `nz` polygon. That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
+
+We start with calculating the entire area of each `nz` polygon, as follows, using the `.area` method (see @sec-area-length):
+
+```{python}
+nz['area'] = nz.area
+nz
+```
+
+Next, we use the `.overlay` method to calculate the pairwise intersections between `nz` and `grid`, hereby named `nz_grid`. We also calculate the area of the intersections, hereby named `area_sub`. If an `nz` polygon was completely within a single `grid` polygon, then `area_sub` is going to be equal to `area`; otherwise, it is going to be smaller:
+
+```{python}
+nz_grid = nz.overlay(grid)
+nz_grid = nz_grid[['id', 'area', 'Population', 'geometry']]
+nz_grid['area_sub'] = nz_grid.area
+nz_grid
+```
+
+We are going to elaborate on the `.overlay` method in...
+
+The resulting layer `nz_grid` is shown in @fig-nz-and-grid2. 
+
+```{python}
+#| label: fig-nz-and-grid2
+#| fig-cap: "The nz layer and a regular grid of rectangles: after an overlay operation"
+
+base = grid.plot(color='none', edgecolor='grey')
+nz_grid.plot(ax=base, column='Population', edgecolor='black', legend=True);
+```
+
+Note that each of the "intersections" still holds the `Population` attribute of its "origin" feature of `nz`, as depicted in @fig-nz-and-grid2. The real population size of each `nz_grid` feature, however, is smaller (or equal), depending on the geographic area proportion that it occupies out of the original `nz` feature. To make the "correction", we first calculate the ratio (`area_prop`) and then multiply it by the population. The new (lowercase) attribute `population` now has the correct estimate of population sizes in `nz_grid`:
+
+```{python}
+nz_grid['area_prop'] = nz_grid['area_sub'] / nz_grid['area']
+nz_grid['population'] = nz_grid['Population'] * nz_grid['area_prop']
+nz_grid
+```
+
+What is left to be done is to sum (see @sec-vector-attribute-aggregation) the population in all parts forming the same grid cell:
+
+```{python}
+nz_grid = nz_grid.groupby('id')['population'].sum().reset_index()
+nz_grid
+```
+
+and join (see @sec-vector-attribute-joining) them back to the `grid` layer:
+
+```{python}
+grid = pd.merge(grid, nz_grid[['id', 'population']], on='id', how='left')
+grid
+```
+
+The final result `grid`, with the incongruently-joined `population` attribute from `nz`, is shown in @fig-nz-and-grid3. 
+
+```{python}
+#| label: fig-nz-and-grid3
+#| fig-cap: "The nz layer and a regular grid of rectangles: final result"
+
+base = grid.plot(column='population', edgecolor='black', legend=True);
+nz.plot(ax=base, color='none', edgecolor='grey', legend=True);
+```
+
+We can demonstrate that, expectedly, the summed population in `nz` and `grid` is identical, even though the geometry is different (since we created `grid` to completely cover `nz`):
+
+```{python}
+nz['Population'].sum()
+```
+
+```{python}
+grid['population'].sum()
+```
+
+The procedure in this section is known as an area-weighted interpolation of a spatially extensive (e.g., population) variable. An area-weighted interpolation of a spatially intensive variable (e.g., population density) is almost identical, except that we would have to calculate the weighted `.mean` rather than `.sum`, to preserve the average rather than the sum. 
 
 ### Distance relations
 
@@ -536,12 +638,7 @@ Finally, the result of a zonal operation is a summary table grouped by zone whic
 
 To demonstrate, let us get back to the `grain` and `elev` rasters (Figure 3.2). To calculate zonal statistics, we use the arrays with raster values. The `elev` array was already imported earlier:
 
-```{python}
-elev
-```
-
-The `grain` array is imported here using `.read`:
-
+```{python}geopandas as gpd
 ```{python}
 grain = src_grain.read(1)
 grain
