@@ -63,12 +63,22 @@ src_grain = rasterio.open('data/grain.tif')
 
 Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object. Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is the 'subsetting object'. `y`, in turn, can be created using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations). 
 
-To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset), in a projected coordinate system. The following code chunk creates an object representing Canterbury, then uses spatial subsetting to return all high points in the region:
+To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset), in a projected coordinate system. The following code chunks create an object representing Canterbury (`canterbury`), then use spatial subsetting to return all high points in the region (`canterbury_height`):
 
 ```{python}
-canterbury = nz[nz["Name"] == "Canterbury"]
+canterbury = nz[nz['Name'] == 'Canterbury']
+canterbury
+```
+
+```{python}
+# Does each 'nz_height' point intersect with 'canterbury'?
 sel = nz_height.intersects(canterbury['geometry'].iloc[0])
+sel
+```
+
+```{python}
 canterbury_height = nz_height[sel]
+canterbury_height
 ```
 
 ```{python}
@@ -76,28 +86,72 @@ canterbury_height = nz_height[sel]
 #| fig-cap: Spatial subsetting of points by intersection with polygon
 
 fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-base = nz.plot(color="white", edgecolor="lightgrey", ax=axes[0])
-nz_height.plot(ax=base, color="None", edgecolor="red")
-base = nz.plot(color="white", edgecolor="lightgrey", ax=axes[1])
-canterbury_height.plot(ax=base, color="None", edgecolor="red");
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
+nz_height.plot(ax=base, color='None', edgecolor='red')
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
+canterbury.plot(ax=base, color='grey', edgecolor='none')
+canterbury_height.plot(ax=base, color='None', edgecolor='red')
+axes[0].set_title('Original')
+axes[1].set_title('Subset (intersects)');
 ```
 
-Spatial subsetting 2...
+Like in attribute subsetting (@sec-vector-attribute-subsetting), we are using a boolean series (`sel`), of the same length as the number of rows in the filtered table (`nz_height`), created based on a condition applied on itself. The difference is that the condition is not a comparison of attribute values, but an evaluation of a spatial relation. Namely, we evaluate whether each geometry of `nz_height` intersects with `canterbury` geometry, using the `.intersects` method.
+
+Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected. These include touches, crosses or within, as we will see shortly in @sec-topological-relations. The most commonly used method `.intersects` method which we used in the last example is a 'catch all' topological relation, that will return features in the target that touch, cross or are within the source 'subsetting' object. Alternatively, we can evaluate other methods, such as `.disjoint` to obtain all points that *do not* intersect with Canterbury:
 
 ```{python}
-non_canterbury_height = nz_height.overlay(canterbury, how='difference')
+# Is each 'nz_height' point disjoint from 'canterbury'?
+sel = nz_height.disjoint(canterbury['geometry'].iloc[0])
+canterbury_height2 = nz_height[sel]
 ```
 
-Plot...
+as shown in @fig-spatial-subset-disjoint:
 
 ```{python}
-base = nz.plot(color="white", edgecolor="lightgrey")
-non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
+#| label: fig-spatial-subset-disjoint
+#| fig-cap: Spatial subsetting of points disjoint from a polygon
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
+nz_height.plot(ax=base, color='None', edgecolor='red')
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
+canterbury.plot(ax=base, color='grey', edgecolor='none')
+canterbury_height2.plot(ax=base, color='None', edgecolor='red');
+axes[0].set_title('Original')
+axes[1].set_title('Subset (disjoint)');
 ```
 
-...
+In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset before applying the `.intersects` (or any other) operator:
 
+```{python}
+canterbury_southland = nz[(nz['Name'] == 'Canterbury') | (nz['Name'] == 'Southland')]
+canterbury_southland = canterbury_southland.unary_union
+canterbury_southland
+```
 
+```{python}
+sel = nz_height.intersects(canterbury_southland)
+canterbury_southland_height = nz_height[sel]
+canterbury_southland_height
+```
+
+The resulting subset is shown in @fig-spatial-subset2:
+
+```{python}
+#| label: fig-spatial-subset2
+#| fig-cap: Spatial subsetting of points by intersection with more that one polygon
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
+nz_height.plot(ax=base, color='None', edgecolor='red')
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
+gpd.GeoSeries(canterbury_southland).plot(ax=base, color='grey', edgecolor='none')
+canterbury_southland_height.plot(ax=base, color='None', edgecolor='red')
+axes[0].set_title('Original')
+axes[1].set_title('Subset (intersects)');
+```
+
+The next section further explores different types of spatial relation, also known as binary predicates (of which `.intersects` and `.disjoint` are two examples), that can be used to identify whether or not two features are spatially related or not.
 
 ### Topological relations {#sec-topological-relations}
 
@@ -176,11 +230,11 @@ random_joined
 #| fig-cap: Illustration of a spatial join. A new attribute variable is added to random points (top left) from source world object (top right) resulting in the data represented in the final panel.
 
 fig, axes = plt.subplots(2, 2, figsize=(9, 5))
-base = world.plot(color="white", edgecolor="lightgrey", ax=axes[0][0])
-random_points.plot(ax=base, color="None", edgecolor="red")
-base = world.plot(color="white", edgecolor="lightgrey", ax=axes[0][1])
+base = world.plot(color='white', edgecolor='lightgrey', ax=axes[0][0])
+random_points.plot(ax=base, color='None', edgecolor='red')
+base = world.plot(color='white', edgecolor='lightgrey', ax=axes[0][1])
 world_random.plot(ax=base, column='name_long')
-base = world.plot(color="white", edgecolor="lightgrey", ax=axes[1][0])
+base = world.plot(color='white', edgecolor='lightgrey', ax=axes[1][0])
 random_joined.geometry.plot(ax=base, color='grey');
 random_joined.plot(ax=base, column='name_long', legend=True)
 fig.delaxes(axes[1][1]);
@@ -195,7 +249,7 @@ fig.delaxes(axes[1][1]);
 As with attribute data aggregation, spatial data aggregation condenses data: aggregated outputs have fewer rows than non-aggregated inputs. Statistical aggregating functions, such as mean, average, or sum, summarise multiple values of a variable, and return a single value per grouping variable. Section ... demonstrated how the `.groupby` method, combined with summary functions such as `.sum`, condense data based on attribute variables. This section shows how grouping by spatial objects can be acheived using spatial joins combined with non-spatial aggregation.
 
 
-Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region: it is the geometry of the source (`nz`, in this case) that defines how values in the target object (`nz_height`) are grouped. This can be done in two steps. First, we "attach" the region classification of each point, using spatial join. Note that just one distinct attribute (such as `Name` in this case) is sufficient for our purposes:
+Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region: it is the geometry of the source (`nz`, in this case) that defines how values in the target object (`nz_height`) are grouped. This can be done in two steps. First, we 'attach' the region classification of each point, using spatial join. Note that just one distinct attribute (such as `Name` in this case) is sufficient for our purposes:
 
 ```{python}
 gpd.sjoin(nz_height, nz[['Name', 'geometry']], how='left')
