@@ -2,7 +2,6 @@
 jupyter: python3
 ---
 
-
 # Geographic data in Python {#sec-spatial-class}
 
 ## Introduction
@@ -100,6 +99,7 @@ There are several approaches for working with vector layers in Python, ranging f
 Before writing and running code for creating and working with geographic vector objects, we therefore import **geopandas** (by convention as `gpd` for more concise code) and **shapely**:
 
 ```{python}
+import pandas as pd
 import geopandas as gpd
 import shapely.geometry
 import shapely.wkt
@@ -520,21 +520,50 @@ towns_layer.explore()
 Alternatively, we can first create a `pandas.DataFrame` and turn it into a `GeoDataFrame` like this:
 
 ```{python}
-import pandas 
-df = pandas.DataFrame({
+towns_table = pd.DataFrame({
   'name': ['London', 'Paris'],
   'temperature': [25, 27],
   'date': ['2017-06-21', '2017-06-21'],
   'x': [0.1, 2.3],
   'y': [51.5, 48.9]
 })
-gdf = gpd.GeoDataFrame(df, 
-    geometry=gpd.points_from_xy(df['x'], df['y']), 
-    crs='EPSG:4326')
-gdf.explore()
+towns_geom = gpd.points_from_xy(towns_table['x'], towns_table['y'])
+towns_layer = gpd.GeoDataFrame(towns_table, geometry=towns_geom, crs=4326)
+towns_layer.explore()
 ```
 
 This approach is particularly useful when we need to read data from a CSV file, e.g., using `pandas.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame`.
+
+### Derived numeric properties {#sec-area-length}
+
+Vector layers are characterized by two essential derived numeric properties: 
+
+* Length (`.length`)---Applicable to lines
+* Area (`.area`)---Applicable to polygons
+
+Area and length can be calculated for any data structures discussed above, either a `shapely` geometry, in which case the returned value is a number:
+
+```{python}
+linestring.length
+```
+
+```{python}
+multipolygon.area
+```
+
+or for `GeoSeries` or `DataFrame`, in which case the returned value is a numeric `Series`:
+
+```{python}
+gdf.area
+```
+
+Like all numeric calculations in `geopandas`, the results assume a planar CRS and are returned in its native units. This means that length and area measurements for geometries in WGS84 (`crs=4326`) are returned in decimal degrees and essentially meaningless, thus the warning in the above command. 
+
+To obtain true length and area measurements, the geometries first need to be transformed to a projected CRS (see @sec-reprojecting-vector-geometries) applicable to the area of interest. For example, the area of Slovenia can be calculated in the UTM zone 33N CRS (`crs=32633`). The result is in the CRS units, namely $m^2$:
+
+```{python}
+gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
+```
 
 ## Raster data
 

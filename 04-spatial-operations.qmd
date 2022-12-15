@@ -12,8 +12,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 pd.set_option("display.max_rows", 4)
 pd.set_option("display.max_columns", 6)
-pd.options.display.max_rows = 10
-pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
 plt.rcParams["figure.figsize"] = (5, 5)
 ```
@@ -21,6 +19,7 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Packages...
 
 ```{python}
+import shapely.geometry
 import geopandas as gpd
 import numpy as np
 import os
@@ -62,14 +61,27 @@ src_grain = rasterio.open('data/grain.tif')
 
 ### Spatial subsetting
 
-Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object. Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is the 'subsetting object'. `y`, in turn, can be created using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations). 
+Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object. 
+Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is the 'subsetting object'. 
+`y`, in turn, can be created using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations). 
 
-To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset), in a projected coordinate system. The following code chunk creates an object representing Canterbury, then uses spatial subsetting to return all high points in the region:
+To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset), in a projected coordinate system. 
+The following lines of code create an object representing Canterbury (`canterbury`), then use spatial subsetting to return all high points in the region (`canterbury_height`):
 
 ```{python}
-canterbury = nz[nz["Name"] == "Canterbury"]
+canterbury = nz[nz['Name'] == 'Canterbury']
+canterbury
+```
+
+```{python}
+# Does each 'nz_height' point intersect with 'canterbury'?
 sel = nz_height.intersects(canterbury['geometry'].iloc[0])
+sel
+```
+
+```{python}
 canterbury_height = nz_height[sel]
+canterbury_height
 ```
 
 ```{python}
@@ -77,62 +89,155 @@ canterbury_height = nz_height[sel]
 #| fig-cap: Spatial subsetting of points by intersection with polygon
 
 fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-base = nz.plot(color="white", edgecolor="lightgrey", ax=axes[0])
-nz_height.plot(ax=base, color="None", edgecolor="red")
-base = nz.plot(color="white", edgecolor="lightgrey", ax=axes[1])
-canterbury_height.plot(ax=base, color="None", edgecolor="red");
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
+nz_height.plot(ax=base, color='None', edgecolor='red')
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
+canterbury.plot(ax=base, color='grey', edgecolor='none')
+canterbury_height.plot(ax=base, color='None', edgecolor='red')
+axes[0].set_title('Original')
+axes[1].set_title('Subset (intersects)');
 ```
 
-Spatial subsetting 2...
+Like in attribute subsetting (@sec-vector-attribute-subsetting), we are using a boolean series (`sel`), of the same length as the number of rows in the filtered table (`nz_height`), created based on a condition applied on itself. 
+The difference is that the condition is not a comparison of attribute values, but an evaluation of a spatial relation. 
+Namely, we evaluate whether each geometry of `nz_height` intersects with `canterbury` geometry, using the `.intersects` method.
+
+Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected. 
+These include touches, crosses or within, as we will see shortly in @sec-topological-relations. 
+The most commonly used method `.intersects` method which we used in the last example is a 'catch all' topological relation, that will return features in the target that touch, cross or are within the source 'subsetting' object. 
+Alternatively, we can evaluate other methods, such as `.disjoint` to obtain all points that *do not* intersect with Canterbury:
 
 ```{python}
-non_canterbury_height = nz_height.overlay(canterbury, how='difference')
+# Is each 'nz_height' point disjoint from 'canterbury'?
+sel = nz_height.disjoint(canterbury['geometry'].iloc[0])
+canterbury_height2 = nz_height[sel]
 ```
 
-Plot...
+as shown in @fig-spatial-subset-disjoint:
 
 ```{python}
-base = nz.plot(color="white", edgecolor="lightgrey")
-non_canterbury_height.plot(ax=base, color="None", edgecolor="red");
+#| label: fig-spatial-subset-disjoint
+#| fig-cap: Spatial subsetting of points disjoint from a polygon
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
+nz_height.plot(ax=base, color='None', edgecolor='red')
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
+canterbury.plot(ax=base, color='grey', edgecolor='none')
+canterbury_height2.plot(ax=base, color='None', edgecolor='red');
+axes[0].set_title('Original')
+axes[1].set_title('Subset (disjoint)');
 ```
 
-...
+In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset before applying the `.intersects` (or any other) operator:
 
+```{python}
+canterbury_southland = nz[(nz['Name'] == 'Canterbury') | (nz['Name'] == 'Southland')]
+canterbury_southland = canterbury_southland.unary_union
+canterbury_southland
+```
 
+```{python}
+sel = nz_height.intersects(canterbury_southland)
+canterbury_southland_height = nz_height[sel]
+canterbury_southland_height
+```
+
+The resulting subset is shown in @fig-spatial-subset2:
+
+```{python}
+#| label: fig-spatial-subset2
+#| fig-cap: Spatial subsetting of points by intersection with more that one polygon
+
+fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
+nz_height.plot(ax=base, color='None', edgecolor='red')
+base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
+gpd.GeoSeries(canterbury_southland).plot(ax=base, color='grey', edgecolor='none')
+canterbury_southland_height.plot(ax=base, color='None', edgecolor='red')
+axes[0].set_title('Original')
+axes[1].set_title('Subset (intersects)');
+```
+
+The next section further explores different types of spatial relation, also known as binary predicates (of which `.intersects` and `.disjoint` are two examples), that can be used to identify whether or not two features are spatially related or not.
 
 ### Topological relations {#sec-topological-relations}
 
-...
+Topological relations describe the spatial relationships between objects. "Binary topological relationships", to give them their full name, are logical statements (in that the answer can only be `True` or `False`) about the spatial relationships between two objects defined by ordered sets of points (typically forming points, lines and polygons) in two or more dimensions (Egenhofer and Herring 1990). That may sound rather abstract and, indeed, the definition and classification of topological relations is based on mathematical foundations first published in book form in 1966 (Spanier 1995), with the field of algebraic topology continuing into the 21st century (Dieck 2008).
+
+Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships. Figure 4.2 shows a variety of geometry pairs and their associated relations. The third and fourth pairs in Figure 4.2 (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if function(x, y) is true, function(y, x) will also by true, relations in which the order of the geometries are important such as contains and within are not. Notice that each geometry pair has a “DE-9IM” string such as FF2F11212, described in the next section. 
+
+![Topological relations between vector geometries, inspired by Figures 1 and 2 in Egenhofer and Herring (1990). The relations for which the function(x, y) is true are printed for each geometry pair, with x represented in pink and y represented in blue. The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string. ](https://geocompr.robinlovelace.net/04-spatial-operations_files/figure-html/relations-1.png)
+
+In `shapely`, functions testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships). To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in Figure 4.2 and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries):
 
 ```{python}
-from shapely.geometry import Point, LineString, Polygon
-points = gpd.GeoSeries([Point(0.2,0.1), Point(0.7,0.2), Point(0.4,0.8)])
-line = LineString([(0.4,0.2), (1,0.5)])
-poly = Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)])
+points = gpd.GeoSeries([
+  shapely.geometry.Point(0.2,0.1), 
+  shapely.geometry.Point(0.7,0.2), 
+  shapely.geometry.Point(0.4,0.8)
+])
+line = gpd.GeoSeries([
+  shapely.geometry.LineString([(0.4,0.2), (1,0.5)])
+])
+poly = gpd.GeoSeries([
+  shapely.geometry.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)])
+])
+```
 
-p = gpd.GeoSeries(poly).plot(color='yellow')
-p = gpd.GeoSeries(line).plot(ax=p, color='red')
-points.plot(ax=p)
+The resulting `GeoSeries` named `points`, `line`, and `poly` are visualized as follows:
+
+```{python}
+#| label: fig-spatial-relations-geoms
+#| fig-cap: Points, line and polygon objects arranged to illustrate topological relations
+
+ax = gpd.GeoSeries(poly).plot(color='grey', edgecolor='red')
+ax = gpd.GeoSeries(line).plot(ax=ax, color='black')
+points.plot(ax=ax, color='none', edgecolor='black')
+for x, y, label in zip(points.x, points.y, [1,2,3]):
+    ax.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords="offset points")
+```
+
+A simple query is: which of the points in `points` intersect in some way with polygon `poly`? The question can be answered by inspection (points 1 and 3 are touching and within the polygon, respectively). This question can be answered with the `.intersects` method, as follows. Note that we evaluate the relation between each geometry in a `GeoSeries` (`points`) and a single `shapely` geometry (`poly.iloc[0]`). When both inputs are `GeoSeries`, a pairwise evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`):
+
+```{python}
+points.intersects(poly.iloc[0])
+```
+
+The result is a boolean `Series`. Its contents should match your intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second are outside the polygon's border.
+
+Again, the above output is a `Series` where each value represents a feature in the first input (`points`). In case we need to obtain a matrix of *pairwise* results, we can use `.apply` as follows. In this case, the result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry (there is just one, in this case)L
+
+```{python}
+points.apply(lambda x: poly.intersects(x))
+```
+
+`.intersects` returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in Figure 4.2. More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it? These can be answered as follows:
+
+```{python}
+points.within(poly.iloc[0])
 ```
 
 ```{python}
-points.intersects(poly)
+points.touches(poly.iloc[0])
 ```
 
-```{python}
-points.within(poly)
-```
+Note that although the first point touches the boundary polygon, it is not within it; the third point is within the polygon but does not touch any part of its border. The opposite of `.intersects` is `.disjoint`, which returns only objects that do not spatially relate in any way to the selecting object:
 
 ```{python}
-points.touches(poly)
+points.disjoint(poly.iloc[0])
 ```
 
-```{python}
-points.disjoint(poly)
-```
+Another useful type of relation is "within distance", where we detect features that intersect with the target buffered by particular distance. Buffer distance determines how close target objects need to be before they are selected. This can be done by literally buffering (@sec-geometries) the target geometry, and evaluating intersection (`.intersects`, see above). Another way is to calculate the distances and compare them to the distance threshold:
 
 ```{python}
-points.distance(poly) < 0.2
+points.distance(poly.iloc[0]) < 0.2
+```
+
+Note that although point 2 is more than 0.2 units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to 0.2. This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure 4.2. We can verify the actual distance between point 2 and the polygon is 0.13, as follows:
+
+```{python}
+points.iloc[1].distance(poly.iloc[0])
 ```
 
 ### DE-9IM strings
@@ -177,11 +282,11 @@ random_joined
 #| fig-cap: Illustration of a spatial join. A new attribute variable is added to random points (top left) from source world object (top right) resulting in the data represented in the final panel.
 
 fig, axes = plt.subplots(2, 2, figsize=(9, 5))
-base = world.plot(color="white", edgecolor="lightgrey", ax=axes[0][0])
-random_points.plot(ax=base, color="None", edgecolor="red")
-base = world.plot(color="white", edgecolor="lightgrey", ax=axes[0][1])
+base = world.plot(color='white', edgecolor='lightgrey', ax=axes[0][0])
+random_points.plot(ax=base, color='None', edgecolor='red')
+base = world.plot(color='white', edgecolor='lightgrey', ax=axes[0][1])
 world_random.plot(ax=base, column='name_long')
-base = world.plot(color="white", edgecolor="lightgrey", ax=axes[1][0])
+base = world.plot(color='white', edgecolor='lightgrey', ax=axes[1][0])
 random_joined.geometry.plot(ax=base, color='grey');
 random_joined.plot(ax=base, column='name_long', legend=True)
 fig.delaxes(axes[1][1]);
@@ -196,7 +301,7 @@ fig.delaxes(axes[1][1]);
 As with attribute data aggregation, spatial data aggregation condenses data: aggregated outputs have fewer rows than non-aggregated inputs. Statistical aggregating functions, such as mean, average, or sum, summarise multiple values of a variable, and return a single value per grouping variable. Section ... demonstrated how the `.groupby` method, combined with summary functions such as `.sum`, condense data based on attribute variables. This section shows how grouping by spatial objects can be acheived using spatial joins combined with non-spatial aggregation.
 
 
-Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region: it is the geometry of the source (`nz`, in this case) that defines how values in the target object (`nz_height`) are grouped. This can be done in two steps. First, we "attach" the region classification of each point, using spatial join. Note that just one distinct attribute (such as `Name` in this case) is sufficient for our purposes:
+Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region: it is the geometry of the source (`nz`, in this case) that defines how values in the target object (`nz_height`) are grouped. This can be done in two steps. First, we 'attach' the region classification of each point, using spatial join. Note that just one distinct attribute (such as `Name` in this case) is sufficient for our purposes:
 
 ```{python}
 gpd.sjoin(nz_height, nz[['Name', 'geometry']], how='left')
@@ -208,9 +313,112 @@ Second, ...
 
 ### Joining incongruent layers
 
-...
+Spatial congruence is an important concept related to spatial aggregation. An aggregating object (which we will refer to as `y`) is congruent with the target object (`x`) if the two objects have shared borders. Often this is the case for administrative boundary data, whereby larger units---such as Middle Layer Super Output Areas (MSOAs) in the UK or districts in many other European countries---are composed of many smaller units.
 
+Incongruent aggregating objects, by contrast, do not share common borders with the target (Qiu, Zhang, and Zhou 2012). This is problematic for spatial aggregation (and other spatial operations) illustrated in @fig-nz-and-grid: aggregating the centroid of each sub-zone will not return accurate results. Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods (Tobler 1979).
 
+To demonstrate, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer:
+
+```{python}
+xmin, ymin, xmax, ymax = nz.total_bounds
+res = 100000
+cols = list(range(int(np.floor(xmin)), int(np.ceil(xmax+res)), res))
+rows = list(range(int(np.floor(ymin)), int(np.ceil(ymax+res)), res))
+rows.reverse()
+polygons = []
+for x in cols:
+    for y in rows:
+        polygons.append( shapely.geometry.Polygon([(x,y), (x+res, y), (x+res, y-res), (x, y-res)]) )
+grid = gpd.GeoDataFrame({'geometry': polygons}, crs=nz.crs)
+sel = grid.intersects(shapely.geometry.box(*nz.total_bounds))
+grid = grid[sel]
+grid['id'] = grid.index
+grid
+```
+
+as shown in @fig-nz-and-grid.
+
+```{python}
+#| label: fig-nz-and-grid
+#| fig-cap: The nz layer and a regular grid of rectangles
+
+base = grid.plot(color='none', edgecolor='grey')
+nz.plot(ax=base, column='Population', edgecolor='black', legend=True);
+```
+
+Our goal, now, is to "transfer" the `Population` attribute to the rectangular grid polygons, which is an example of a join between incongruent layers. To do that, we basically need to calculate--for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell. The weights in the weighted sum calculation are the ratios between the area of the coinciding "part" out of the entire `nz` polygon. That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
+
+We start with calculating the entire area of each `nz` polygon, as follows, using the `.area` method (see @sec-area-length):
+
+```{python}
+nz['area'] = nz.area
+nz
+```
+
+Next, we use the `.overlay` method to calculate the pairwise intersections between `nz` and `grid`, hereby named `nz_grid`. We also calculate the area of the intersections, hereby named `area_sub`. If an `nz` polygon was completely within a single `grid` polygon, then `area_sub` is going to be equal to `area`; otherwise, it is going to be smaller:
+
+```{python}
+nz_grid = nz.overlay(grid)
+nz_grid = nz_grid[['id', 'area', 'Population', 'geometry']]
+nz_grid['area_sub'] = nz_grid.area
+nz_grid
+```
+
+We are going to elaborate on the `.overlay` method in...
+
+The resulting layer `nz_grid` is shown in @fig-nz-and-grid2. 
+
+```{python}
+#| label: fig-nz-and-grid2
+#| fig-cap: "The nz layer and a regular grid of rectangles: after an overlay operation"
+
+base = grid.plot(color='none', edgecolor='grey')
+nz_grid.plot(ax=base, column='Population', edgecolor='black', legend=True);
+```
+
+Note that each of the "intersections" still holds the `Population` attribute of its "origin" feature of `nz`, as depicted in @fig-nz-and-grid2. The real population size of each `nz_grid` feature, however, is smaller (or equal), depending on the geographic area proportion that it occupies out of the original `nz` feature. To make the "correction", we first calculate the ratio (`area_prop`) and then multiply it by the population. The new (lowercase) attribute `population` now has the correct estimate of population sizes in `nz_grid`:
+
+```{python}
+nz_grid['area_prop'] = nz_grid['area_sub'] / nz_grid['area']
+nz_grid['population'] = nz_grid['Population'] * nz_grid['area_prop']
+nz_grid
+```
+
+What is left to be done is to sum (see @sec-vector-attribute-aggregation) the population in all parts forming the same grid cell:
+
+```{python}
+nz_grid = nz_grid.groupby('id')['population'].sum().reset_index()
+nz_grid
+```
+
+and join (see @sec-vector-attribute-joining) them back to the `grid` layer: 
+
+```{python}
+grid = pd.merge(grid, nz_grid[['id', 'population']], on='id', how='left')
+grid
+```
+
+The final result `grid`, with the incongruently-joined `population` attribute from `nz`, is shown in @fig-nz-and-grid3. 
+
+```{python}
+#| label: fig-nz-and-grid3
+#| fig-cap: "The nz layer and a regular grid of rectangles: final result"
+
+base = grid.plot(column='population', edgecolor='black', legend=True);
+nz.plot(ax=base, color='none', edgecolor='grey', legend=True);
+```
+
+We can demonstrate that, expectedly, the summed population in `nz` and `grid` is identical, even though the geometry is different (since we created `grid` to completely cover `nz`):
+
+```{python}
+nz['Population'].sum()
+```
+
+```{python}
+grid['population'].sum()
+```
+
+The procedure in this section is known as an area-weighted interpolation of a spatially extensive (e.g., population) variable. An area-weighted interpolation of a spatially intensive variable (e.g., population density) is almost identical, except that we would have to calculate the weighted `.mean` rather than `.sum`, to preserve the average rather than the sum. 
 
 ### Distance relations
 
@@ -536,12 +744,7 @@ Finally, the result of a zonal operation is a summary table grouped by zone whic
 
 To demonstrate, let us get back to the `grain` and `elev` rasters (Figure 3.2). To calculate zonal statistics, we use the arrays with raster values. The `elev` array was already imported earlier:
 
-```{python}
-elev
-```
-
-The `grain` array is imported here using `.read`:
-
+```{python}geopandas as gpd
 ```{python}
 grain = src_grain.read(1)
 grain
