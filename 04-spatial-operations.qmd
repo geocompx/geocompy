@@ -298,17 +298,57 @@ fig.delaxes(axes[1][1]);
 
 ### Spatial aggregation
 
-As with attribute data aggregation, spatial data aggregation condenses data: aggregated outputs have fewer rows than non-aggregated inputs. Statistical aggregating functions, such as mean, average, or sum, summarise multiple values of a variable, and return a single value per grouping variable. Section ... demonstrated how the `.groupby` method, combined with summary functions such as `.sum`, condense data based on attribute variables. This section shows how grouping by spatial objects can be acheived using spatial joins combined with non-spatial aggregation.
+As with attribute data aggregation, spatial data aggregation condenses data: aggregated outputs have fewer rows than non-aggregated inputs. 
+Statistical aggregating functions, such as mean, average, or sum, summarise multiple values of a variable, and return a single value per grouping variable. 
+@sec-vector-attribute-aggregation demonstrated how the `.groupby` method, combined with summary functions such as `.sum`, condense data based on attribute variables. 
+This section shows how grouping by spatial objects can be acheived using spatial joins combined with non-spatial aggregation.
 
+Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region. 
+It is the geometry of the source (`nz`) that defines how values in the target object (`nz_height`) are grouped. 
+This can be done in three steps:
 
-Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region: it is the geometry of the source (`nz`, in this case) that defines how values in the target object (`nz_height`) are grouped. This can be done in two steps. First, we 'attach' the region classification of each point, using spatial join. Note that just one distinct attribute (such as `Name` in this case) is sufficient for our purposes:
+1. Figuring out which `nz` region each `nz_height` point falls in---using `gpd.sjoin`
+2. Summarizing the average elevation per region---using `.groupby` and `.mean`
+3. Joining the result back to `nz`---using `pd.merge`
+
+First, we 'attach' the region classification of each point, using spatial join. 
+Note that we are using the minimal set of columns required: the geometries (for the spatial join to work), the point elevation (to later calculate an average), and the region name (to use as key when joining the results back to `nz`).
 
 ```{python}
-gpd.sjoin(nz_height, nz[['Name', 'geometry']], how='left')
+nz_height2 = gpd.sjoin(
+  nz_height[['elevation', 'geometry']], 
+  nz[['Name', 'geometry']], 
+  how='left'
+)
+nz_height2
 ```
 
-Second, ...
+Second, we calculate the average elevation:
 
+```{python}
+nz_height3 = nz_height2.groupby('Name')[['elevation']].mean()
+nz_height3
+```
+
+The third and final step is joining the averages with the `nz` layer:
+
+```{python}
+nz_height4 = pd.merge(nz[['Name', 'geometry']], nz_height3, on='Name', how='left')
+nz_height4
+```
+
+We now have create the `nz_height4` layer, which gives the average `nz_height` elevation value per polygon. The result is shown in @fig-nz-avg-nz-height. Note that the `missing_kwds` part determines the style of geometries where the symbology attribute (`elevation`) is missing, because the were no `nz_height` points overlapping with them. The default is to omit them, which is usually not what we want. With `{'color':'none','edgecolor':'black'}`, those polygons are shown with black outline and no fill.
+
+```{python}
+#| label: fig-nz-avg-nz-height
+#| fig-cap: Average height of the top 101 high points across the regions of New Zealand
+
+nz_height4.plot(
+  column='elevation', 
+  legend=True,
+  missing_kwds={'color': 'none', 'edgecolor': 'black'}
+);
+```
 
 
 ### Joining incongruent layers
@@ -744,7 +784,6 @@ Finally, the result of a zonal operation is a summary table grouped by zone whic
 
 To demonstrate, let us get back to the `grain` and `elev` rasters (Figure 3.2). To calculate zonal statistics, we use the arrays with raster values. The `elev` array was already imported earlier:
 
-```{python}geopandas as gpd
 ```{python}
 grain = src_grain.read(1)
 grain
