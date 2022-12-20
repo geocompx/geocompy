@@ -306,8 +306,16 @@ base = cycle_hire.plot(edgecolor='blue', color='none')
 cycle_hire_osm.plot(ax=base, edgecolor='red', color='none');
 ```
 
+We can check if any points are the same by creating a pairwise boolean matrix of `.intersects` relations, then evaluating whether any of the values in it is `True`. Note that the `.to_numpy` method is applied to go from a `DataFrame` to a `numpy` array, for which `.any` gives a global rather than a row-wise summary, which is what we want in this case:
 
+```{python}
+m = cycle_hire['geometry'].apply(
+  lambda x: cycle_hire_osm['geometry'].intersects(x)
+)
+m.to_numpy().any()
+```
 
+...
 
 ### Spatial aggregation
 
