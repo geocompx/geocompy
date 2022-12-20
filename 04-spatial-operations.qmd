@@ -50,6 +50,8 @@ if not file_path.exists():
 nz = gpd.read_file("data/nz.gpkg")
 nz_height = gpd.read_file("data/nz_height.gpkg")
 world = gpd.read_file('data/world.gpkg')
+cycle_hire = gpd.read_file('data/cycle_hire.gpkg')
+cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
 src_elev = rasterio.open("data/elev.tif")
 src_multi_rast = rasterio.open("data/landsat.tif")
 src_grain = rasterio.open('data/grain.tif')
@@ -294,22 +296,17 @@ fig.delaxes(axes[1][1]);
 
 ### Non-overlapping joins
 
-Sometimes two geographic datasets do not touch but still have a strong geographic relationship. The datasets `cycle_hire` and `cycle_hire_osm`, provide a good example. Plotting them shows that they are often closely related but they do not touch, as shown in ..., a base version of which is created with the following code below: 
+Sometimes two geographic datasets do not touch but still have a strong geographic relationship. The datasets `cycle_hire` and `cycle_hire_osm`, provide a good example. Plotting them shows that they are often closely related but they do not touch, as shown in @fig-cycle-hire, which is created with the code below: 
 
 ```{python}
-#| label: fig-spatial-join
-#| fig-cap: Illustration of a spatial join. A new attribute variable is added to random points (top left) from source world object (top right) resulting in the data represented in the final panel.
+#| label: fig-cycle-hire
+#| fig-cap: The spatial distribution of cycle hire points in London based on official data (blue) and OpenStreetMap data (red). 
 
-fig, axes = plt.subplots(2, 2, figsize=(9, 5))
-base = world.plot(color='white', edgecolor='lightgrey', ax=axes[0][0])
-random_points.plot(ax=base, color='None', edgecolor='red')
-base = world.plot(color='white', edgecolor='lightgrey', ax=axes[0][1])
-world_random.plot(ax=base, column='name_long')
-base = world.plot(color='white', edgecolor='lightgrey', ax=axes[1][0])
-random_joined.geometry.plot(ax=base, color='grey');
-random_joined.plot(ax=base, column='name_long', legend=True)
-fig.delaxes(axes[1][1]);
+base = cycle_hire.plot(edgecolor='blue', color='none')
+cycle_hire_osm.plot(ax=base, edgecolor='red', color='none');
 ```
+
+
 
 
 ### Spatial aggregation
