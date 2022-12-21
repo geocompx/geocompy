@@ -4,7 +4,7 @@
 <!-- [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb) -->
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 
-<https://geocompr.github.io/py/>
+<https://py.geocompx.org>
 
 Broadly, the book can be reproduced after following three steps:
 
