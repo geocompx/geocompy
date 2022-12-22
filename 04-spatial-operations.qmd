@@ -165,13 +165,24 @@ The next section further explores different types of spatial relation, also know
 
 ### Topological relations {#sec-topological-relations}
 
-Topological relations describe the spatial relationships between objects. "Binary topological relationships", to give them their full name, are logical statements (in that the answer can only be `True` or `False`) about the spatial relationships between two objects defined by ordered sets of points (typically forming points, lines and polygons) in two or more dimensions (Egenhofer and Herring 1990). That may sound rather abstract and, indeed, the definition and classification of topological relations is based on mathematical foundations first published in book form in 1966 (Spanier 1995), with the field of algebraic topology continuing into the 21st century (Dieck 2008).
+<!--toDo: references should be fixed-->
+Topological relations describe the spatial relationships between objects. 
+"Binary topological relationships", to give them their full name, are logical statements (in that the answer can only be `True` or `False`) about the spatial relationships between two objects defined by ordered sets of points (typically forming points, lines and polygons) in two or more dimensions (Egenhofer and Herring 1990).
+That may sound rather abstract and, indeed, the definition and classification of topological relations is based on mathematical foundations first published in book form in 1966 (Spanier 1995), with the field of algebraic topology continuing into the 21st century (Dieck 2008).
 
-Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships. Figure 4.2 shows a variety of geometry pairs and their associated relations. The third and fourth pairs in Figure 4.2 (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if function(x, y) is true, function(y, x) will also by true, relations in which the order of the geometries are important such as contains and within are not. Notice that each geometry pair has a “DE-9IM” string such as FF2F11212, described in the next section. 
+Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships.
+<!--toDo: update references to figures-->
+Figure 4.2 shows a variety of geometry pairs and their associated relations.
+The third and fourth pairs in Figure 4.2 (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if function(x, y) is true, function(y, x) will also by true, relations in which the order of the geometries are important such as contains and within are not. 
+Notice that each geometry pair has a “DE-9IM” string such as FF2F11212, described in the next section. 
 
-![Topological relations between vector geometries, inspired by Figures 1 and 2 in Egenhofer and Herring (1990). The relations for which the function(x, y) is true are printed for each geometry pair, with x represented in pink and y represented in blue. The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string. ](https://geocompr.robinlovelace.net/04-spatial-operations_files/figure-html/relations-1.png)
+![Topological relations between vector geometries, inspired by Figures 1 and 2 in Egenhofer and Herring (1990). 
+The relations for which the function(x, y) is true are printed for each geometry pair, with x represented in pink and y represented in blue.
+<!--toDo: move the used images from geocompr to the geocompy repo (this will make it more stable)-->
+The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](https://geocompr.robinlovelace.net/04-spatial-operations_files/figure-html/relations-1.png)
 
-In `shapely`, functions testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships). To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in Figure 4.2 and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries):
+In **shapely**, functions testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships).
+To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in Figure 4.2 and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries):
 
 ```{python}
 points = gpd.GeoSeries([
@@ -200,7 +211,11 @@ for x, y, label in zip(points.x, points.y, [1,2,3]):
     ax.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords="offset points")
 ```
 
-A simple query is: which of the points in `points` intersect in some way with polygon `poly`? The question can be answered by inspection (points 1 and 3 are touching and within the polygon, respectively). This question can be answered with the `.intersects` method, as follows. Note that we evaluate the relation between each geometry in a `GeoSeries` (`points`) and a single `shapely` geometry (`poly.iloc[0]`). When both inputs are `GeoSeries`, a pairwise evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`):
+A simple query is: which of the points in `points` intersect in some way with polygon `poly`?
+The question can be answered by inspection (points 1 and 3 are touching and within the polygon, respectively). 
+This question can be answered with the `.intersects` method, as follows.
+Note that we evaluate the relation between each geometry in a `GeoSeries` (`points`) and a single `shapely` geometry (`poly.iloc[0]`). 
+When both inputs are `GeoSeries`, a pairwise evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`):
 
 ```{python}
 points.intersects(poly.iloc[0])
@@ -208,13 +223,17 @@ points.intersects(poly.iloc[0])
 
 The result is a boolean `Series`. Its contents should match your intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second are outside the polygon's border.
 
-Again, the above output is a `Series` where each value represents a feature in the first input (`points`). In case we need to obtain a matrix of *pairwise* results, we can use `.apply` as follows. In this case, the result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry (there is just one, in this case)L
+Again, the above output is a `Series` where each value represents a feature in the first input (`points`).
+In case we need to obtain a matrix of *pairwise* results, we can use `.apply` as follows. 
+In this case, the result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry (there is just one, in this case)L
 
 ```{python}
 points.apply(lambda x: poly.intersects(x))
 ```
 
-`.intersects` returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in Figure 4.2. More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it? These can be answered as follows:
+The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in Figure 4.2.
+More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it?
+These can be answered as follows:
 
 ```{python}
 points.within(poly.iloc[0])
@@ -224,19 +243,24 @@ points.within(poly.iloc[0])
 points.touches(poly.iloc[0])
 ```
 
-Note that although the first point touches the boundary polygon, it is not within it; the third point is within the polygon but does not touch any part of its border. The opposite of `.intersects` is `.disjoint`, which returns only objects that do not spatially relate in any way to the selecting object:
+Note that although the first point touches the boundary polygon, it is not within it; the third point is within the polygon but does not touch any part of its border. 
+The opposite of `.intersects` is `.disjoint`, which returns only objects that do not spatially relate in any way to the selecting object:
 
 ```{python}
 points.disjoint(poly.iloc[0])
 ```
 
-Another useful type of relation is "within distance", where we detect features that intersect with the target buffered by particular distance. Buffer distance determines how close target objects need to be before they are selected. This can be done by literally buffering (@sec-geometries) the target geometry, and evaluating intersection (`.intersects`, see above). Another way is to calculate the distances and compare them to the distance threshold:
+Another useful type of relation is "within distance", where we detect features that intersect with the target buffered by particular distance.
+Buffer distance determines how close target objects need to be before they are selected. This can be done by literally buffering (@sec-geometries) the target geometry, and evaluating intersection (`.intersects`, see above).
+Another way is to calculate the distances and compare them to the distance threshold:
 
 ```{python}
 points.distance(poly.iloc[0]) < 0.2
 ```
 
-Note that although point 2 is more than 0.2 units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to 0.2. This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure 4.2. We can verify the actual distance between point 2 and the polygon is 0.13, as follows:
+Note that although point 2 is more than 0.2 units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to 0.2. 
+This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure 4.2.
+We can verify the actual distance between point 2 and the polygon is 0.13, as follows:
 
 ```{python}
 points.iloc[1].distance(poly.iloc[0])
@@ -296,7 +320,9 @@ fig.delaxes(axes[1][1]);
 
 ### Non-overlapping joins
 
-Sometimes two geographic datasets do not touch but still have a strong geographic relationship. The datasets `cycle_hire` and `cycle_hire_osm`, provide a good example. Plotting them shows that they are often closely related but they do not touch, as shown in @fig-cycle-hire, which is created with the code below: 
+Sometimes two geographic datasets do not touch but still have a strong geographic relationship. 
+The datasets `cycle_hire` and `cycle_hire_osm`, provide a good example.
+Plotting them shows that they are often closely related but they do not touch, as shown in @fig-cycle-hire, which is created with the code below: 
 
 ```{python}
 #| label: fig-cycle-hire
@@ -306,7 +332,8 @@ base = cycle_hire.plot(edgecolor='blue', color='none')
 cycle_hire_osm.plot(ax=base, edgecolor='red', color='none');
 ```
 
-We can check if any points are the same by creating a pairwise boolean matrix of `.intersects` relations, then evaluating whether any of the values in it is `True`. Note that the `.to_numpy` method is applied to go from a `DataFrame` to a `numpy` array, for which `.any` gives a global rather than a row-wise summary, which is what we want in this case:
+We can check if any of the points are the same by creating a pairwise boolean matrix of `.intersects` relations, then evaluating whether any of the values in it is `True`. 
+Note that the `.to_numpy` method is applied to go from a `DataFrame` to a `numpy` array, for which `.any` gives a global rather than a row-wise summary, which is what we want in this case:
 
 ```{python}
 m = cycle_hire['geometry'].apply(
@@ -315,7 +342,11 @@ m = cycle_hire['geometry'].apply(
 m.to_numpy().any()
 ```
 
-Imagine that we need to join the capacity variable in `cycle_hire_osm` onto the official 'target' data contained in `cycle_hire`. This is when a non-overlapping join is needed. Spatial join (`gpd.sjoin`) along with buffered geometries can be used to do that. This is demonstrated below, using a threshold distance of 20 m. Note that we transform the data to a projected CRS (`27700`) to use real buffer distances, in meters. 
+Imagine that we need to join the capacity variable in `cycle_hire_osm` onto the official 'target' data contained in `cycle_hire`.
+This is when a non-overlapping join is needed. 
+Spatial join (`gpd.sjoin`) along with buffered geometries can be used to do that.
+This is demonstrated below, using a threshold distance of 20 m. 
+Note that we transform the data to a projected CRS (`27700`) to use real buffer distances, in meters. 
 
 ```{python}
 crs = 27700
@@ -328,7 +359,11 @@ z = gpd.sjoin(
 z
 ```
 
-The result `z` shows that there are 438 points in the target object `cycle_hire` within the threshold distance of `cycle_hire_osm`. Note that the number of rows in the joined result is greater than the target. This is because some cycle hire stations in `cycle_hire` have multiple matches in `cycle_hire_osm`. To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods learned in @attr, resulting in an object with the same number of rows as the target. We also go back from buffers to points using `.centroid`:
+The result `z` shows that there are 438 points in the target object `cycle_hire` within the threshold distance of `cycle_hire_osm`.
+Note that the number of rows in the joined result is greater than the target.
+This is because some cycle hire stations in `cycle_hire` have multiple matches in `cycle_hire_osm`.
+To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods learned in @attr, resulting in an object with the same number of rows as the target.
+We also go back from buffers to points using `.centroid`:
 
 ```{python}
 z = z[['id', 'capacity', 'geometry']] \
