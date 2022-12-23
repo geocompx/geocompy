@@ -1,60 +1,66 @@
 # ---
+# description-meta: |
+#   This book will teach you how to work with geographic data in Python.
+#   It's a short and practical open source book in which you'll
+#   develop and use geocomputation to solve practical
+#   problems and lay the foundations for advanced geospatial applications.
 # jupyter:
 #   jupytext:
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.1
+#       jupytext_version: 1.14.4
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
-# # Introduction
+# ::: {.content-visible when-format="html"}
 #
-# This site contains ideas, code and an outline of a yet-to-be written book on *Geocomputation with Python*.
+# ## Welcome {.unnumbered}
 #
-# ## Motivations
+# This is the online home of *Geocomputation with Python*, a book on reproducible geographic data analysis with open source software.
 #
-# *Geocomputation with Python*, is motivated by the need for an introductory yet rigorous and maintained resource on working with geographic data in Python.
-# A unique feature of the book is that it that demonstrates code for working with *both vector and raster* geographic data types.
-# <!-- , and how to use them together. -->
-# There are many resources on Python packages for geographic research and various applications but, to the best of our knowledge, no other resource brings together the following features into a single home:
+# Inspired by the Free and Open Source Software for Geospatial ([FOSS4G](https://foss4g.org/)) movement this is an *open source book*.
+# Find the code underlying the *geocompy* project on [GitHub](https://github.com/geocompr/py), ensuring that the content is reproducible, transparent, and accessible.
+# Making the book open source allows you or anyone else, to interact with the project by opening [issues](https://github.com/geocompr/py/issues), making typo fixes and more, for the benefit of everyone.
 #
-# 1. Small introductory textbook focuses on doing basic operations well
-# 2. Integration of vector and raster datasets in the same book, and within each section
-# 3. Clear explanation of the code and exercises to maximize learning for newcomers
-# 4. Provision of lucid example datasets and meaningful operations to illustrate the applied nature of geographic research
+# The book's website is built by GitHub Actions, which runs the code every time we make a change, ensuring code correctness and reproducibility.
+# The current build status as follows:
 #
-# The book aims to supplement other resources in the ecosystem, as highlighted by comparison with the book's scope with existing and in-progress works:
+# [![](https://github.com/geocompr/py/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompr/py/actions/workflows/main.yaml)
 #
-# - [Learning Geospatial Analysis with Python](https://www.packtpub.com/product/learning-geospatial-analysis-with-python/9781783281138) and [Geoprocessing with Python](https://www.manning.com/books/geoprocessing-with-python) focuses on processing spatial data using low-level Python interfaces for GDAL, such as the `gdal`, `gdalnumeric`, and `ogr` [packages](https://gdal.org/api/python.html) from `osgeo`. 
-# This approach is more complex, [less "Pythonic"](https://rasterio.readthedocs.io/en/latest/intro.html#philosophy), and perhaps outdated in light of development of packages such as `geopandas` and `rasterio` covered here
-# - [pythongis.org](https://pythongis.org/) (at an early stage of development) seeks to provide a general introduction to 'GIS in Python', with parts focusing on Python essentials, using Python with GIS, and case studies. 
-# Compared with pythongis.org, geocompy has a relatively narrow scope (1) and a greater focus on raster-vector interoperability
-# - [geographicdata.science](https://geographicdata.science/book/intro.html) is an ambitious project with chapters dedicated to advanced topics, with Chapter 4 on [Spatial Weights](https://geographicdata.science/book/notebooks/04_spatial_weights.html) getting into complex topics relatively early, for example.
-# Geocompy would be shorter, simpler and more introductory, and cover raster and vector data with equal importance (1 to 4)
+# You can run the code in the book using GitHub CodeSpaces as follows (requires a GitHub account):
 #
-# Geocompy is a sister project of [Geocomputation with R](https://geocompr.robinlovelace.net/) -- a book on geographic data analysis, visualization, and modeling using the R programming language.
+# [![](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
+#
+# For details on reproducing the book, see the README in the project's GitHub repo: <https://github.com/geocompr/py>.
+#
+# <!-- 
+# Note: we don't need this here but commenting out the content rather than deleting because some of it could be ported into the README.
+# Reasonable? 
+# Happy for these lines to be deleted also (RL 2022-12)
 #
 # ## Reproducing this book
 #
-# An important aspect of scientific research and 'citizen science' that is participatory is reproducibility of results.
+# An important aspect of scientific research that results can be independently verified by others.
+# Information that is generated by scientific means does not on auguments of authority or other [logical fallacies](https://bookofbadarguments.com/) as the basis for belief.
+# Instead science relies on a network of people who are open minded yet skeptical to test assumptions and in some cases 'bust myths'.
 #
-# To reproduce this book you can simply click on the link below to see the code running in your web browser (see details of how this works at [mybinder.org](https://mybinder.org/)):
+# In the digital age, trust in claims depends on computational reproducibility.
 #
-# [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb)
+# ### Local with Quarto
 #
-# To run the code locally, recommended for using the material on real data, you need to have a reasonable computer, e.g. with 8 GB RAM.
+# To run the code locally, recommended for using the material on real data, you need to have a reasonable computer, e.g., with 8 GB RAM.
 # You'll need administrative rights to install the requirements, which include:
 #
 # - A suitable integrated development environment (IDE) such as VS Code, RStudio or Jupyter Notebook
 # - Quarto, if you want to reproduce the book's open access website
 # - Either an Anaconda-like environment (we recommend `miniconda3`) or Docker to get systems dependencies
 #
-# See the project's README for details on getting set-up.
+# See the [project's README](https://github.com/geocompr/py) for details on getting set-up.
 # After you have installed the necessary dependencies and cloned or [unzipped](https://github.com/geocompr/py/archive/refs/heads/main.zip) the book's source code, you should be able to reproduce the code in its entirety with the following command:
 #
 # ```bash
@@ -64,4 +70,15 @@
 # If you see output like that below (with the IDE and browser arranged to see live updates after editing the source code), congratulations, it has worked!
 #
 # ![](https://user-images.githubusercontent.com/1825120/161321382-ac36aeab-5628-4bef-b3dd-7b2becdd4860.png)
+#
+# ### Local with Jupyter
+#
+# Alternatively, you can [download](https://github.com/geocompr/py/archive/refs/heads/main.zip) and unzip the book's source code. The unzipped directory `py-main/code/chapters/` contains:
+#
+# * The source `ipynb` files, one for each chapter
+# * The `data` sub-directory with the sample data used in the code sections
+#
+# Assuming that all required packages are installed (see beginning of each chapter), you can execute the `ipynb` files through your chosen working environment (VScode, Jupyter Notebook, etc.).  -->
+#
+# :::
 #

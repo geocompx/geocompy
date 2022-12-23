@@ -5,14 +5,14 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.1
+#       jupytext_version: 1.14.4
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
-# # Geographic data in Python {#spatial-class}
+# # Geographic data in Python {#sec-spatial-class}
 #
 # ## Introduction
 #
@@ -21,17 +21,18 @@
 # * **shapely** and **geopandas** --- for working with vector layers
 # * **rasterio** and **xarray** --- for working with rasters
 #
-# As we will see in the code chunks presented later in this chapter, **shapely** and **geopandas** are related:
+# As we will see in the example code presented later in this chapter, **shapely** and **geopandas** are related:
 #
 # * **shapely** is a "low-level" package for working with individual vector geometry objects
 # * **geopandas** is a "high-level" package for working with geometry columns (`GeoSeries` objects), which internally contain **shapely** geometries, and vector layers (`GeoDataFrame` objects)
 #
 # The **geopandas** ecosystem provides a comprehensive approach for working with vector layers in Python, with many packages building on it.
 # This is not the case for raster data, however: there are several partially overlapping packages for working with raster data, each with its own advantages and disadvantages. 
-# In this book we focus on the two most prominent ones:
+# In this book we focus on the most prominent one:
 #
 # * **rasterio** --- a spatial-oriented package, focused on "simple" raster formats (such as GeoTIFF), representing a raster using a combination of a `numpy` array, and a metadata object (`dict`) specifying the spatial referencing of the array
-# * **xarray** --- A general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster format (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`
+#
+# Another raster-related package worth mentioning is **xarray**. It is a general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster format (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`
 #
 # This chapter will briefly explain the fundamental geographic data models: vector and raster. 
 # Before demonstrating their implementation in Python, we will introduce the theory behind each data model and the disciplines in which they predominate.
@@ -90,41 +91,43 @@
 #
 # The main classes for working with geographic vector data in Python are hierarchical, meaning the highest level 'vector layer' class is composed of simpler 'geometry column' and individual 'geometry' components.
 # This section introduces them in order, starting with the highest level class.
-# For many applications, the high level vector layer class, which are essentially data frame with geometry columns, are that's needed.
+# For many applications, the high level vector layer class, which are essentially a data frame with geometry columns, are all that's needed.
 # However, it's important to understand the structure of vector geographic objects and their component pieces for more advanced applications.
 # The three main vector geographic data classes in Python are:
 #
 # * `GeoDataFrame`, a class representing vector layers, with a geometry column (class `GeoSeries`) as one of the columns
 # * `GeoSeries`, a class that is used to represent the geometry column in `GeoDataFrame` objects
-# * `shapely` objects which represent individual geometries such as a point or a polygon
+# * `shapely` geometry objects which represent individual geometries, such as a point or a polygon
 #
 # The first two classes (`GeoDataFrame` and `GeoSeries`) are defined in **geopandas**.
 # The third class is defined in the **shapely** package, which deals with individual geometries, and is a main dependency of the **geopandas** package.
 #
-# ### Vector layers
+# ### Vector layers {#sec-vector-layers}
 #
 # The most commonly used geographic vector data structure is the vector layer.
 # There are several approaches for working with vector layers in Python, ranging from low-level packages (e.g., **osgeo**, **fiona**) to the relatively high-level **geopandas** package that is the focus of this section.
 # Before writing and running code for creating and working with geographic vector objects, we therefore import **geopandas** (by convention as `gpd` for more concise code) and **shapely**:
 
+import pandas as pd
 import geopandas as gpd
 import shapely.geometry
 import shapely.wkt
 
 # We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**:
 
-import pandas as pd
 pd.set_option('display.max_rows', 4)
 
 # Projects often start by importing an existing vector layer saved as an ESRI Shapefile (`.shp`), a GeoPackage (`.gpkg`) file, or other geographic file format.
 # The function `read_file()` in the following line of code imports a GeoPackage file named `world.gpkg` located in the `data` directory of Python's working directory into a `GeoDataFrame` named `gdf`:
 
+# +
 #| echo: false
 #| label: getdata
 from pathlib import Path
 import os
 import shutil
 data_path = Path('data')
+
 if data_path.is_dir():
   pass
   # print('path exists') # directory exists
@@ -134,7 +137,9 @@ else:
   r = requests.get('https://github.com/geocompr/py/releases/download/0.1/data.zip')
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall('.')
+
 data_path = Path('data/cycle_hire_osm.gpkg')
+
 if data_path.is_file():
   pass
   # print('path exists') # directory exists
@@ -144,17 +149,20 @@ else:
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall('.')
   shutil.copytree('py-main/data', 'data', dirs_exist_ok=True) 
+
 data_path = Path('output')
+
 if data_path.is_dir():
   pass
   # print('path exists') # directory exists
 else:
   print('Attempting to move data')
   shutil.copytree('py-main/output', 'output', dirs_exist_ok=True) 
+# -
 
 gdf = gpd.read_file('data/world.gpkg')
 
-# As  result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code chunk:
+# As  result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code:
 
 #| label: typegdf
 type(gdf)
@@ -168,7 +176,7 @@ gdf.shape
 gdf = gdf[['name_long', 'geometry']]
 gdf
 
-# The following expression creates a subset based on a condition, such as equality of the `'name_long'` column to the string `'Egypt'`:
+# The following expression creates a subset based on a condition, such as equality of the value in the `'name_long'` column to the string `'Egypt'`:
 
 gdf[gdf['name_long'] == 'Egypt']
 
@@ -180,6 +188,10 @@ gdf.plot();
 
 gdf.explore()
 
+# And consequently, a subset can be plotted using: 
+
+gdf[gdf['name_long'] == 'Egypt'].explore()
+
 # +
 #| echo: false
 # (Alternative)
@@ -189,7 +201,7 @@ gdf.explore()
 # gdf.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
 # -
 
-# ### Geometry columns
+# ### Geometry columns {#sec-geometry-columns}
 #
 # A vital column in a `GeoDataFrame` is the geometry column, of class `GeoSeries`.
 # The geometry column contains the geometric part of the vector layer.
@@ -197,22 +209,22 @@ gdf.explore()
 
 gdf['geometry']
 
-# The geometry column also contains the spatial reference information, if any.
-#
+# The geometry column also contains the spatial reference information, if any:
+
+gdf['geometry'].crs
+
 # Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
 # Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
-# The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids (results not shown):
+# The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids:
 
-#| eval: false
 gdf.centroid
 
-#| eval: false
 gdf['geometry'].centroid
 
 # <!-- Note: the attribute data is lost in the first example, right? Worth stating that? (RL 2022-07) -->
 #
-# Another useful property of the geometry column is the geometry type, as shown in the following code chunk. 
-# Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same.
+# Another useful property of the geometry column is the geometry type, as shown in the following code. 
+# Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same for every row.
 # Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value:
 
 gdf['geometry'].type
@@ -222,8 +234,20 @@ gdf['geometry'].type
 gdf['geometry'].type.value_counts()
 
 # In this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
-# It is possible to have multiple geometry types in a single `GeoDataFrame`.
-#
+# It is possible to have multiple geometry types in a single `GeoSeries` and a `GeoDataFrame` can have multiple `GeoSeries`:
+
+gdf['centroids'] = gdf.centroid
+gdf['polygons'] = gdf.geometry
+gdf
+
+# To switch the geometry column from one ``GeoSeries` column to another, we use `set_geometry`:
+
+gdf.set_geometry('centroids', inplace=True)
+gdf.explore()
+
+gdf.set_geometry('polygons', inplace=True)
+gdf.explore()
+
 # ### The Simple Features standard
 #
 # Geometries are the basic building blocks of vector layers. 
@@ -281,7 +305,7 @@ gdf['geometry'].type.value_counts()
 # GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
 # ```
 #
-# ### Geometries
+# ### Geometries {#sec-geometries}
 #
 # Each element in the geometry column is a geometry object, of class `shapely`.
 # For example, here is one specific geometry selected by implicit index (that of Canada):
@@ -303,7 +327,7 @@ gdf[gdf['name_long'] == 'Egypt']['geometry'].iloc[0]
 #
 # Creating a `'Point'` geometry from a list of coordinates uses the `shapely.geometry.Point` function:
 
-point = shapely.geometry.Point(5, 2)
+point = shapely.geometry.Point([5, 2])
 point
 
 # Alternatively, we can use the `shapely.wkt.loads` (stands for "load a WKT *s*tring") to transform a WKT string to a `shapely` geometry object. 
@@ -312,22 +336,22 @@ point
 point = shapely.wkt.loads('POINT (5 2)')
 point
 
-# Here is an example of a `'MultiPoint'` geometry:
+# Here is an example of a `'MultiPoint'` geometry from a list of coordinate tuples:
 
 multipoint = shapely.geometry.MultiPoint([(5,2), (1,3), (3,4), (3,2)])
 multipoint
 
-# Here is an example of a `'LineString'` geometry:
+# Here is an example of a `'LineString'` geometry from a list of coordinate tuples:
 
 linestring = shapely.geometry.LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
 linestring
 
-# Here is an example of a `'MultiLineString'` geometry:
+# Here is an example of a `'MultiLineString'` geometry. Note that there is one list of coordinates for each line in the `MultiLineString`:
 
 linestring = shapely.geometry.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
 linestring
 
-# Here is an example of a `'Polygon'` geometry:
+# Here is an example of a `'Polygon'` geometry. Note that there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a list of lists of coordinates that define the potential holes in the polygon:
 
 polygon = shapely.geometry.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
 polygon
@@ -364,9 +388,104 @@ linestring.geom_type
 
 # Finally, it is important to note that raw coordinates of `shapely` geometries are accessible through a combination of the `.coords`, `.geoms`, `.exterior`, and `.interiors`, properties (depending on the geometry type). 
 # These access methods are helpful when we need to develop our own spatial operators for specific tasks. 
-# For example, the following expression returns the coordinates of the `polygon` geometry exterior (note that the returned object is iterable, thus enclosed in a `list` to return all coordinates at once):
+# For example, the following expression returns the `list` of all coordinates of the `polygon` geometry exterior:
 
 list(polygon.exterior.coords)
+
+# ### Vector layer from scratch
+#
+# In the previous sections we started with a vector layer (`GeoDataFrame`), from an existing Shapefile, and "decomposed" it to extract the geometry column (`GeoSeries`, @sec-geometry-columns) and separate geometries (`shapely`, see @sec-geometries).
+# In this section, we will demonstrate the opposite process, constructing a `GeoDataFrame` from `shapely` geometries, combined into a `GeoSeries`.
+# This will:
+#
+# * Help you better understand the structure of a `GeoDataFrame`, and
+# * May come in handy when you need to programmatically construct simple vector layers, such as a line between two given points, etc.
+#
+# Vector layers consist of two main parts: geometries and non-geographic attributes. Figure ... shows how a `GeoDataFrame` object is created – geometries come from a `GeoSeries` object, while attributes are taken from `Series` objects. 
+#
+# (Figure such as https://geocompr.robinlovelace.net/spatial-class.html#fig:02-sfdiagram)
+#
+# Non-geographic attributes represent the name of the feature or other attributes such as measured values, groups, and other things. To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2017. This example contains a geometry (the coordinates), and three attributes with three different classes (place name, temperature and date). Objects of class `GeoDataFrame` represent such data by combining the attributes (`Series`) with the simple feature geometry column (`GeoSeries`). First, we create a point geometry, which we know how to do from @sec-geometries:
+
+lnd_point = shapely.geometry.Point(0.1, 51.5)
+lnd_point
+
+# Next, we create a `GeoSeries` (of length 1), containing the point. Note that a `GeoSeries` stores a CRS definition, in this case WGS84 (defined using its EPSG code `4326`). Also note that the `shapely` geometries go into a `list`, to illustrate that there can be more than one (unlike in this example):
+
+lnd_geom = gpd.GeoSeries([lnd_point], crs=4326)
+lnd_geom
+
+# Next, we combine the `GeoSeries` with other attributes into a `dict`. The geometry column is a `GeoSeries`, named `geometry`. The other attributes (if any) may be defined using `list` or `Series` objects. Here, for simplicity, we use the `list` option for defining the three attributes `name`, `temperature`, and `date`. Again, note that the `list` can be of length >1, in case we are creating a layer with more than one feature:
+
+d = {
+  'name': ['London'],
+  'temperature': [25],
+  'date': ['2017-06-21'],
+  'geometry': lnd_geom
+}
+
+# Finally, the `dict` can be coverted to a `GeoDataFrame`:
+
+lnd_layer = gpd.GeoDataFrame(d)
+lnd_layer
+
+# What just happened? First, the coordinates were used to create the simple feature geometry (`shapely`). Second, the geometry was converted into a simple feature geometry column (`GeoSeries`), with a CRS. Third, attributes were combined with `GeoSeries`. This results in an `GeoDataFrame` object, named `lnd_layer`.
+#
+# Just to illustrate how does creating a layer with more than one feature looks like, here is an example where we create a layer with two points, London and Paris:
+
+lnd_point = shapely.geometry.Point(0.1, 51.5)
+paris_point = shapely.geometry.Point(2.3, 48.9)
+towns_geom = gpd.GeoSeries([lnd_point, paris_point], crs=4326)
+d = {
+  'name': ['London', 'Paris'],
+  'temperature': [25, 27],
+  'date': ['2017-06-21', '2017-06-21'],
+  'geometry': towns_geom
+}
+towns_layer = gpd.GeoDataFrame(d)
+towns_layer
+
+# The following expression creates an interactive map with the result:
+
+towns_layer.explore()
+
+# Alternatively, we can first create a `pandas.DataFrame` and turn it into a `GeoDataFrame` like this:
+
+towns_table = pd.DataFrame({
+  'name': ['London', 'Paris'],
+  'temperature': [25, 27],
+  'date': ['2017-06-21', '2017-06-21'],
+  'x': [0.1, 2.3],
+  'y': [51.5, 48.9]
+})
+towns_geom = gpd.points_from_xy(towns_table['x'], towns_table['y'])
+towns_layer = gpd.GeoDataFrame(towns_table, geometry=towns_geom, crs=4326)
+towns_layer.explore()
+
+# This approach is particularly useful when we need to read data from a CSV file, e.g., using `pandas.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame`.
+#
+# ### Derived numeric properties {#sec-area-length}
+#
+# Vector layers are characterized by two essential derived numeric properties: 
+#
+# * Length (`.length`)---Applicable to lines
+# * Area (`.area`)---Applicable to polygons
+#
+# Area and length can be calculated for any data structures discussed above, either a `shapely` geometry, in which case the returned value is a number:
+
+linestring.length
+
+multipolygon.area
+
+# or for `GeoSeries` or `DataFrame`, in which case the returned value is a numeric `Series`:
+
+gdf.area
+
+# Like all numeric calculations in `geopandas`, the results assume a planar CRS and are returned in its native units. This means that length and area measurements for geometries in WGS84 (`crs=4326`) are returned in decimal degrees and essentially meaningless, thus the warning in the above command. 
+#
+# To obtain true length and area measurements, the geometries first need to be transformed to a projected CRS (see @sec-reprojecting-vector-geometries) applicable to the area of interest. For example, the area of Slovenia can be calculated in the UTM zone 33N CRS (`crs=32633`). The result is in the CRS units, namely $m^2$:
+
+gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
 
 # ## Raster data
 #
@@ -380,14 +499,13 @@ list(polygon.exterior.coords)
 # Specifically, **rasterio** represents rasters as **numpy** arrays associated with a separate object holding the spatial metadata.
 # The **xarray** package, however, represents rasters with the native `DataArray` object, which is an extension of **numpy** array designed to hold axis labels and attributes, in the same object, together with the array of raster values.
 #
-# Both packages are not exhaustive in the same way as **geopandas** is. 
+# Both packages are not exhaustive in the same way **geopandas** is. 
 # For example, when working with **rasterio**, on the one hand, more packages may be needed to accomplish common tasks such as zonal statistics (package **rasterstats**) or calculating topographic indices (package **richdem**). 
 # On the other hand, **xarray** was extended to accommodate spatial operators missing from the core package itself, with the **rioxarray** and **xarray-spatial** packages.
 #
-# In the following two sections, we introduce the two well-established packages, **rasterio** and **xarray**, which form the basis for most raster functionality in Python. 
-# Using any of the add-on packages, or the extensions, should be straightforward, once the reader is familiar with the basics.
+# In the following two sections, we introduce **rasterio**, which is the raster-related package we are going to work with through the rest of the book. 
 #
-# ### Using **rasterio**
+# ### Using **rasterio** {#sec-using-rasterio}
 #
 # To work with the **rasterio** package, we first need to import it.
 # We also import **numpy**, since the underlying raster data are stored in **numpy** arrays.
@@ -409,16 +527,17 @@ import subprocess
 # The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size. 
 # Accordingly, the second step (`.read`) is selective. For example, we may want to read just one raster band rather than reading all bands.
 #
-# In the first step, we pass a file path to the `rasterio.open` function to create a file connection. 
+# In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection. 
 # For this example, we use a single-band raster representing elevation in Zion National Park:
 
 src = rasterio.open('data/srtm.tif')
+src
 
-# To get a first impression of the raster values, we can plot it using the `show` function:
+# To get a first impression of the raster values, we can plot the raster using the `show` function:
 
 show(src);
 
-# The "connection" object contains the raster metadata, that is, all of the information other than the raster values.
+# The `DatasetReader` contains the raster metadata, that is, all of the information other than the raster values.
 # Let us examine it:
 
 src.meta
@@ -441,7 +560,7 @@ src.meta
 #
 # Note that, by convention, raster y-axis origin is set to the maximum value ($y_{max}$) rather than the minimum, and, accordingly, the y-axis resolution ($delta_{y}$) is negative. 
 #
-# The `.read` method of a raster file connection object is used to read the last but not least piece of information: the raster values.
+# Finally, the `.read` method of the `DatasetReader` is used to read the actual raster values.
 # Importantly, we can read:
 #
 # * A particular layer, passing a numeric index (as in `.read(1)`)
@@ -463,23 +582,98 @@ s
 
 # The result `s` is a two-dimensional `numpy` array.
 #
-# ### Using `xarray`
+# ### Raster from scratch
 #
-# <!-- TODO: content ... -->
+# In this section, we are going to demonstrate creation of rasters from scratch. We are going to create two small rasters, `elev` and `grain`, which we are going to use in examples later on in the book. Unlike creating a vector layer, creating a raster from scratch is rarely needed in practive because aligning a raster with the right spatial extent is difficult to do programmatically (GIS software is a better fit for the job). Nevertheless, the examples will be useful to become more familiar with the `rasterio` data structures.
+#
+# A raster is basically an array combined with georeferencing information, namely:
+#
+# * A transformation matrix (linking pixel indices with coordinates)
+# * A CRS definition
+#
+# Therefore, to create a raster, we first need to have an array with the values, then supplement it with the georeferencing information. Let's create the arrays `elev` and `grain`. The `elev` array is a 6 by 6 array with sequential values from 1 to 36. It can be created as follows:
 
-import xarray as xr
+elev = np.arange(1, 37, dtype=np.uint8).reshape(6, 6)
+elev
 
-# Reading [source](https://crudata.uea.ac.uk/cru/data//temperature/):
+# The `grain` array represents a categorical raster with values `0`, `1`, `2`, corresponding to categories "clay", "silt", "sand", respectively. We will create if from a specific arrangement of pixel values, as follows:
 
-x = xr.open_dataset('data/absolute_v5.nc')
-x
+v = [1, 0, 1, 2, 2, 2, 0, 2, 0, 0, 2, 1, 0, 2, 2, 0, 0, 2, 0, 0, 1, 1,
+       1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 2, 2, 0, 2]
+grain = np.array(v, dtype=np.uint8).reshape(6, 6)
+grain
 
-x['tem']
+# Note that in both cases we are using the `uint8` (unsigned integer in 8 bits, i.e., `0-255`) data type, which is minimally sufficient to represent all possible values of the given rasters. This is the recommended approach for a minimal memory footprint.
+#
+# What is missing is the raster transform (see @sec-using-rasterio). In this case, since the rasters are arbitrary, we also set up an arbitrary transformation matrix, where:
+#
+# * the origin ($x_{min}$, $y_{max}$) is at `-1.5,1.5`, and
+# * and resolution ($delta_{x}$, $delta_{y}$) is `0.5,-0.5`.
+#
+# In terms of code, we do that as follows, using `rasterio.transform.from_origin`:
 
-# Plot:
+new_transform = rasterio.transform.from_origin(west=-1.5, north=1.5, xsize=0.5, ysize=0.5)
+new_transform
 
-x['tem'].plot(col='time', col_wrap=4)
+# Note that, confusingly, $delta_{y}$ is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is eventuially negative (`-0.5`)! 
+#
+# The raster can now be plotted in its coordinate system, passing the array along with the transformation matrix to `show`:
 
+show(elev, transform=new_transform);
+
+# The `grain` raster can be plotted the same way, as we are going to use the same transformation matrix for it as well:
+
+show(grain, transform=new_transform);
+
+# At this point, we can work with the raster using `rasterio`:
+#
+# * Passing the transformation matrix wherever true raster pixel coordinates are important (such as in function `show` above)
+# * Keeping in mind that any other layer we use in the analysis is in the same CRS of those coordinates
+#
+# Finally, to export the raster for permanent storage, along with the CRS definition, we need to go through the following steps:
+#
+# * Create a raster file connection (where we set the transform and the CRS, among other settings)
+# * Write the array with raster values into the connection
+# * Close the connection
+#
+# In the case of `elev`, we do it as follows:
+
+new_dataset = rasterio.open(
+    'output/elev.tif', 'w', 
+    driver='GTiff',
+    height=elev.shape[0],
+    width=elev.shape[1],
+    count=1,
+    dtype=elev.dtype,
+    crs=4326,
+    transform=new_transform
+)
+new_dataset.write(elev, 1)
+new_dataset.close()
+
+# Note that the CRS we (arbitrarily) set for the `elev` raster is WGS84, defined using `crs=4326` according to the EPSG code.
+#
+# Here is how we export the `grain` raster as well, using almost the exact same code just with `elev` replaced with `grain`:
+
+new_dataset = rasterio.open(
+    'output/grain.tif', 'w', 
+    driver='GTiff',
+    height=grain.shape[0],
+    width=grain.shape[1],
+    count=1,
+    dtype=grain.dtype,
+    crs=4326,
+    transform=new_transform
+)
+new_dataset.write(grain, 1)
+new_dataset.close()
+
+# Don't worry if the raster export code is unclear. We will elaborate on the details of raster output in @read-write. 
+#
+# As a result, the files `elev.tif` and `grain.tif` are written into the `output` directory. These are identical to the `elev.tif` and `grain.tif` files in the `data` directory which we use later on in the examples (for example, @sec-raster-subsetting).
+#
+# Note that the transform matrices and dimensions of `elev` and `grain` are identical. This means that the rasters are overlapping, and can be combined into one two-band raster, combined in raster algebra operations (@sec-map-algebra), etc.
+#
 # ## Coordinate Reference Systems
 #
 # Vector and raster spatial data types share concepts intrinsic to spatial data. 
