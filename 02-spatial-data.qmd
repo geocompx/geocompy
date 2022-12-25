@@ -456,9 +456,13 @@ This will:
 * Help you better understand the structure of a `GeoDataFrame`, and
 * May come in handy when you need to programmatically construct simple vector layers, such as a line between two given points, etc.
 
-Vector layers consist of two main parts: geometries and non-geographic attributes. Figure ... shows how a `GeoDataFrame` object is created – geometries come from a `GeoSeries` object, while attributes are taken from `Series` objects. 
+Vector layers consist of two main parts: geometries and non-geographic attributes. @fig-gdf-flow shows how a `GeoDataFrame` object is created---geometries come from a `GeoSeries` object (which consists of `shapely` geometries), while attributes are taken from `Series` objects. 
 
-(Figure such as https://geocompr.robinlovelace.net/spatial-class.html#fig:02-sfdiagram)
+![Creating a `GeoDataFrame` from scratch](images/gdf-flow.svg){#fig-gdf-flow}
+
+The final result, a vector layer (`GeoDataFrame`) is therefore a hierarchical structure (@fig-gdf-structure), containing the geometry column (`GeoSeries`), which in turn contains geometries (`shapely`). Each of the "internal" components can be accessed, or "extracted", which is sometimes necessary, as we will see later on.
+
+![Structure of a `GeoDataFrame`](images/gdf-structure.svg){#fig-gdf-structure}
 
 Non-geographic attributes represent the name of the feature or other attributes such as measured values, groups, and other things. To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2017. This example contains a geometry (the coordinates), and three attributes with three different classes (place name, temperature and date). Objects of class `GeoDataFrame` represent such data by combining the attributes (`Series`) with the simple feature geometry column (`GeoSeries`). First, we create a point geometry, which we know how to do from @sec-geometries:
 
@@ -528,7 +532,12 @@ towns_table = pd.DataFrame({
 })
 towns_geom = gpd.points_from_xy(towns_table['x'], towns_table['y'])
 towns_layer = gpd.GeoDataFrame(towns_table, geometry=towns_geom, crs=4326)
-towns_layer.explore()
+```
+
+which gives the same result `towns_layer`:
+
+```{python}
+towns_layer
 ```
 
 This approach is particularly useful when we need to read data from a CSV file, e.g., using `pandas.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame`.
