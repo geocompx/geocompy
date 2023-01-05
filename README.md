@@ -1,6 +1,6 @@
 # geocompy
 
-[![Render](https://github.com/geocompr/py/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompr/py/actions/workflows/main.yaml)
+[![Render](https://github.com/geocompx/geocompy/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompx/geocompy/actions/workflows/main.yaml)
 <!-- [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb) -->
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 
@@ -39,7 +39,7 @@ quarto preview
 
 ![](https://user-images.githubusercontent.com/1825120/202933280-e313c076-f188-4efd-9de1-5625eb169045.png)
 
-If you have any issues related to running the code in Codespaces let us know in the [issue tracker](https://github.com/geocompr/py/issues/114).
+If you have any issues related to running the code in Codespaces let us know in the [issue tracker](https://github.com/geocompx/geocompy/issues/114).
 
 ## Reproduce the book with Docker (devcontainer)
 
