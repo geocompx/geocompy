@@ -19,6 +19,7 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Packages...
 
 ```{python}
+import numpy as np
 import shapely.geometry
 import geopandas as gpd
 import topojson as tp
@@ -268,9 +269,102 @@ Imagine you want to select not one circle or the other, but the space covered by
 x.intersection(y)
 ```
 
+The next lines of code demonstrate how this works for the `.difference`, `.union`, and `.symmetric_difference` operators:
+
+```{python}
+x.difference(y)
+```
+
+```{python}
+x.union(y)
+```
+
+```{python}
+x.symmetric_difference(y)
+```
+
 ### Subsetting and clipping
 
-...
+Clipping objects can change their geometry but it can also subset objects, returning only features that intersect (or partly intersect) with a clipping/subsetting object. 
+To illustrate this point, we will subset points that cover the bounding box of the circles x and y in @fig-overlapping-circles. 
+Some points will be inside just one circle, some will be inside both and some will be inside neither. 
+The following code sections generates a simple random distribution of points within the extent of circles x and y, resulting in output illustrated in @fig-random-points. 
+We do this in two steps. First, we figure out the bounds where random points are to be generated:
+
+```{python}
+bounds = x.union(y).bounds
+bounds
+```
+
+Second, we use `np.random.uniform` to calculate `n` random x and y coordinates within the given bounds:
+
+```{python}
+np.random.seed(1)
+n = 10  ## Number of points to generate
+coords_x = np.random.uniform(bounds[0], bounds[2], n)
+coords_y = np.random.uniform(bounds[1], bounds[3], n)
+coords = list(zip(coords_x, coords_y))
+coords
+```
+
+Third, we transform the list of coordinates into a `list` of `shapely` points:
+
+```{python}
+pnt = [shapely.geometry.Point(i) for i in coords]
+pnt
+```
+
+and then to a `GeoSeries`:
+
+```{python}
+pnt = gpd.GeoSeries(pnt)
+pnt
+```
+
+The result is shown in @fig-random-points:
+
+```{python}
+#| label: fig-random-points
+#| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
+
+base = pnt.plot(color='none', edgecolor='black')
+gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
+gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
+```
+
+Now, we get back to our question: how to subset the points to only return the point that intersects with both x and y? 
+The code chunks below demonstrate three ways to achieve the same result. 
+We can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of x and y: 
+
+```{python}
+sel = pnt.intersects(x.intersection(y))
+sel
+```
+
+then use it to subset `pnt` to get the result `pnt1`:
+
+```{python}
+pnt1 = pnt[sel]
+pnt1
+```
+
+We can also find the intersection between the input points represented by `pnt`, using the intersection of `x` and `y` as the subsetting/clipping object. Since the second argument is an individual `shapely` geometry (`x.intersection(y)`), we get "pairwise" intersections of each `pnt` with it: 
+
+```{python}
+pnt2 = pnt.intersection(x.intersection(y))
+pnt2
+```
+
+Empty geometries can be filtered out to retain the required subset, and to get `pnt2` which is identical to `pnt1`:
+
+```{python}
+pnt2 = pnt2[~pnt2.is_empty]  ## Subset non-empty geometries
+pnt2
+```
+
+This second approach will return features that partly intersect with `x.intersection(y)` but with modified geometries for spatially extensive features that cross the border of the subsetting object. The results are identical, but the implementation differs substantially.
+
+Although the example above is rather contrived and provided for educational rather than applied purposes, and we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in R, it raises an important question: which implementation to use? Generally, more concise implementations should be favored, meaning the first approach above. We will return to the question of choosing between different implementations of the same technique or algorithm in Chapter 11.
 
 ### Geometry unions {#sec-geometry-unions}
 
@@ -335,10 +429,12 @@ and then dissove using `.unary_union`. The result is identical in both cases, sh
 texas_union
 ```
 
-
 ### Type transformations {#sec-type-transformations}
 
-Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. The `shapely` package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.geometry.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
+Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. 
+The `shapely` package can be used for geometry casting. 
+The exact expression(s) depend on the specific transformation we are interested in. 
+In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.geometry.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
 
 Let's create a `"MultiPoint"` to illustrate how geometry casting works on `shapely` geometry objects:
 
