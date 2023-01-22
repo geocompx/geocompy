@@ -227,7 +227,7 @@ gdf['geometry'].crs
 
 Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
 Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
-The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids (note: only the geometry is returned, not the attribute data):
+The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids:
 
 ```{python}
 gdf.centroid
@@ -235,6 +235,14 @@ gdf.centroid
 
 ```{python}
 gdf['geometry'].centroid
+```
+
+Note that `.centroid`, and other similar operators in `geopandas` such as `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data. In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we don't need the original ones, as in `gdf['geometry']=gdf.centroid`):
+
+```{python}
+gdf2 = gdf.copy()
+gdf2['geometry'] = gdf.centroid
+gdf2
 ```
 
 Another useful property of the geometry column is the geometry type, as shown in the following code. 
