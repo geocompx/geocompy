@@ -169,7 +169,7 @@ In the following examples, we use a third-party package called `rasterstats`, wh
 * to *points*, via the `rasterstats.point_query` function, or 
 * to *polygons*, via the `rasterstats.zonal_stats` function.
 
-### Extraction to points
+### Extraction to points {#sec-extraction-to-points}
 
 The basic example is of extracting the value of a raster cell at specific points. For this purpose, we will use `zion_points`, which contain a sample of 30 locations within the Zion National Park (Figure ...). The following expression extracts elevation values from `srtm`:
 
@@ -198,39 +198,99 @@ zion_points
 
 ### Extraction to lines
 
-Raster extraction also works with line selectors. Then, it extracts one value for each raster cell touched by a line. However, the line extraction approach is not recommended to obtain values along the transects as it is hard to get the correct distance between each pair of extracted raster values.
+Raster extraction is also applicable with line selectors. 
+The typical line extraction algorithm is to extract one value for each raster cell touched by a line. 
+However, this particular approach is not recommended to obtain values along the transects, as it is hard to get the correct distance between each pair of extracted raster values.
 
-In this case, a better approach is to split the line into many points and then extract the values for these points. To demonstrate this, the code below creates zion_transect, a straight line going from northwest to southeast of the Zion National Park, illustrated in Figure 6.3(A) (see Section 2.2 for a recap on the vector data model):
+For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points. 
+To demonstrate this, the code below creates `zion_transect`, a straight line going from northwest to southeast of the Zion National Park (see @sec-vector-data for a recap on the vector data model):
 
-zion_transect = cbind(c(-113.2, -112.9), c(37.45, 37.2)) |>
-  st_linestring() |> 
-  st_sfc(crs = crs(srtm)) |>
-  st_sf(geometry = _)
+```{python}
+coords = [[-113.2, 37.45], [-112.9, 37.2]]
+zion_transect = shapely.geometry.LineString(coords)
+zion_transect
+```
 
-The utility of extracting heights from a linear selector is illustrated by imagining that you are planning a hike. The method demonstrated below provides an ‘elevation profile’ of the route (the line does not need to be straight), useful for estimating how long it will take due to long climbs.
+Here is a printout demonstrating that this is a `"LineString"` geometry representing a straight line between two points:
 
-The first step is to add a unique id for each transect. Next, with the st_segmentize() function we can add points along our line(s) with a provided density (dfMaxLength) and convert them into points with st_cast().
+```{python}
+print(zion_transect)
+```
 
-zion_transect$id = 1:nrow(zion_transect)
-zion_transect = st_segmentize(zion_transect, dfMaxLength = 250)
-zion_transect = st_cast(zion_transect, "POINT")
+The line is illustrated in the context of the raster in @fig-zion-transect.
 
-Now, we have a large set of points, and we want to derive a distance between the first point in our transects and each of the subsequent points. In this case, we only have one transect, but the code, in principle, should work on any number of transects:
+The utility of extracting heights from a linear selector is illustrated by imagining that you are planning a hike. 
+The method demonstrated below provides an 'elevation profile' of the route (the line does not need to be straight), useful for estimating how long it will take due to long climbs.
 
-zion_transect = zion_transect |> 
-  group_by(id) |> 
-  mutate(dist = st_distance(geometry)[, 1]) 
+First, we need to create a layer `zion_transect_pnt` consisting of points along our line (`zion_transect`), at specified intervals (`distance_delta`). To do that, we need to transform the line into a projected CRS (so that we work with true distances, in $m$), such as UTM. This requires going through a `GeoSeries`, as `shapely` geometries have no CRS definition nor concept of reprojection (see @sec-vector-layer-from-scratch):
 
-Finally, we can extract elevation values for each point in our transects and combine this information with our main object.
+```{python}
+zion_transect_utm = gpd.GeoSeries(zion_transect, crs=4326)
+zion_transect_utm = zion_transect_utm.to_crs(32612)
+zion_transect_utm = zion_transect_utm.iloc[0]
+```
 
-zion_elev = terra::extract(srtm, vect(zion_transect))
-zion_transect = cbind(zion_transect, zion_elev)
+The printout of the new geometry shows this is still a straight line between two points, only with coordinates in a different CRS:
 
-The resulting zion_transect can be used to create elevation profiles, as illustrated in Figure 6.3(B).
+```{python}
+print(zion_transect_utm)
+```
+
+Then, we calculate the distances, along the line, where points are going to be generated, using `np.arange`. This is a numeric sequence starting at `0`, going up to line `.length`, in steps of 250 ($m$):
+
+```{python}
+distances = np.arange(0, zion_transect_utm.length, 250)
+distances[:7]  ## First 7 distance cutoff points
+```
+
+The distances cutoffs are used to sample ("interpolate") points along the line. The `shapely` method `line.interpolate(d)` is used to generate the points. The points are then reproject back to the CRS of the raster:
+
+```{python}
+zion_transect_pnt = [zion_transect_utm.interpolate(distance) for distance in distances]
+zion_transect_pnt = gpd.GeoSeries(zion_transect_pnt, crs=32612)
+zion_transect_pnt = zion_transect_pnt.to_crs(4326)
+zion_transect_pnt
+```
+
+Second, we extract elevation values for each point in our transects and combine this information with `zion_transect_pnt` (after "promoting" it to a `GeoDataFrame`, to accomodate extra attributes), using the point extraction method shown earlier (@sec-extraction-to-points). We also attach the respective distance cutoff points `distances`:
+
+```{python}
+result = rasterstats.point_query(
+    zion_transect_pnt, 
+    src_srtm.read(1), 
+    nodata = src_srtm.nodata, 
+    affine = src_srtm.transform,
+    interpolate='nearest'
+)
+zion_transect_pnt = gpd.GeoDataFrame(geometry=zion_transect_pnt)
+zion_transect_pnt['dist'] = distances
+zion_transect_pnt['elev'] = result
+zion_transect_pnt
+```
+
+The information in `zion_transect_pnt`, namely the `"dist"` and `"elev"` attributes, can now be used to create elevation profiles, as illustrated in @fig-zion-transect:
+
+```{python}
+#| label: fig-zion-transect
+#| fig-cap: Location of a line used for raster extraction (left) and the elevation along this line (right). 
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,4))
+show(src_srtm, ax=axes[0])
+gpd.GeoSeries(zion_transect).plot(ax=axes[0], color='black')
+zion.plot(ax=axes[0], color='none', edgecolor='darkgrey')
+zion_transect_pnt.set_index('dist')['elev'].plot(ax=axes[1])
+axes[1].set_xlabel('Distance (m)')
+axes[1].set_ylabel('Elevation (m)')
+axes[0].set_title('Line extraction')
+axes[1].set_title('Elevation along the line');
+```
 
 ### Extraction to polygons
 
-The final type of geographic vector object for raster extraction is polygons. Like lines, polygons tend to return many raster values per polygon. Typically, we generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. The generation of raster summary statistics, by polygons, is demonstrated in the code below, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon), again using `rasterstats`:
+The final type of geographic vector object for raster extraction is polygons. 
+Like lines, polygons tend to return many raster values per polygon. 
+Typically, we generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. 
+The generation of raster summary statistics, by polygons, is demonstrated in the code below, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon), again using `rasterstats`:
 
 ```{python}
 rasterstats.zonal_stats(
@@ -242,16 +302,19 @@ rasterstats.zonal_stats(
 )
 ```
 
-The results provide useful summaries, for example that the maximum height in the park is around 2,661 meters above see level (other summary statistics, such as standard deviation, can also be calculated in this way). Because there is only one polygon in the example a data frame with a single row is returned; however, the method works when multiple selector polygons are used.
+The results provide useful summaries, for example that the maximum height in the park is around 2,661 meters above see level (other summary statistics, such as standard deviation, can also be calculated in this way). 
+Because there is only one polygon in the example a data frame with a single row is returned; however, the method works when multiple selector polygons are used.
 
-Note the `stats` argument, where we determine what type of statistics are calculated per polygon. Possible values other than `'mean'`, `'min'`, `'max'` are:
+Note the `stats` argument, where we determine what type of statistics are calculated per polygon. 
+Possible values other than `'mean'`, `'min'`, `'max'` are:
 
 * `'count'`—The number of valid (i.e., excluding "No Data") pixels
 * `'nodata'`—The number of pixels with 'No Data"
 * `'majority'`—The most frequently occurring value
 * `'median'`—The median value
 
-See the [documentation](https://pythonhosted.org/rasterstats/manual.html#statistics) for the complete list. Additionally, the `zonal_stats` function accepts user-defined functions for calculating any custom statistics.
+See the [documentation](https://pythonhosted.org/rasterstats/manual.html#statistics) for the complete list. 
+Additionally, the `zonal_stats` function accepts user-defined functions for calculating any custom statistics.
 
 To count occurrences of categorical raster values within polygons, we can use masking (see Section...) combined with `np.unique`, as follows:
 
