@@ -24,6 +24,7 @@ import geopandas as gpd
 import rasterio
 import rasterio.warp
 from rasterio.plot import show
+import pyproj
 ```
 
 and load the sample data:
@@ -41,9 +42,41 @@ world = gpd.read_file('data/world.gpkg')
 
 In many projects there is no need to worry about, let alone convert between, different CRSs. It is important to know if your data is in a projected or geographic coordinate system, and the consequences of this for geometry operations. However, if you know the CRS of your data and the consequences for geometry operations (covered in the next section), CRSs should just work behind the scenes: people often suddenly need to learn about CRSs when things go wrong. Having a clearly defined project CRS that all project data is in, plus understanding how and why to use different CRSs, can ensure that things don't go wrong. Furthermore, learning about coordinate systems will deepen your knowledge of geographic datasets and how to use them effectively.
 
-This chapter teaches the fundamentals of CRSs, demonstrates the consequences of using different CRSs (including what can go wrong), and how to 'reproject' datasets from one coordinate system to another. In the next section we introduce CRSs in Python, followed by @sec-querying-and-setting-coordinate-systems which shows how to get and set CRSs associated with spatial objects. Section @sec-geometry-operations-on-projected-and-unprojected-data demonstrates the importance of knowing what CRS your data is in with reference to a worked example of creating buffers. We tackle questions of when to reproject and which CRS to use in Section @sec-when-to-reproject and Section @which-crs-to-use, respectively. We cover reprojecting vector and raster objects in sections @sec-reprojecting-vector-geometries and @sec-reprojecting-raster-geometries and modifying map projections in @sec-custom-map-projections.
+This chapter teaches the fundamentals of CRSs, demonstrates the consequences of using different CRSs (including what can go wrong), and how to 'reproject' datasets from one coordinate system to another. In the next section we introduce CRSs in Python, followed by @sec-querying-and-setting-coordinate-systems which shows how to get and set CRSs associated with spatial objects. Section @sec-geometry-operations-on-projected-and-unprojected-data demonstrates the importance of knowing what CRS your data is in with reference to a worked example of creating buffers. We tackle questions of when to reproject and which CRS to use in Section @sec-when-to-reproject and Section @sec-which-crs-to-use, respectively. We cover reprojecting vector and raster objects in sections @sec-reprojecting-vector-geometries and @sec-reprojecting-raster-geometries and modifying map projections in @sec-custom-map-projections.
 
 ## Coordinate Reference Systems
+
+Most modern geographic tools that require CRS conversions, including Python packages and desktop GIS software such as QGIS, interface with [PROJ](https://proj.org/), an open source C++ library that "transforms coordinates from one coordinate reference system (CRS) to another". CRSs can be described in many ways, including the following.
+
+* Simple yet potentially ambiguous statements such as "it's in lon/lat coordinates".
+* Formalized yet now outdated 'proj4 strings' such as `+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs`.
+* With an identifying 'authority:code' text string such as `EPSG:4326`.
+
+Each refers to the same thing: the 'WGS84' coordinate system that forms the basis of Global Positioning System (GPS) coordinates and many other datasets. But which one is correct?
+
+The short answer is that the third way to identify CRSs is correct: `EPSG:4326` is understood by `geopandas` and `rasterio` packages covered in this book, plus many other software projects for working with geographic data including [QGIS](https://docs.qgis.org/3.22/en/docs/user_manual/working_with_projections/working_with_projections.html) and [PROJ](https://proj.org/development/quickstart.html). `EPSG:4326` is future-proof. Furthermore, although it is machine readable, unlike the proj-string representation "EPSG:4326" is short, easy to remember and highly 'findable' online (searching for EPSG:4326 yields a dedicated page on the website [epsg.io](https://epsg.io/4326), for example). The more concise identifier `4326` is also understood by `geopandas` and `rasterio`, but we recommend the more explicit `AUTHORITY:CODE` representation to prevent ambiguity and to provide context.
+
+The longer answer is that none of the three descriptions are sufficient and more detail is needed for unambiguous CRS handling and transformations: due to the complexity of CRSs, it is not possible to capture all relevant information about them in such short text strings. For this reason, the Open Geospatial Consortium (OGC, which also developed the simple features specification that the sf package implements) developed an open standard format for describing CRSs that is called WKT (Well Known Text). This is detailed in a [100+ page document](file:///home/michael/Downloads/18-010r7_Geographic_information__Well-known_text_representation_of_coordinate_reference_systems.pdf) that "defines the structure and content of a text string implementation of the abstract model for coordinate reference systems described in ISO 19111:2019" (Open Geospatial Consortium 2019...to add citation!). The WKT representation of the WGS84 CRS, which has the identifier `EPSG:4326` is as follows:
+
+```{python}
+crs = pyproj.CRS.from_string('EPSG:4326') # or '.from_epsg(4326)'
+print(crs.to_wkt(pretty=True))
+```
+
+The output of the command shows how the CRS identifier (also known as a Spatial Reference Identifier or [SRID](https://postgis.net/workshops/postgis-intro/projection.html)) works: it is simply a look-up, providing a unique identifier associated with a more complete WKT representation of the CRS. This raises the question: what happens if there is a mismatch between the identifier and the longer WKT representation of a CRS? On this point Open Geospatial Consortium (2019... to add citation!) is clear, the verbose WKT representation takes precedence over the [identifier](https://docs.opengeospatial.org/is/18-010r7/18-010r7.html#37):
+
+> Should any attributes or values given in the cited identifier be in conflict with attributes or values given explicitly in the WKT description, the WKT values shall prevail.
+
+The convention of referring to CRSs identifiers in the form AUTHORITY:CODE, which is also used by geographic software written in other languages, allows a wide range of formally defined coordinate systems to be referred to.26 The most commonly used authority in CRS identifiers is EPSG, an acronym for the European Petroleum Survey Group which published a standardized list of CRSs (the EPSG was [taken over](http://wiki.gis.com/wiki/index.php/European_Petroleum_Survey_Group) by the oil and gas body the Geomatics Committee of the International Association of Oil & Gas Producers (...to add citation!) in 2005). Other authorities can be used in CRS identifiers. ESRI:54030, for example, refers to ESRI’s implementation of the Robinson projection, which has the following WKT string:
+
+```{python}
+crs = pyproj.CRS.from_string('ESRI:54030')
+print(crs.to_wkt(pretty=True))
+```
+
+WKT strings are exhaustive, detailed, and precise, allowing for unambiguous CRSs storage and transformations. They contain all relevant information about any given CRS, including its datum and ellipsoid, prime meridian, projection, and units.
+
+Recent PROJ versions (6+) still allow use of proj-strings to define coordinate operations, but some proj-string keys (`+nadgrids`, `+towgs84`, `+k`, `+init=epsg:`) are either no longer supported or are discouraged. Additionally, only three datums (i.e., WGS84, NAD83, and NAD27) can be directly set in proj-string. Longer explanations of the evolution of CRS definitions and the PROJ library can be found in Bivand (2021), Chapter 2 of Pebesma and Bivand (2022), and a blog post by Floris Vanderhaeghe (...to add citations!). As outlined in the [PROJ documentation](https://proj.org/development/reference/cpp/cpp_general.html) there are different versions of the WKT CRS format including WKT1 and two variants of WKT2, the latter of which (WKT2, 2018 specification) corresponds to the ISO 19111:2019 (Open Geospatial Consortium 2019...to add citations!).
 
 ## Querying and setting coordinate systems {#sec-querying-and-setting-coordinate-systems}
 
@@ -59,7 +92,7 @@ world.crs
 
 ## When to reproject? {#sec-when-to-reproject}
 
-## Which CRS to use? {#which-crs-to-use}
+## Which CRS to use? {#sec-which-crs-to-use}
 
 ## Reprojecting vector geometries {#sec-reprojecting-vector-geometries}
 
