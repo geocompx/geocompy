@@ -99,6 +99,7 @@ There are several approaches for working with vector layers in Python, ranging f
 Before writing and running code for creating and working with geographic vector objects, we therefore import **geopandas** (by convention as `gpd` for more concise code) and **shapely**:
 
 ```{python}
+import matplotlib.pyplot as plt
 import pandas as pd
 import geopandas as gpd
 import shapely.geometry
@@ -802,19 +803,19 @@ This section explains each type, laying the foundations for @sec-reproj-geo-data
 
 ### Geographic coordinate systems
 
-Geographic coordinate systems identify any location on the Earth's surface using two values — longitude and latitude (see left panel of Figure ...). Longitude is a location in the East-West direction in angular distance from the Prime Meridian plane, while latitude is an angular distance North or South of the equatorial plane.
+Geographic coordinate systems identify any location on the Earth's surface using two values---longitude and latitude (see left panel of @fig-zion-crs). Longitude is a location in the East-West direction in angular distance from the Prime Meridian plane, while latitude is an angular distance North or South of the equatorial plane.
 Distances in geographic CRSs are therefore not measured in meters. 
 This has important consequences, as demonstrated in Section 7.
 
 A spherical or ellipsoidal surface represents the surface of the Earth in geographic coordinate systems. 
-Spherical models assume that the Earth is a perfect sphere of a given radius — they have the advantage of simplicity, but, at the same time, they are inaccurate: the Earth is not a sphere!
+Spherical models assume that the Earth is a perfect sphere of a given radius---they have the advantage of simplicity, but, at the same time, they are inaccurate: the Earth is not a sphere!
 Ellipsoidal models are defined by two parameters: the equatorial radius and the polar radius. 
 These are suitable because the Earth is compressed: the equatorial radius is around 11.5 km longer than the polar radius.
 <!-- TODO: add reference, (Maling 1992...). -->
 
 Ellipsoids are part of a broader component of CRSs: the datum. 
 This contains information on what ellipsoid to use and the precise relationship between the Cartesian coordinates and location on the Earth's surface.
-There are two types of datum — geocentric (such as WGS84) and local (such as NAD83). 
+There are two types of datum---geocentric (such as WGS84) and local (such as NAD83). 
 You can see examples of these two types of datums in Figure .... 
 Black lines represent a geocentric datum, whose center is located in the Earth's center of gravity and is not optimized for a specific location.
 In a local datum, shown as a purple dashed line, the ellipsoidal surface is shifted to align with the surface at a particular location. 
@@ -824,7 +825,7 @@ These allow local variations on Earth's surface, such as large mountain ranges, 
 ### Projected coordinate reference systems
 
 All projected CRSs are based on a geographic CRS, described in the previous section, and rely on map projections to convert the three-dimensional surface of the Earth into Easting and Northing (x and y) values in a projected CRS.
-Projected CRSs are based on Cartesian coordinates on an implicitly flat surface.
+Projected CRSs are based on Cartesian coordinates on an implicitly flat surface (see right panel of @fig-zion-crs).
  <!-- TODO (right panel of Figure ...).  -->
 They have an origin, x and y axes, and a linear unit of measurement such as meters.
 
@@ -865,20 +866,31 @@ But, for now, it is sufficient to know:
 * Knowing which CRS your data is in, and whether it is in geographic (lon/lat) or projected (typically meters), is important and has consequences for how Python handles spatial and geometry operations
 * CRSs of **geopandas** (vector layer or geometry column) and **rasterio** (raster) objects can be queried with the `.crs` property
 
-Here is a demonstration of the last bullet point:
-
-```{python}
-gdf.crs
-```
-
-```{python}
-src.crs
-```
+Here is a demonstration of the last bullet point, where we import a vector layer and figure out its CRS (in this case, a projected CRS, namely UTM Zone 12):
 
 ```{python}
 zion = gpd.read_file('data/zion.gpkg')
-zion.plot();
+zion.crs
 ```
+
+And here is an illustration of the layer in the original projected CRS and in a geographic CRS (@fig-zion-crs):
+
+```{python}
+#| label: fig-zion-crs
+#| fig-cap: Examples of geographic (WGS 84; left) and projected (NAD83 / UTM zone 12N; right) coordinate systems for a vector data type. 
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,4))
+zion.to_crs(4326).plot(ax=axes[0], edgecolor='black', color='lightgrey')
+zion.plot(ax=axes[1], edgecolor='black', color='lightgrey')
+axes[0].set_axisbelow(True)  ## Plot grid below other elements
+axes[1].set_axisbelow(True)
+axes[0].grid()  ## Add grid
+axes[1].grid()
+axes[0].set_title('WGS 84')
+axes[1].set_title('UTM zone 12N');
+```
+
+We are going to elaborate on reprojection from one CRS to another (`.to_crs` in the above code section) in @sec-reproj-geo-data.
 
 ## Units
 
