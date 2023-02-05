@@ -11,6 +11,7 @@ Let's import the required packages:
 ```{python}
 import matplotlib.pyplot as plt
 import numpy as np
+import shapely.geometry
 import geopandas as gpd
 import rasterio
 import rasterio.warp
@@ -44,7 +45,7 @@ In many projects there is no need to worry about, let alone convert between, dif
 
 This chapter teaches the fundamentals of CRSs, demonstrates the consequences of using different CRSs (including what can go wrong), and how to 'reproject' datasets from one coordinate system to another. In the next section we introduce CRSs in Python, followed by @sec-querying-and-setting-coordinate-systems which shows how to get and set CRSs associated with spatial objects. Section @sec-geometry-operations-on-projected-and-unprojected-data demonstrates the importance of knowing what CRS your data is in with reference to a worked example of creating buffers. We tackle questions of when to reproject and which CRS to use in Section @sec-when-to-reproject and Section @sec-which-crs-to-use, respectively. We cover reprojecting vector and raster objects in sections @sec-reprojecting-vector-geometries and @sec-reprojecting-raster-geometries and modifying map projections in @sec-custom-map-projections.
 
-## Coordinate Reference Systems
+## Coordinate Reference Systems {#sec-coordinate-reference-systems}
 
 Most modern geographic tools that require CRS conversions, including Python packages and desktop GIS software such as QGIS, interface with [PROJ](https://proj.org/), an open source C++ library that "transforms coordinates from one coordinate reference system (CRS) to another". CRSs can be described in many ways, including the following.
 
@@ -86,7 +87,74 @@ Let's look at how CRSs are stored in Python spatial objects and how they can be 
 world.crs
 ```
 
-...
+The output specifies the following pieces of information:
+
+1. The CRS type (`Geographic 2D CRS`) and EPSG code (`EPSG:4326`) 
+1. The CRS name (`WGS 84`)
+1. The axes (`latitude`, `longitude`) and their units (`degree`)
+1. The applicable area name (`World`) and bounding box (`(-180.0, -90.0, 180.0, 90.0)`)
+1. The datum (`WGS 84`)
+
+The WKT representation, which is internally used when saving the object to a file or doing any coordinate operations, can be extracted using `.crs.to_wkt()` as shown above (@sec-coordinate-reference-systems). Above, we can see that the `world` object has the WGS84 ellipsoid, uses the Greenwich prime meridian, and the latitude and longitude axis order. We also have the suitable suitable area specification for the use of this CRS, and CRS identifier: `EPSG:4326`.
+
+The CRS specification object, such as `world.crs`, has several other useful properties and methods to retrieve additional information about the used CRS. For example, try to run:
+
+* `world.crs.is_geographic` to check is the CRS is geographic or not
+* `world.crs.axis_info[0].unit_name` and `world.crs.axis_info[1].unit_name` to find out the CRS units of both axes (typically having identical units)
+* `world.crs.to_authority()` extracts the authority (e.g., `EPSG`) and the identifier (e.g., `4326`)
+* `world.crs.to_proj4()` returns the proj-string representation
+
+In cases when a coordinate reference system (CRS) is missing or the wrong CRS is set, the `.set_crs` method can be used on a `GeoSeries` or a `GeoDataFrame` to set it. The CRS can be specified using an EPSG code as the first argument. In case the object already has a different CRS definition, we must also specify `allow_override=True` to replace it (otherwise we get an error). For example, here we set the `EPSG:4326` CRS, which has no effect because `world` already has that exact CRS definition:
+
+```{python}
+world2 = world.set_crs(4326)
+world2
+```
+
+and here we replace the definition from the existing `EPSG:4326`, to a new definition `EPSG:3857`:
+
+```{python}
+world3 = world.set_crs(3857, allow_override=True)
+world3
+```
+
+In `rasterio`, the CRS information is stored as part of a raster file connection metadata (@sec-using-rasterio). Replacing the CRS definition for a `rasterio` file connection is typically not necessary, because it is not considered in any operation, only the transformation matrix and coordinates are. One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch). However, if we do for some reason need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode:
+
+```{python}
+src_nlcd2 = rasterio.open('data/nlcd.tif', 'r+')
+src_nlcd2.crs
+```
+
+```{python}
+src_nlcd2.crs = 3857
+src_nlcd2.crs
+```
+
+Importantly, the `.set_crs` (for vector layers) or the assignment to `.crs` (for rasters), as shown above, do not alter coordinates' values or geometries. Their role is only to set a metadata information about the object CRS. Consequently, the objects we created, `world3` and `src_nlcd2` are "incorrect", in the sense that the geometries are in fact given in a different CRS than specified in the associated CRS definition.
+
+In some cases the CRS of a geographic object is unknown, as is the case in the london dataset created in the code chunk below, building on the example of London introduced in @sec-vector-layer-from-scratch:
+
+```{python}
+lnd_point = shapely.geometry.Point(0.1, 51.5)
+lnd_geom = gpd.GeoSeries([lnd_point])
+lnd_layer = gpd.GeoDataFrame({'geometry': lnd_geom})
+lnd_layer
+```
+
+```{python}
+lnd_layer.crs
+```
+
+Nothing is printed as a result of the last expression, because the value of the CRS definition in `.crs` is `None`. This implies that `geopandas` does not know what the CRS is and is unwilling to guess. Unless a CRS is manually specified or is loaded from a source that has CRS metadata, `geopandas` does not make any explicit assumptions about which coordinate systems, other than to say "I don't know". This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying assumption that all coordinates have a lon/lat CRS: `EPSG:4326`.
+
+A CRS can be added to `GeoSeries` or `GeoDataFrame` objects using the `.set_crs` method, as mentioned above. Since the definition is missing, we do not need to specify `allow_override=True`, as there is nothing to override. For example:
+
+```{python}
+lnd_layer = lnd_layer.set_crs(4326)
+lnd_layer.crs
+```
+
+In general, all geographic coordinates have a coordinate system and software can only make good decisions around plotting and and geometry operations if it knows what type of CRS it is working with. When working with `geopandas` and `rasterio`, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered. It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not). When exporting the results, though, it is important to keep the CRS definition in place, because other software typically *do* use, and require, the CRS definition in calculation. It should also be mentioned that, in some cases the CRS specification is left unspecified on purpose, for example when working with layers in arbitrary or non-geographic space (simulations, internal building plans, analysis of plot-scale ecological patterns, etc.). 
 
 ## Geometry operations on projected and unprojected data {#sec-geometry-operations-on-projected-and-unprojected-data}
 
