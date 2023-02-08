@@ -108,14 +108,18 @@ In cases when a coordinate reference system (CRS) is missing or the wrong CRS is
 
 ```{python}
 world2 = world.set_crs(4326)
-world2
 ```
 
 and here we replace the definition from the existing `EPSG:4326`, to a new definition `EPSG:3857`:
 
 ```{python}
 world3 = world.set_crs(3857, allow_override=True)
-world3
+```
+
+A number is interpreted as an `EPSG` code. We can also use strings, as in `'EPSG:4326'`, which is useful to make the code more clear and when using other authorities:
+
+```{python}
+world4 = world.set_crs('ESRI:54009', allow_override=True)
 ```
 
 In `rasterio`, the CRS information is stored as part of a raster file connection metadata (@sec-using-rasterio). Replacing the CRS definition for a `rasterio` file connection is typically not necessary, because it is not considered in any operation, only the transformation matrix and coordinates are. One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch). However, if we do for some reason need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode:
@@ -130,7 +134,7 @@ src_nlcd2.crs = 3857
 src_nlcd2.crs
 ```
 
-Importantly, the `.set_crs` (for vector layers) or the assignment to `.crs` (for rasters), as shown above, do not alter coordinates' values or geometries. Their role is only to set a metadata information about the object CRS. Consequently, the objects we created, `world3` and `src_nlcd2` are "incorrect", in the sense that the geometries are in fact given in a different CRS than specified in the associated CRS definition.
+Importantly, the `.set_crs` (for vector layers) or the assignment to `.crs` (for rasters), as shown above, do not alter coordinates' values or geometries. Their role is only to set a metadata information about the object CRS. Consequently, the objects we created, `world3`, `world4`, and `src_nlcd2` are "incorrect", in the sense that the geometries are in fact given in a different CRS than specified in the associated CRS definition.
 
 In some cases the CRS of a geographic object is unknown, as is the case in the london dataset created in the code chunk below, building on the example of London introduced in @sec-vector-layer-from-scratch:
 
