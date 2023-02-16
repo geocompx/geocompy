@@ -2,26 +2,97 @@
 
 ## Introduction
 
-## Retrieving open data
+This chapter is about reading and writing geographic data. Geographic data import is essential for geocomputation: real-world applications are impossible without data. 
+Data output is also vital, enabling others to use valuable new or improved datasets resulting from your work. 
+Taken together, these processes of import/output can be referred to as data I/O.
 
-## Geographic data packages
+Geographic data I/O is often done with few lines of code at the beginning and end of projects. 
+It is often overlooked as a simple one step process. 
+However, mistakes made at the outset of projects (e.g. using an out-of-date or in some way faulty dataset) can lead to large problems later down the line, so it is worth putting considerable time into identifying which datasets are available, where they can be found and how to retrieve them. 
+These topics are covered in @sec-retrieving-open-data, which describes various geoportals, which collectively contain many terabytes of data, and how to use them. 
+To further ease data access, a number of packages for downloading geographic data have been developed. 
+These are described in @sec-geographic-data-packages.
+
+There are many geographic file formats, each of which has pros and cons. 
+These are described in @sec-file-formats. 
+The process of actually reading and writing such file formats efficiently is not covered until Sections @sec-data-input and @sec-data-output, respectively. 
+The final Section @sec-visual-outputs demonstrates methods for saving visual outputs (maps), in preparation for @sec-map-making on visualization.
+
+## Retrieving open data {#sec-retrieving-open-data}
+
+## Geographic data packages {#sec-geographic-data-packages}
 
 ## Geographic web services
 
-## File formats
+## File formats {#sec-file-formats}
 
-## Data input (I)
+Geographic datasets are usually stored as files or in spatial databases. 
+File formats can either store vector or raster data, while spatial databases such as [PostGIS](https://postgis.net/) can store both. 
+Today the variety of file formats may seem bewildering but there has been much consolidation and standardization since the beginnings of GIS software in the 1960s when the first widely distributed program ([SYMAP](https://news.harvard.edu/gazette/story/2011/10/the-invention-of-gis/)) for spatial analysis was created at Harvard University (Coppock and Rhind 1991, to add citation...).
+
+GDAL (which should be pronounced "goo-dal", with the double "o" making a reference to object-orientation), the Geospatial Data Abstraction Library, has resolved many issues associated with incompatibility between geographic file formats since its release in 2000. 
+GDAL provides a unified and high-performance interface for reading and writing of many raster and vector data formats. 
+Many open and proprietary GIS programs, including GRASS, ArcGIS and QGIS, use GDAL behind their GUIs for doing the legwork of ingesting and spitting out geographic data in appropriate formats.
+
+GDAL provides access to more than 200 vector and raster data formats. 
+@tbl-file-formats presents some basic information about selected and often used spatial file formats.
+
+Name  | Extension  | Info  | Type  | Model |
+|-----|----|----------|-----|-----|
+ESRI Shapefile  | `.shp` (the main file)  | Popular format consisting of at least three files. No support for: files > 2GB;mixed types; names > 10 chars; cols > 255.  | Vector  | Partially open |
+GeoJSON  | `.geojson`  | Extends the JSON exchange format by including a subset of the simple feature representation; mostly used for storing coordinates in longitude and latitude; it is extended by the TopoJSON format  | Vector  | Open |
+KML  | `.kml`  | XML-based format for spatial visualization, developed for use with Google Earth. Zipped KML file forms the KMZ format.  | Vector  | Open |
+GPX  | `.gpx`  | XML schema created for exchange of GPS data.  | Vector  | Open |
+FlatGeobuf  | `.fgb`  | Single file format allowing for quick reading and writing of vector data. Has streaming capabilities.  | Vector  | Open |
+GeoTIFF  | `.tif/.tiff`  | Popular raster format. A TIFF file containing additional spatial metadata.  | Raster  | Open |
+Arc ASCII  | `.asc`  | Text format where the first six lines represent the raster header, followed by the raster cell values arranged in rows and columns.  | Raster  | Open |
+SQLite/SpatiaLite  | `.sqlite`  | Standalone relational database, SpatiaLite is the spatial extension of SQLite.  | Vector and raster  | Open |
+ESRI FileGDB  | `.gdb`  | Spatial and nonspatial objects created by ArcGIS. Allows: multiple feature classes; topology. Limited support from GDAL.  | Vector and raster  | Proprietary |
+GeoPackage  | `.gpkg`  | Lightweight database container based on SQLite allowing an easy and platform-independent exchange of geodata  | Vector and (very limited) raster  | Open |
+: Commonly used spatial data file formats {#tbl-file-formats}
+
+An important development ensuring the standardization and open-sourcing of file formats was the founding of the Open Geospatial Consortium ([OGC](http://www.opengeospatial.org/)) in 1994. 
+Beyond defining the simple features data model (see @sec-simple-features), the OGC also coordinates the development of open standards, for example as used in file formats such as KML and GeoPackage. 
+Open file formats of the kind endorsed by the OGC have several advantages over proprietary formats: the standards are published, ensure transparency and open up the possibility for users to further develop and adjust the file formats to their specific needs.
+
+ESRI Shapefile is the most popular vector data exchange format; however, it is not an open format (though its specification is open). 
+It was developed in the early 1990s and has a number of limitations. 
+First of all, it is a multi-file format, which consists of at least three files. 
+It only supports 255 columns, column names are restricted to ten characters and the file size limit is 2 GB. 
+Furthermore, ESRI Shapefile does not support all possible geometry types, for example, it is unable to distinguish between a polygon and a multipolygon. 
+Despite these limitations, a viable alternative had been missing for a long time. 
+In the meantime, [GeoPackage](https://www.geopackage.org/) emerged, and seems to be a more than suitable replacement candidate for ESRI Shapefile. 
+GeoPackage is a format for exchanging geospatial information and an OGC standard. 
+The GeoPackage standard describes the rules on how to store geospatial information in a tiny SQLite container. 
+Hence, GeoPackage is a lightweight spatial database container, which allows the storage of vector and raster data but also of non-spatial data and extensions. 
+Aside from GeoPackage, there are other geospatial data exchange formats worth checking out (@tbl-file-formats).
+
+The GeoTIFF format seems to be the most prominent raster data format. 
+It allows spatial information, such as the CRS definition and the transformation matrix (see @sec-using-rasterio), to be embedded within a TIFF file. 
+Similar to ESRI Shapefile, this format was firstly developed in the 1990s, but as an open format. 
+Additionally, GeoTIFF is still being expanded and improved. 
+One of the most significant recent addition to the GeoTIFF format is its variant called COG (Cloud Optimized GeoTIFF). 
+Raster objects saved as COGs can be hosted on HTTP servers, so other people can read only parts of the file without downloading the whole file (see Sections 8.6.2 and 8.7.2...).
+
+There is also a plethora of other spatial data formats that we do not explain in detail or mention in @tbl-file-formats due to the book limits. 
+If you need to use other formats, we encourage you to read the GDAL documentation about [vector](https://gdal.org/drivers/vector/index.html) and [raster](https://gdal.org/drivers/raster/index.html) drivers. 
+Additionally, some spatial data formats can store other data models (types) than vector or raster. 
+It includes LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays.
+
+Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets. For example, this can be convenient to share spatial samples with people who do not use GIS tools or exchange data with other software that does not accept spatial data formats. However, this approach has several possible issues – it is fairly challenging for storing geometries more complex than POINTs and does not directly store information about CRS.
+
+## Data input (I) {#sec-data-input}
 
 ### Vector data
 
 ### Raster data
 
-## Data output (O)
+## Data output (O) {#sec-data-output}
 
 ### Vector data
 
 ### Raster data
 
-## Visual outputs
+## Visual outputs {#sec-visual-outputs}
 
 ## Exercises
