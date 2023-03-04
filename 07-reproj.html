@@ -451,7 +451,7 @@ Datum: World Geodetic System 1984 ensemble
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>src_nlcd2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/nlcd.tif'</span>, <span class="st">'r+'</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>src_nlcd2.crs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="10">
-<pre><code>CRS.from_epsg(3857)</code></pre>
+<pre><code>CRS.from_epsg(26912)</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="11">
@@ -582,10 +582,10 @@ Note
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="18">
-<pre><code>(Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
-        0.0, -0.00025326212175780043, 34.92789350789737),
- 1200,
- 1248)</code></pre>
+<pre><code>(Affine(0.00031506316853514724, 0.0, -113.24138811813536,
+        0.0, -0.00031506316853514724, 37.51912722777022),
+ 1244,
+ 1246)</code></pre>
 </div>
 </div>
 <p>Note that <code>*</code>, in <code>*src_nlcd.bounds</code>, is used to unpack <code>src_nlcd.bounds</code> to four separate arguments, which <code>calculate_default_transform</code> requires:</p>
@@ -609,12 +609,12 @@ Note
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint8',
  'nodata': 255.0,
- 'width': 1200,
- 'height': 1248,
+ 'width': 1244,
+ 'height': 1246,
  'count': 1,
  'crs': 'EPSG:4326',
- 'transform': Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
-        0.0, -0.00025326212175780043, 34.92789350789737)}</code></pre>
+ 'transform': Affine(0.00031506316853514724, 0.0, -113.24138811813536,
+        0.0, -0.00031506316853514724, 37.51912722777022)}</code></pre>
 </div>
 </div>
 <p>We are ready to create the reprojected raster. Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once. It is also possible to reproject into an in-memory <code>ndarray</code> object, see the <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject">documentation</a>.</p>
@@ -634,9 +634,9 @@ Note
 <span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.warp.Resampling.nearest</span>
 <span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="22">
-<pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1248, 1200)),
- Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
-        0.0, -0.00025326212175780043, 34.92789350789737))</code></pre>
+<pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1246, 1244)),
+ Affine(0.00031506316853514724, 0.0, -113.24138811813536,
+        0.0, -0.00031506316853514724, 37.51912722777022))</code></pre>
 </div>
 </div>
 <p>Finally, we close the file connection so that the data are actually written:</p>
@@ -653,7 +653,7 @@ Note
  'width': 1073,
  'height': 1359,
  'count': 1,
- 'crs': CRS.from_epsg(3857),
+ 'crs': CRS.from_epsg(26912),
  'transform': Affine(31.530298224786595, 0.0, 301903.344386758,
         0.0, -31.52465870178793, 4154086.47216415)}</code></pre>
 </div>
@@ -665,12 +665,12 @@ Note
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint8',
  'nodata': 255.0,
- 'width': 1200,
- 'height': 1248,
+ 'width': 1244,
+ 'height': 1246,
  'count': 1,
  'crs': CRS.from_epsg(4326),
- 'transform': Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
-        0.0, -0.00025326212175780043, 34.92789350789737)}</code></pre>
+ 'transform': Affine(0.00031506316853514724, 0.0, -113.24138811813536,
+        0.0, -0.00031506316853514724, 37.51912722777022)}</code></pre>
 </div>
 </div>
 <p>Examining the unique raster values tells us that the new raster has the same categories, plus the value <code>255</code> representing “No Data”:</p>
@@ -683,7 +683,7 @@ Note
 <div class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>np.unique(src_nlcd_4326.read(<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="27">
-<pre><code>array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8)</code></pre>
+<pre><code>array([  1,   2,   3,   4,   5,   6,   7,   8, 255], dtype=uint8)</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="28">
@@ -710,12 +710,12 @@ Note
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint8',
  'nodata': 255.0,
- 'width': 1200,
- 'height': 1248,
+ 'width': 1244,
+ 'height': 1246,
  'count': 1,
  'crs': CRS.from_epsg(4326),
- 'transform': Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
-        0.0, -0.00025326212175780043, 34.92789350789737)}</code></pre>
+ 'transform': Affine(0.00031506316853514724, 0.0, -113.24138811813536,
+        0.0, -0.00031506316853514724, 37.51912722777022)}</code></pre>
 </div>
 </div>
 <p>Then, we create a write-mode connection to our destination raster, using this metadata, meaning that as the resampling result is going to have identical metadata as the “template”:</p>
@@ -734,9 +734,9 @@ Note
 <span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.warp.Resampling.nearest</span>
 <span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="31">
-<pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326_2.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1248, 1200)),
- Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
-        0.0, -0.00025326212175780043, 34.92789350789737))</code></pre>
+<pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326_2.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1246, 1244)),
+ Affine(0.00031506316853514724, 0.0, -113.24138811813536,
+        0.0, -0.00031506316853514724, 37.51912722777022))</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="32">
