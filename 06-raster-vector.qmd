@@ -354,6 +354,8 @@ axes[1].set_title('Categorical data extraction');
 
 ## Rasterization {#sec-rasterization}
 
+### Rasterizing points
+
 Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in @sec-spatial-class, the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.
 
 The `rasterio` package contains the `rasterio.features.rasterize` function for doing this work. To make it happen, we need to have the "template" grid definition, i.e., the "template" raster defining the extent, resolution and CRS of the output, in the form of `out_shape` (the dimensions) and `transform` (the transform). In case we have an existing template raster, we simply need to query its `out_shape` and `transform`. In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate the `out_shape` and `transform` (see next example). 
@@ -473,6 +475,8 @@ axes[1][0].set_title('Count')
 axes[1][1].set_title('Aggregated capacity');
 ```
 
+### Rasterizing lines and polygons
+
 Another dataset based on California's polygons and borders (created below) illustrates rasterization of lines. There are three preliminary steps. First, we subset the California polygon:
 
 ```{python}
@@ -480,17 +484,17 @@ california = us_states[us_states['NAME'] == "California"]
 california
 ```
 
-Second, we "cast" the polygon into a `"MultiLineString"` geometry, using the `.boundary` property that `shapely` geometries have: 
+Second, we "cast" the polygon into a `"MultiLineString"` geometry, using the `.boundary` property that `GeoSeries` have: 
 
 ```{python}
-california_borders = california['geometry'].iloc[0].boundary
+california_borders = california['geometry'].boundary
 california_borders
 ```
 
 Third, we create a template raster with a resolution of a 0.5 degree:
 
 ```{python}
-bounds = california_borders.bounds
+bounds = california_borders.total_bounds
 res = 0.5
 transform = rasterio.transform.from_origin(
     west=bounds[0], 
@@ -508,7 +512,7 @@ Finally, we rasterize `california_borders` based on the calculated template `sha
 
 ```{python}
 california_raster1 = rasterio.features.rasterize(
-    ((g, 1) for g in [california_borders]),
+    ((g, 1) for g in california_borders.to_list()),
     out_shape=shape,
     transform=transform,
     all_touched=True,
