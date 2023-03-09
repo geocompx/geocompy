@@ -42,6 +42,7 @@ src_dem = rasterio.open('data/dem.tif')
 zion = gpd.read_file('data/zion.gpkg')
 zion_points = gpd.read_file('data/zion_points.gpkg')
 cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
+us_states = gpd.read_file('data/us_states.gpkg')
 ```
 
 ## Introduction
@@ -164,7 +165,7 @@ axes[2].set_title('Crop');
 
 ## Raster extraction
 
-Raster extraction is the process of identifying and returning the values associated with a 'target' raster at specific locations, based on a (typically vector) geographic 'selector' object. The reverse of raster extraction — assigning raster cell values based on vector objects — is rasterization, described in Section ...
+Raster extraction is the process of identifying and returning the values associated with a 'target' raster at specific locations, based on a (typically vector) geographic 'selector' object. The reverse of raster extraction — assigning raster cell values based on vector objects — is rasterization, described in @sec-rasterization.
 
 In the following examples, we use a third-party package called `rasterstats`, which is specifically aimed at extracting raster values: 
 
@@ -459,9 +460,9 @@ Here is the code to illustrate the input point layer `cycle_hire_osm_projected` 
 
 ```{python}
 #| label: fig-rasterize-points
-#| fig-cap: Examples of point rasterization.
+#| fig-cap: Examples of point rasterization
 
-fig, axes = plt.subplots(2, 2, figsize=(9, 9))
+fig, axes = plt.subplots(2, 2, figsize=(8.5, 6.5))
 cycle_hire_osm_projected.plot(ax=axes[0][0], column='capacity')
 show(ch_raster1, transform=transform, ax=axes[0][1])
 show(ch_raster2, transform=transform, ax=axes[1][0])
@@ -472,9 +473,87 @@ axes[1][0].set_title('Count')
 axes[1][1].set_title('Aggregated capacity');
 ```
 
-...
+Another dataset based on California's polygons and borders (created below) illustrates rasterization of lines. There are three preliminary steps. First, we subset the California polygon:
 
-## Spatial vectorization
+```{python}
+california = us_states[us_states['NAME'] == "California"]
+california
+```
+
+Second, we "cast" the polygon into a `"MultiLineString"` geometry, using the `.boundary` property that `shapely` geometries have: 
+
+```{python}
+california_borders = california['geometry'].iloc[0].boundary
+california_borders
+```
+
+Third, we create a template raster with a resolution of a 0.5 degree:
+
+```{python}
+bounds = california_borders.bounds
+res = 0.5
+transform = rasterio.transform.from_origin(
+    west=bounds[0], 
+    north=bounds[3], 
+    xsize=res, 
+    ysize=res
+)
+rows = math.ceil((bounds[3] - bounds[1]) / res)
+cols = math.ceil((bounds[2] - bounds[0]) / res)
+shape = (rows, cols)
+shape
+```
+
+Finally, we rasterize `california_borders` based on the calculated template `shape` and `transform`. When considering line or polygon rasterization, one useful additional argument is `all_touched`. By default it is `False`, but when changed to `True`---all cells that are touched by a line or polygon border get a value. Line rasterization with `all_touched=True` is demonstrated in the code below (@fig-rasterize-lines-polygons, left). We are also using `fill=np.nan` to set "background" values as "No Data":
+
+```{python}
+california_raster1 = rasterio.features.rasterize(
+    ((g, 1) for g in [california_borders]),
+    out_shape=shape,
+    transform=transform,
+    all_touched=True,
+    fill=np.nan
+)
+```
+
+Compare it to a polygon rasterization, with `all_touched=False` by default, which selects only raster cells whose centroids are inside the selector polygon, as illustrated in @fig-rasterize-lines-polygons (right):
+
+```{python}
+california_raster2 = rasterio.features.rasterize(
+    ((g, 1) for g in california['geometry'].to_list()),
+    out_shape=shape,
+    transform=transform,
+    fill=np.nan
+)
+```
+
+The results are shown in @fig-rasterize-lines-polygons. To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points, which also requires the "Raster to points" code section, as explained in @sec-spatial-vectorization:
+
+```{python}
+#| label: fig-rasterize-lines-polygons
+#| fig-cap: Examples of line and polygon rasterization 
+
+# Raster to points
+ids = california_raster1.copy()
+ids = np.arange(0, california_raster1.size).reshape(california_raster1.shape).astype(np.int32)
+shapes = rasterio.features.shapes(ids, transform=transform)
+pol = list(shapes)
+pnt = [shapely.geometry.shape(i[0]).centroid for i in pol]
+pnt = gpd.GeoSeries(pnt, crs=california.crs)
+
+# Plot
+fig, axes = plt.subplots(1, 2, figsize=(8.5, 6.5))
+show(california_raster1, transform=transform, ax=axes[0], cmap='Set3')
+gpd.GeoSeries(california_borders, crs=california.crs).plot(ax=axes[0], edgecolor='darkgrey', linewidth=1)
+pnt.plot(ax=axes[0], color='black', markersize=1)
+show(california_raster2, transform=transform, ax=axes[1], cmap='Set3')
+california.plot(ax=axes[1], color='none', edgecolor='darkgrey', linewidth=1)
+pnt.plot(ax=axes[1], color='black', markersize=1)
+axes[0].set_title('Line rasterization')
+axes[1].set_title('Polygon rasterization');
+```
+
+## Spatial vectorization {#sec-spatial-vectorization}
 
 Spatial vectorization is the counterpart of rasterization (@sec-rasterization), but in the opposite direction. It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons.
 
