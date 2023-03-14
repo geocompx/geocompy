@@ -1,5 +1,24 @@
 # Geographic data I/O {#read-write}
 
+## Prerequisites
+
+Let's import the required packages:
+
+```{python}
+import fiona
+import geopandas as gpd
+```
+
+```{python}
+#| echo: false
+import pandas as pd
+import matplotlib.pyplot as plt
+pd.options.display.max_rows = 6
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams['figure.figsize'] = (5, 5)
+```
+
 ## Introduction
 
 This chapter is about reading and writing geographic data. Geographic data import is essential for geocomputation: real-world applications are impossible without data. 
@@ -79,11 +98,57 @@ If you need to use other formats, we encourage you to read the GDAL documentatio
 Additionally, some spatial data formats can store other data models (types) than vector or raster. 
 It includes LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays.
 
-Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets. For example, this can be convenient to share spatial samples with people who do not use GIS tools or exchange data with other software that does not accept spatial data formats. However, this approach has several possible issues – it is fairly challenging for storing geometries more complex than POINTs and does not directly store information about CRS.
+Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets. For example, this can be convenient to share spatial samples with people who do not use GIS tools or exchange data with other software that does not accept spatial data formats. However, this approach has several possible issues---it is fairly challenging for storing geometries more complex than POINTs and does not directly store information about CRS.
 
 ## Data input (I) {#sec-data-input}
 
+Executing commands such as `geopandas.read_file` (the main function we use for loading vector data) or `rasterio.open`+`.read` (the main functions used for loading raster data) silently sets off a chain of events that reads data from files. 
+Moreover, there are many Python packages containing a wide range of geographic data or providing simple access to different data sources. 
+All of them load the data into the Python environment or, more precisely, assign objects to your workspace, stored in RAM and accessible within the Python session.
+
 ### Vector data
+
+Spatial vector data comes in a wide variety of file formats. 
+Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported directly into Python with the `geopandas` function `read_file`, which uses GDAL's vector drivers behind the scenes. 
+`geopandas` uses GDAL indirectly, utilizing the `fiona` package. 
+Once `fiona` is imported, the expression `fiona.supported_drivers` can be used to list the drivers available to GDAL (and therefore `fiona` and `geopandas`), including ability to read (`r`), append (`a`), and write (`w`):
+
+```{python}
+fiona.supported_drivers
+```
+
+Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
+
+The first argument of `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection. The content of a string could vary between different drivers. In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the dsn would be a file name. `gpd.read_file` guesses the driver based on the file extension, as illustrated for a `.gpkg` file below:
+
+```{python}
+gpd.read_file('data/world.gpkg')
+```
+
+For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name. A GeoJSON string can also be read directly, rather than from a file:
+
+```{python}
+gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
+```
+
+Alternatively, the `gpd.read_postgis` function can be used to read a vector layer from a PostGIS database.
+
+Some vector formats, such as GeoPackage, can store multiple data layers. 
+By default, `gpd.read_file` automatically reads the first layer of the file specified in `filename`. 
+However, using the `layer` argument you can specify any other layer.
+
+The `gpd.read_file` function also allows for reading just parts of the file into RAM with two possible mechanisms. 
+The first one is related to the `where` argument, which allows specifying what part of the data to read using an SQL `WHERE` expression. 
+An example below extracts data for Tanzania only (Figure ...). 
+It is done by specifying that we want to get all rows for which `name_long` equals to `"Tanzania"`:
+
+```{python}
+gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
+```
+
+Figure...
+
+...
 
 ### Raster data
 
