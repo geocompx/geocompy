@@ -1,8 +1,28 @@
 # Geographic data I/O {#read-write}
 
+## Prerequisites
+
+This chapter requires the following packages, used in previous chapters:
+
+```{python}
+import fiona
+import geopandas as gpd
+```
+
+```{python}
+#| echo: false
+import pandas as pd
+import matplotlib.pyplot as plt
+pd.options.display.max_rows = 6
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams['figure.figsize'] = (5, 5)
+```
+
 ## Introduction
 
-This chapter is about reading and writing geographic data. Geographic data import is essential for geocomputation: real-world applications are impossible without data. 
+This chapter is about reading and writing geographic data.
+Geographic data import is essential for geocomputation: real-world applications are impossible without data. 
 Data output is also vital, enabling others to use valuable new or improved datasets resulting from your work. 
 Taken together, these processes of import/output can be referred to as data I/O.
 
@@ -10,12 +30,10 @@ Geographic data I/O is often done with few lines of code at the beginning and en
 It is often overlooked as a simple one step process. 
 However, mistakes made at the outset of projects (e.g. using an out-of-date or in some way faulty dataset) can lead to large problems later down the line, so it is worth putting considerable time into identifying which datasets are available, where they can be found and how to retrieve them. 
 These topics are covered in @sec-retrieving-open-data, which describes various geoportals, which collectively contain many terabytes of data, and how to use them. 
-To further ease data access, a number of packages for downloading geographic data have been developed. 
-These are described in @sec-geographic-data-packages.
+To further ease data access, a number of packages for downloading geographic data have been developed, as described in @sec-geographic-data-packages.
 
-There are many geographic file formats, each of which has pros and cons. 
-These are described in @sec-file-formats. 
-The process of actually reading and writing such file formats efficiently is not covered until Sections @sec-data-input and @sec-data-output, respectively. 
+There are many geographic file formats, each of which has pros and cons, described in @sec-file-formats. 
+The process of reading and writing files in formats efficiently is covered in Sections @sec-data-input and @sec-data-output, respectively. 
 The final Section @sec-visual-outputs demonstrates methods for saving visual outputs (maps), in preparation for @sec-map-making on visualization.
 
 ## Retrieving open data {#sec-retrieving-open-data}
@@ -28,7 +46,7 @@ The final Section @sec-visual-outputs demonstrates methods for saving visual out
 
 Geographic datasets are usually stored as files or in spatial databases. 
 File formats can either store vector or raster data, while spatial databases such as [PostGIS](https://postgis.net/) can store both. 
-Today the variety of file formats may seem bewildering but there has been much consolidation and standardization since the beginnings of GIS software in the 1960s when the first widely distributed program ([SYMAP](https://news.harvard.edu/gazette/story/2011/10/the-invention-of-gis/)) for spatial analysis was created at Harvard University (Coppock and Rhind 1991, to add citation...).
+The large variety of file formats may seem bewildering, but there has been much consolidation and standardization since the beginnings of GIS software in the 1960s when the first widely distributed program ([SYMAP](https://news.harvard.edu/gazette/story/2011/10/the-invention-of-gis/)) for spatial analysis was created at Harvard University [@coppock_history_1991].
 
 GDAL (which should be pronounced "goo-dal", with the double "o" making a reference to object-orientation), the Geospatial Data Abstraction Library, has resolved many issues associated with incompatibility between geographic file formats since its release in 2000. 
 GDAL provides a unified and high-performance interface for reading and writing of many raster and vector data formats. 
@@ -79,11 +97,58 @@ If you need to use other formats, we encourage you to read the GDAL documentatio
 Additionally, some spatial data formats can store other data models (types) than vector or raster. 
 It includes LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays.
 
-Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets. For example, this can be convenient to share spatial samples with people who do not use GIS tools or exchange data with other software that does not accept spatial data formats. However, this approach has several possible issues – it is fairly challenging for storing geometries more complex than POINTs and does not directly store information about CRS.
+Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets. 
+This can be convenient to share spatial datasets with people who, or software that, struggle with spatial data formats.
 
 ## Data input (I) {#sec-data-input}
 
+Executing commands such as `geopandas.read_file` (the main function we use for loading vector data) or `rasterio.open`+`.read` (the main functions used for loading raster data) silently sets off a chain of events that reads data from files. 
+Moreover, there are many Python packages containing a wide range of geographic data or providing simple access to different data sources. 
+All of them load the data into the Python environment or, more precisely, assign objects to your workspace, stored in RAM and accessible within the Python session.
+
 ### Vector data
+
+Spatial vector data comes in a wide variety of file formats. 
+Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported directly into Python with the `geopandas` function `read_file`, which uses GDAL's vector drivers behind the scenes. 
+`geopandas` uses GDAL via `fiona` (the [default](https://github.com/geopandas/geopandas/issues/2217)) or `pyogrio` packages (a recently developed alternative to `fiona`). 
+After `fiona` is imported, the command `fiona.supported_drivers` lists the drivers available to GDAL, including ability to read (`r`), append (`a`), and write (`w`):
+
+```{python}
+fiona.supported_drivers
+```
+
+Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
+
+The first argument of `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection. The content of a string could vary between different drivers. In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the dsn would be a file name. `gpd.read_file` guesses the driver based on the file extension, as illustrated for a `.gpkg` file below:
+
+```{python}
+gpd.read_file('data/world.gpkg')
+```
+
+For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name. A GeoJSON string can also be read directly, rather than from a file:
+
+```{python}
+gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
+```
+
+Alternatively, the `gpd.read_postgis` function can be used to read a vector layer from a PostGIS database.
+
+Some vector formats, such as GeoPackage, can store multiple data layers. 
+By default, `gpd.read_file` automatically reads the first layer of the file specified in `filename`. 
+However, using the `layer` argument you can specify any other layer.
+
+The `gpd.read_file` function also allows for reading just parts of the file into RAM with two possible mechanisms. 
+The first one is related to the `where` argument, which allows specifying what part of the data to read using an SQL `WHERE` expression. 
+An example below extracts data for Tanzania only (Figure ...). 
+It is done by specifying that we want to get all rows for which `name_long` equals to `"Tanzania"`:
+
+```{python}
+gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
+```
+
+Figure...
+
+...
 
 ### Raster data
 
