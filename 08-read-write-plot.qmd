@@ -7,6 +7,7 @@ This chapter requires the following packages, used in previous chapters:
 ```{python}
 import fiona
 import geopandas as gpd
+import shapely
 ```
 
 ```{python}
@@ -143,20 +144,115 @@ An example below extracts data for Tanzania only (Figure ...).
 It is done by specifying that we want to get all rows for which `name_long` equals to `"Tanzania"`:
 
 ```{python}
-gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
+tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
+tanzania
 ```
 
-Figure...
+If you do not know the names of the available columns, a good approach is to just read one row of the data using the `rows` argument, which can be used to read the first N rows, then use the `.columns` property to examine the column names:
+
+```{python}
+gpd.read_file('data/world.gpkg', rows=1).columns
+```
+
+The second mechanism uses the `mask` argument to filter data based on intersection with an existing geometry. 
+This argument expects a geometry (`GeoDataFrame`, `GeoSeries`, or `shapely`) representing the area where we want to extract the data. 
+Let's try it using a small example---we want to read polygons from our file that intersect with the buffer of 50,000 $m$ of Tanzania's borders. 
+To do it, we need to (a) transform the geometry to a projected CRS (such as EPSG:32736), (b) prepare our "filter" by creating the buffer (@sec-buffers), and (c) transform back to the original CRS to be used as a mask:
+
+```{python}
+tanzania_buf = tanzania.to_crs(32736).buffer(50000).to_crs(4326)
+tanzania_buf.iloc[0]
+```
+
+Now, we can apply this "filter" using the `mask` argument.
+
+```{python}
+tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
+tanzania_neigh
+```
+
+Our result, shown in @fig-read-shp-query, contains Tanzania and every country within its 50,000 $m$ buffer. 
+Note that the last two expressions are used to add text labels with the `name_long` of each country, placed at the country centroid:
+
+```{python}
+#| label: fig-read-shp-query
+#| fig-cap: 'Reading a subset of the vector data using a `where` query (left) and a `mask` (right)'
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+tanzania.plot(ax=axes[0], color='lightgrey', edgecolor='grey')
+tanzania_neigh.plot(ax=axes[1], color='lightgrey', edgecolor='grey')
+tanzania_buf.plot(ax=axes[1], color='none', edgecolor='red')
+axes[0].set_title('where')
+axes[1].set_title('mask')
+tanzania.apply(lambda x: axes[0].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1)
+tanzania_neigh.apply(lambda x: axes[1].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+```
+
+Often we need to read CSV files (or other tabular formats) which have x and y coordinate columns, and turn them into a `GeoDataFrame` with point geometries. 
+To do that, we can import the file using `pandas` (e.g., `pd.read_csv` or `pd.read_excel`), then go from `DataFrame` to `GeoDataFrame` using the `gpd.points_from_xy` function, as shown earlier in the book (See @sec-vector-layer-from-scratch and @sec-spatial-joining). 
+For example, the table `cycle_hire_xy.csv`, where the coordinates are stored in the `X` and `Y` columns in EPSG:4326, can be imported, converted to a `GeoDataFrame`, and plotted, as follows:
+
+```{python}
+cycle_hire = pd.read_csv('data/cycle_hire_xy.csv')
+geom = gpd.points_from_xy(cycle_hire['X'], cycle_hire['Y'], crs=4326)
+geom = gpd.GeoSeries(geom)
+cycle_hire = gpd.GeoDataFrame(data=cycle_hire, geometry=geom)
+cycle_hire.plot();
+```
+
+Instead of columns describing 'XY' coordinates, a single column can also contain the geometry information. 
+Well-known text (WKT), well-known binary (WKB), and the GeoJSON formats are examples of this. 
+For instance, the `world_wkt.csv` file has a column named WKT representing polygons of the world's countries. 
+To import and convert it to a `GeoDataFrame`, we can apply the `shapely.wkt.loads` function (@sec-geometries) on WKT strings, to convert them into `shapely` geometries:
+
+```{python}
+world_wkt = pd.read_csv('data/world_wkt.csv')
+world_wkt['geometry'] = world_wkt['WKT'].apply(shapely.wkt.loads)
+world_wkt = gpd.GeoDataFrame(world_wkt)
+world_wkt.plot();
+```
+
+::: {.callout-note}
+Not all of the supported vector file formats store information about their coordinate reference system. In these situations, it is possible to add the missing information using the `.set_crs` function. Please refer also to @sec-querying-and-setting-coordinate-systems for more information. 
+:::
+
+As a final example, we will show how `geopandas` also reads KML files. 
+A KML file stores geographic information in XML format---a data format for the creation of web pages and the transfer of data in an application-independent way (Nolan and Lang 2014 ...). Here, we access a KML file from the web. First, we need to "activate" the `KML` driver, which isn't available by default (see above):
+
+```{python}
+fiona.supported_drivers['KML'] = 'r'
+```
+
+This file contains more than one layer. To list the available layers, we can use the `fiona.listlayers` function: 
+
+```{python}
+u = 'https://developers.google.com/kml/documentation/KML_Samples.kml'
+fiona.listlayers(u)
+```
+
+Finally, we can choose the first layer `Placemarks` and read it, using `gpd.read_file` with an additional `layer` argument:
+
+```{python}
+gpd.read_file(u, layer='Placemarks')
+```
+
+### Raster data
+
+...
+
+## Data output (O) {#sec-data-output}
+
+Writing geographic data allows you to convert from one format to another and to save newly created objects for permanent storage. 
+Depending on the data type (vector or raster), object class (e.g., `GeoDataFrame`), and type and amount of stored information (e.g., object size, range of values), it is important to know how to store spatial files in the most efficient way. 
+The next two sections will demonstrate how to do this.
+
+### Vector data
 
 ...
 
 ### Raster data
 
-## Data output (O) {#sec-data-output}
-
-### Vector data
-
-### Raster data
+...
 
 ## Visual outputs {#sec-visual-outputs}
 
