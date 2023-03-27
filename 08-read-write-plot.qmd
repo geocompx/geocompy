@@ -111,23 +111,27 @@ All of them load the data into the Python environment or, more precisely, assign
 ### Vector data
 
 Spatial vector data comes in a wide variety of file formats. 
-Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported directly into Python with the `geopandas` function `read_file`, which uses GDAL's vector drivers behind the scenes. 
-`geopandas` uses GDAL via `fiona` (the [default](https://github.com/geopandas/geopandas/issues/2217)) or `pyogrio` packages (a recently developed alternative to `fiona`). 
-After `fiona` is imported, the command `fiona.supported_drivers` lists the drivers available to GDAL, including ability to read (`r`), append (`a`), and write (`w`):
+Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with `geopandas` functions `read_file` and `to_file` (covered in Section \@ref(sec-data-output)), respectively.
+
+`geopandas` uses GDAL to read and write data, via `fiona` (the [default](https://github.com/geopandas/geopandas/issues/2217)) or `pyogrio` packages (a recently developed alternative to `fiona`). 
+After `fiona` is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`r`), append (`a`), or write (`w`) data, or all three:
 
 ```{python}
 fiona.supported_drivers
 ```
 
 Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
-
-The first argument of `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection. The content of a string could vary between different drivers. In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the dsn would be a file name. `gpd.read_file` guesses the driver based on the file extension, as illustrated for a `.gpkg` file below:
+The first argument of the `geopandas` versatile data import function `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection.
+The content of a string could vary between different drivers.
+ In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the dsn would be a file name, such as `geodata.gpkg`.
+ The driver is automatically selected based on the file extension, as demosntrated for a `.gpkg` file below:
 
 ```{python}
 gpd.read_file('data/world.gpkg')
 ```
 
-For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name. A GeoJSON string can also be read directly, rather than from a file:
+For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name.
+GeoJSON string can also be read from a character string:
 
 ```{python}
 gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
@@ -261,9 +265,11 @@ src = rasterio.open(url)
 src
 ```
 
-Just as with a local file, `rasterio.open` creates a connection to the file without obtaining any values. 
+In the example above `rasterio.open` creates a connection to the file without obtaining any values, as we did for the local `srtm.tif` file.
 The values can read, into an `ndarray`, using the `.read` method of the file connection (@sec-using-rasterio). 
 This allows us also to just read a small portion of the data without downloading the entire file. 
+This is very useful when working with large datasets hosted online from resource-constrained computing environments such as laptops.
+
 Another option is to extract raster values at particular points, directly from the file connection, using the `.sample` method (see @sec-spatial-subsetting). 
 For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying `.sample`:
 
@@ -272,11 +278,8 @@ values = src.sample([(-21.94, 64.15)])
 list(values)
 ```
 
-This way, we just downloaded a single value instead of the whole, large GeoTIFF file.
-
-The above example just shows one simple (but useful) case, but there is more to explore. 
-The `/vsicurl/` prefix works not only for raster but also for vector file formats. 
-It allows reading vectors directly from online storage with `geopandas` just by adding the prefix before the vector file URL.
+The example above efficiently extracts and downloads a single value instead of the entire GeoTIFF file, saving valuable resources.
+The `/vsicurl/` prefix **also works for vector file formats**, enabling you to import datasets from online storage with `geopandas` just by adding it before the vector file URL.
 
 Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets. You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
 
