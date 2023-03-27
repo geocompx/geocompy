@@ -102,13 +102,18 @@ It includes LAS and LAZ formats for storing lidar point clouds, and NetCDF and H
 Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets. 
 This can be convenient to share spatial datasets with people who, or software that, struggle with spatial data formats.
 
-## Reading and writing vector data 
+## Data input (I) {#sec-data-input}
+
+Executing commands such as `geopandas.read_file` (the main function we use for loading vector data) or `rasterio.open`+`.read` (the main functions used for loading raster data) silently sets off a chain of events that reads data from files. 
+Moreover, there are many Python packages containing a wide range of geographic data or providing simple access to different data sources. 
+All of them load the data into the Python environment or, more precisely, assign objects to your workspace, stored in RAM and accessible within the Python session.
+
+### Vector data
 
 Spatial vector data comes in a wide variety of file formats. 
-Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with `geopandas` functions `read_file` and `to_file`, respectively.
-
-`geopandas` uses GDAL to read and write data, via `fiona` (the [default](https://github.com/geopandas/geopandas/issues/2217)) or `pyogrio` packages (a recently developed alternative to `fiona`). 
-After `fiona` is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`r`), append (`a`), or write (`w`) data, or all three:
+Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported directly into Python with the `geopandas` function `read_file`, which uses GDAL's vector drivers behind the scenes. 
+`geopandas` uses GDAL via `fiona` (the [default](https://github.com/geopandas/geopandas/issues/2217)) or `pyogrio` packages (a recently developed alternative to `fiona`). 
+After `fiona` is imported, the command `fiona.supported_drivers` lists the drivers available to GDAL, including ability to read (`r`), append (`a`), and write (`w`):
 
 ```{python}
 fiona.supported_drivers
@@ -116,19 +121,13 @@ fiona.supported_drivers
 
 Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
 
-### Reading geographic vector data
-
-The first argument of the `geopandas` versatile data import function `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection.
-The content of a string could vary between different drivers.
- In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the dsn would be a file name, such as `geodata.gpkg`.
- The driver is determined by file extension, as illustrated for a `.gpkg` file below:
+The first argument of `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection. The content of a string could vary between different drivers. In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the dsn would be a file name. `gpd.read_file` guesses the driver based on the file extension, as illustrated for a `.gpkg` file below:
 
 ```{python}
 gpd.read_file('data/world.gpkg')
 ```
 
-For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name.
- A GeoJSON string can also be read directly, rather than from a file:
+For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name. A GeoJSON string can also be read directly, rather than from a file:
 
 ```{python}
 gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
@@ -237,14 +236,6 @@ Finally, we can choose the first layer `Placemarks` and read it, using `gpd.read
 ```{python}
 gpd.read_file(u, layer='Placemarks')
 ```
-
-### Writing geographic vector data {#sec-data-input-vec}
-
-Executing commands such as `geopandas.read_file` (the main function we use for loading vector data) or `rasterio.open`+`.read` (the main functions used for loading raster data) silently sets off a chain of events that reads data from files. 
-Moreover, there are many Python packages containing a wide range of geographic data or providing simple access to different data sources. 
-All of them load the data into the Python environment or, more precisely, assign objects to your workspace, stored in RAM and accessible within the Python session.
-
-
 
 ### Raster data
 
