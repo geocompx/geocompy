@@ -24,19 +24,19 @@
 # This is the online home of *Geocomputation with Python*, a book on reproducible geographic data analysis with open source software.
 #
 # Inspired by the Free and Open Source Software for Geospatial ([FOSS4G](https://foss4g.org/)) movement this is an *open source book*.
-# Find the code underlying the *geocompy* project on [GitHub](https://github.com/geocompr/py), ensuring that the content is reproducible, transparent, and accessible.
-# Making the book open source allows you or anyone else, to interact with the project by opening [issues](https://github.com/geocompr/py/issues), making typo fixes and more, for the benefit of everyone.
+# Find the code underlying the *geocompy* project on [GitHub](https://github.com/geocompx/geocompy), ensuring that the content is reproducible, transparent, and accessible.
+# Making the book open source allows you or anyone else, to interact with the project by opening [issues](https://github.com/geocompx/geocompy/issues), making typo fixes and more, for the benefit of everyone.
 #
 # The book's website is built by GitHub Actions, which runs the code every time we make a change, ensuring code correctness and reproducibility.
 # The current build status as follows:
 #
-# [![](https://github.com/geocompr/py/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompr/py/actions/workflows/main.yaml)
+# [![](https://github.com/geocompx/geocompy/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompx/geocompy/actions/workflows/main.yaml)
 #
 # You can run the code in the book using GitHub CodeSpaces as follows (requires a GitHub account):
 #
 # [![](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 #
-# For details on reproducing the book, see the README in the project's GitHub repo: <https://github.com/geocompr/py>.
+# For details on reproducing the book, see the README in the project's GitHub repo: <https://github.com/geocompx/geocompy>.
 #
 # <!-- 
 # Note: we don't need this here but commenting out the content rather than deleting because some of it could be ported into the README.
@@ -60,8 +60,8 @@
 # - Quarto, if you want to reproduce the book's open access website
 # - Either an Anaconda-like environment (we recommend `miniconda3`) or Docker to get systems dependencies
 #
-# See the [project's README](https://github.com/geocompr/py) for details on getting set-up.
-# After you have installed the necessary dependencies and cloned or [unzipped](https://github.com/geocompr/py/archive/refs/heads/main.zip) the book's source code, you should be able to reproduce the code in its entirety with the following command:
+# See the [project's README](https://github.com/geocompx/geocompy) for details on getting set-up.
+# After you have installed the necessary dependencies and cloned or [unzipped](https://github.com/geocompx/geocompy/archive/refs/heads/main.zip) the book's source code, you should be able to reproduce the code in its entirety with the following command:
 #
 # ```bash
 # quarto preview
@@ -73,7 +73,7 @@
 #
 # ### Local with Jupyter
 #
-# Alternatively, you can [download](https://github.com/geocompr/py/archive/refs/heads/main.zip) and unzip the book's source code. The unzipped directory `py-main/code/chapters/` contains:
+# Alternatively, you can [download](https://github.com/geocompx/geocompy/archive/refs/heads/main.zip) and unzip the book's source code. The unzipped directory `py-main/code/chapters/` contains:
 #
 # * The source `ipynb` files, one for each chapter
 # * The `data` sub-directory with the sample data used in the code sections

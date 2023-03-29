@@ -134,7 +134,7 @@ if data_path.is_dir():
 else:
   print('Attempting to get and unzip the data')
   import requests, zipfile, io
-  r = requests.get('https://github.com/geocompr/py/releases/download/0.1/data.zip')
+  r = requests.get('https://github.com/geocompx/geocompy/releases/download/0.1/data.zip')
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall('.')
 
@@ -145,7 +145,7 @@ if data_path.is_file():
   # print('path exists') # directory exists
 else:
   print('Attempting to move data')
-  r = requests.get('https://github.com/geocompr/py/archive/refs/heads/main.zip')
+  r = requests.get('https://github.com/geocompx/geocompy/archive/refs/heads/main.zip')
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall('.')
   shutil.copytree('py-main/data', 'data', dirs_exist_ok=True) 
