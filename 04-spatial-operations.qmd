@@ -25,8 +25,8 @@ import numpy as np
 import os
 import rasterio
 import scipy.ndimage
-
 from rasterio.plot import show
+import rasterio.merge
 ```
 
 Let us load the sample data for this chapter:
@@ -911,9 +911,50 @@ This returns the statistics for each category, here the mean elevation for each 
 
 ### Merging rasters
 
-...
+Suppose we would like to compute the NDVI (see @sec-raster-local-operations), and additionally want to compute terrain attributes from elevation data for observations within a study area. 
+Such computations rely on remotely sensed information. 
+The corresponding imagery is often divided into scenes covering a specific spatial extent (i.e., "tiles"), and frequently, a study area covers more than one scene. 
+Then, we would need to merge (also known as "mosaic") the scenes covered by our study area. 
+In the easiest case, we can just merge these scenes, that is put them side by side. 
+However, the procedure is the same regardless of the number of scenes. 
+In case when all scenes are "aligned" (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes are resampled (see @sec-raster-resampling) to the grid defined by the first scene. 
+
+For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (`aut.tif`) and Switzerland (`ch.tif`). 
+Merging can be done using function `rasterio.merge.merge`, which accepts a `list` of raster file connections, and returns the new `ndarray` and a "transform":
+
+```{python}
+src_1 = rasterio.open('data/aut.tif')
+src_2 = rasterio.open('data/ch.tif')
+out_image, out_transform = rasterio.merge.merge([src_1, src_2])
+```
+
+Both inputs and the result are shown in @fig-raster-merge:
+
+```{python}
+#| label: fig-raster-merge
+#| fig-cap: Raster merging
+
+fig, axes = plt.subplots(ncols=3, figsize=(9,6))
+show(src_1, ax=axes[0]);
+show(src_2, ax=axes[1]);
+show(out_image, transform=out_transform, ax=axes[2])
+axes[0].set_title('aut.tif')
+axes[1].set_title('ch.tif')
+axes[2].set_title('Mosaic (aut.tif+ch.tif)');
+```
+
+By default (`method='first`), areas of overlap retain the value of the *first* raster. Other possible methods are:
+
+* `last`---Value of the last raster
+* `min`---Minimum value
+* `max`---Maximum value
+
+When dealing with non-overlapping tiles, such as `aut.tif` and `ch.tif` (above), the `method` argument has no practical effect. However, it becomes relevant when we want to combine spectral imagery from scenes that were taken on different dates. The above four options for `method` do not cover the commonly required scenario when we would like to compute the mean value---for example to calculate a seasonal average NDVI image from a set of partially overlapping satellite images (such as Landsat). An alternative worflow to `rasterio.merge.merge`, for calculating a mosaic as well as "averaging" any overlaps, could be to go through two steps:
+
+* Resampling all scenes into a common "global" grid (@sec-raster-resampling), thereby producing a series of "matching" rasters (with the area surrounding each scene set as "No Data")
+* Averaging the rasters through raster algebra (@sec-raster-local-operations), as in `np.mean(m,axis=0)` or `np.nanmean(m,axis=0)`, where `m` is the multi-band array, which would return a single-band array of averages
 
 ## Exercises
 
-* Write a function which accepts and array and an `int` specifying the number of rows/columns to erase along an array edges. The function needs to return the modified array with `nan` values along its edges.
+* Write a function which accepts and array and an `int` specifying the number of rows/columns to erase along an array edges. The function needs to return the modified array with `np.nan` values along its edges.
 
