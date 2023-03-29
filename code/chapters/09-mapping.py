@@ -33,7 +33,7 @@ if data_path.is_dir():
 else:
   print("Attempting to get and unzip the data")
   import requests, zipfile, io
-  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/data.zip")
+  r = requests.get("https://github.com/geocompx/geocompy/releases/download/0.1/data.zip")
   z = zipfile.ZipFile(io.BytesIO(r.content))
   z.extractall(".")
 

@@ -44,7 +44,7 @@ if not os.path.exists(data_path):
   os.mkdir(data_path)
   
 file_path = 'data/landsat.tif'
-url = 'https://github.com/geocompr/py/releases/download/0.1/landsat.tif'
+url = 'https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif'
 if not os.path.exists(file_path):
   print('Attempting to get the data')
   urlretrieve(url, file_path)

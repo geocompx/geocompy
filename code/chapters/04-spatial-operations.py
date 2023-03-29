@@ -48,7 +48,7 @@ if not file_path.exists():
      os.mkdir(data_path)
   print("Attempting to get the data")
   import requests
-  r = requests.get("https://github.com/geocompr/py/releases/download/0.1/landsat.tif")  
+  r = requests.get("https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif")  
   with open(file_path, "wb") as f:
     f.write(r.content)
 
