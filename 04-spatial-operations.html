@@ -310,8 +310,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.ndimage</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.plot <span class="im">import</span> show</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rasterio.plot <span class="im">import</span> show</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.merge</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let us load the sample data for this chapter:</p>
 <div class="cell" data-execution_count="4">
@@ -1900,7 +1900,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="53">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="53">
-<pre><code>&lt;generator object sample_gen at 0x7fc454aaa820&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7efd3cc02400&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>
@@ -2250,13 +2250,48 @@ dtype: float64</code></pre>
 </section>
 <section id="merging-rasters" class="level3" data-number="3.4.8">
 <h3 data-number="3.4.8" class="anchored" data-anchor-id="merging-rasters"><span class="header-section-number">3.4.8</span> Merging rasters</h3>
-<p>…</p>
+<p>Suppose we would like to compute the NDVI (see <a href="#sec-raster-local-operations"><span>Section&nbsp;3.4.3</span></a>), and additionally want to compute terrain attributes from elevation data for observations within a study area. Such computations rely on remotely sensed information. The corresponding imagery is often divided into scenes covering a specific spatial extent (i.e., “tiles”), and frequently, a study area covers more than one scene. Then, we would need to merge (also known as “mosaic”) the scenes covered by our study area. In the easiest case, we can just merge these scenes, that is put them side by side. However, the procedure is the same regardless of the number of scenes. In case when all scenes are “aligned” (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes are resampled (see <a href="05-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>) to the grid defined by the first scene.</p>
+<p>For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (<code>aut.tif</code>) and Switzerland (<code>ch.tif</code>). Merging can be done using function <code>rasterio.merge.merge</code>, which accepts a <code>list</code> of raster file connections, and returns the new <code>ndarray</code> and a “transform”:</p>
+<div class="cell" data-execution_count="77">
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>src_1 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/aut.tif'</span>)</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>src_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/ch.tif'</span>)</span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.merge.merge([src_1, src_2])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Both inputs and the result are shown in <a href="#fig-raster-merge">Figure&nbsp;<span>3.16</span></a>:</p>
+<div class="cell" data-execution_count="78">
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">6</span>))</span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>show(src_1, ax<span class="op">=</span>axes[<span class="dv">0</span>])<span class="op">;</span></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>show(src_2, ax<span class="op">=</span>axes[<span class="dv">1</span>])<span class="op">;</span></span>
+<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>show(out_image, transform<span class="op">=</span>out_transform, ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
+<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'aut.tif'</span>)</span>
+<span id="cb102-6"><a href="#cb102-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'ch.tif'</span>)</span>
+<span id="cb102-7"><a href="#cb102-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">'Mosaic (aut.tif+ch.tif)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-raster-merge" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-spatial-operations_files/figure-html/fig-raster-merge-output-1.png" width="715" height="154" class="figure-img"></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.16: Raster merging</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p>By default (<code>method='first</code>), areas of overlap retain the value of the <em>first</em> raster. Other possible methods are:</p>
+<ul>
+<li><code>last</code>—Value of the last raster</li>
+<li><code>min</code>—Minimum value</li>
+<li><code>max</code>—Maximum value</li>
+</ul>
+<p>When dealing with non-overlapping tiles, such as <code>aut.tif</code> and <code>ch.tif</code> (above), the <code>method</code> argument has no practical effect. However, it becomes relevant when we want to combine spectral imagery from scenes that were taken on different dates. The above four options for <code>method</code> do not cover the commonly required scenario when we would like to compute the mean value—for example to calculate a seasonal average NDVI image from a set of partially overlapping satellite images (such as Landsat). An alternative worflow to <code>rasterio.merge.merge</code>, for calculating a mosaic as well as “averaging” any overlaps, could be to go through two steps:</p>
+<ul>
+<li>Resampling all scenes into a common “global” grid (<a href="05-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>), thereby producing a series of “matching” rasters (with the area surrounding each scene set as “No Data”)</li>
+<li>Averaging the rasters through raster algebra (<a href="#sec-raster-local-operations"><span>Section&nbsp;3.4.3</span></a>), as in <code>np.mean(m,axis=0)</code> or <code>np.nanmean(m,axis=0)</code>, where <code>m</code> is the multi-band array, which would return a single-band array of averages</li>
+</ul>
 </section>
 </section>
 <section id="exercises" class="level2" data-number="3.5">
 <h2 data-number="3.5" class="anchored" data-anchor-id="exercises"><span class="header-section-number">3.5</span> Exercises</h2>
 <ul>
-<li>Write a function which accepts and array and an <code>int</code> specifying the number of rows/columns to erase along an array edges. The function needs to return the modified array with <code>nan</code> values along its edges.</li>
+<li>Write a function which accepts and array and an <code>int</code> specifying the number of rows/columns to erase along an array edges. The function needs to return the modified array with <code>np.nan</code> values along its edges.</li>
 </ul>
 
 
