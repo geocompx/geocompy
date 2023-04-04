@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
-plt.rcParams["figure.figsize"] = (5, 5)
+plt.rcParams['figure.figsize'] = (5, 5)
 ```
 
 Packages...
@@ -23,14 +23,17 @@ import numpy as np
 import shapely.geometry
 import geopandas as gpd
 import topojson as tp
+import rasterio
+import rasterio.warp
+import rasterio.plot
 ```
 
 Sample data...
 
 ```{python}
-seine = gpd.read_file("data/seine.gpkg")
-us_states = gpd.read_file("data/us_states.gpkg")
-nz = gpd.read_file("data/nz.gpkg")
+seine = gpd.read_file('data/seine.gpkg')
+us_states = gpd.read_file('data/us_states.gpkg')
+nz = gpd.read_file('data/nz.gpkg')
 ```
 
 ## Introduction
@@ -501,6 +504,107 @@ shapely.geometry.MultiPoint(polygon.exterior.coords)
 ...
 
 ### Aggregation and disaggregation
+
+Raster datasets can also differ with regard to their resolution. 
+To match resolutions, or to modify the resolution for other reasons (such as conserving storage space), one can either decrease (aggregate) or increase (disaggregate) the resolution of one raster. 
+As an example, we here change the spatial resolution of `dem.tif` by a factor of 5 (Figure @fig-raster-aggregate). 
+
+Raster aggregation is, in fact, a special case of raster resampling (see @sec-raster-resampling), where the target raster grid is aligned with the original raster, only with coarser pixels. Raster resampling, is the general case where the new grid is not necessarily an aggregation of the original one, but any other case as well (such as a rotated and/or shifted one, etc.). 
+
+To aggregate a raster using `rasterio`, we go through [two steps](https://rasterio.readthedocs.io/en/stable/topics/resampling.html):
+
+* Reading the raster values (using `.read`) into an `out_shape` that is different from the original `.shape`
+* Updating the `transform` according to the `out_shape`
+
+Let's demonstrate. First, we create a file connection to `dem.tif`, using `rasterio.open`:
+
+```{python}
+src = rasterio.open('data/dem.tif')
+```
+
+Note the shape of the raster, at has 117 rows and 117 columns:
+
+```{python}
+src.read(1).shape
+```
+
+Also note the `transform`, which tells us that the raster resolution is 30.85 $m$:
+
+```{python}
+src.transform
+```
+
+Now, instead of reading the raster values the usual way, as in `src.read(1)`, we can specify `out_shape` to read the values into a different shape. Here, we calculate a new shape which is downscaled by a factor of `5`, i.e., the number of rows and columns is multiplied by `0.2`. We must truncate any "partial" rows and columns, e.g., using `int`. Each new pixel is now obtained, or "resampled", from ~5×5=25 "old" raster values. We can choose the resampling method through the `resampling` parameter. Here we use `rasterio.enums.Resampling.average`, i.e., the new "large" pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in `dem.tif`:
+
+```{python}
+factor = 0.2
+r = src.read(1,
+    out_shape=(
+        int(src.height * factor),
+        int(src.width * factor)
+        ),
+    resampling=rasterio.enums.Resampling.average
+)
+```
+
+The resulting array `r` has a smaller `.shape`, as shown below:
+
+```{python}
+r.shape
+```
+
+Other useful [options](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling) include:
+
+* `rasterio.enums.Resampling.nearest`---Nearest neighbor resampling
+* `rasterio.enums.Resampling.bilinear`---Bilinear resampling
+* `rasterio.enums.Resampling.mode`---Mode resampling (most common value)
+* `rasterio.enums.Resampling.min`---Minimum resampling
+* `rasterio.enums.Resampling.max`---Maximum resampling
+* `rasterio.enums.Resampling.med`---Median resampling
+* `rasterio.enums.Resampling.sum`---Median resampling
+
+The second step is to update the `transform`, taking into account the change in raster shape, as follows:
+
+```{python}
+new_transform = src.transform * src.transform.scale(
+    (src.width / r.shape[0]),
+    (src.height / r.shape[1])
+)
+new_transform
+```
+
+The original raster and the aggregated one, are shown in @fig-raster-aggregate:
+
+```{python}
+#| label: fig-raster-aggregate
+#| fig-cap: Original raster (left), and aggregated raster (right). 
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+rasterio.plot.show(src, ax=axes[0])
+rasterio.plot.show(r, transform=new_transform, ax=axes[1]);
+```
+
+In case we need to export the new raster, we need to update the metadata: 
+
+```{python}
+dst_kwargs = src.meta.copy()
+dst_kwargs.update({
+    'transform': new_transform,
+    'width': r.shape[0],
+    'height': r.shape[1],
+})
+dst_kwargs
+```
+
+Then create a new file in writing mode, and write the values in `r` into that file (see @sec-data-output-raster): 
+
+```{python}
+dst = rasterio.open('output/dem_agg5.tif', 'w', **dst_kwargs)
+dst.write(r, 1)
+dst.close()
+```
+
+Disaggregation...
 
 ...
 
