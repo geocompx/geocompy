@@ -579,9 +579,11 @@ The original raster and the aggregated one, are shown in @fig-raster-aggregate:
 #| label: fig-raster-aggregate
 #| fig-cap: Original raster (left), and aggregated raster (right). 
 
-fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+fig, axes = plt.subplots(ncols=2, figsize=(8,4))
 rasterio.plot.show(src, ax=axes[0])
-rasterio.plot.show(r, transform=new_transform, ax=axes[1]);
+rasterio.plot.show(r, transform=new_transform, ax=axes[1])
+axes[0].set_title('Original')
+axes[1].set_title('Aggregated');
 ```
 
 In case we need to export the new raster, we need to update the metadata: 
@@ -604,9 +606,54 @@ dst.write(r, 1)
 dst.close()
 ```
 
-Disaggregation...
+The opposite operastion, disaggregation, is when we increase the resolution of raster objects. Either of the supported resampling methods (see above) can be used. However, since we are not actually summarizing information but transferring the value of a large pixel into multiple small pixels, it makes sense to use either:
 
-...
+* Nearest neighbor resampling (`rasterio.enums.Resampling.nearest`), when want to keep the original values as-is, since when modifying them would be incorrect (such as in categorical rasters)
+* Smooting techniques, such as Bilinear resampling (`rasterio.enums.Resampling.bilinear`), when we would like the smaller pixels to reflect gradual change between the original values, e.g., when the disaggregated raster is used for visulalization purposes
+
+To disaggregate a raster, we go through the same workflow as for aggregation, only using a different factor, such as `factor=5` instead of `factor=0.2`, i.e., *increasing* the number of raster pixels instead of decreasing. In this example, we use bilinear interpolation to get a smoothed high-resolution raster:
+
+```{python}
+factor = 5
+r2 = src.read(1,
+    out_shape=(
+        int(src.height * factor),
+        int(src.width * factor)
+        ),
+    resampling=rasterio.enums.Resampling.bilinear
+)
+```
+
+Here is the size of the disaggregated raster:
+
+```{python}
+r2.shape
+```
+
+And here is the same expression as shown for aggregation, to calculate the new transform:
+
+```{python}
+new_transform2 = src.transform * src.transform.scale(
+    (src.width / r2.shape[0]),
+    (src.height / r2.shape[1])
+)
+new_transform2
+```
+
+A zoom-in on the top-left corner of the original raster and the disaggregated one, are shown in @fig-raster-disaggregate:
+
+```{python}
+#| label: fig-raster-disaggregate
+#| fig-cap: Original raster (left), and disaggregated raster (right). The same top-left corner extent of both rasters is shown, to zoom-in and demonstrate the effect of bilinear interpolation.
+
+fig, axes = plt.subplots(ncols=2, figsize=(8,4))
+rasterio.plot.show(src.read(1)[:5, :5], transform=src.transform, ax=axes[0])
+rasterio.plot.show(r2[:25, :25], transform=new_transform2, ax=axes[1])
+axes[0].set_title('Original')
+axes[1].set_title('Disaggregated');
+```
+
+Code to export the disaggregated raster would be identical to the one used above for the aggregated raster, so omit it to save space.
 
 ### Resampling {#sec-raster-resampling}
 
