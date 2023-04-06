@@ -303,13 +303,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely.geometry</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> topojson <span class="im">as</span> tp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> topojson <span class="im">as</span> tp</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.warp</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Sample data…</p>
 <div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>seine <span class="op">=</span> gpd.read_file(<span class="st">"data/seine.gpkg"</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>us_states <span class="op">=</span> gpd.read_file(<span class="st">"data/us_states.gpkg"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>nz <span class="op">=</span> gpd.read_file(<span class="st">"data/nz.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>seine <span class="op">=</span> gpd.read_file(<span class="st">'data/seine.gpkg'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>us_states <span class="op">=</span> gpd.read_file(<span class="st">'data/us_states.gpkg'</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>nz <span class="op">=</span> gpd.read_file(<span class="st">'data/nz.gpkg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="introduction" class="level2" data-number="4.2">
@@ -931,6 +934,114 @@ dtype: geometry</code></pre>
 </section>
 <section id="aggregation-and-disaggregation" class="level3" data-number="4.4.3">
 <h3 data-number="4.4.3" class="anchored" data-anchor-id="aggregation-and-disaggregation"><span class="header-section-number">4.4.3</span> Aggregation and disaggregation</h3>
+<p>Raster datasets can also differ with regard to their resolution. To match resolutions, or to modify the resolution for other reasons (such as conserving storage space), one can either decrease (aggregate) or increase (disaggregate) the resolution of one raster. As an example, we here change the spatial resolution of <code>dem.tif</code> by a factor of 5 (Figure <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.13</span></a>).</p>
+<p>Raster aggregation is, in fact, a special case of raster resampling (see <a href="#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>), where the target raster grid is aligned with the original raster, only with coarser pixels. Raster resampling, is the general case where the new grid is not necessarily an aggregation of the original one, but any other case as well (such as a rotated and/or shifted one, etc.).</p>
+<p>To aggregate a raster using <code>rasterio</code>, we go through <a href="https://rasterio.readthedocs.io/en/stable/topics/resampling.html">two steps</a>:</p>
+<ul>
+<li>Reading the raster values (using <code>.read</code>) into an <code>out_shape</code> that is different from the original <code>.shape</code></li>
+<li>Updating the <code>transform</code> according to the <code>out_shape</code></li>
+</ul>
+<p>Let’s demonstrate. First, we create a file connection to <code>dem.tif</code>, using <code>rasterio.open</code>:</p>
+<div class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/dem.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note the shape of the raster, it has 117 rows and 117 columns:</p>
+<div class="cell" data-execution_count="51">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>src.read(<span class="dv">1</span>).shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="51">
+<pre><code>(117, 117)</code></pre>
+</div>
+</div>
+<p>Also note the <code>transform</code>, which tells us that the raster resolution is 30.85 <span class="math inline">\(m\)</span>:</p>
+<div class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>src.transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="52">
+<pre><code>Affine(30.849999999999604, 0.0, 794599.1076146346,
+       0.0, -30.84999999999363, 8935384.324602526)</code></pre>
+</div>
+</div>
+<p>Now, instead of reading the raster values the usual way, as in <code>src.read(1)</code>, we can specify <code>out_shape</code> to read the values into a different shape. Here, we calculate a new shape which is downscaled by a factor of <code>5</code>, i.e., the number of rows and columns is multiplied by <code>0.2</code>. We must truncate any “partial” rows and columns, e.g., using <code>int</code>. Each new pixel is now obtained, or “resampled”, from ~5×5=25 “old” raster values. We can choose the resampling method through the <code>resampling</code> parameter. Here we use <code>rasterio.enums.Resampling.average</code>, i.e., the new “large” pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in <code>dem.tif</code>:</p>
+<div class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="fl">0.2</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read(<span class="dv">1</span>,</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.height <span class="op">*</span> factor),</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.width <span class="op">*</span> factor)</span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.average</span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The resulting array <code>r</code> has a smaller <code>.shape</code>, as shown below:</p>
+<div class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>r.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="54">
+<pre><code>(23, 23)</code></pre>
+</div>
+</div>
+<p>Other useful <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling">options</a> include:</p>
+<ul>
+<li><code>rasterio.enums.Resampling.nearest</code>—Nearest neighbor resampling</li>
+<li><code>rasterio.enums.Resampling.bilinear</code>—Bilinear resampling</li>
+<li><code>rasterio.enums.Resampling.mode</code>—Mode resampling (most common value)</li>
+<li><code>rasterio.enums.Resampling.min</code>—Minimum resampling</li>
+<li><code>rasterio.enums.Resampling.max</code>—Maximum resampling</li>
+<li><code>rasterio.enums.Resampling.med</code>—Median resampling</li>
+<li><code>rasterio.enums.Resampling.sum</code>—Median resampling</li>
+</ul>
+<p>The second step is to update the <code>transform</code>, taking into account the change in raster shape, as follows:</p>
+<div class="cell" data-execution_count="55">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> src.transform <span class="op">*</span> src.transform.scale(</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    (src.width <span class="op">/</span> r.shape[<span class="dv">0</span>]),</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    (src.height <span class="op">/</span> r.shape[<span class="dv">1</span>])</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="55">
+<pre><code>Affine(156.93260869565017, 0.0, 794599.1076146346,
+       0.0, -156.9326086956198, 8935384.324602526)</code></pre>
+</div>
+</div>
+<p>The original raster and the aggregated one, are shown in <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.13</span></a>:</p>
+<div class="cell" data-execution_count="56">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>axes[<span class="dv">1</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-raster-aggregate" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="05-geometry-operations_files/figure-html/fig-raster-aggregate-output-1.png" width="753" height="360" class="figure-img"></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.13: Original raster (left), and aggregated raster (right).</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In case we need to export the new raster, we need to update the metadata:</p>
+<div class="cell" data-execution_count="57">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src.meta.copy()</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: new_transform,</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: r.shape[<span class="dv">0</span>],</span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: r.shape[<span class="dv">1</span>],</span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>dst_kwargs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="57">
+<pre><code>{'driver': 'GTiff',
+ 'dtype': 'float32',
+ 'nodata': nan,
+ 'width': 23,
+ 'height': 23,
+ 'count': 1,
+ 'crs': CRS.from_epsg(32717),
+ 'transform': Affine(156.93260869565017, 0.0, 794599.1076146346,
+        0.0, -156.9326086956198, 8935384.324602526)}</code></pre>
+</div>
+</div>
+<p>Then create a new file in writing mode, and write the values in <code>r</code> into that file (see <a href="08-read-write-plot.html#sec-data-output-raster"><span>Section&nbsp;7.8.2</span></a>):</p>
+<div class="cell" data-execution_count="58">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_agg5.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Disaggregation…</p>
 <p>…</p>
 </section>
 <section id="sec-raster-resampling" class="level3" data-number="4.4.4">

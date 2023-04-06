@@ -631,7 +631,7 @@ Note
 <span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_nlcd.crs,</span>
 <span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
 <span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_crs,</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.warp.Resampling.nearest</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
 <span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="22">
 <pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1248, 1200)),
@@ -731,7 +731,7 @@ Note
 <span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_nlcd.crs,</span>
 <span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_nlcd_2.transform,</span>
 <span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_nlcd_2.crs,</span>
-<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.warp.Resampling.nearest</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
 <span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="31">
 <pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326_2.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1248, 1200)),
@@ -765,10 +765,10 @@ Note
 <p>The difference is that in the first example we calculate the template automatically, using <code>rasterio.warp.calculate_default_transform</code>, while in the second example we used an existing raster as the “template”.</p>
 <p>Importantly, when the template raster has much more “coarse” resolution than the source raster, the:</p>
 <ul>
-<li><code>rasterio.warp.Resampling.average</code> (for continuous rasters), or</li>
-<li><code>rasterio.warp.Resampling.mode</code> (for categorical rasters)</li>
+<li><code>rasterio.enums.Resampling.average</code> (for continuous rasters), or</li>
+<li><code>rasterio.enums.Resampling.mode</code> (for categorical rasters)</li>
 </ul>
-<p>resampling method should be used, instead of <code>rasterio.warp.Resampling.nearest</code>. Otherwise, much of the data will be lost, as the “nearest” method can capture one pixel value only for each destination raster pixel.</p>
+<p>resampling method should be used, instead of <code>rasterio.enums.Resampling.nearest</code>. Otherwise, much of the data will be lost, as the “nearest” method can capture one pixel value only for each destination raster pixel.</p>
 <p>Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure. This is demonstrated below with <code>srtm.tif</code> from the Shuttle Radar Topography Mission (SRTM), which represents height in meters above sea level (elevation) with the WGS84 CRS.</p>
 <p>We will reproject this dataset into a projected CRS, but not with the nearest neighbor method which is appropriate for categorical data. Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster. The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight. The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method. The code is practically the same, except for changing the source and destination file names, and replacing <code>nearest</code> with <code>bilinear</code>:</p>
 <div class="cell" data-execution_count="35">
@@ -795,7 +795,7 @@ Note
 <span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_srtm.crs,</span>
 <span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
 <span id="cb54-23"><a href="#cb54-23" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_crs,</span>
-<span id="cb54-24"><a href="#cb54-24" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.warp.Resampling.bilinear</span>
+<span id="cb54-24"><a href="#cb54-24" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.bilinear</span>
 <span id="cb54-25"><a href="#cb54-25" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb54-26"><a href="#cb54-26" aria-hidden="true" tabindex="-1"></a>dst_srtm.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
