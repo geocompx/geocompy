@@ -123,11 +123,12 @@ fiona.supported_drivers
 Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
 The first argument of the `geopandas` versatile data import function `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection.
 The content of a string could vary between different drivers.
- In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the dsn would be a file name, such as `geodata.gpkg`.
- The driver is automatically selected based on the file extension, as demosntrated for a `.gpkg` file below:
+In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the `filename` argument would be a path or a URL to an actual file, such as `geodata.gpkg`.
+The driver is automatically selected based on the file extension, as demonstrated for a `.gpkg` file below:
 
 ```{python}
-gpd.read_file('data/world.gpkg')
+world = gpd.read_file('data/world.gpkg')
+world
 ```
 
 For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name.
@@ -201,8 +202,8 @@ For example, the table `cycle_hire_xy.csv`, where the coordinates are stored in 
 cycle_hire = pd.read_csv('data/cycle_hire_xy.csv')
 geom = gpd.points_from_xy(cycle_hire['X'], cycle_hire['Y'], crs=4326)
 geom = gpd.GeoSeries(geom)
-cycle_hire = gpd.GeoDataFrame(data=cycle_hire, geometry=geom)
-cycle_hire.plot();
+cycle_hire_xy = gpd.GeoDataFrame(data=cycle_hire, geometry=geom)
+cycle_hire_xy.plot();
 ```
 
 Instead of columns describing 'XY' coordinates, a single column can also contain the geometry information. 
@@ -290,6 +291,44 @@ Depending on the data type (vector or raster), object class (e.g., `GeoDataFrame
 The next two sections will demonstrate how to do this.
 
 ### Vector data
+
+The counterpart of `gpd.read_file` is the `.to_file` method that a `GeoDataFrame` has. It allows you to write `GeoDataFrame` objects to a wide range of geographic vector file formats, including the most common, such as `.geojson`, `.shp` and `.gpkg`. Based on the file name, `.to_file` decides automatically which driver to use. The speed of the writing process depends also on the driver.
+
+```{python}
+world.to_file('output/world.gpkg')
+```
+
+Note: if you try to write to the same data source again, the function will overwrite the file:
+
+```{python}
+world.to_file('output/world.gpkg')
+```
+
+Instead of overwriting the file, we could add a new layer to the file with `mode='a'` ("append" mode, as opposed to the default `mode='w'` for "write" mode). Appending is supported by several spatial formats, including GeoPackage. For example:
+
+```{python}
+world.to_file('output/world_many_features.gpkg')
+world.to_file('output/world_many_features.gpkg', mode='a')
+```
+
+Here, `world_many_features.gpkg` will contain a polygonal layer named `world` with two "copies" of each country (that is 177×2=354 features, whereas the `world` layer has 177 features).
+
+Alternatively, you can create another, separate, layer, within the same file. The GeoPackage format also supports multiple layers within one file. For example:
+
+```{python}
+world.to_file('output/world_many_layers.gpkg')
+world.to_file('output/world_many_layers.gpkg', layer='world2')
+```
+
+In this case, `world_many_layers.gpkg` has two "layers", `world_many_layers` (same as the file name, when `layer` is unspecified) and `world2`. Incidentally, the contents of the two layers is identical, but this doesn't have to be so. Each layer from such a file can be imported separately, as in: 
+
+```{python}
+gpd.read_file('output/world_many_layers.gpkg', layer='world_many_layers').head(1)
+```
+
+```{python}
+gpd.read_file('output/world_many_layers.gpkg', layer='world2').head(1)
+```
 
 ...
 
