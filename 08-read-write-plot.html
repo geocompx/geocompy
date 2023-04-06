@@ -451,9 +451,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
  'TopoJSON': 'r'}</code></pre>
 </div>
 </div>
-<p>Other, less common, drivers can be <a href="https://geopandas.org/en/stable/docs/user_guide/io.html">“activated”</a> by manually supplementing <code>fiona.supported_drivers</code>. The first argument of the <code>geopandas</code> versatile data import function <code>gpd.read_file</code> is <code>filename</code>, which is typically a string, but can also be a file connection. The content of a string could vary between different drivers. In most cases, as with the ESRI Shapefile (<code>.shp</code>) or the GeoPackage format (<code>.gpkg</code>), the dsn would be a file name, such as <code>geodata.gpkg</code>. The driver is automatically selected based on the file extension, as demosntrated for a <code>.gpkg</code> file below:</p>
+<p>Other, less common, drivers can be <a href="https://geopandas.org/en/stable/docs/user_guide/io.html">“activated”</a> by manually supplementing <code>fiona.supported_drivers</code>. The first argument of the <code>geopandas</code> versatile data import function <code>gpd.read_file</code> is <code>filename</code>, which is typically a string, but can also be a file connection. The content of a string could vary between different drivers. In most cases, as with the ESRI Shapefile (<code>.shp</code>) or the GeoPackage format (<code>.gpkg</code>), the <code>filename</code> argument would be a path or a URL to an actual file, such as <code>geodata.gpkg</code>. The driver is automatically selected based on the file extension, as demonstrated for a <code>.gpkg</code> file below:</p>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'data/world.gpkg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>world <span class="op">=</span> gpd.read_file(<span class="st">'data/world.gpkg'</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>world</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 
 <div>
@@ -751,8 +752,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>cycle_hire <span class="op">=</span> pd.read_csv(<span class="st">'data/cycle_hire_xy.csv'</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> gpd.points_from_xy(cycle_hire[<span class="st">'X'</span>], cycle_hire[<span class="st">'Y'</span>], crs<span class="op">=</span><span class="dv">4326</span>)</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> gpd.GeoSeries(geom)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>cycle_hire <span class="op">=</span> gpd.GeoDataFrame(data<span class="op">=</span>cycle_hire, geometry<span class="op">=</span>geom)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>cycle_hire.plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>cycle_hire_xy <span class="op">=</span> gpd.GeoDataFrame(data<span class="op">=</span>cycle_hire, geometry<span class="op">=</span>geom)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>cycle_hire_xy.plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <p><img src="08-read-write-plot_files/figure-html/cell-12-output-1.png" width="440" height="264"></p>
 </div>
@@ -875,6 +876,98 @@ Note
 <p>Writing geographic data allows you to convert from one format to another and to save newly created objects for permanent storage. Depending on the data type (vector or raster), object class (e.g., <code>GeoDataFrame</code>), and type and amount of stored information (e.g., object size, range of values), it is important to know how to store spatial files in the most efficient way. The next two sections will demonstrate how to do this.</p>
 <section id="vector-data-1" class="level3" data-number="7.8.1">
 <h3 data-number="7.8.1" class="anchored" data-anchor-id="vector-data-1"><span class="header-section-number">7.8.1</span> Vector data</h3>
+<p>The counterpart of <code>gpd.read_file</code> is the <code>.to_file</code> method that a <code>GeoDataFrame</code> has. It allows you to write <code>GeoDataFrame</code> objects to a wide range of geographic vector file formats, including the most common, such as <code>.geojson</code>, <code>.shp</code> and <code>.gpkg</code>. Based on the file name, <code>.to_file</code> decides automatically which driver to use. The speed of the writing process depends also on the driver.</p>
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world.gpkg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note: if you try to write to the same data source again, the function will overwrite the file:</p>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world.gpkg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Instead of overwriting the file, we could add a new layer to the file with <code>mode='a'</code> (“append” mode, as opposed to the default <code>mode='w'</code> for “write” mode). Appending is supported by several spatial formats, including GeoPackage. For example:</p>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_features.gpkg'</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_features.gpkg'</span>, mode<span class="op">=</span><span class="st">'a'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here, <code>world_many_features.gpkg</code> will contain a polygonal layer named <code>world</code> with two “copies” of each country (that is 177×2=354 features, whereas the <code>world</code> layer has 177 features).</p>
+<p>Alternatively, you can create another, separate, layer, within the same file. The GeoPackage format also supports multiple layers within one file. For example:</p>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_layers.gpkg'</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this case, <code>world_many_layers.gpkg</code> has two “layers”, <code>world_many_layers</code> (same as the file name, when <code>layer</code> is unspecified) and <code>world2</code>. Incidentally, the contents of the two layers is identical, but this doesn’t have to be so. Each layer from such a file can be imported separately, as in:</p>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world_many_layers'</span>).head(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>iso_a2</th>
+      <th>name_long</th>
+      <th>continent</th>
+      <th>...</th>
+      <th>lifeExp</th>
+      <th>gdpPercap</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>FJ</td>
+      <td>Fiji</td>
+      <td>Oceania</td>
+      <td>...</td>
+      <td>69.96</td>
+      <td>8222.253784</td>
+      <td>MULTIPOLYGON (((-180.00000 -16....</td>
+    </tr>
+  </tbody>
+</table>
+<p>1 rows × 11 columns</p>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world2'</span>).head(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
+
+<div>
+
+<table class="dataframe table table-sm table-striped">
+  <thead>
+    <tr>
+      <th></th>
+      <th>iso_a2</th>
+      <th>name_long</th>
+      <th>continent</th>
+      <th>...</th>
+      <th>lifeExp</th>
+      <th>gdpPercap</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>FJ</td>
+      <td>Fiji</td>
+      <td>Oceania</td>
+      <td>...</td>
+      <td>69.96</td>
+      <td>8222.253784</td>
+      <td>MULTIPOLYGON (((-180.00000 -16....</td>
+    </tr>
+  </tbody>
+</table>
+<p>1 rows × 11 columns</p>
+</div>
+</div>
+</div>
 <p>…</p>
 </section>
 <section id="raster-data-1" class="level3" data-number="7.8.2">
