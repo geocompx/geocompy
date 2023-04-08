@@ -185,7 +185,10 @@ In other words, raster reprojection can be thought of as two separate spatial op
 Thus in most cases when both raster and vector data are used, it is better to avoid reprojecting rasters and reproject vectors instead.
 
 :::{.callout-note}
-Reprojection of the regular rasters is also known as warping. Additionally, there is a second similar operation called "transformation". Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry. For example, it could convert the input raster (a regular grid) into a curvilinear grid. The `rasterio`, like common raster file formats (such as GeoTIFF), does not support curvilinear grids (?).
+Reprojection of the regular rasters is also known as warping. 
+Additionally, there is a second similar operation called "transformation". 
+Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry. 
+For example, it could convert the input raster (a regular grid) into a curvilinear grid. The `rasterio`, like common raster file formats (such as GeoTIFF), does not support curvilinear grids (?).
 :::
 
 The raster reprojection process is done using two functions from the `rasterio.warp` sub-package:
@@ -236,7 +239,10 @@ Note that `*`, in `*src_nlcd.bounds`, is used to unpack `src_nlcd.bounds` to fou
 src_nlcd.bounds
 ```
 
-Next, we will create the metadata file used for writing the reprojected raster to file. For convenience, we are taking the metadata of the source raster (`src_nlcd.meta`), making a copy (`dst_kwargs`), and then updating those specific properties that need to be changed. Note that the reprojection process typically creates "No Data" pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be "filled" to get back a rectangular extent. We need to specify a "No Data" value of our choice, if there is none, or use the existing source raster setting, such as `255` in this case:
+Next, we will create the metadata file used for writing the reprojected raster to file. 
+For convenience, we are taking the metadata of the source raster (`src_nlcd.meta`), making a copy (`dst_kwargs`), and then updating those specific properties that need to be changed. 
+Note that the reprojection process typically creates "No Data" pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be "filled" to get back a rectangular extent. 
+We need to specify a "No Data" value of our choice, if there is none, or use the existing source raster setting, such as `255` in this case:
 
 ```{python}
 dst_kwargs = src_nlcd.meta.copy()
@@ -249,7 +255,9 @@ dst_kwargs.update({
 dst_kwargs
 ```
 
-We are ready to create the reprojected raster. Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once. It is also possible to reproject into an in-memory `ndarray` object, see the [documentation](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject).
+We are ready to create the reprojected raster. 
+Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once. 
+It is also possible to reproject into an in-memory `ndarray` object, see the [documentation](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject).
 
 To write the reprojected raster, we first create a destination file connection `dst_nlcd`, pointing at the output file path of our choice (`output/nlcd_4326.tif`), using the updated metadata object created earlier (`dst_kwargs`):
 
@@ -257,7 +265,10 @@ To write the reprojected raster, we first create a destination file connection `
 dst_nlcd = rasterio.open('output/nlcd_4326.tif', 'w', **dst_kwargs)
 ```
 
-Then, we use the `rasterio.warp.reproject` function to calculate and write the reprojection result into the `dst_nlcd` file connection. Note that the `source` and `destination` accept a "band" object, created using `rasterio.band`. In this case, there is just one band. If there were more bands, we would have to repeat the procedure for each band, using `i` instead of `1` inside a [loop](https://rasterio.readthedocs.io/en/latest/topics/reproject.html#reprojecting-a-geotiff-dataset):
+Then, we use the `rasterio.warp.reproject` function to calculate and write the reprojection result into the `dst_nlcd` file connection. 
+Note that the `source` and `destination` accept a "band" object, created using `rasterio.band`. 
+In this case, there is just one band. 
+If there were more bands, we would have to repeat the procedure for each band, using `i` instead of `1` inside a [loop](https://rasterio.readthedocs.io/en/latest/topics/reproject.html#reprojecting-a-geotiff-dataset):
 
 ```{python}
 rasterio.warp.reproject(
@@ -277,7 +288,7 @@ Finally, we close the file connection so that the data are actually written:
 dst_nlcd.close()
 ```
 
-Many properties of the new object differ from the previous one, including the number of columns and rows (and therefore number of cells), resolution (transformed from meters into degrees), and extent, as summarized again below (note that the number of categories increases from 8 to 9 because of the addition of NA values, not because a new category has been created — the land cover classes are preserved).
+Many properties of the new object differ from the previous one, including the number of columns and rows (and therefore number of cells), resolution (transformed from meters into degrees), and extent, as summarized again below (note that the number of categories increases from 8 to 9 because of the addition of NA values, not because a new category has been created---the land cover classes are preserved).
 
 ```{python}
 src_nlcd.meta
@@ -365,11 +376,17 @@ Importantly, when the template raster has much more "coarse" resolution than the
 * `rasterio.enums.Resampling.average` (for continuous rasters), or 
 * `rasterio.enums.Resampling.mode` (for categorical rasters)
 
-resampling method should be used, instead of `rasterio.enums.Resampling.nearest`. Otherwise, much of the data will be lost, as the "nearest" method can capture one pixel value only for each destination raster pixel. 
+resampling method should be used, instead of `rasterio.enums.Resampling.nearest`. 
+Otherwise, much of the data will be lost, as the "nearest" method can capture one pixel value only for each destination raster pixel. 
 
-Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure. This is demonstrated below with `srtm.tif` from the Shuttle Radar Topography Mission (SRTM), which represents height in meters above sea level (elevation) with the WGS84 CRS.
+Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure. 
+This is demonstrated below with `srtm.tif` from the Shuttle Radar Topography Mission (SRTM), which represents height in meters above sea level (elevation) with the WGS84 CRS.
 
-We will reproject this dataset into a projected CRS, but not with the nearest neighbor method which is appropriate for categorical data. Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster. The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight. The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method. The code is practically the same, except for changing the source and destination file names, and replacing `nearest` with `bilinear`:
+We will reproject this dataset into a projected CRS, but not with the nearest neighbor method which is appropriate for categorical data. 
+Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster. 
+The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight. 
+The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method. 
+The code is practically the same, except for changing the source and destination file names, and replacing `nearest` with `bilinear`:
 
 ```{python}
 dst_crs = 'EPSG:32612'
