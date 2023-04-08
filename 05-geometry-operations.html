@@ -934,7 +934,7 @@ dtype: geometry</code></pre>
 </section>
 <section id="aggregation-and-disaggregation" class="level3" data-number="4.4.3">
 <h3 data-number="4.4.3" class="anchored" data-anchor-id="aggregation-and-disaggregation"><span class="header-section-number">4.4.3</span> Aggregation and disaggregation</h3>
-<p>Raster datasets can also differ with regard to their resolution. To match resolutions, or to modify the resolution for other reasons (such as conserving storage space), one can either decrease (aggregate) or increase (disaggregate) the resolution of one raster. As an example, we here change the spatial resolution of <code>dem.tif</code> by a factor of 5 (Figure <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.13</span></a>).</p>
+<p>Raster datasets vary based on their resolution, from high resolution datasets that enable individual trees to be seen, to low resolution datasets covering the whole Earth. Raster datasets can be transformed to either decrease (aggregate) or increase (disaggregate) their resolution for a number of reasons. Aggregation can reduce computational resource requirements of raster storage and subsequent steps, disaggregation can be used to match other datasets or to add detail. As an example, we here change the spatial resolution of <code>dem.tif</code> by a factor of 5 (Figure <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.13</span></a>).</p>
 <p>Raster aggregation is, in fact, a special case of raster resampling (see <a href="#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>), where the target raster grid is aligned with the original raster, only with coarser pixels. Raster resampling, is the general case where the new grid is not necessarily an aggregation of the original one, but any other case as well (such as a rotated and/or shifted one, etc.).</p>
 <p>To aggregate a raster using <code>rasterio</code>, we go through <a href="https://rasterio.readthedocs.io/en/stable/topics/resampling.html">two steps</a>:</p>
 <ul>
@@ -1004,11 +1004,13 @@ dtype: geometry</code></pre>
 <div class="cell" data-execution_count="56">
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>axes[<span class="dv">1</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original'</span>)</span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Aggregated'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-aggregate" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
-<p><img src="05-geometry-operations_files/figure-html/fig-raster-aggregate-output-1.png" width="680" height="326" class="figure-img"></p>
+<p><img src="05-geometry-operations_files/figure-html/fig-raster-aggregate-output-1.png" width="680" height="332" class="figure-img"></p>
 <p></p><figcaption class="figure-caption">Figure&nbsp;4.13: Original raster (left), and aggregated raster (right).</figcaption><p></p>
 </figure>
 </div>
@@ -1041,8 +1043,58 @@ dtype: geometry</code></pre>
 <span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
 <span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Disaggregation…</p>
-<p>…</p>
+<p>The opposite operastion, disaggregation, is when we increase the resolution of raster objects. Either of the supported resampling methods (see above) can be used. However, since we are not actually summarizing information but transferring the value of a large pixel into multiple small pixels, it makes sense to use either:</p>
+<ul>
+<li>Nearest neighbor resampling (<code>rasterio.enums.Resampling.nearest</code>), when want to keep the original values as-is, since when modifying them would be incorrect (such as in categorical rasters)</li>
+<li>Smooting techniques, such as Bilinear resampling (<code>rasterio.enums.Resampling.bilinear</code>), when we would like the smaller pixels to reflect gradual change between the original values, e.g., when the disaggregated raster is used for visulalization purposes</li>
+</ul>
+<p>To disaggregate a raster, we go through the same workflow as for aggregation, only using a different factor, such as <code>factor=5</code> instead of <code>factor=0.2</code>, i.e., <em>increasing</em> the number of raster pixels instead of decreasing. In this example, we use bilinear interpolation to get a smoothed high-resolution raster:</p>
+<div class="cell" data-execution_count="59">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>r2 <span class="op">=</span> src.read(<span class="dv">1</span>,</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.height <span class="op">*</span> factor),</span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.width <span class="op">*</span> factor)</span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.bilinear</span>
+<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here is the size of the disaggregated raster:</p>
+<div class="cell" data-execution_count="60">
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>r2.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="60">
+<pre><code>(585, 585)</code></pre>
+</div>
+</div>
+<p>And here is the same expression as shown for aggregation, to calculate the new transform:</p>
+<div class="cell" data-execution_count="61">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>new_transform2 <span class="op">=</span> src.transform <span class="op">*</span> src.transform.scale(</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>    (src.width <span class="op">/</span> r2.shape[<span class="dv">0</span>]),</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>    (src.height <span class="op">/</span> r2.shape[<span class="dv">1</span>])</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>new_transform2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="61">
+<pre><code>Affine(6.169999999999921, 0.0, 794599.1076146346,
+       0.0, -6.169999999998726, 8935384.324602526)</code></pre>
+</div>
+</div>
+<p>A zoom-in on the top-left corner of the original raster and the disaggregated one, are shown in <a href="#fig-raster-disaggregate">Figure&nbsp;<span>4.14</span></a>:</p>
+<div class="cell" data-execution_count="62">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src.read(<span class="dv">1</span>)[:<span class="dv">5</span>, :<span class="dv">5</span>], transform<span class="op">=</span>src.transform, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r2[:<span class="dv">25</span>, :<span class="dv">25</span>], transform<span class="op">=</span>new_transform2, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original'</span>)</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Disaggregated'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-raster-disaggregate" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="05-geometry-operations_files/figure-html/fig-raster-disaggregate-output-1.png" width="669" height="332" class="figure-img"></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.14: Original raster (left), and disaggregated raster (right). The same top-left corner extent of both rasters is shown, to zoom-in and demonstrate the effect of bilinear interpolation.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Code to export the disaggregated raster would be identical to the one used above for the aggregated raster, so omit it to save space.</p>
 </section>
 <section id="sec-raster-resampling" class="level3" data-number="4.4.4">
 <h3 data-number="4.4.4" class="anchored" data-anchor-id="sec-raster-resampling"><span class="header-section-number">4.4.4</span> Resampling</h3>
