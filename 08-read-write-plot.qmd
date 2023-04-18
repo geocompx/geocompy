@@ -2,9 +2,10 @@
 
 ## Prerequisites
 
-This chapter requires the following packages, used in previous chapters:
+This chapter requires the following packages:
 
 ```{python}
+import numpy as np
 import fiona
 import geopandas as gpd
 import shapely
@@ -284,6 +285,8 @@ The `/vsicurl/` prefix **also works for vector file formats**, enabling you to i
 
 Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets. You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
 
+(To add example of reading rectangular extent...)
+
 ## Data output (O) {#sec-data-output}
 
 Writing geographic data allows you to convert from one format to another and to save newly created objects for permanent storage. 
@@ -332,7 +335,97 @@ gpd.read_file('output/world_many_layers.gpkg', layer='world2').head(1)
 
 ### Raster data {#sec-data-output-raster}
 
-...
+To write a raster file using `rasterio`, we need to pass a raster file path to `rasterio.open`, in writing (`'w'`) mode. This implies creatign a new empty file (or overwriting an existing one). As opposed to read (`'r'`, the default) mode, the `rasterio.open` function needs quite a lot of information, in addition to the file path and mode:
+
+* An array with the raster values
+* Metadata describing the raster format and spatial properties
+
+The metadata needs to specify the following properties:
+
+* `driver`---The file format (The recommendation is `'GTiff'` for GeoTIFF)
+* `height`---Number of rows
+* `width`---Number of columns
+* `count`---Number of bands
+* `nodata`---The value which represents “No Data”, if any
+* `dtype`---The raster data type, one of numpy types (e.g., `np.int64`)
+* `crs`---The CRS, using an EPSG code (e.g., `4326`)
+* `transform`---The transform matrix
+* `compress`---a compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [doesn't work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters.
+
+Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection. If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is the array with band values and `n` is the band index (starting from `1`, see below). When done, we close the file connection using the `.close` method. Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting, directly accept a file connection in `'w'` mode, thus handling the writing (of a resampled or reprojected raster) for us.
+
+Most of the properties are either straightforward to choose, based on our aims, (e.g., `driver`, `crs`, `compress`, `nodata`), or directly derived from the array with the raster values itself (e.g., `height`, `width`, `count`, `dtype`). The most complicated property is the `transform`, which specifies the raster origin and resolution. The `transform` is typically either obtained from an existing raster (serving as a "template"), or created from scratch based on manually specified origin and resolution values (e.g., using `rasterio.transform.from_origin`), or calculate automatically (e.g., using `rasterio.warp.calculate_default_transform`).
+
+Earlier in the book, we have already demonstrated the four most common scenarios of writing rasters:
+
+* Creating from scratch (@sec-raster-from-scratch)---we created and wrote two rasters from scratch by associating the `elev` and `grain` arrays with an arbitrary spatial extent. The custom arbitrary `transform` created using `rasterio.transform.from_origin`.
+* Aggregating (@sec-raster-agg-disagg)---we wrote an aggregated a raster, by reading a resampled array from an exising raster, then updating the `transform` using `.transform.scale`.
+* Resampling (@sec-raster-resampling)---we resampled a raster into a custom grid, manually creating the `transform` using `rasterio.transform.from_origin`, then resampling and writing the output using `rasterio.warp.reproject`.
+* Reprojecting (@sec-reprojecting-raster-geometries)---We reprojected a raster into another CRS, by automatically calculating an optimal `transform` using `rasterio.warp.calculate_default_transform`, then resampling and writing the output using `rasterio.warp.reproject`.
+
+A miminal example of writing a raster file named `r.tif` from scratch (i.e., the 1^st^ scenario), to remind some of these concepts, is given below:
+
+```{python}
+# An array with raster values
+r = np.array([1,2,3,4]).reshape(2,2).astype(np.int8)
+r
+```
+
+```{python}
+# Calculating the transform
+new_transform = rasterio.transform.from_origin(
+    west=-0.5, 
+    north=51.5, 
+    xsize=2, 
+    ysize=2
+)
+new_transform
+```
+
+```{python}
+# Creating the file connection with the metadata
+dst = rasterio.open(
+    'output/r.tif', 'w', 
+    driver = 'GTiff',
+    height = r.shape[0],
+    width = r.shape[1],
+    count = 1,
+    dtype = r.dtype,
+    crs = 4326,
+    transform = new_transform
+)
+dst
+```
+
+```{python}
+# Writing the array values into the file
+dst.write(r, 1)
+```
+
+```{python}
+# Closing the file
+dst.close()
+```
+
+This code section creates a new file `output/r.tif`, which is a $2 \times 2$ raster, having a 2 decimal degree resolution, with the top-left corner placed over London.
+
+To summarize, the various scenarios differ in two aspects:
+
+* The way that the `transform` for the output raster is obtained: 
+    * Imported from an existing raster (see below)
+    * Created from scratch, using `rasterio.transform.from_origin` (@sec-raster-from-scratch)
+    * Calculate automatically, using `rasterio.warp.calculate_default_transform` (@sec-reprojecting-raster-geometries)
+* The way that the raster is written:
+    * Using the `.write` method, given an existing array (@sec-raster-from-scratch, @sec-raster-agg-disagg)
+    * Using `rasterio.warp.reproject` to calculate and write a resampled or reprojected array (@sec-raster-resampling, @sec-reprojecting-raster-geometries)
+
+To make the picture of raster export complete, there are three important concepts we haven't covered yet: array and raster data types, writing multiband rasters, and handling "No Data" values.
+
+Raster data types...
+
+Writing multiband raster example...
+
+Nodata...
 
 ## Visual outputs {#sec-visual-outputs}
 
