@@ -457,7 +457,38 @@ When reading the data back into the Python session, the array with the same data
 rasterio.open('output/r.tif').read().dtype
 ```
 
-Writing multiband raster example...
+Writing multiband rasters is similar to writing single-band rasters, only that we need to: 
+
+* Define the number of layers (the `count` property in the metadata) that are going to be in the file we are creating
+* Execute the `.write` method multiple times, once for each layer
+
+For completeness, let's demonstrate writing a multi-band raster named `r3.tif`, which is similar to `r.tif`, but having three bands with values `r`, `r*2`, and `r*3` (i.e., the array `r` multiplied by 1, 2, or 3). Since most of the metadata is going to be the same, this is also a good opportunity to (re-)demonstrate updating an existing metadata object rather than creating one from scratch. 
+
+First, let's make a copy of the metadata we already have in `r.tif`:
+
+```{python}
+dst_kwds = rasterio.open('output/r.tif').meta.copy()
+dst_kwds
+```
+
+Second, we update the `count` entry, replacing `1` (single-band) with `3` (three-band):
+
+```{python}
+dst_kwds.update(count=3)
+dst_kwds
+```
+
+Finally, we can create a file connection using the updated metadata and then write the values of the three bands:
+
+```{python}
+dst = rasterio.open('output/r3.tif', 'w', **dst_kwds)
+dst.write(r,   1)
+dst.write(r*2, 2)
+dst.write(r*3, 3)
+dst.close()
+```
+
+As a result, a three-band raster named `r3.tif` is created. 
 
 Nodata...
 
