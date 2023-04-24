@@ -335,7 +335,7 @@ gpd.read_file('output/world_many_layers.gpkg', layer='world2').head(1)
 
 ### Raster data {#sec-data-output-raster}
 
-To write a raster file using `rasterio`, we need to pass a raster file path to `rasterio.open`, in writing (`'w'`) mode. This implies creatign a new empty file (or overwriting an existing one). As opposed to read (`'r'`, the default) mode, the `rasterio.open` function needs quite a lot of information, in addition to the file path and mode:
+To write a raster file using **rasterio**, we need to pass a raster file path to `rasterio.open`, in writing (`'w'`) mode. This implies creating a new empty file (or overwriting an existing one). As opposed to read (`'r'`, the default) mode, the `rasterio.open` function needs quite a lot of information, in addition to the file path and mode:
 
 * An array with the raster values
 * Metadata describing the raster format and spatial properties
@@ -346,11 +346,11 @@ The metadata needs to specify the following properties:
 * `height`---Number of rows
 * `width`---Number of columns
 * `count`---Number of bands
-* `nodata`---The value which represents “No Data”, if any
-* `dtype`---The raster data type, one of numpy types (e.g., `np.int64`)
+* `nodata`---The value which represents "No Data", if any
+* `dtype`---The raster data type, one of **numpy** types (e.g., `np.int64`)
 * `crs`---The CRS, using an EPSG code (e.g., `4326`)
 * `transform`---The transform matrix
-* `compress`---a compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [doesn't work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters.
+* `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [doesn't work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters.
 
 Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection. If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is the array with band values and `n` is the band index (starting from `1`, see below). When done, we close the file connection using the `.close` method. Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting, directly accept a file connection in `'w'` mode, thus handling the writing (of a resampled or reprojected raster) for us.
 
@@ -358,9 +358,9 @@ Most of the properties are either straightforward to choose, based on our aims, 
 
 Earlier in the book, we have already demonstrated the four most common scenarios of writing rasters:
 
-* Creating from scratch (@sec-raster-from-scratch)---we created and wrote two rasters from scratch by associating the `elev` and `grain` arrays with an arbitrary spatial extent. The custom arbitrary `transform` created using `rasterio.transform.from_origin`.
-* Aggregating (@sec-raster-agg-disagg)---we wrote an aggregated a raster, by reading a resampled array from an exising raster, then updating the `transform` using `.transform.scale`.
-* Resampling (@sec-raster-resampling)---we resampled a raster into a custom grid, manually creating the `transform` using `rasterio.transform.from_origin`, then resampling and writing the output using `rasterio.warp.reproject`.
+* Creating from scratch (@sec-raster-from-scratch)---We created and wrote two rasters from scratch by associating the `elev` and `grain` arrays with an arbitrary spatial extent. The custom arbitrary `transform` created using `rasterio.transform.from_origin`.
+* Aggregating (@sec-raster-agg-disagg)---We wrote an aggregated a raster, by reading a resampled array from an exising raster, then updating the `transform` using `.transform.scale`.
+* Resampling (@sec-raster-resampling)---We resampled a raster into a custom grid, manually creating the `transform` using `rasterio.transform.from_origin`, then resampling and writing the output using `rasterio.warp.reproject`.
 * Reprojecting (@sec-reprojecting-raster-geometries)---We reprojected a raster into another CRS, by automatically calculating an optimal `transform` using `rasterio.warp.calculate_default_transform`, then resampling and writing the output using `rasterio.warp.reproject`.
 
 A miminal example of writing a raster file named `r.tif` from scratch (i.e., the 1^st^ scenario), to remind some of these concepts, is given below:
@@ -421,7 +421,7 @@ To summarize, the various scenarios differ in two aspects:
 
 To make the picture of raster export complete, there are three important concepts we haven't covered yet: array and raster data types, writing multiband rasters, and handling "No Data" values.
 
-Arrays (i.e., `ndarray` objects defined in package `numpy`) are used to store raster values when reading them from file, suing `.read` (@sec-using-rasterio). All values in an array are of the same type, whereas the `numpy` package supports numerous numeric data types of various precision (and, accordingly, memory footprint). Raster formats, such as GeoTIFF, support exactly the same data types, which means that reading a raster file uses as little RAM as possible. The most relevant types are summarized in @tbl-numpy-data-types.
+Arrays (i.e., `ndarray` objects defined in package **numpy**) are used to store raster values when reading them from file, using `.read` (@sec-using-rasterio). All values in an array are of the same type, whereas the **numpy** package supports numerous numeric data types of various precision (and, accordingly, memory footprint). Raster formats, such as GeoTIFF, support exactly the same data types, which means that reading a raster file uses as little RAM as possible. The most relevant types are summarized in @tbl-numpy-data-types.
 
 | Data type | Description |
 |---|-------------|
