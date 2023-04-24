@@ -428,11 +428,9 @@ Arrays (i.e., `ndarray` objects defined in package **numpy**) are used to store 
 | `int8` | Integer in a single byte (`-128` to `127`)
 | `int16` | Integer in 16 bits (`-32768` to `32767`)
 | `int32` | Integer in 32 bits (`-2147483648` to `2147483647`)
-| `int64` | Integer in 64 bits (`-9223372036854775808` to `9223372036854775807`)
 | `uint8` | Unsigned integer (`0` to `255`)
 | `uint16` | Unsigned integer (`0` to `65535`)
 | `uint32` | Unsigned integer (`0` to `4294967295`)
-| `uint64` | Unsigned integer (`0` to `18446744073709551615`)
 | `float16` | Half-precision (16 bit) float (`-65504` to `65504`)
 | `float32` | Single-precision (32 bit) float (`1e-38` to `1e38`)
 | `float64` | Double-precision (64 bit) float (`1e-308` to `1e308`)
@@ -490,7 +488,142 @@ dst.close()
 
 As a result, a three-band raster named `r3.tif` is created. 
 
-Nodata...
+Rasters often contain "No Data" values, representing missing data, e.g., unreliable measurement due to clouds or pixels outside of the photographed extent. 
+In a **numpy** `ndarray` object, "No Data" values may be represented by the special `np.nan` value. 
+However, due to computer memory limitations, only arrays of type `float` can contain `np.nan`, while arrays of type `int` cannot. 
+For `int` rasters containing "No Data", we typically mark missing data with a specific value beyond the valid range (e.g., `-9999`). 
+The missing data "flag" is stored in the file (set through the `nodata` property of the file connection, see above). 
+When reading an `int` raster with "No Data" back into Python, we need to be aware of these flags. Let's demonstrate through examples.
+
+We will start with the simpler case, rasters of type `float`. Since `float` arrays may contain the "native" value `np.nan`, representing "No Data" is straightforward. 
+For example, suppose that we have a `float` array with `np.nan`:
+
+```{python}
+r = np.array([1.1,2.1,np.nan,4.1]).reshape(2,2)
+r
+```
+
+```{python}
+r.dtype
+```
+
+When writing the array to file, we do not need to specify any particular `nodata` value:
+
+```{python}
+dst = rasterio.open(
+    'output/r_nodata_float.tif', 'w', 
+    driver = 'GTiff',
+    height = r.shape[0],
+    width = r.shape[1],
+    count = 1,
+    dtype = r.dtype,
+    crs = 4326,
+    transform = new_transform
+)
+dst.write(r, 1)
+dst.close()
+```
+
+This is equivalent to `nodata=None`:
+
+```{python}
+rasterio.open('output/r_nodata_float.tif').meta
+```
+
+Reading from the raster back into the Python session reproduces the same exact array, with `np.nan`:
+
+```{python}
+rasterio.open('output/r_nodata_float.tif').read()
+```
+
+Now, suppose that we have an `np.int32` array with missing data, which is inevitably flagged using a specific `int` value such as `-9999` (remember that we can't store `np.nan` in an `int` array!):
+
+```{python}
+r = np.array([1,2,-9999,4]).reshape(2,2).astype(np.int32)
+r
+```
+
+```{python}
+r.dtype
+```
+
+When writing the array to file, we must specify `nodata=-9999` to keep track of our "No Data" flag:
+
+```{python}
+dst = rasterio.open(
+    'output/r_nodata_int.tif', 'w', 
+    driver = 'GTiff',
+    height = r.shape[0],
+    width = r.shape[1],
+    count = 1,
+    dtype = r.dtype,
+    nodata = -9999,
+    crs = 4326,
+    transform = new_transform
+)
+dst.write(r, 1)
+dst.close()
+```
+
+Examining the metadata confirms that the `nodata=-9999` setting was stored in the file `r_nodata_int.tif`. 
+
+```{python}
+rasterio.open('output/r_nodata_int.tif').meta
+```
+
+If you try to open the file in GIS software, such as QGIS, you will see the missing data interpreted (e.g., the pixel shown as blank), meaning that the software is aware of the flag. 
+However, reading the data back into Python reproduces an `int` array with `-9999`, for the same reason stated before:
+
+```{python}
+src = rasterio.open('output/r_nodata_int.tif')
+r = src.read()
+r
+```
+
+The Python user must thefore be mindful of "No Data" `int` rasters, for example to avoid interpreting the value `-9999` literally. 
+For example, if we "forget" about the `nodata` flag, the literal calculation of the `.mean` would incorrectly include the value `-9999`:
+
+```{python}
+r.mean()
+```
+
+There are two basic ways to deal with the situation:
+
+* Converting the raster to `float`
+* Using "No Data" masks
+
+First, particularly with small rasters where memory constraints are irrelevant, it may be more convenient to go from `int` to `float`, to gain the ability of the natural `np.nan` representation. 
+Here is how we can do this with `r_nodata_int.tif`. We detect the missing data flag, conver the raster to `float`, and assign `np.nan` into the cells that are supposed to be missing:
+
+```{python}
+mask = r == src.nodata
+r = r.astype(np.float64)
+r[mask] = np.nan
+r
+```
+
+From there on, we deal with `np.nan` the usual way, such as using `np.nanmean` to calculate the mean excluding "No Data":
+
+```{python}
+np.nanmean(r)
+```
+
+The second approach is to read the values into a so-called ["masked" array](https://numpy.org/doc/stable/reference/maskedarray.generic.html#what-is-a-masked-array), using the argument `masked=True`. 
+A masked array can be thought of as an extended `ndarray`, with two components: `.data` (the values) and `.mask` (a corresponding boolean array marking "No Data" values): 
+
+```{python}
+r = src.read(masked=True)
+r
+```
+
+Using masked arrays is beyond the scope of this book. However, the basic idea is that many **numpy** operations "honor" the mask, so that the user does not have to keep track of the way that "No Data" values are marked, similarly to the natural `np.nan` representation. For example, the `.mean` of a masked array ignores the value `-9999`, because it is masked, taking into account just the valid values `1`, `2`, and `4`:
+
+```{python}
+r.mean()
+```
+
+Keep in mind that, somewhat confusingly, `float` rasters may represent "No Data" using a specific value (such as `-9999.0`), instead, or in addition to (!), the native `np.nan` representation. 
+In such cases, the same considerations shown for `int` apply to `float` rasters as well. 
 
 ## Visual outputs {#sec-visual-outputs}
 
