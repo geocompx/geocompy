@@ -2,9 +2,10 @@
 
 ## Prerequisites
 
-This chapter requires the following packages, used in previous chapters:
+This chapter requires the following packages:
 
 ```{python}
+import numpy as np
 import fiona
 import geopandas as gpd
 import shapely
@@ -284,6 +285,8 @@ The `/vsicurl/` prefix **also works for vector file formats**, enabling you to i
 
 Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets. You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
 
+(To add example of reading rectangular extent...)
+
 ## Data output (O) {#sec-data-output}
 
 Writing geographic data allows you to convert from one format to another and to save newly created objects for permanent storage. 
@@ -332,7 +335,295 @@ gpd.read_file('output/world_many_layers.gpkg', layer='world2').head(1)
 
 ### Raster data {#sec-data-output-raster}
 
-...
+To write a raster file using **rasterio**, we need to pass a raster file path to `rasterio.open`, in writing (`'w'`) mode. This implies creating a new empty file (or overwriting an existing one). As opposed to read (`'r'`, the default) mode, the `rasterio.open` function needs quite a lot of information, in addition to the file path and mode:
+
+* An array with the raster values
+* Metadata describing the raster format and spatial properties
+
+The metadata needs to specify the following properties:
+
+* `driver`---The file format (The recommendation is `'GTiff'` for GeoTIFF)
+* `height`---Number of rows
+* `width`---Number of columns
+* `count`---Number of bands
+* `nodata`---The value which represents "No Data", if any
+* `dtype`---The raster data type, one of **numpy** types (e.g., `np.int64`)
+* `crs`---The CRS, using an EPSG code (e.g., `4326`)
+* `transform`---The transform matrix
+* `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [doesn't work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters.
+
+Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection. If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is the array with band values and `n` is the band index (starting from `1`, see below). When done, we close the file connection using the `.close` method. Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting, directly accept a file connection in `'w'` mode, thus handling the writing (of a resampled or reprojected raster) for us.
+
+Most of the properties are either straightforward to choose, based on our aims, (e.g., `driver`, `crs`, `compress`, `nodata`), or directly derived from the array with the raster values itself (e.g., `height`, `width`, `count`, `dtype`). The most complicated property is the `transform`, which specifies the raster origin and resolution. The `transform` is typically either obtained from an existing raster (serving as a "template"), or created from scratch based on manually specified origin and resolution values (e.g., using `rasterio.transform.from_origin`), or calculate automatically (e.g., using `rasterio.warp.calculate_default_transform`).
+
+Earlier in the book, we have already demonstrated the four most common scenarios of writing rasters:
+
+* Creating from scratch (@sec-raster-from-scratch)---We created and wrote two rasters from scratch by associating the `elev` and `grain` arrays with an arbitrary spatial extent. The custom arbitrary `transform` created using `rasterio.transform.from_origin`.
+* Aggregating (@sec-raster-agg-disagg)---We wrote an aggregated a raster, by reading a resampled array from an exising raster, then updating the `transform` using `.transform.scale`.
+* Resampling (@sec-raster-resampling)---We resampled a raster into a custom grid, manually creating the `transform` using `rasterio.transform.from_origin`, then resampling and writing the output using `rasterio.warp.reproject`.
+* Reprojecting (@sec-reprojecting-raster-geometries)---We reprojected a raster into another CRS, by automatically calculating an optimal `transform` using `rasterio.warp.calculate_default_transform`, then resampling and writing the output using `rasterio.warp.reproject`.
+
+A miminal example of writing a raster file named `r.tif` from scratch (i.e., the 1^st^ scenario), to remind some of these concepts, is given below:
+
+```{python}
+# An array with raster values
+r = np.array([1,2,3,4]).reshape(2,2).astype(np.int8)
+r
+```
+
+```{python}
+# Calculating the transform
+new_transform = rasterio.transform.from_origin(
+    west=-0.5, 
+    north=51.5, 
+    xsize=2, 
+    ysize=2
+)
+new_transform
+```
+
+```{python}
+# Creating the file connection with the metadata
+dst = rasterio.open(
+    'output/r.tif', 'w', 
+    driver = 'GTiff',
+    height = r.shape[0],
+    width = r.shape[1],
+    count = 1,
+    dtype = r.dtype,
+    crs = 4326,
+    transform = new_transform
+)
+dst
+```
+
+```{python}
+# Writing the array values into the file
+dst.write(r, 1)
+```
+
+```{python}
+# Closing the file
+dst.close()
+```
+
+This code section creates a new file `output/r.tif`, which is a $2 \times 2$ raster, having a 2 decimal degree resolution, with the top-left corner placed over London.
+
+To summarize, the various scenarios differ in two aspects:
+
+* The way that the `transform` for the output raster is obtained: 
+    * Imported from an existing raster (see below)
+    * Created from scratch, using `rasterio.transform.from_origin` (@sec-raster-from-scratch)
+    * Calculate automatically, using `rasterio.warp.calculate_default_transform` (@sec-reprojecting-raster-geometries)
+* The way that the raster is written:
+    * Using the `.write` method, given an existing array (@sec-raster-from-scratch, @sec-raster-agg-disagg)
+    * Using `rasterio.warp.reproject` to calculate and write a resampled or reprojected array (@sec-raster-resampling, @sec-reprojecting-raster-geometries)
+
+To make the picture of raster export complete, there are three important concepts we haven't covered yet: array and raster data types, writing multiband rasters, and handling "No Data" values.
+
+Arrays (i.e., `ndarray` objects defined in package **numpy**) are used to store raster values when reading them from file, using `.read` (@sec-using-rasterio). All values in an array are of the same type, whereas the **numpy** package supports numerous numeric data types of various precision (and, accordingly, memory footprint). Raster formats, such as GeoTIFF, support exactly the same data types, which means that reading a raster file uses as little RAM as possible. The most relevant types are summarized in @tbl-numpy-data-types.
+
+| Data type | Description |
+|---|-------------|
+| `int8` | Integer in a single byte (`-128` to `127`)
+| `int16` | Integer in 16 bits (`-32768` to `32767`)
+| `int32` | Integer in 32 bits (`-2147483648` to `2147483647`)
+| `uint8` | Unsigned integer (`0` to `255`)
+| `uint16` | Unsigned integer (`0` to `65535`)
+| `uint32` | Unsigned integer (`0` to `4294967295`)
+| `float16` | Half-precision (16 bit) float (`-65504` to `65504`)
+| `float32` | Single-precision (32 bit) float (`1e-38` to `1e38`)
+| `float64` | Double-precision (64 bit) float (`1e-308` to `1e308`)
+
+: Numeric `numpy` data which are commonly used for rasters {#tbl-numpy-data-types}
+
+The raster data type can be specified when writing a raster (see above). For an existing raster file, the data type is accessible through the `.dtype` property of the metadata: 
+
+```{python}
+rasterio.open('output/r.tif').meta['dtype']
+```
+
+The file `r.tif` has the data type `np.int8`, which we specified when creating it according to the data type of the original array:
+
+```{python}
+r.dtype
+```
+
+When reading the data back into the Python session, the array with the same data type is recreated:
+
+```{python}
+rasterio.open('output/r.tif').read().dtype
+```
+
+Writing multiband rasters is similar to writing single-band rasters, only that we need to: 
+
+* Define the number of layers (the `count` property in the metadata) that are going to be in the file we are creating
+* Execute the `.write` method multiple times, once for each layer
+
+For completeness, let's demonstrate writing a multi-band raster named `r3.tif`, which is similar to `r.tif`, but having three bands with values `r`, `r*2`, and `r*3` (i.e., the array `r` multiplied by 1, 2, or 3). Since most of the metadata is going to be the same, this is also a good opportunity to (re-)demonstrate updating an existing metadata object rather than creating one from scratch. 
+
+First, let's make a copy of the metadata we already have in `r.tif`:
+
+```{python}
+dst_kwds = rasterio.open('output/r.tif').meta.copy()
+dst_kwds
+```
+
+Second, we update the `count` entry, replacing `1` (single-band) with `3` (three-band):
+
+```{python}
+dst_kwds.update(count=3)
+dst_kwds
+```
+
+Finally, we can create a file connection using the updated metadata and then write the values of the three bands:
+
+```{python}
+dst = rasterio.open('output/r3.tif', 'w', **dst_kwds)
+dst.write(r,   1)
+dst.write(r*2, 2)
+dst.write(r*3, 3)
+dst.close()
+```
+
+As a result, a three-band raster named `r3.tif` is created. 
+
+Rasters often contain "No Data" values, representing missing data, e.g., unreliable measurement due to clouds or pixels outside of the photographed extent. 
+In a **numpy** `ndarray` object, "No Data" values may be represented by the special `np.nan` value. 
+However, due to computer memory limitations, only arrays of type `float` can contain `np.nan`, while arrays of type `int` cannot. 
+For `int` rasters containing "No Data", we typically mark missing data with a specific value beyond the valid range (e.g., `-9999`). 
+The missing data "flag" is stored in the file (set through the `nodata` property of the file connection, see above). 
+When reading an `int` raster with "No Data" back into Python, we need to be aware of these flags. Let's demonstrate through examples.
+
+We will start with the simpler case, rasters of type `float`. Since `float` arrays may contain the "native" value `np.nan`, representing "No Data" is straightforward. 
+For example, suppose that we have a `float` array with `np.nan`:
+
+```{python}
+r = np.array([1.1,2.1,np.nan,4.1]).reshape(2,2)
+r
+```
+
+```{python}
+r.dtype
+```
+
+When writing the array to file, we do not need to specify any particular `nodata` value:
+
+```{python}
+dst = rasterio.open(
+    'output/r_nodata_float.tif', 'w', 
+    driver = 'GTiff',
+    height = r.shape[0],
+    width = r.shape[1],
+    count = 1,
+    dtype = r.dtype,
+    crs = 4326,
+    transform = new_transform
+)
+dst.write(r, 1)
+dst.close()
+```
+
+This is equivalent to `nodata=None`:
+
+```{python}
+rasterio.open('output/r_nodata_float.tif').meta
+```
+
+Reading from the raster back into the Python session reproduces the same exact array, with `np.nan`:
+
+```{python}
+rasterio.open('output/r_nodata_float.tif').read()
+```
+
+Now, suppose that we have an `np.int32` array with missing data, which is inevitably flagged using a specific `int` value such as `-9999` (remember that we can't store `np.nan` in an `int` array!):
+
+```{python}
+r = np.array([1,2,-9999,4]).reshape(2,2).astype(np.int32)
+r
+```
+
+```{python}
+r.dtype
+```
+
+When writing the array to file, we must specify `nodata=-9999` to keep track of our "No Data" flag:
+
+```{python}
+dst = rasterio.open(
+    'output/r_nodata_int.tif', 'w', 
+    driver = 'GTiff',
+    height = r.shape[0],
+    width = r.shape[1],
+    count = 1,
+    dtype = r.dtype,
+    nodata = -9999,
+    crs = 4326,
+    transform = new_transform
+)
+dst.write(r, 1)
+dst.close()
+```
+
+Examining the metadata confirms that the `nodata=-9999` setting was stored in the file `r_nodata_int.tif`. 
+
+```{python}
+rasterio.open('output/r_nodata_int.tif').meta
+```
+
+If you try to open the file in GIS software, such as QGIS, you will see the missing data interpreted (e.g., the pixel shown as blank), meaning that the software is aware of the flag. 
+However, reading the data back into Python reproduces an `int` array with `-9999`, for the same reason stated before:
+
+```{python}
+src = rasterio.open('output/r_nodata_int.tif')
+r = src.read()
+r
+```
+
+The Python user must thefore be mindful of "No Data" `int` rasters, for example to avoid interpreting the value `-9999` literally. 
+For example, if we "forget" about the `nodata` flag, the literal calculation of the `.mean` would incorrectly include the value `-9999`:
+
+```{python}
+r.mean()
+```
+
+There are two basic ways to deal with the situation:
+
+* Converting the raster to `float`
+* Using "No Data" masks
+
+First, particularly with small rasters where memory constraints are irrelevant, it may be more convenient to go from `int` to `float`, to gain the ability of the natural `np.nan` representation. 
+Here is how we can do this with `r_nodata_int.tif`. We detect the missing data flag, conver the raster to `float`, and assign `np.nan` into the cells that are supposed to be missing:
+
+```{python}
+mask = r == src.nodata
+r = r.astype(np.float64)
+r[mask] = np.nan
+r
+```
+
+From there on, we deal with `np.nan` the usual way, such as using `np.nanmean` to calculate the mean excluding "No Data":
+
+```{python}
+np.nanmean(r)
+```
+
+The second approach is to read the values into a so-called ["masked" array](https://numpy.org/doc/stable/reference/maskedarray.generic.html#what-is-a-masked-array), using the argument `masked=True`. 
+A masked array can be thought of as an extended `ndarray`, with two components: `.data` (the values) and `.mask` (a corresponding boolean array marking "No Data" values): 
+
+```{python}
+r = src.read(masked=True)
+r
+```
+
+Using masked arrays is beyond the scope of this book. However, the basic idea is that many **numpy** operations "honor" the mask, so that the user does not have to keep track of the way that "No Data" values are marked, similarly to the natural `np.nan` representation. For example, the `.mean` of a masked array ignores the value `-9999`, because it is masked, taking into account just the valid values `1`, `2`, and `4`:
+
+```{python}
+r.mean()
+```
+
+Keep in mind that, somewhat confusingly, `float` rasters may represent "No Data" using a specific value (such as `-9999.0`), instead, or in addition to (!), the native `np.nan` representation. 
+In such cases, the same considerations shown for `int` apply to `float` rasters as well. 
 
 ## Visual outputs {#sec-visual-outputs}
 
