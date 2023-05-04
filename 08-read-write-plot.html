@@ -295,12 +295,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <section id="prerequisites" class="level2" data-number="7.1">
 <h2 data-number="7.1" class="anchored" data-anchor-id="prerequisites"><span class="header-section-number">7.1</span> Prerequisites</h2>
-<p>This chapter requires the following packages, used in previous chapters:</p>
+<p>This chapter requires the following packages:</p>
 <div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> fiona</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> fiona</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="introduction" class="level2" data-number="7.2">
@@ -869,6 +870,7 @@ Note
 </div>
 <p>The example above efficiently extracts and downloads a single value instead of the entire GeoTIFF file, saving valuable resources. The <code>/vsicurl/</code> prefix <strong>also works for vector file formats</strong>, enabling you to import datasets from online storage with <code>geopandas</code> just by adding it before the vector file URL.</p>
 <p>Importantly, <code>/vsicurl/</code> is not the only prefix provided by GDAL—many more exist, such as <code>/vsizip/</code> to read spatial files from ZIP archives without decompressing them beforehand or <code>/vsis3/</code> for on-the-fly reading files available in AWS S3 buckets. You can learn more about it at <a href="https://gdal.org/user/virtual_file_systems.html" class="uri">https://gdal.org/user/virtual_file_systems.html</a>.</p>
+<p>(To add example of reading rectangular extent…)</p>
 </section>
 </section>
 <section id="sec-data-output" class="level2" data-number="7.8">
@@ -971,7 +973,377 @@ Note
 </section>
 <section id="sec-data-output-raster" class="level3" data-number="7.8.2">
 <h3 data-number="7.8.2" class="anchored" data-anchor-id="sec-data-output-raster"><span class="header-section-number">7.8.2</span> Raster data</h3>
-<p>…</p>
+<p>To write a raster file using <strong>rasterio</strong>, we need to pass a raster file path to <code>rasterio.open</code>, in writing (<code>'w'</code>) mode. This implies creating a new empty file (or overwriting an existing one). As opposed to read (<code>'r'</code>, the default) mode, the <code>rasterio.open</code> function needs quite a lot of information, in addition to the file path and mode:</p>
+<ul>
+<li>An array with the raster values</li>
+<li>Metadata describing the raster format and spatial properties</li>
+</ul>
+<p>The metadata needs to specify the following properties:</p>
+<ul>
+<li><code>driver</code>—The file format (The recommendation is <code>'GTiff'</code> for GeoTIFF)</li>
+<li><code>height</code>—Number of rows</li>
+<li><code>width</code>—Number of columns</li>
+<li><code>count</code>—Number of bands</li>
+<li><code>nodata</code>—The value which represents “No Data”, if any</li>
+<li><code>dtype</code>—The raster data type, one of <strong>numpy</strong> types (e.g., <code>np.int64</code>)</li>
+<li><code>crs</code>—The CRS, using an EPSG code (e.g., <code>4326</code>)</li>
+<li><code>transform</code>—The transform matrix</li>
+<li><code>compress</code>—A compression method to apply, such as <code>'lzw'</code>. This is optional and most useful for large rasters. Note that, at the time of writing, this <a href="https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m">doesn’t work well</a> for writing multiband rasters.</li>
+</ul>
+<p>Once the file connection with the right metadata is ready, we do the actual writing using the <code>.write</code> method of the file connection. If there are several bands we may execute the <code>.write</code> method several times, as in <code>.write(a,n)</code>, where <code>a</code> is the array with band values and <code>n</code> is the band index (starting from <code>1</code>, see below). When done, we close the file connection using the <code>.close</code> method. Some functions, such as <code>rasterio.warp.reproject</code> used for resampling and reprojecting, directly accept a file connection in <code>'w'</code> mode, thus handling the writing (of a resampled or reprojected raster) for us.</p>
+<p>Most of the properties are either straightforward to choose, based on our aims, (e.g., <code>driver</code>, <code>crs</code>, <code>compress</code>, <code>nodata</code>), or directly derived from the array with the raster values itself (e.g., <code>height</code>, <code>width</code>, <code>count</code>, <code>dtype</code>). The most complicated property is the <code>transform</code>, which specifies the raster origin and resolution. The <code>transform</code> is typically either obtained from an existing raster (serving as a “template”), or created from scratch based on manually specified origin and resolution values (e.g., using <code>rasterio.transform.from_origin</code>), or calculate automatically (e.g., using <code>rasterio.warp.calculate_default_transform</code>).</p>
+<p>Earlier in the book, we have already demonstrated the four most common scenarios of writing rasters:</p>
+<ul>
+<li>Creating from scratch (<a href="02-spatial-data.html#sec-raster-from-scratch"><span>Section&nbsp;1.3.3</span></a>)—We created and wrote two rasters from scratch by associating the <code>elev</code> and <code>grain</code> arrays with an arbitrary spatial extent. The custom arbitrary <code>transform</code> created using <code>rasterio.transform.from_origin</code>.</li>
+<li>Aggregating (<a href="05-geometry-operations.html#sec-raster-agg-disagg"><span>Section&nbsp;4.4.3</span></a>)—We wrote an aggregated a raster, by reading a resampled array from an exising raster, then updating the <code>transform</code> using <code>.transform.scale</code>.</li>
+<li>Resampling (<a href="05-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>)—We resampled a raster into a custom grid, manually creating the <code>transform</code> using <code>rasterio.transform.from_origin</code>, then resampling and writing the output using <code>rasterio.warp.reproject</code>.</li>
+<li>Reprojecting (<a href="07-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>)—We reprojected a raster into another CRS, by automatically calculating an optimal <code>transform</code> using <code>rasterio.warp.calculate_default_transform</code>, then resampling and writing the output using <code>rasterio.warp.reproject</code>.</li>
+</ul>
+<p>A miminal example of writing a raster file named <code>r.tif</code> from scratch (i.e., the 1<sup>st</sup> scenario), to remind some of these concepts, is given below:</p>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># An array with raster values</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>).astype(np.int8)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<pre><code>array([[1, 2],
+       [3, 4]], dtype=int8)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating the transform</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=-</span><span class="fl">0.5</span>, </span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span><span class="fl">51.5</span>, </span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="dv">2</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
+<pre><code>Affine(2.0, 0.0, -0.5,
+       0.0, -2.0, 51.5)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating the file connection with the metadata</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r.tif'</span>, <span class="st">'w'</span>, </span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>dst</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="27">
+<pre><code>&lt;open DatasetWriter name='output/r.tif' mode='w'&gt;</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Writing the array values into the file</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Closing the file</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This code section creates a new file <code>output/r.tif</code>, which is a <span class="math inline">\(2 \times 2\)</span> raster, having a 2 decimal degree resolution, with the top-left corner placed over London.</p>
+<p>To summarize, the various scenarios differ in two aspects:</p>
+<ul>
+<li>The way that the <code>transform</code> for the output raster is obtained:
+<ul>
+<li>Imported from an existing raster (see below)</li>
+<li>Created from scratch, using <code>rasterio.transform.from_origin</code> (<a href="02-spatial-data.html#sec-raster-from-scratch"><span>Section&nbsp;1.3.3</span></a>)</li>
+<li>Calculate automatically, using <code>rasterio.warp.calculate_default_transform</code> (<a href="07-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>)</li>
+</ul></li>
+<li>The way that the raster is written:
+<ul>
+<li>Using the <code>.write</code> method, given an existing array (<a href="02-spatial-data.html#sec-raster-from-scratch"><span>Section&nbsp;1.3.3</span></a>, <a href="05-geometry-operations.html#sec-raster-agg-disagg"><span>Section&nbsp;4.4.3</span></a>)</li>
+<li>Using <code>rasterio.warp.reproject</code> to calculate and write a resampled or reprojected array (<a href="05-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>, <a href="07-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>)</li>
+</ul></li>
+</ul>
+<p>To make the picture of raster export complete, there are three important concepts we haven’t covered yet: array and raster data types, writing multiband rasters, and handling “No Data” values.</p>
+<p>Arrays (i.e., <code>ndarray</code> objects defined in package <strong>numpy</strong>) are used to store raster values when reading them from file, using <code>.read</code> (<a href="02-spatial-data.html#sec-using-rasterio"><span>Section&nbsp;1.3.2</span></a>). All values in an array are of the same type, whereas the <strong>numpy</strong> package supports numerous numeric data types of various precision (and, accordingly, memory footprint). Raster formats, such as GeoTIFF, support exactly the same data types, which means that reading a raster file uses as little RAM as possible. The most relevant types are summarized in <a href="#tbl-numpy-data-types">Table&nbsp;<span>7.2</span></a>.</p>
+<div id="tbl-numpy-data-types" class="anchored">
+<table class="table">
+<caption>Table&nbsp;7.2: Numeric <code>numpy</code> data which are commonly used for rasters</caption>
+<thead>
+<tr class="header">
+<th>Data type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>int8</code></td>
+<td>Integer in a single byte (<code>-128</code> to <code>127</code>)</td>
+</tr>
+<tr class="even">
+<td><code>int16</code></td>
+<td>Integer in 16 bits (<code>-32768</code> to <code>32767</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>int32</code></td>
+<td>Integer in 32 bits (<code>-2147483648</code> to <code>2147483647</code>)</td>
+</tr>
+<tr class="even">
+<td><code>uint8</code></td>
+<td>Unsigned integer (<code>0</code> to <code>255</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>uint16</code></td>
+<td>Unsigned integer (<code>0</code> to <code>65535</code>)</td>
+</tr>
+<tr class="even">
+<td><code>uint32</code></td>
+<td>Unsigned integer (<code>0</code> to <code>4294967295</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>float16</code></td>
+<td>Half-precision (16 bit) float (<code>-65504</code> to <code>65504</code>)</td>
+</tr>
+<tr class="even">
+<td><code>float32</code></td>
+<td>Single-precision (32 bit) float (<code>1e-38</code> to <code>1e38</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>float64</code></td>
+<td>Double-precision (64 bit) float (<code>1e-308</code> to <code>1e308</code>)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The raster data type can be specified when writing a raster (see above). For an existing raster file, the data type is accessible through the <code>.dtype</code> property of the metadata:</p>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).meta[<span class="st">'dtype'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="30">
+<pre><code>'int8'</code></pre>
+</div>
+</div>
+<p>The file <code>r.tif</code> has the data type <code>np.int8</code>, which we specified when creating it according to the data type of the original array:</p>
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="31">
+<pre><code>dtype('int8')</code></pre>
+</div>
+</div>
+<p>When reading the data back into the Python session, the array with the same data type is recreated:</p>
+<div class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).read().dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="32">
+<pre><code>dtype('int8')</code></pre>
+</div>
+</div>
+<p>Writing multiband rasters is similar to writing single-band rasters, only that we need to:</p>
+<ul>
+<li>Define the number of layers (the <code>count</code> property in the metadata) that are going to be in the file we are creating</li>
+<li>Execute the <code>.write</code> method multiple times, once for each layer</li>
+</ul>
+<p>For completeness, let’s demonstrate writing a multi-band raster named <code>r3.tif</code>, which is similar to <code>r.tif</code>, but having three bands with values <code>r</code>, <code>r*2</code>, and <code>r*3</code> (i.e., the array <code>r</code> multiplied by 1, 2, or 3). Since most of the metadata is going to be the same, this is also a good opportunity to (re-)demonstrate updating an existing metadata object rather than creating one from scratch.</p>
+<p>First, let’s make a copy of the metadata we already have in <code>r.tif</code>:</p>
+<div class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>dst_kwds <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).meta.copy()</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>dst_kwds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="33">
+<pre><code>{'driver': 'GTiff',
+ 'dtype': 'int8',
+ 'nodata': None,
+ 'width': 2,
+ 'height': 2,
+ 'count': 1,
+ 'crs': CRS.from_epsg(4326),
+ 'transform': Affine(2.0, 0.0, -0.5,
+        0.0, -2.0, 51.5)}</code></pre>
+</div>
+</div>
+<p>Second, we update the <code>count</code> entry, replacing <code>1</code> (single-band) with <code>3</code> (three-band):</p>
+<div class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>dst_kwds.update(count<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>dst_kwds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="34">
+<pre><code>{'driver': 'GTiff',
+ 'dtype': 'int8',
+ 'nodata': None,
+ 'width': 2,
+ 'height': 2,
+ 'count': 3,
+ 'crs': CRS.from_epsg(4326),
+ 'transform': Affine(2.0, 0.0, -0.5,
+        0.0, -2.0, 51.5)}</code></pre>
+</div>
+</div>
+<p>Finally, we can create a file connection using the updated metadata and then write the values of the three bands:</p>
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r3.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwds)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>dst.write(r,   <span class="dv">1</span>)</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>dst.write(r<span class="op">*</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>dst.write(r<span class="op">*</span><span class="dv">3</span>, <span class="dv">3</span>)</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As a result, a three-band raster named <code>r3.tif</code> is created.</p>
+<p>Rasters often contain “No Data” values, representing missing data, e.g., unreliable measurement due to clouds or pixels outside of the photographed extent. In a <strong>numpy</strong> <code>ndarray</code> object, “No Data” values may be represented by the special <code>np.nan</code> value. However, due to computer memory limitations, only arrays of type <code>float</code> can contain <code>np.nan</code>, while arrays of type <code>int</code> cannot. For <code>int</code> rasters containing “No Data”, we typically mark missing data with a specific value beyond the valid range (e.g., <code>-9999</code>). The missing data “flag” is stored in the file (set through the <code>nodata</code> property of the file connection, see above). When reading an <code>int</code> raster with “No Data” back into Python, we need to be aware of these flags. Let’s demonstrate through examples.</p>
+<p>We will start with the simpler case, rasters of type <code>float</code>. Since <code>float</code> arrays may contain the “native” value <code>np.nan</code>, representing “No Data” is straightforward. For example, suppose that we have a <code>float</code> array with <code>np.nan</code>:</p>
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="fl">1.1</span>,<span class="fl">2.1</span>,np.nan,<span class="fl">4.1</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="36">
+<pre><code>array([[1.1, 2.1],
+       [nan, 4.1]])</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="37">
+<pre><code>dtype('float64')</code></pre>
+</div>
+</div>
+<p>When writing the array to file, we do not need to specify any particular <code>nodata</code> value:</p>
+<div class="cell" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r_nodata_float.tif'</span>, <span class="st">'w'</span>, </span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This is equivalent to <code>nodata=None</code>:</p>
+<div class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_float.tif'</span>).meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="39">
+<pre><code>{'driver': 'GTiff',
+ 'dtype': 'float64',
+ 'nodata': None,
+ 'width': 2,
+ 'height': 2,
+ 'count': 1,
+ 'crs': CRS.from_epsg(4326),
+ 'transform': Affine(2.0, 0.0, -0.5,
+        0.0, -2.0, 51.5)}</code></pre>
+</div>
+</div>
+<p>Reading from the raster back into the Python session reproduces the same exact array, with <code>np.nan</code>:</p>
+<div class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_float.tif'</span>).read()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="40">
+<pre><code>array([[[1.1, 2.1],
+        [nan, 4.1]]])</code></pre>
+</div>
+</div>
+<p>Now, suppose that we have an <code>np.int32</code> array with missing data, which is inevitably flagged using a specific <code>int</code> value such as <code>-9999</code> (remember that we can’t store <code>np.nan</code> in an <code>int</code> array!):</p>
+<div class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="dv">1</span>,<span class="dv">2</span>,<span class="op">-</span><span class="dv">9999</span>,<span class="dv">4</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>).astype(np.int32)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="41">
+<pre><code>array([[    1,     2],
+       [-9999,     4]], dtype=int32)</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="42">
+<pre><code>dtype('int32')</code></pre>
+</div>
+</div>
+<p>When writing the array to file, we must specify <code>nodata=-9999</code> to keep track of our “No Data” flag:</p>
+<div class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r_nodata_int.tif'</span>, <span class="st">'w'</span>, </span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    nodata <span class="op">=</span> <span class="op">-</span><span class="dv">9999</span>,</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Examining the metadata confirms that the <code>nodata=-9999</code> setting was stored in the file <code>r_nodata_int.tif</code>.</p>
+<div class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_int.tif'</span>).meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="44">
+<pre><code>{'driver': 'GTiff',
+ 'dtype': 'int32',
+ 'nodata': -9999.0,
+ 'width': 2,
+ 'height': 2,
+ 'count': 1,
+ 'crs': CRS.from_epsg(4326),
+ 'transform': Affine(2.0, 0.0, -0.5,
+        0.0, -2.0, 51.5)}</code></pre>
+</div>
+</div>
+<p>If you try to open the file in GIS software, such as QGIS, you will see the missing data interpreted (e.g., the pixel shown as blank), meaning that the software is aware of the flag. However, reading the data back into Python reproduces an <code>int</code> array with <code>-9999</code>, for the same reason stated before:</p>
+<div class="cell" data-execution_count="45">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_int.tif'</span>)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read()</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="45">
+<pre><code>array([[[    1,     2],
+        [-9999,     4]]], dtype=int32)</code></pre>
+</div>
+</div>
+<p>The Python user must thefore be mindful of “No Data” <code>int</code> rasters, for example to avoid interpreting the value <code>-9999</code> literally. For example, if we “forget” about the <code>nodata</code> flag, the literal calculation of the <code>.mean</code> would incorrectly include the value <code>-9999</code>:</p>
+<div class="cell" data-execution_count="46">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>r.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="46">
+<pre><code>-2498.0</code></pre>
+</div>
+</div>
+<p>There are two basic ways to deal with the situation:</p>
+<ul>
+<li>Converting the raster to <code>float</code></li>
+<li>Using “No Data” masks</li>
+</ul>
+<p>First, particularly with small rasters where memory constraints are irrelevant, it may be more convenient to go from <code>int</code> to <code>float</code>, to gain the ability of the natural <code>np.nan</code> representation. Here is how we can do this with <code>r_nodata_int.tif</code>. We detect the missing data flag, conver the raster to <code>float</code>, and assign <code>np.nan</code> into the cells that are supposed to be missing:</p>
+<div class="cell" data-execution_count="47">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> r <span class="op">==</span> src.nodata</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> r.astype(np.float64)</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>r[mask] <span class="op">=</span> np.nan</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="47">
+<pre><code>array([[[ 1.,  2.],
+        [nan,  4.]]])</code></pre>
+</div>
+</div>
+<p>From there on, we deal with <code>np.nan</code> the usual way, such as using <code>np.nanmean</code> to calculate the mean excluding “No Data”:</p>
+<div class="cell" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>np.nanmean(r)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="48">
+<pre><code>2.3333333333333335</code></pre>
+</div>
+</div>
+<p>The second approach is to read the values into a so-called <a href="https://numpy.org/doc/stable/reference/maskedarray.generic.html#what-is-a-masked-array">“masked” array</a>, using the argument <code>masked=True</code>. A masked array can be thought of as an extended <code>ndarray</code>, with two components: <code>.data</code> (the values) and <code>.mask</code> (a corresponding boolean array marking “No Data” values):</p>
+<div class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read(masked<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="49">
+<pre><code>masked_array(
+  data=[[[1, 2],
+         [--, 4]]],
+  mask=[[[False, False],
+         [ True, False]]],
+  fill_value=-9999,
+  dtype=int32)</code></pre>
+</div>
+</div>
+<p>Using masked arrays is beyond the scope of this book. However, the basic idea is that many <strong>numpy</strong> operations “honor” the mask, so that the user does not have to keep track of the way that “No Data” values are marked, similarly to the natural <code>np.nan</code> representation. For example, the <code>.mean</code> of a masked array ignores the value <code>-9999</code>, because it is masked, taking into account just the valid values <code>1</code>, <code>2</code>, and <code>4</code>:</p>
+<div class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>r.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="50">
+<pre><code>2.3333333333333335</code></pre>
+</div>
+</div>
+<p>Keep in mind that, somewhat confusingly, <code>float</code> rasters may represent “No Data” using a specific value (such as <code>-9999.0</code>), instead, or in addition to (!), the native <code>np.nan</code> representation. In such cases, the same considerations shown for <code>int</code> apply to <code>float</code> rasters as well.</p>
 </section>
 </section>
 <section id="sec-visual-outputs" class="level2" data-number="7.9">
