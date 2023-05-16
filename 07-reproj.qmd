@@ -234,17 +234,23 @@ The [`spherely`](https://github.com/benbovy/spherely) package, which is in early
 
 ## When to reproject? {#sec-when-to-reproject}
 
-The previous section showed how to set the CRS manually, with `lnd_layer.set_crs(4326)`. In real world applications, however, CRSs are usually set automatically when data is read-in. In many projects the main CRS-related task is to transform objects, from one CRS into another. But when should data be transformed? And into which CRS? There are no clear-cut answers to these questions and CRS selection always involves trade-offs (Maling 1992, add reference...). However, there are some general principles provided in this section that can help you decide.
+The previous section showed how to set the CRS manually, with `lnd_layer.set_crs(4326)`. 
+In real world applications, however, CRSs are usually set automatically when data is read-in. 
+In many projects the main CRS-related task is to transform objects, from one CRS into another. But when should data be transformed? And into which CRS? There are no clear-cut answers to these questions and CRS selection always involves trade-offs (Maling 1992, add reference...). 
+However, there are some general principles provided in this section that can help you decide.
 
-First it's worth considering when to transform. In some cases transformation to a geographic CRS is essential, such as when publishing data online (for example, a Leaflet-based map using Python package `folium`). Another case is when two objects with different CRSs must be compared or combined, as shown when we try to find the distance between two objects with different CRSs:
+First it's worth considering when to transform. In some cases transformation to a geographic CRS is essential, such as when publishing data online (for example, a Leaflet-based map using Python package `folium`). 
+Another case is when two objects with different CRSs must be compared or combined, as shown when we try to find the distance between two objects with different CRSs:
 
 ```{python}
 lnd_layer.distance(lnd_layer_proj)
 ```
 
-To make the london and london_proj objects geographically comparable one of them must be transformed into the CRS of the other. But which CRS to use? The answer depends on context: many projects, especially those involving web mapping, require outputs in EPSG:4326, in which case it is worth transforming the projected object. If, however, the project requires planar geometry operations rather than spherical geometry operations engine (e.g. to create buffers with smooth edges), it may be worth transforming data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (EPSG:27700). That is the subject of Section 7.7.
+To make the `lnd_layer` and `lnd_layer_proj` objects geographically comparable one of them must be transformed into the CRS of the other. But which CRS to use? The answer depends on context: many projects, especially those involving web mapping, require outputs in `EPSG:4326`, in which case it is worth transforming the projected object. If, however, the project requires geometric calculations, implying planar geometry, e.g., to calculating buffers (@sec-geometry-operations-on-projected-and-unprojected-data), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (`EPSG:27700`). That is the subject of @sec-reprojecting-raster-geometries.
 
 ## Which CRS to use? {#sec-which-crs-to-use}
+
+...
 
 ## Reprojecting vector geometries {#sec-reprojecting-vector-geometries}
 
