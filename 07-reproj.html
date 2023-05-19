@@ -128,7 +128,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
@@ -465,7 +464,7 @@ Datum: World Geodetic System 1984 ensemble
 <p>Importantly, the <code>.set_crs</code> (for vector layers) or the assignment to <code>.crs</code> (for rasters), as shown above, do not alter coordinates’ values or geometries. Their role is only to set a metadata information about the object CRS. Consequently, the objects we created, <code>world3</code>, <code>world4</code>, and <code>src_nlcd2</code> are “incorrect”, in the sense that the geometries are in fact given in a different CRS than specified in the associated CRS definition.</p>
 <p>In some cases the CRS of a geographic object is unknown, as is the case in the london dataset created in the code chunk below, building on the example of London introduced in <a href="02-spatial-data.html#sec-vector-layer-from-scratch"><span>Section&nbsp;1.2.6</span></a>:</p>
 <div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>lnd_point <span class="op">=</span> shapely.geometry.Point(<span class="op">-</span><span class="fl">0.1</span>, <span class="fl">51.5</span>)</span>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>lnd_point <span class="op">=</span> shapely.geometry.Point(<span class="fl">0.1</span>, <span class="fl">51.5</span>)</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>lnd_geom <span class="op">=</span> gpd.GeoSeries([lnd_point])</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>lnd_layer <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: lnd_geom})</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>lnd_layer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -483,7 +482,7 @@ Datum: World Geodetic System 1984 ensemble
   <tbody>
     <tr>
       <th>0</th>
-      <td>POINT (-0.10000 51.50000)</td>
+      <td>POINT (0.10000 51.50000)</td>
     </tr>
   </tbody>
 </table>
@@ -516,189 +515,12 @@ Datum: World Geodetic System 1984 ensemble
 </section>
 <section id="sec-geometry-operations-on-projected-and-unprojected-data" class="level2" data-number="6.5">
 <h2 data-number="6.5" class="anchored" data-anchor-id="sec-geometry-operations-on-projected-and-unprojected-data"><span class="header-section-number">6.5</span> Geometry operations on projected and unprojected data</h2>
-<p>The <code>geopandas</code> package, through its dependency <code>shapely</code>, assumes planar geometry and works with distance/area values assumed to be in CRS units. In fact, the CRS definition is typically ignored, and the respective functions (such as in plotting and distance calculations) are applied on the “bare” <code>shapely</code> geometries. Accordingly, it is crucial to make sure that:</p>
-<ul>
-<li>Geometric calculations are only applied in projected CRS</li>
-<li>If there is more than one layer involved—all layers have to be in the same (projected) CRS</li>
-<li>The input distance and area values are passed in CRS units (and the returned values—interpreted in CRS units)</li>
-</ul>
-<p>For example, to calculate a buffer of 100 <span class="math inline">\(km\)</span> around London, we need to:</p>
-<ul>
-<li>Work with a layer representing London in a projected CRS (e.g., <code>EPSG:27700</code>)</li>
-<li>Pass the distance value in the CRS units (e.g., <code>100000</code> <span class="math inline">\(m\)</span>)</li>
-</ul>
-<p>In the following code section we create, from scratch, a point layer <code>lnd_layer_proj</code> with a point representing London (compare to <code>lnd_layer</code>, in a geographical CRS which we created above, see <a href="#sec-querying-and-setting-coordinate-systems"><span>Section&nbsp;6.4</span></a>):</p>
-<div class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>lnd_point_proj <span class="op">=</span> shapely.geometry.Point(<span class="dv">530000</span>, <span class="dv">180000</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>lnd_geom_proj <span class="op">=</span> gpd.GeoSeries([lnd_point_proj], crs<span class="op">=</span><span class="dv">27700</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: lnd_geom_proj})</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="15">
-
-<div>
-
-<table class="dataframe table table-sm table-striped">
-  <thead>
-    <tr>
-      <th></th>
-      <th>geometry</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>POINT (530000.000 180000.000)</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-</div>
-<p>Now we can use the <code>.buffer</code> method (<a href="05-geometry-operations.html#sec-buffers"><span>Section&nbsp;4.3.3</span></a>) to calculate the buffer:</p>
-<div class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj_buff <span class="op">=</span> lnd_layer_proj.<span class="bu">buffer</span>(<span class="dv">100000</span>)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj_buff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="16">
-<pre><code>0    POLYGON ((630000.000 180000.000...
-dtype: geometry</code></pre>
-</div>
-</div>
-<p>The resulting buffer is shown in the left panel of <a href="#fig-reprojection-geo-proj">Figure&nbsp;<span>6.1</span></a>.</p>
-<p>Calculating a 100-<span class="math inline">\(km\)</span> buffer <code>lnd_layer</code>, which is in a geographical CRS, is impossible. Since the <code>lnd_layer</code> is in decimal degrees, the closest thing to a 100-<span class="math inline">\(km\)</span> buffer would be to use a distance of 1 degree, which is roughly equivalent to 100 <span class="math inline">\(km\)</span> (1 degree is about 111 <span class="math inline">\(km\)</span> at the equator):</p>
-<div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff <span class="op">=</span> lnd_layer.<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_366/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
-
-  lnd_layer_buff = lnd_layer.buffer(1)</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="17">
-<pre><code>0    POLYGON ((0.90000 51.50000, 0.8...
-dtype: geometry</code></pre>
-</div>
-</div>
-<p>However, this is incorrect, as told by the warning message and shown in the right panel of <a href="#fig-reprojection-geo-proj">Figure&nbsp;<span>6.1</span></a>. The association between degrees and true distance varies over the surface of the earth and we cannot assume it is fixed (such as 1 degree = 111 <span class="math inline">\(km\)</span>).</p>
-<div class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>uk <span class="op">=</span> world[world[<span class="st">'name_long'</span>] <span class="op">==</span> <span class="st">'United Kingdom'</span>]</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>uk_proj <span class="op">=</span> uk.to_crs(<span class="dv">27700</span>)</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">4</span>))</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>uk_proj.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj.plot(color<span class="op">=</span><span class="st">'red'</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj_buff.plot(color<span class="op">=</span><span class="st">'none'</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>uk.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>lnd_layer.plot(color<span class="op">=</span><span class="st">'red'</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff.plot(color<span class="op">=</span><span class="st">'none'</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'100 km buffer</span><span class="ch">\n</span><span class="st">correct'</span>)</span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'1 degree buffer</span><span class="ch">\n</span><span class="st">incorrectly approximating 100 km'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-reprojection-geo-proj" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="07-reproj_files/figure-html/fig-reprojection-geo-proj-output-1.png" width="604" height="375" class="figure-img"></p>
-<p></p><figcaption class="figure-caption">Figure&nbsp;6.1: Buffers around London, around a projected point and distance of 100 <span class="math inline">\(km\)</span> (left), and around a point in lon/lat using distance of 1 degree (right) which is incorrect.</figcaption><p></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="callout-note callout callout-style-default callout-captioned">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-caption-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The distance between two lines of longitude, called meridians, is around 111 <span class="math inline">\(km\)</span> at the equator (execute <code>import geopy.distance;geopy.distance.geodesic((0,0),(0,1))</code> to find the precise distance). This shrinks to zero at the poles. At the latitude of London, for example, meridians are less than 70 <span class="math inline">\(km\)</span> apart (challenge: execute code that verifies this). Lines of latitude, by contrast, are equidistant from each other irrespective of latitude: they are always around 111 <span class="math inline">\(km\)</span> apart, including at the equator and near the poles (see Figure…).</p>
-</div>
-</div>
-<div class="callout-note callout callout-style-default callout-captioned">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-caption-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The <a href="https://github.com/benbovy/spherely"><code>spherely</code></a> package, which is in early stages of development, is aimed at providing a spherical-geometry counterpart to <code>shapely</code>, so that true distances (in <span class="math inline">\(m\)</span>) and areas (in <span class="math inline">\(m^2\)</span>) can be calculated on geometries in geographic CRS.</p>
-</div>
-</div>
 </section>
 <section id="sec-when-to-reproject" class="level2" data-number="6.6">
 <h2 data-number="6.6" class="anchored" data-anchor-id="sec-when-to-reproject"><span class="header-section-number">6.6</span> When to reproject?</h2>
-<p>The previous section showed how to set the CRS manually, with <code>lnd_layer.set_crs(4326)</code>. In real world applications, however, CRSs are usually set automatically when data is read-in. In many projects the main CRS-related task is to transform objects, from one CRS into another. But when should data be transformed? And into which CRS? There are no clear-cut answers to these questions and CRS selection always involves trade-offs (Maling 1992, add reference…). However, there are some general principles provided in this section that can help you decide.</p>
-<p>First it’s worth considering when to transform. In some cases transformation to a geographic CRS is essential, such as when publishing data online (for example, a Leaflet-based map using Python package <code>folium</code>). Another case is when two objects with different CRSs must be compared or combined, as shown when we try to find the distance between two objects with different CRSs:</p>
-<div class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>lnd_layer.distance(lnd_layer_proj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_366/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
-
-  lnd_layer.distance(lnd_layer_proj)
-/tmp/ipykernel_366/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
-Use `to_crs()` to reproject one of the input geometries to match the CRS of the other.
-
-Left CRS: EPSG:4326
-Right CRS: EPSG:27700
-
-  lnd_layer.distance(lnd_layer_proj)</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="19">
-<pre><code>0    559715.614087
-dtype: float64</code></pre>
-</div>
-</div>
-<p>To make the <code>lnd_layer</code> and <code>lnd_layer_proj</code> objects geographically comparable one of them must be transformed into the CRS of the other. But which CRS to use? The answer depends on context: many projects, especially those involving web mapping, require outputs in <code>EPSG:4326</code>, in which case it is worth transforming the projected object. If, however, the project requires geometric calculations, implying planar geometry, e.g., to calculating buffers (<a href="#sec-geometry-operations-on-projected-and-unprojected-data"><span>Section&nbsp;6.5</span></a>), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (<code>EPSG:27700</code>). That is the subject of <a href="#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>.</p>
 </section>
 <section id="sec-which-crs-to-use" class="level2" data-number="6.7">
 <h2 data-number="6.7" class="anchored" data-anchor-id="sec-which-crs-to-use"><span class="header-section-number">6.7</span> Which CRS to use?</h2>
-<p>The question of which CRS is tricky, and there is rarely a “right” answer: “There exist no all-purpose projections, all involve distortion when far from the center of the specified frame” (Bivand, Pebesma, and Gómez-Rubio 2013, add citation…). Additionally, you should not be attached just to one projection for every task. It is possible to use one projection for some part of the analysis, another projection for a different part, and even some other for visualization. Always try to pick the CRS that serves your goal best!</p>
-<p>When selecting <strong>geographic</strong> CRSs, the answer is often <a href="https://en.wikipedia.org/wiki/World_Geodetic_System#A_new_World_Geodetic_System:_WGS_84">WGS84</a>. It is used not only for web mapping, but also because GPS datasets and thousands of raster and vector datasets are provided in this CRS by default. WGS84 is the most common CRS in the world, so it is worth knowing its EPSG code: 4326. This “magic number” can be used to convert objects with unusual projected CRSs into something that is widely understood.</p>
-<p>What about when a <strong>projected</strong> CRS is required? In some cases, it is not something that we are free to decide: “often the choice of projection is made by a public mapping agency” (Bivand, Pebesma, and Gómez-Rubio 2013, add citation…). This means that when working with local data sources, it is likely preferable to work with the CRS in which the data was provided, to ensure compatibility, even if the official CRS is not the most accurate. The example of London was easy to answer because:</p>
-<ul>
-<li>the British National Grid (with its associated EPSG code 27700) is well known, and</li>
-<li>the original dataset (<code>lnd_layer</code>) already had that CRS.</li>
-</ul>
-<p>A commonly used default is Universal Transverse Mercator (<a href="https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system">UTM</a>), a set of CRSs that divides the Earth into 60 longitudinal wedges and 20 latitudinal segments. The transverse Mercator projection used by UTM CRSs is conformal but distorts areas and distances with increasing severity with distance from the center of the UTM zone. Documentation from the GIS software Manifold therefore suggests restricting the longitudinal extent of projects using UTM zones to 6 degrees from the central meridian (source: <a href="http://www.manifold.net/doc/mfd9/universal_transverse_mercator_projection.htm">manifold.net</a>). Therefore, we recommend using UTM only when your focus is on preserving angles for relatively small area!</p>
-<p>Almost every place on Earth has a UTM code, such as “60H” which refers to northern New Zealand. UTM EPSG codes run sequentially from 32601 to 32660 for northern hemisphere locations and from 32701 to 32760 for southern hemisphere locations.</p>
-<p>To show how the system works, let’s create a function, <code>lonlat2UTM</code> to calculate the EPSG code associated with any point on the planet as follows:</p>
-<div class="cell" data-execution_count="20">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lonlat2UTM(lon, lat):</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    utm <span class="op">=</span> (math.floor((lon <span class="op">+</span> <span class="dv">180</span>) <span class="op">/</span> <span class="dv">6</span>) <span class="op">%</span> <span class="dv">60</span>) <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lat <span class="op">&gt;</span> <span class="dv">0</span>:</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>        utm <span class="op">+=</span> <span class="dv">32600</span></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>        utm <span class="op">+=</span> <span class="dv">32700</span></span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> utm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The following command uses this function to identify the UTM zone and associated EPSG code for Auckland:</p>
-<div class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>lonlat2UTM(<span class="fl">174.7</span>, <span class="op">-</span><span class="fl">36.9</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="21">
-<pre><code>32760</code></pre>
-</div>
-</div>
-<p>Here is another example for London (where we “unpack” the coordinates of the 1<sup>st</sup> geometry in <code>lnd_layer</code> into the <code>lonlat2UTM</code> function arguments):</p>
-<div class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>lonlat2UTM(<span class="op">*</span>lnd_layer[<span class="st">'geometry'</span>].iloc[<span class="dv">0</span>].coords[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="22">
-<pre><code>32630</code></pre>
-</div>
-</div>
-<p>Currently, we also have tools helping us to select a proper CRS. For example, the webpage https://jjimenezshaw.github.io/crs-explorer/ lists CRSs based on selected location and type. Important note: while these tools are helpful in many situations, you need to be aware of the properties of the recommended CRS before you apply it.</p>
-<p>In cases where an appropriate CRS is not immediately clear, the choice of CRS should depend on the properties that are most important to preserve in the subsequent maps and analysis. All CRSs are either equal-area, equidistant, conformal (with shapes remaining unchanged), or some combination of compromises of those (<a href="02-spatial-data.html#sec-projected-coordinate-reference-systems"><span>Section&nbsp;1.4.2</span></a>). Custom CRSs with local parameters can be created for a region of interest and multiple CRSs can be used in projects when no single CRS suits all tasks. “Geodesic calculations” can provide a fall-back if no CRSs are appropriate (see proj.org/geodesic.html). Regardless of the projected CRS used, the results may not be accurate for geometries covering hundreds of kilometers.</p>
-<p>When deciding on a custom CRS, we recommend the following:</p>
-<ul>
-<li><p>A Lambert azimuthal equal-area (<a href="https://en.wikipedia.org/wiki/Lambert_azimuthal_equal-area_projection">LAEA</a>) projection for a custom local projection (set latitude and longitude of origin to the center of the study area), which is an equal-area projection at all locations but distorts shapes beyond thousands of kilometers</p></li>
-<li><p>Azimuthal equidistant (<a href="https://en.wikipedia.org/wiki/Azimuthal_equidistant_projection">AEQD</a>) projections for a specifically accurate straight-line distance between a point and the center point of the local projection</p></li>
-<li><p>Lambert conformal conic (<a href="https://en.wikipedia.org/wiki/Lambert_conformal_conic_projection">LCC</a>) projections for regions covering thousands of kilometers, with the cone set to keep distance and area properties reasonable between the secant lines</p></li>
-<li><p>Stereographic (<a href="https://en.wikipedia.org/wiki/Stereographic_projection">STERE</a>) projections for polar regions, but taking care not to rely on area and distance calculations thousands of kilometers from the center</p></li>
-</ul>
-<p>One possible approach to automatically select a projected CRS specific to a local dataset is to create an azimuthal equidistant (AEQD) projection for the center-point of the study area. This involves creating a custom CRS (with no EPSG code) with units of meters based on the center point of a dataset. Note that this approach should be used with caution: no other datasets will be compatible with the custom CRS created and results may not be accurate when used on extensive datasets covering hundreds of kilometers.</p>
-<p>The principles outlined in this section apply equally to vector and raster datasets. Some features of CRS transformation however are unique to each geographic data model. We will cover the particularities of vector data transformation in <a href="#sec-reprojecting-vector-geometries"><span>Section&nbsp;6.8</span></a> and those of raster transformation in <a href="#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>. Next, the last section, shows how to create custom map projections (<a href="#sec-custom-map-projections"><span>Section&nbsp;6.10</span></a>).</p>
 </section>
 <section id="sec-reprojecting-vector-geometries" class="level2" data-number="6.8">
 <h2 data-number="6.8" class="anchored" data-anchor-id="sec-reprojecting-vector-geometries"><span class="header-section-number">6.8</span> Reprojecting vector geometries</h2>
@@ -729,16 +551,16 @@ Note
 </ul>
 <p>The first function, <code>calculate_default_transform</code>, is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds. Alternatively, the destination transformation matrix can be obtained from an existing raster; this is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (<a href="04-spatial-operations.html#sec-raster-local-operations"><span>Section&nbsp;3.4.3</span></a>) (see below). The second function <code>rasterio.warp.reproject</code> then actually calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear).</p>
 <p>Let’s take a look at two examples of raster transformation: using categorical and continuous data. Land cover data are usually represented by categorical maps. The <code>nlcd.tif</code> file provides information for a small area in Utah, USA obtained from National Land Cover Database 2011 in the NAD83 / UTM zone 12N CRS, as shown in the output of the code chunk below (only first line of output shown). We already created a connection to the <code>nlcd.tif</code> file, named <code>src_nlcd</code>:</p>
-<div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>src_nlcd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="23">
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>src_nlcd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
 <pre><code>&lt;open DatasetReader name='data/nlcd.tif' mode='r'&gt;</code></pre>
 </div>
 </div>
 <p>Recall that the raster transformation matrix and dimensions are accessible from the file connection as follows. This information will be required to calculate the destination transformation matrix (hereby printed collectively in a <code>tuple</code>):</p>
-<div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>src_nlcd.transform, src_nlcd.width, src_nlcd.height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="24">
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>src_nlcd.transform, src_nlcd.width, src_nlcd.height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
 <pre><code>(Affine(31.530298224786595, 0.0, 301903.344386758,
         0.0, -31.52465870178793, 4154086.47216415),
  1073,
@@ -746,20 +568,20 @@ Note
 </div>
 </div>
 <p>First, let’s define the destination CRS. In this case, we choose WGS84 (EPSG code <code>4326</code>):</p>
-<div class="cell" data-execution_count="25">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>dst_crs <span class="op">=</span> <span class="st">'EPSG:4326'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>dst_crs <span class="op">=</span> <span class="st">'EPSG:4326'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now, we are ready to claculate the destination raster transformation matrix (<code>dst_transform</code>), and the destination dimensions (<code>dst_width</code>, <code>dst_height</code>), as follows:</p>
-<div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height <span class="op">=</span> rasterio.warp.calculate_default_transform(</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    src_nlcd.crs,</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    dst_crs,</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    src_nlcd.width,</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    src_nlcd.height,</span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>src_nlcd.bounds</span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="26">
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height <span class="op">=</span> rasterio.warp.calculate_default_transform(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    src_nlcd.crs,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    dst_crs,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    src_nlcd.width,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    src_nlcd.height,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>src_nlcd.bounds</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
 <pre><code>(Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
         0.0, -0.00025326212175780043, 34.92789350789737),
  1200,
@@ -767,23 +589,23 @@ Note
 </div>
 </div>
 <p>Note that <code>*</code>, in <code>*src_nlcd.bounds</code>, is used to unpack <code>src_nlcd.bounds</code> to four separate arguments, which <code>calculate_default_transform</code> requires:</p>
-<div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>src_nlcd.bounds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="27">
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>src_nlcd.bounds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="19">
 <pre><code>BoundingBox(left=301903.344386758, bottom=4111244.46098842, right=335735.354381954, top=4154086.47216415)</code></pre>
 </div>
 </div>
 <p>Next, we will create the metadata file used for writing the reprojected raster to file. For convenience, we are taking the metadata of the source raster (<code>src_nlcd.meta</code>), making a copy (<code>dst_kwargs</code>), and then updating those specific properties that need to be changed. Note that the reprojection process typically creates “No Data” pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be “filled” to get back a rectangular extent. We need to specify a “No Data” value of our choice, if there is none, or use the existing source raster setting, such as <code>255</code> in this case:</p>
-<div class="cell" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_nlcd.meta.copy()</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'crs'</span>: dst_crs,</span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: dst_transform,</span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: dst_width,</span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: dst_height</span>
-<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>dst_kwargs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="28">
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_nlcd.meta.copy()</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'crs'</span>: dst_crs,</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: dst_transform,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: dst_width,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: dst_height</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>dst_kwargs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint8',
  'nodata': 255.0,
@@ -797,34 +619,34 @@ Note
 </div>
 <p>We are ready to create the reprojected raster. Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once. It is also possible to reproject into an in-memory <code>ndarray</code> object, see the <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject">documentation</a>.</p>
 <p>To write the reprojected raster, we first create a destination file connection <code>dst_nlcd</code>, pointing at the output file path of our choice (<code>output/nlcd_4326.tif</code>), using the updated metadata object created earlier (<code>dst_kwargs</code>):</p>
-<div class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Then, we use the <code>rasterio.warp.reproject</code> function to calculate and write the reprojection result into the <code>dst_nlcd</code> file connection. Note that the <code>source</code> and <code>destination</code> accept a “band” object, created using <code>rasterio.band</code>. In this case, there is just one band. If there were more bands, we would have to repeat the procedure for each band, using <code>i</code> instead of <code>1</code> inside a <a href="https://rasterio.readthedocs.io/en/latest/topics/reproject.html#reprojecting-a-geotiff-dataset">loop</a>:</p>
-<div class="cell" data-execution_count="30">
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_nlcd, <span class="dv">1</span>),</span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_nlcd, <span class="dv">1</span>),</span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_nlcd.transform,</span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_nlcd.crs,</span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
-<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_crs,</span>
-<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
-<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="30">
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_nlcd, <span class="dv">1</span>),</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_nlcd, <span class="dv">1</span>),</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_nlcd.transform,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_nlcd.crs,</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_crs,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
 <pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1248, 1200)),
  Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
         0.0, -0.00025326212175780043, 34.92789350789737))</code></pre>
 </div>
 </div>
 <p>Finally, we close the file connection so that the data are actually written:</p>
-<div class="cell" data-execution_count="31">
-<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Many properties of the new object differ from the previous one, including the number of columns and rows (and therefore number of cells), resolution (transformed from meters into degrees), and extent, as summarized again below (note that the number of categories increases from 8 to 9 because of the addition of NA values, not because a new category has been created—the land cover classes are preserved).</p>
-<div class="cell" data-execution_count="32">
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>src_nlcd.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="32">
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>src_nlcd.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint8',
  'nodata': 255.0,
@@ -836,10 +658,10 @@ Note
         0.0, -31.52465870178793, 4154086.47216415)}</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="33">
-<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>src_nlcd_4326 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>)</span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>src_nlcd_4326.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="33">
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>src_nlcd_4326 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>src_nlcd_4326.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint8',
  'nodata': 255.0,
@@ -852,39 +674,39 @@ Note
 </div>
 </div>
 <p>Examining the unique raster values tells us that the new raster has the same categories, plus the value <code>255</code> representing “No Data”:</p>
-<div class="cell" data-execution_count="34">
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>np.unique(src_nlcd.read(<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="34">
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>np.unique(src_nlcd.read(<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
 <pre><code>array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8)</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="35">
-<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>np.unique(src_nlcd_4326.read(<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="35">
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>np.unique(src_nlcd_4326.read(<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="27">
 <pre><code>array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8)</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="36">
-<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>show(src_nlcd, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">'Set3'</span>)</span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>show(src_nlcd_4326, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">'Set3'</span>)</span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original (EPSG:26912)'</span>)</span>
-<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Reprojected (EPSG:4326)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>show(src_nlcd, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">'Set3'</span>)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>show(src_nlcd_4326, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">'Set3'</span>)</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original (EPSG:26912)'</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Reprojected (EPSG:4326)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-reproject-nlcd" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="07-reproj_files/figure-html/fig-raster-reproject-nlcd-output-1.png" width="643" height="357" class="figure-img"></p>
-<p></p><figcaption class="figure-caption">Figure&nbsp;6.2: Reprojecting a categorical raster using nearest neighbor resampling</figcaption><p></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;6.1: Reprojecting a categorical raster using nearest neighbor resampling</figcaption><p></p>
 </figure>
 </div>
 </div>
 </div>
 <p>In the above example, we automatically calculated an optimal (i.e., most information preserving) destination grid using <code>rasterio.warp.calculate_default_transform</code>. This is appropriate when there are no specific requirements for the destination raster spatial properties. Namely, we are not required to otain a specific origin and resolution, but just wish to preserve the raster values as much as possible. To do that, <code>calculate_default_transform</code> “tries” to keep the extent and resolution of the destination raster as similar as possible to the source. In other situations, however, we need to reproject a raster into a specific “template”, so that it corresponds, for instance, with other rasters we use in the analysis. In the following code section, we reproject the <code>nlcd.tif</code> raster, again, buit this time using the <code>nlcd_4326.tif</code> reprojection result as the “template” to demonstrate this alternative workflow.</p>
 <p>First, we create a connection to our “template” raster to read its metadata:</p>
-<div class="cell" data-execution_count="37">
-<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>template <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>)</span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>template.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="37">
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>template <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>)</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>template.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="29">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'uint8',
  'nodata': 255.0,
@@ -897,34 +719,34 @@ Note
 </div>
 </div>
 <p>Then, we create a write-mode connection to our destination raster, using this metadata, meaning that as the resampling result is going to have identical metadata as the “template”:</p>
-<div class="cell" data-execution_count="38">
-<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>template.meta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>template.meta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now, we can resample and write the result:</p>
-<div class="cell" data-execution_count="39">
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_nlcd, <span class="dv">1</span>),</span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_nlcd_2, <span class="dv">1</span>),</span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_nlcd.transform,</span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_nlcd.crs,</span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_nlcd_2.transform,</span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_nlcd_2.crs,</span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
-<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="39">
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_nlcd, <span class="dv">1</span>),</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_nlcd_2, <span class="dv">1</span>),</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_nlcd.transform,</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_nlcd.crs,</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_nlcd_2.transform,</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_nlcd_2.crs,</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="31">
 <pre><code>(Band(ds=&lt;open DatasetWriter name='output/nlcd_4326_2.tif' mode='w'&gt;, bidx=1, dtype='uint8', shape=(1248, 1200)),
  Affine(0.00025326212175780043, 0.0, 2.7120438858942424,
         0.0, -0.00025326212175780043, 34.92789350789737))</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="40">
-<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Naturally, in this case, the outputs <code>nlcd_4326.tif</code> and <code>nlcd_4326_2.tif</code> are identical, as we used the same “template” and the same source data:</p>
-<div class="cell" data-execution_count="41">
-<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>).read(<span class="dv">1</span>) <span class="op">==</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>).read(<span class="dv">1</span>)</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>d</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="41">
+<div class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>).read(<span class="dv">1</span>) <span class="op">==</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>).read(<span class="dv">1</span>)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>d</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="33">
 <pre><code>array([[ True,  True,  True, ...,  True,  True,  True],
        [ True,  True,  True, ...,  True,  True,  True],
        [ True,  True,  True, ...,  True,  True,  True],
@@ -934,9 +756,9 @@ Note
        [ True,  True,  True, ...,  True,  True,  True]])</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="42">
-<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>np.<span class="bu">all</span>(d)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="42">
+<div class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>np.<span class="bu">all</span>(d)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="34">
 <pre><code>True</code></pre>
 </div>
 </div>
@@ -949,46 +771,46 @@ Note
 <p>resampling method should be used, instead of <code>rasterio.enums.Resampling.nearest</code>. Otherwise, much of the data will be lost, as the “nearest” method can capture one pixel value only for each destination raster pixel.</p>
 <p>Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure. This is demonstrated below with <code>srtm.tif</code> from the Shuttle Radar Topography Mission (SRTM), which represents height in meters above sea level (elevation) with the WGS84 CRS.</p>
 <p>We will reproject this dataset into a projected CRS, but not with the nearest neighbor method which is appropriate for categorical data. Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster. The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight. The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method. The code is practically the same, except for changing the source and destination file names, and replacing <code>nearest</code> with <code>bilinear</code>:</p>
-<div class="cell" data-execution_count="43">
-<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>dst_crs <span class="op">=</span> <span class="st">'EPSG:32612'</span></span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height <span class="op">=</span> rasterio.warp.calculate_default_transform(</span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    src_srtm.crs,</span>
-<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>    dst_crs,</span>
-<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>    src_srtm.width,</span>
-<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>    src_srtm.height,</span>
-<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>src_srtm.bounds</span>
-<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_srtm.meta.copy()</span>
-<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
-<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'crs'</span>: dst_crs,</span>
-<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: dst_transform,</span>
-<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: dst_width,</span>
-<span id="cb69-14"><a href="#cb69-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: dst_height</span>
-<span id="cb69-15"><a href="#cb69-15" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb69-16"><a href="#cb69-16" aria-hidden="true" tabindex="-1"></a>dst_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
-<span id="cb69-17"><a href="#cb69-17" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
-<span id="cb69-18"><a href="#cb69-18" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_srtm, <span class="dv">1</span>),</span>
-<span id="cb69-19"><a href="#cb69-19" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_srtm, <span class="dv">1</span>),</span>
-<span id="cb69-20"><a href="#cb69-20" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_srtm.transform,</span>
-<span id="cb69-21"><a href="#cb69-21" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_srtm.crs,</span>
-<span id="cb69-22"><a href="#cb69-22" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
-<span id="cb69-23"><a href="#cb69-23" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_crs,</span>
-<span id="cb69-24"><a href="#cb69-24" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.bilinear</span>
-<span id="cb69-25"><a href="#cb69-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb69-26"><a href="#cb69-26" aria-hidden="true" tabindex="-1"></a>dst_srtm.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>dst_crs <span class="op">=</span> <span class="st">'EPSG:32612'</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height <span class="op">=</span> rasterio.warp.calculate_default_transform(</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    src_srtm.crs,</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    dst_crs,</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    src_srtm.width,</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    src_srtm.height,</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>src_srtm.bounds</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_srtm.meta.copy()</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'crs'</span>: dst_crs,</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: dst_transform,</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: dst_width,</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: dst_height</span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>dst_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
+<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_srtm, <span class="dv">1</span>),</span>
+<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_srtm, <span class="dv">1</span>),</span>
+<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src_srtm.transform,</span>
+<span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src_srtm.crs,</span>
+<span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
+<span id="cb54-23"><a href="#cb54-23" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>dst_crs,</span>
+<span id="cb54-24"><a href="#cb54-24" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.bilinear</span>
+<span id="cb54-25"><a href="#cb54-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb54-26"><a href="#cb54-26" aria-hidden="true" tabindex="-1"></a>dst_srtm.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><a href="#fig-raster-reproject-srtm">Figure&nbsp;<span>6.3</span></a> shows the input and the reprojected SRTM rasters.</p>
-<div class="cell" data-execution_count="44">
-<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>show(src_srtm, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>show(rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>), ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original (EPSG:4326)'</span>)</span>
-<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Reprojected (EPSG:32612)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="#fig-raster-reproject-srtm">Figure&nbsp;<span>6.2</span></a> shows the input and the reprojected SRTM rasters.</p>
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>show(src_srtm, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>show(rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>), ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original (EPSG:4326)'</span>)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Reprojected (EPSG:32612)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-reproject-srtm" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="07-reproj_files/figure-html/fig-raster-reproject-srtm-output-1.png" width="648" height="371" class="figure-img"></p>
-<p></p><figcaption class="figure-caption">Figure&nbsp;6.3: Reprojecting a continuous raster using bilinear resampling</figcaption><p></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;6.2: Reprojecting a continuous raster using bilinear resampling</figcaption><p></p>
 </figure>
 </div>
 </div>
@@ -996,7 +818,6 @@ Note
 </section>
 <section id="sec-custom-map-projections" class="level2" data-number="6.10">
 <h2 data-number="6.10" class="anchored" data-anchor-id="sec-custom-map-projections"><span class="header-section-number">6.10</span> Custom map projections</h2>
-<p>…</p>
 </section>
 <section id="exercises" class="level2" data-number="6.11">
 <h2 data-number="6.11" class="anchored" data-anchor-id="exercises"><span class="header-section-number">6.11</span> Exercises</h2>
