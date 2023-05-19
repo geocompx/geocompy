@@ -491,7 +491,45 @@ The `"Polygon"` (exterior) coordinates can be passed to `shapely.geometry.MultiP
 shapely.geometry.MultiPoint(polygon.exterior.coords)
 ```
 
-...
+Summary / table of possible transformations... (?)
+
+Let's apply another commonly used type transformation to demonstrate. As input, we will create a `"MultiLineString"` geometry composed of three lines:
+
+```{python}
+l1 = shapely.geometry.LineString([(1, 5), (4, 3)])
+l2 = shapely.geometry.LineString([(4, 4), (4, 1)])
+l3 = shapely.geometry.LineString([(2, 2), (4, 2)])
+ml = shapely.geometry.MultiLineString([l1, l2, l3])
+ml
+```
+
+Let's place it into a `GeoSeries`:
+
+```{python}
+geom = gpd.GeoSeries([ml])
+geom
+```
+
+and finally into a `GeoDataFrame` with an attribute called `"id"`:
+
+```{python}
+dat = gpd.GeoDataFrame(geometry = geom, data = pd.DataFrame({'id': [1]}))
+dat
+```
+
+You can imagine it as a road or river network. The above layer `dat` has only one row that defines all the lines. This restricts the number of operations that can be done, for example it prevents adding names to each line segment or calculating lengths of single lines. Using `shapely` methods which we are already familiar with (see above), the individual single-part geometries (i.e., the "parts") can be accessed through the `.geoms` property:
+
+```{python}
+list(ml.geoms)
+```
+
+However, spoecifically for the "multi-part to single part" type transformation scenarios, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one. The advantage is that the original attributes (such as `id`) are retained, so that we can keep track of the original multi-part geometry properties that each part came from:
+
+```{python}
+dat.explode()
+```
+
+The opposite transformation, i.e., "single-part to multi-part", can be acheived using the `.dissolve` method (@sec-geometry-unions).
 
 ## Geometric operations on raster data {#sec-geo-ras}
 
