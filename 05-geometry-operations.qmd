@@ -141,12 +141,12 @@ The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surf
 #| fig-cap: Centroids (black) and points on surface red of New Zealand and Seine datasets.
 
 fig, axes = plt.subplots(ncols=2)
-nz.plot(ax=axes[0], color="white", edgecolor="lightgrey")
-nz_centroid.plot(ax=axes[0], color="None", edgecolor="black")
-nz_pos.plot(ax=axes[0], color="None", edgecolor="red")
-seine.plot(ax=axes[1], color="grey")
-seine_pos.plot(ax=axes[1], color="None", edgecolor="red")
-seine_centroid.plot(ax=axes[1], color="None", edgecolor="black");
+nz.plot(ax=axes[0], color='white', edgecolor='lightgrey')
+nz_centroid.plot(ax=axes[0], color='None', edgecolor='black')
+nz_pos.plot(ax=axes[0], color='None', edgecolor='red')
+seine.plot(ax=axes[1], color='grey')
+seine_pos.plot(ax=axes[1], color='None', edgecolor='red')
+seine_centroid.plot(ax=axes[1], color='None', edgecolor='black');
 ```
 
 ### Buffers {#sec-buffers}
@@ -167,10 +167,10 @@ The 5 and 50 km buffers are visualized in @fig-buffers:
 #| fig-cap: Buffers around the Seine dataset of 5 km (left) and 50 km (right). Note the colors, which reflect the fact that one buffer is created per geometry feature.
 
 fig, axes = plt.subplots(ncols=2)
-seine_buff_5km.plot(ax=axes[0], color="none", edgecolor=["red", "green", "blue"])
-seine_buff_50km.plot(ax=axes[1], color="none", edgecolor=["red", "green", "blue"])
-axes[0].set_title("5 km buffer")
-axes[1].set_title("50 km buffer");
+seine_buff_5km.plot(ax=axes[0], color='none', edgecolor=['red', 'green', 'blue'])
+seine_buff_50km.plot(ax=axes[1], color='none', edgecolor=['red', 'green', 'blue'])
+axes[0].set_title('5 km buffer')
+axes[1].set_title('50 km buffer');
 ```
 
 Note that both `.centroid` and `.buffer` return a `GeoSeries` object, even when the input is a `GeoDataFrame`:
@@ -218,16 +218,16 @@ nz_shift = nz.translate(0, 100000)
 
 Scaling enlarges or shrinks objects by a factor. It can be applied either globally or locally. Global scaling increases or decreases all coordinates values in relation to the origin coordinates, while keeping all geometries topological relations intact. 
 
-`Geopandas` implements local scaling using the `.scale` method. Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids. In the example below, each geometry is shrunk by a factor of two around the centroids (middle panel in @fig-affine-transformations). To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respectively), and the `"centroid"` option for the point of origin. (Other than `"centroid"`, it is possible to use `"center"` for the bounding box center, or specific point coordinates.)
+`Geopandas` implements local scaling using the `.scale` method. Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids. In the example below, each geometry is shrunk by a factor of two around the centroids (middle panel in @fig-affine-transformations). To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respectively), and the `'centroid'` option for the point of origin. (Other than `'centroid'`, it is possible to use `'center'` for the bounding box center, or specific point coordinates.)
 
 ```{python}
-nz_scale = nz.scale(0.5, 0.5, origin="centroid")
+nz_scale = nz.scale(0.5, 0.5, origin='centroid')
 ```
 
 Rotating the geometries can be done using the `.rotate` method. When rotating, we need to specify the rotation angle (positive values imply clockwise rotation) and the `origin` points (using the same options as in `scale`). For example, the following expression rotates `nz` by 30 degrees counter-clockwise, around the geometry centroids:
 
 ```{python}
-nz_rotate = nz.rotate(-30, origin="centroid")
+nz_rotate = nz.rotate(-30, origin='centroid')
 ```
 
 @fig-affine-transformations shows the original layer `nz`, and the shifting, scaling and rotation results.
@@ -237,15 +237,15 @@ nz_rotate = nz.rotate(-30, origin="centroid")
 #| fig-cap: "Illustrations of affine transformations: shift, scale and rotate."
 
 fig, axes = plt.subplots(ncols=3, figsize=(8,4))
-nz.plot(ax=axes[0], color="lightgrey", edgecolor="darkgrey")
-nz_shift.plot(ax=axes[0], color="red", edgecolor="darkgrey")
-nz.plot(ax=axes[1], color="lightgrey", edgecolor="darkgrey")
-nz_scale.plot(ax=axes[1], color="red", edgecolor="darkgrey")
-nz.plot(ax=axes[2], color="lightgrey", edgecolor="darkgrey")
-nz_rotate.plot(ax=axes[2], color="red", edgecolor="darkgrey")
-axes[0].set_title("Shift")
-axes[1].set_title("Scale")
-axes[2].set_title("Rotate");
+nz.plot(ax=axes[0], color='lightgrey', edgecolor='darkgrey')
+nz_shift.plot(ax=axes[0], color='red', edgecolor='darkgrey')
+nz.plot(ax=axes[1], color='lightgrey', edgecolor='darkgrey')
+nz_scale.plot(ax=axes[1], color='red', edgecolor='darkgrey')
+nz.plot(ax=axes[2], color='lightgrey', edgecolor='darkgrey')
+nz_rotate.plot(ax=axes[2], color='red', edgecolor='darkgrey')
+axes[0].set_title('Shift')
+axes[1].set_title('Scale')
+axes[2].set_title('Rotate');
 ```
 
 ### Clipping {#sec-clipping}
@@ -526,10 +526,24 @@ list(ml.geoms)
 However, spoecifically for the "multi-part to single part" type transformation scenarios, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one. The advantage is that the original attributes (such as `id`) are retained, so that we can keep track of the original multi-part geometry properties that each part came from. The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively:
 
 ```{python}
-dat.explode(index_parts=True).reset_index()
+dat1 = dat.explode(index_parts=True).reset_index()
+dat1
 ```
 
 For example, here we see that all `"LineString"` geometries came from the same multi-part geometry (`level_0`=`0`), which had three parts (`level_1`=`0`,`1`,`2`).
+
+@fig-multilinestring-to-linestring demonstrates the effect of `.explode` in converting a layer with multi-part geometries into a layer with single part geometries. 
+
+```{python}
+#| label: fig-multilinestring-to-linestring
+#| fig-cap: Transformation from a `"MultiLineString"` layer with one feature (left), to a `"LineString"` layer with three features (right) using `.explode`
+
+fig, axes = plt.subplots(ncols=2)
+dat.plot(ax=axes[0], column='id')
+dat1.plot(ax=axes[1], column='level_1')
+axes[0].set_title('MultiLineString\n1 feature')
+axes[1].set_title('LineString\n3 features');
+```
 
 By the way, the opposite transformation, i.e., "single-part to multi-part", is acheived using the `.dissolve` method (@sec-geometry-unions).
 
