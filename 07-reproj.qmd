@@ -35,6 +35,7 @@ src_srtm = rasterio.open('data/srtm.tif')
 src_nlcd = rasterio.open('data/nlcd.tif')
 zion = gpd.read_file('data/zion.gpkg')
 world = gpd.read_file('data/world.gpkg')
+cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
 ```
 
 ## Introduction
@@ -246,6 +247,8 @@ Another case is when two objects with different CRSs must be compared or combine
 lnd_layer.distance(lnd_layer_proj)
 ```
 
+We got a meaningless result and a warning.
+
 To make the `lnd_layer` and `lnd_layer_proj` objects geographically comparable one of them must be transformed into the CRS of the other. 
 But which CRS to use? 
 The answer depends on context: many projects, especially those involving web mapping, require outputs in `EPSG:4326`, in which case it is worth transforming the projected object. 
@@ -336,11 +339,67 @@ Next, the last section, shows how to create custom map projections (@sec-custom-
 
 ## Reprojecting vector geometries {#sec-reprojecting-vector-geometries}
 
-@sec-spatial-class demonstrated how vector geometries are made-up of points, and how points form the basis of more complex objects such as lines and polygons. Reprojecting vectors thus consists of transforming the coordinates of these points, which form the vertices of lines and polygons.
+@sec-spatial-class demonstrated how vector geometries are made-up of points, and how points form the basis of more complex objects such as lines and polygons. 
+Reprojecting vectors thus consists of transforming the coordinates of these points, which form the vertices of lines and polygons.
 
-@sec-geometry-operations-on-projected-and-unprojected-data contains an example in which at least one `GeoDataFrame` object must be transformed into an equivalent object with a different CRS to calculate the distance between two objects (?).
+@sec-geometry-operations-on-projected-and-unprojected-data contains an example in which at least one `GeoDataFrame` object must be transformed into an equivalent object with a different CRS to calculate the distance between two objects.
 
-...
+```{python}
+lnd_layer2 = lnd_layer.to_crs(27700)
+```
+
+Now that a transformed version of `lnd_layer` has been created, using the `.distance` method, the distance between the two representations of London can be found. 
+It may come as a surprise that `lnd_layer` and `lnd_layer2` are just over 2 km apart! 
+The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually-created coordinates that created `lnd_layer` and `lnd_layer_proj`:
+
+```{python}
+lnd_layer2.distance(lnd_layer_proj)
+```
+
+Functions for querying and reprojecting CRSs are demonstrated below with reference to `cycle_hire_osm`, a point layer that represents 'docking stations' where you can hire bicycles in London. 
+The CRS of `GeoSeries` and `GeoDataFrame` objects can be queried---as we learned in @sec-querying-and-setting-coordinate-systems set---using the `.crs` property and the `.set_crs` method, respectively. 
+The output is printed as multiple lines of text containing information about the coordinate system:
+
+```{python}
+crs_lnd = lnd_layer.crs
+crs_lnd
+```
+
+As mentioned in @sec-coordinate-reference-systems, a CRS object has many useful properties to examing the CRS characteristics and details, including `.name`, `.to_proj4()` and `.to_epsg()`:
+
+```{python}
+crs_lnd.name
+```
+
+```{python}
+crs_lnd.to_proj4()
+```
+
+```{python}
+crs_lnd.to_epsg()
+```
+
+As mentioned in @sec-coordinate-reference-systems, WKT representation, accessible through `.to_wkt()` of the `crs_lnd` object is the ultimate source of truth. 
+This means that the outputs of the previous code chunk are queries from the WKT representation provided by PROJ, rather than inherent attributes of the object and its CRS.
+
+The contents of the CRS object associated with a given geometry column is changed when the object's CRS is transformed. 
+In the code chunk below, we create a new version of `cycle_hire_osm` with a projected CRS:
+
+```{python}
+cycle_hire_osm_projected = cycle_hire_osm.to_crs(27700)
+cycle_hire_osm_projected.crs
+```
+
+The resulting object has a new CRS with an EPSG code 27700. But how to find out more details about this EPSG code, or any code? 
+One option is to search for it online. 
+Another option is to create a standalone CRS object within the Python environment (using `pyproj.CRS.from_string` or `pyproj.CRS.from_epsg`, see @sec-coordinate-reference-systems), and then query its properties:
+
+```{python}
+crs_lnd_new = pyproj.CRS.from_epsg(27700)
+crs_lnd_new.name, crs_lnd_new.to_proj4(), crs_lnd_new.to_wkt()
+```
+
+The result shows that the EPSG code 27700 represents the British National Grid, a result that could have been found by searching online for "[EPSG 27700](https://www.google.com/search?q=CRS+27700)".
 
 ## Reprojecting raster geometries {#sec-reprojecting-raster-geometries}
 
