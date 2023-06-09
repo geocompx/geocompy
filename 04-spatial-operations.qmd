@@ -145,6 +145,15 @@ canterbury_southland_height = nz_height[sel]
 canterbury_southland_height
 ```
 
+or, alternatively, we can use the `.isin` function to filter the regions and use `.overlay` to calculate the pairwise intersection between the `canterbury_southland` GeoDataFrame (with two rows for Canterbury and Southland, respectively) and the `nz_height` GeoDataFrame: 
+
+```{python}
+canterbury_southland = nz[nz['Name'].isin(['Canterbury', 'Southland'])]
+canterbury_southland
+nz_height.overlay(canterbury_southland)
+```
+
+
 The resulting subset is shown in @fig-spatial-subset2:
 
 ```{python}
@@ -155,7 +164,7 @@ fig, axes = plt.subplots(1, 2, figsize=(8, 4))
 base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
 nz_height.plot(ax=base, color='None', edgecolor='red')
 base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
-gpd.GeoSeries(canterbury_southland).plot(ax=base, color='grey', edgecolor='none')
+canterbury_southland.plot(ax=base, color='grey', edgecolor='none')
 canterbury_southland_height.plot(ax=base, color='None', edgecolor='red')
 axes[0].set_title('Original')
 axes[1].set_title('Subset (intersects)');
@@ -204,8 +213,8 @@ The resulting `GeoSeries` named `points`, `line`, and `poly` are visualized as f
 #| label: fig-spatial-relations-geoms
 #| fig-cap: Points, line and polygon objects arranged to illustrate topological relations
 
-ax = gpd.GeoSeries(poly).plot(color='grey', edgecolor='red')
-ax = gpd.GeoSeries(line).plot(ax=ax, color='black')
+ax = poly.plot(color='grey', edgecolor='red')
+ax = line.plot(ax=ax, color='black', linewidth=7)
 points.plot(ax=ax, color='none', edgecolor='black')
 for x, y, label in zip(points.x, points.y, [1,2,3]):
     ax.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords="offset points")
@@ -225,9 +234,13 @@ The result is a boolean `Series`. Its contents should match your intuition: posi
 
 Again, the above output is a `Series` where each value represents a feature in the first input (`points`).
 In case we need to obtain a matrix of *pairwise* results, we can use `.apply` as follows. 
-In this case, the result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry (there is just one, in this case)L
+In this case, the result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry. We'll add another polygon to demonstrate:
 
 ```{python}
+poly = gpd.GeoSeries([
+  shapely.geometry.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)]),
+  shapely.geometry.Polygon([(0,0), (1,0.5), (1,0), (0,0)])
+])
 points.apply(lambda x: poly.intersects(x))
 ```
 
@@ -356,7 +369,7 @@ z = gpd.sjoin(
   cycle_hire2, 
   cycle_hire_osm.to_crs(crs)
 )
-z
+z[['name_left','name_right']]
 ```
 
 The result `z` shows that there are 438 points in the target object `cycle_hire` within the threshold distance of `cycle_hire_osm`.
@@ -436,6 +449,7 @@ We now have create the `nz_height4` layer, which gives the average `nz_height` e
 nz_height4.plot(
   column='elevation', 
   legend=True,
+  cmap='Blues', edgecolor='black',
   missing_kwds={'color': 'none', 'edgecolor': 'black'}
 );
 ```
@@ -473,7 +487,8 @@ as shown in @fig-nz-and-grid.
 #| fig-cap: The nz layer and a regular grid of rectangles
 
 base = grid.plot(color='none', edgecolor='grey')
-nz.plot(ax=base, column='Population', edgecolor='black', legend=True);
+nz.plot(ax=base, column='Population', edgecolor='black', legend=True, cmap='viridis_r');
+base.set_title('Population');
 ```
 
 Our goal, now, is to "transfer" the `Population` attribute to the rectangular grid polygons, which is an example of a join between incongruent layers. To do that, we basically need to calculate--for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell. The weights in the weighted sum calculation are the ratios between the area of the coinciding "part" out of the entire `nz` polygon. That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
@@ -503,7 +518,7 @@ The resulting layer `nz_grid` is shown in @fig-nz-and-grid2.
 #| fig-cap: "The nz layer and a regular grid of rectangles: after an overlay operation"
 
 base = grid.plot(color='none', edgecolor='grey')
-nz_grid.plot(ax=base, column='Population', edgecolor='black', legend=True);
+nz_grid.plot(ax=base, column='Population', edgecolor='black', legend=True, cmap='viridis_r');
 ```
 
 Note that each of the "intersections" still holds the `Population` attribute of its "origin" feature of `nz`, as depicted in @fig-nz-and-grid2. The real population size of each `nz_grid` feature, however, is smaller (or equal), depending on the geographic area proportion that it occupies out of the original `nz` feature. To make the "correction", we first calculate the ratio (`area_prop`) and then multiply it by the population. The new (lowercase) attribute `population` now has the correct estimate of population sizes in `nz_grid`:
@@ -534,7 +549,7 @@ The final result `grid`, with the incongruently-joined `population` attribute fr
 #| label: fig-nz-and-grid3
 #| fig-cap: "The nz layer and a regular grid of rectangles: final result"
 
-base = grid.plot(column='population', edgecolor='black', legend=True);
+base = grid.plot(column='population', edgecolor='black', legend=True, cmap='viridis_r');
 nz.plot(ax=base, color='none', edgecolor='grey', legend=True);
 ```
 
