@@ -72,7 +72,7 @@ mamba env create -f environment.yml
 Activate the environment as follows:
 
 ```bash
-mamba activate geocompy
+conda activate geocompy
 ```
 
 and reproduce the book (requires quarto to be installed):
