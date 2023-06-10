@@ -55,7 +55,7 @@ Simplification is a process for generalization of vector objects (lines and poly
 For example, a simplified geometry of a `"LineString"` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can created using the following command:
 
 ```{python}
-seine_simp = seine.simplify(2000)  # 2000 m
+seine_simp = seine.simplify(2000) # meters
 ```
 
 Figure @fig-simplify-lines illustrates the input and the result of the simplification:
@@ -75,11 +75,11 @@ The resulting `seine_simp` object is a copy of the original `seine` but with few
 
 ```{python}
 import sys
-sys.getsizeof(seine)       ## Original (bytes)
+print(f'Original: {sys.getsizeof(seine)} bytes')
 ```
 
 ```{python}
-sys.getsizeof(seine_simp)  ## Simplified (bytes)
+print(f'Simplified: {sys.getsizeof(seine_simp)} bytes')
 ```
 
 Simplification is also applicable for polygons. This is illustrated using `us_states`, representing the contiguous United States. As we show in @sec-reproj-geo-data, GEOS assumes that the data is in a projected CRS and this could lead to unexpected results when using a geographic CRS. Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (epsg = `2163`) (on the left in Figure @fig-simplify-polygons):
@@ -105,15 +105,15 @@ Figure @fig-simplify-polygons demonstrates the two simplification methods applie
 
 ```{python}
 #| label: fig-simplify-polygons
-#| fig-cap: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the geopandas (middle), and topojson (right), packages. 
+#| fig-cap: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the GeoPandas (middle), and TopoJSON (right), packages. 
 
 fig, axes = plt.subplots(ncols=3, figsize=(8,4))
 us_states2163.plot(ax=axes[0], color='lightgrey', edgecolor='black')
 us_states_simp1.plot(ax=axes[1], color='lightgrey', edgecolor='black')
 us_states_simp2.plot(ax=axes[2], color='lightgrey', edgecolor='black')
 axes[0].set_title("Original")
-axes[1].set_title("Simplified (w/ geopandas)")
-axes[2].set_title("Simplified (w/ topojson)");
+axes[1].set_title("Simplified (w/ GeoPandas)")
+axes[2].set_title("Simplified (w/ TopoJSON)");
 ```
 
 ### Centroids
@@ -147,6 +147,8 @@ nz_pos.plot(ax=axes[0], color='None', edgecolor='red')
 seine.plot(ax=axes[1], color='grey')
 seine_pos.plot(ax=axes[1], color='None', edgecolor='red')
 seine_centroid.plot(ax=axes[1], color='None', edgecolor='black');
+fig.suptitle("Represenative points in red and centroids in black", y=0.85)
+fig.tight_layout()
 ```
 
 ### Buffers {#sec-buffers}
@@ -358,6 +360,18 @@ pnt2 = pnt.intersection(x.intersection(y))
 pnt2
 ```
 
+The result is shown in @fig-intersection-points:
+
+```{python}
+#| label: fig-intersection-points
+#| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
+
+base = pnt.plot(color='none', edgecolor='black')
+gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
+gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
+pnt2.plot(ax=base, color='red')
+```
+
 Empty geometries can be filtered out to retain the required subset, and to get `pnt2` which is identical to `pnt1`:
 
 ```{python}
@@ -385,8 +399,8 @@ The result is shown in @fig-dissolve:
 #| fig-cap: "Spatial aggregation on contiguous polygons, illustrated by aggregating the population of US states into regions, with population represented by color. Note the operation automatically dissolves boundaries between states."
 
 fig, axes = plt.subplots(ncols=2, figsize=(9, 2.5))
-us_states.plot(ax=axes[0], edgecolor='black', column='total_pop_15', legend=True)
-regions.plot(ax=axes[1], edgecolor='black', column='total_pop_15', legend=True)
+us_states.plot(ax=axes[0], edgecolor='black', column='total_pop_15', legend=True, cmap='PuRd')
+regions.plot(ax=axes[1], edgecolor='black', column='total_pop_15', legend=True, cmap='PuRd')
 axes[0].set_title('State')
 axes[1].set_title('Region');
 ```
@@ -475,7 +489,7 @@ axes[1].set_title("LineString")
 axes[2].set_title("Polygon");
 ```
 
-Conversion from multipoint to linestring is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from multipoint or linestring to polygon is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
+Conversion from `"MultiPoint"` to `"LineString"` is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from `"MultiPoint"` or `"LineString"` to `"Polygon"` is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
 Our `"LineString"` geometry can be converted bact to a `"MultiPoint"` geometry by passing its coordinates directly to `shapely.geometry.MultiPoint`:
 
