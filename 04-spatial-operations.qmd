@@ -153,13 +153,11 @@ canterbury_southland
 nz_height.overlay(canterbury_southland)
 ```
 
-
 The resulting subset is shown in @fig-spatial-subset2:
 
 ```{python}
 #| label: fig-spatial-subset2
 #| fig-cap: Spatial subsetting of points by intersection with more that one polygon
-
 fig, axes = plt.subplots(1, 2, figsize=(8, 4))
 base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
 nz_height.plot(ax=base, color='None', edgecolor='red')
@@ -222,18 +220,17 @@ for x, y, label in zip(points.x, points.y, [1,2,3]):
 
 A simple query is: which of the points in `points` intersect in some way with polygon `poly`?
 The question can be answered by inspection (points 1 and 3 are touching and within the polygon, respectively). 
-This question can be answered with the `.intersects` method, as follows.
-Note that we evaluate the relation between each geometry in a `GeoSeries` (`points`) and a single `shapely` geometry (`poly.iloc[0]`). 
-When both inputs are `GeoSeries`, a pairwise evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`):
+This question can be answered with the `.intersects` method, which reports whether or not each geometry in a `GeoSeries` (`points`) intersects with a single `shapely` geometry (`poly.iloc[0]`). 
+When both inputs are a `GeoSeries` object, a pairwise evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`):
 
 ```{python}
 points.intersects(poly.iloc[0])
 ```
 
-The result is a boolean `Series`. Its contents should match your intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second are outside the polygon's border.
+The result shown above is a boolean `Series`. Its contents should match your intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second are outside the polygon's border.
+Each value in this `Series` represents a feature in the first input (`points`).
 
-Again, the above output is a `Series` where each value represents a feature in the first input (`points`).
-In case we need to obtain a matrix of *pairwise* results, we can use `.apply` as follows. 
+The `.apply` method can be used to obtain a matrix of *pairwise* results.
 In this case, the result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry. We'll add another polygon to demonstrate:
 
 ```{python}
