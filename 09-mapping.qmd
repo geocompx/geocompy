@@ -1,13 +1,6 @@
 # Making maps with Python {#sec-map-making}
 
-## Introduction
-
-- Geopandas explore has been used in previous chapters.
-- When to focus on visualisation? At the end of geographic data processing workflows.
-
-<!-- Input datasets: https://github.com/geocompx/spDatapy -->
-<!-- Decision of whether to use static or interactive. -->
-<!-- Flow diagram? -->
+## Prerequisites
 
 ```{python}
 #| echo: false
@@ -25,62 +18,69 @@ else:
   z.extractall(".")
 ```
 
+This chapter requires the following packages:
+
 ```{python}
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import rasterio
 import rasterio.plot
-nz = gpd.read_file("data/nz.gpkg")
 ```
 
-## Static maps
-
-- Focus on matlibplot
-- First example: NZ with fill and borders
-- Scary matplotlib code here...
+Sample data...
 
 ```{python}
-#| layout-ncol: 3
-nz.plot(color="grey");
-nz.plot(color="none", edgecolor="blue");
-nz.plot(color="grey", edgecolor="blue");
-```
-
-<!-- # Add fill layer to nz shape
-tm_shape(nz) +
-  tm_fill()
-# Add border layer to nz shape
-tm_shape(nz) +
-  tm_borders()
-# Add fill and border layers to nz shape
-tm_shape(nz) +
-  tm_fill() +
-  tm_borders()  -->
-
-As covered in Chapter 2, you can plot raster datasets as follows:
-
-```{python}
+nz = gpd.read_file('data/nz.gpkg')
 nz_elev = rasterio.open('data/nz_elev.tif')
+```
+
+## Introduction
+
+<!-- - Geopandas explore has been used in previous chapters. -->
+<!-- - When to focus on visualisation? At the end of geographic data processing workflows. -->
+
+<!-- Input datasets: https://github.com/geocompx/spDatapy -->
+
+A satisfying and important aspect of geographic research is communicating the results. Map making---the art of cartography---is an ancient skill that involves communication, intuition, and an element of creativity. In addition to being fun and creative, cartography also has important practical applications. A carefully crafted map can be the best way of communicating the results of your work, but poorly designed maps can leave a bad impression. Common design issues include poor placement, size and readability of text and careless selection of colors, as outlined in the style guide of the Journal of Maps. Furthermore, poor map making can hinder the communication of results (Brewer 2015, add citation...):
+
+> Amateur-looking maps can undermine your audience's ability to understand important information and weaken the presentation of a professional data investigation. Maps have been used for several thousand years for a wide variety of purposes. Historic examples include maps of buildings and land ownership in the Old Babylonian dynasty more than 3000 years ago and Ptolemy's world map in his masterpiece Geography nearly 2000 years ago (Talbert 2014, add citation...).
+
+Map making has historically been an activity undertaken only by, or on behalf of, the elite. This has changed with the emergence of open source mapping software such as mapping packages in Python, R, and other languages, and the "print composer" in QGIS which enable anyone to make high-quality maps, enabling "citizen science". Maps are also often the best way to present the findings of geocomputational research in a way that is accessible. Map making is therefore a critical part of geocomputation and its emphasis not only on describing, but also changing the world.
+
+Basic static display of vector layers in Python is done with the `.plot` method or the `rasterio.plot.show` function, for vector layers and rasters, as we saw in Sections @sec-vector-layers and @sec-using-rasterio, respectively. Other, more advaned uses of these methods, were also encountered in later chapters, when demonstrating the various outputs we got. In this chapter, we provide a comprehensive summary of the most useful workflows of these two methods for creating static maps (@sec-static-maps). Then, we move on to elaborate on the `.explore` method for creating interactive maps, which was also briefly introduced earlier (@sec-vector-layers).  
+
+## Static maps {#sec-static-maps}
+
+Static maps are the most common type of visual output from geocomputation. Standard formats include `.png` and `.pdf` for raster and vector outputs, respectively. Static maps can be easily shared and viewed (whether digitally or in print), however they can only convey as much information as a static image can. Interactive maps provide much more flexibilty in terms of user experience and amout of information, however they often require more work to design and effectively share.
+
+<!-- Decision of whether to use static or interactive. -->
+<!-- Flow diagram? -->
+
+Let's move on to the basics of static mapping with Python. 
+
+A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method. Most common visual properties include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot): 
+
+```{python}
+#| label: fig-basic-plot
+#| fig-cap: Setting `color` and `edgecolor` in static maps of a vector layer
+#| fig-subcap: 
+#| - Grey fill
+#| - No fill, blue edge
+#| - Grey fill, blue edge
+#| layout-ncol: 3
+nz.plot(color='grey');
+nz.plot(color='none', edgecolor='blue');
+nz.plot(color='grey', edgecolor='blue');
+```
+
+As shown in @sec-using-rasterio, you can plot raster datasets using `rasterio.plot.show`, as follows:
+
+```{python}
 rasterio.plot.show(nz_elev);
 ```
 
-<!--
-In R:
-nz_elev = stars::read_stars("data/nz_elev.tif")
-sf::st_crs(nz_elev)
-nz = spData::nz
-waldo::compare(sf::st_crs(nz), sf::st_crs(nz_elev))
-library(sf)
-plot(nz)
-nz_elev_transformed = sf::st_transform(nz_elev, sf::st_crs(nz))
-stars::write_stars(nz_elev_transformed, "data/nz_elev.tif")
-nz_transformed = sf::st_transform(nz, sf::st_crs(nz_elev))
-sf::st_write(nz_transformed, "nz_transformed.gpkg")
--->
-
-
-You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers as follows:
+You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers, which we used to explain masking and cropping (@fig-raster-crop):
 
 <!-- 
 Source:
@@ -95,9 +95,20 @@ nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
 
 
 ### Palettes
+
+...
+
 ### Layers
+
+...
+
 ### Faceted maps
+
+...
+
 ### Exporting maps as images
+
+...
 
 <!-- ## Animated maps -->
 
@@ -203,9 +214,20 @@ OUTPUT.to_file('stations.gpkg', driver='GPKG', layer='stations')
 - Panel: allows you to create applications/dashboards
 
 ### GeoPandas explore
+
+...
+
 ### Layers
+
+...
+
 ### Publishing interactive maps
+
+...
+
 ### Linking geographic and non-geographic visualisations
+
+...
 
 <!-- ## Mapping applications Streamlit? -->
 
