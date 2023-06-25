@@ -43,7 +43,7 @@ If you have any issues related to running the code in Codespaces let us know in 
 
 ## Reproduce the book with Docker (devcontainer)
 
-For many people the next quickest way to reproduce the book will be in a Docker container running on your local computer.
+If you're able to install [Docker](https://docs.docker.com/desktop/install/) this is likely to be the quickest way to reproduce the contents of this book.
 To do this from within VS Code (recommended), you can
 
 1. Install Microsoft's official [Dev Container](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
@@ -53,32 +53,34 @@ To do this from within VS Code (recommended), you can
 
 Edit the code in the containerised instance of VS Code that will appear 🎉
 
-## Reproduce the book with mamba
+## Reproduce the book with micromamba
 
-To reproduce the book with the fast and efficient mamba package manager, first install [miniforge](https://github.com/conda-forge/miniforge#mambaforge).
+To reproduce the book with the fast and efficient mamba package manager, follow the instructions at [mamba.readthedocs.io](https://mamba.readthedocs.io/en/latest/installation.html#micromamba).
 
-Install mamba with the following commands on Unix alike plateforms:
+E.g. with:
 
 ```bash
-curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh"
-bash Mambaforge-$(uname)-$(uname -m).sh
+# For Linux, the default shell is bash:
+curl micro.mamba.pm/install.sh | bash
+# For macOS, the default shell is zsh:
+curl micro.mamba.pm/install.sh | zsh
 ```
 After answering the questions, install dependencies with the following command:
 
 ```bash
-mamba env create -f environment.yml
+micromamba env create -f environment.yml
 ```
 
 Activate the environment as follows:
 
 ```bash
-conda activate geocompy
+micromamba activate geocompy
 ```
 
 and reproduce the book (requires quarto to be installed):
 
 ```bash
-quarto preview
+micromamba run -n geocompy quarto preview
 ```
 
 ## Reproduce the book with conda installation
