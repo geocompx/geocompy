@@ -26,7 +26,7 @@ import geopandas as gpd
 import rasterio
 import rasterio.mask
 import rasterstats
-from rasterio.plot import show
+import rasterio.plot
 import math
 import os
 ```
@@ -154,11 +154,11 @@ out_image_crop, out_transform_crop = rasterio.mask.mask(
 #| fig-cap: Raster masking and cropping
 
 fig, axes = plt.subplots(ncols=3, figsize=(9,5))
-show(src_srtm, ax=axes[0])
+rasterio.plot.show(src_srtm, ax=axes[0])
 zion.plot(ax=axes[0], color='none', edgecolor='black')
-show(src_srtm_mask, ax=axes[1])
+rasterio.plot.show(src_srtm_mask, ax=axes[1])
 zion.plot(ax=axes[1], color='none', edgecolor='black')
-show(out_image_crop, transform=out_transform_crop, ax=axes[2])
+rasterio.plot.show(out_image_crop, transform=out_transform_crop, ax=axes[2])
 zion.plot(ax=axes[2], color='none', edgecolor='black')
 axes[0].set_title('Original')
 axes[1].set_title('Mask')
@@ -280,7 +280,7 @@ The information in `zion_transect_pnt`, namely the `"dist"` and `"elev"` attribu
 #| fig-cap: Location of a line used for raster extraction (left) and the elevation along this line (right). 
 
 fig, axes = plt.subplots(ncols=2, figsize=(9,4))
-show(src_srtm, ax=axes[0])
+rasterio.plot.show(src_srtm, ax=axes[0])
 gpd.GeoSeries(zion_transect).plot(ax=axes[0], color='black')
 zion.plot(ax=axes[0], color='none', edgecolor='darkgrey')
 zion_transect_pnt.set_index('dist')['elev'].plot(ax=axes[1])
@@ -346,9 +346,9 @@ Raster to polygon extraction is illustrated in @fig-raster-extract-to-polygon.
 #| fig-cap: Area used for continuous (left) and categorical (right) raster extraction.
 
 fig, axes = plt.subplots(ncols=2, figsize=(6,4))
-show(src_srtm, ax=axes[0])
+rasterio.plot.show(src_srtm, ax=axes[0])
 zion.plot(ax=axes[0], color='none', edgecolor='black')
-show(src_nlcd, ax=axes[1], cmap='Set3')
+rasterio.plot.show(src_nlcd, ax=axes[1], cmap='Set3')
 zion.to_crs(src_nlcd.crs).plot(ax=axes[1], color='none', edgecolor='black')
 axes[0].set_title('Continuous data extraction')
 axes[1].set_title('Categorical data extraction');
@@ -468,9 +468,9 @@ Here is the code to illustrate the input point layer `cycle_hire_osm_projected` 
 
 fig, axes = plt.subplots(2, 2, figsize=(8.5, 6.5))
 cycle_hire_osm_projected.plot(ax=axes[0][0], column='capacity')
-show(ch_raster1, transform=transform, ax=axes[0][1])
-show(ch_raster2, transform=transform, ax=axes[1][0])
-show(ch_raster3, transform=transform, ax=axes[1][1])
+rasterio.plot.show(ch_raster1, transform=transform, ax=axes[0][1])
+rasterio.plot.show(ch_raster2, transform=transform, ax=axes[1][0])
+rasterio.plot.show(ch_raster3, transform=transform, ax=axes[1][1])
 axes[0][0].set_title('Points')
 axes[0][1].set_title('Presence/Absence')
 axes[1][0].set_title('Count')
@@ -551,10 +551,10 @@ pnt = gpd.GeoSeries(pnt, crs=california.crs)
 
 # Plot
 fig, axes = plt.subplots(1, 2, figsize=(8.5, 6.5))
-show(california_raster1, transform=transform, ax=axes[0], cmap='Set3')
+rasterio.plot.show(california_raster1, transform=transform, ax=axes[0], cmap='Set3')
 gpd.GeoSeries(california_borders, crs=california.crs).plot(ax=axes[0], edgecolor='darkgrey', linewidth=1)
 pnt.plot(ax=axes[0], color='black', markersize=1)
-show(california_raster2, transform=transform, ax=axes[1], cmap='Set3')
+rasterio.plot.show(california_raster2, transform=transform, ax=axes[1], cmap='Set3')
 california.plot(ax=axes[1], color='none', edgecolor='darkgrey', linewidth=1)
 pnt.plot(ax=axes[1], color='black', markersize=1)
 axes[0].set_title('Line rasterization')
@@ -665,9 +665,9 @@ The result is shown in @fig-raster-to-points.
 
 fig, axes = plt.subplots(1, 2, figsize=(8, 4))
 result.plot(column='value', legend=True, ax=axes[0])
-show(src_elev, transform=src_elev.transform, ax=axes[0])
+rasterio.plot.show(src_elev, transform=src_elev.transform, ax=axes[0])
 result.plot(column='value', legend=True, ax=axes[1])
-show(src_elev, cmap='Greys', ax=axes[1]);
+rasterio.plot.show(src_elev, cmap='Greys', ax=axes[1]);
 ```
 
 Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (isotherms) for example. We will use a real-world digital elevation model (DEM) because the artificial raster elev produces parallel lines (task for the reader: verify this and explain why this happens). Plotting contour lines is straightforward, using the `contour=True` option of `rasterio.plot.show` (@fig-raster-contours1):
@@ -677,8 +677,8 @@ Another common type of spatial vectorization is the creation of contour lines re
 #| fig-cap: Displaying raster contours
 
 fig, ax = plt.subplots(1)
-show(src_dem, ax=ax)
-show(src_dem, ax=ax, contour=True, levels=np.arange(0,1200,50), colors='black');
+rasterio.plot.show(src_dem, ax=ax)
+rasterio.plot.show(src_dem, ax=ax, contour=True, levels=np.arange(0,1200,50), colors='black');
 ```
 
 Unfortunately, `rasterio` does not provide any way of extracting the contour lines in the form of a vector layer, for uses other than plotting. There are two possible workarounds:
@@ -717,7 +717,7 @@ Here is a plot of the contour layer in `dem_contour.gpkg` (@fig-raster-contours2
 #| fig-cap: Raster contours calculated with the `gdal_contour` program
 
 fig, ax = plt.subplots()
-show(src_dem, ax=ax)
+rasterio.plot.show(src_dem, ax=ax)
 contours.plot(ax=ax, edgecolor='black');
 ```
 
