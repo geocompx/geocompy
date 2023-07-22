@@ -77,7 +77,13 @@ Activate the environment as follows:
 micromamba activate geocompy
 ```
 
-and reproduce the book (requires quarto to be installed):
+Install kernel, this will allow you to select the environment in vscode or IPython as follows:
+
+```bash
+python -m ipykernel install --user
+```
+
+You can now reproduce the book (requires quarto to be installed):
 
 ```bash
 micromamba run -n geocompy quarto preview
