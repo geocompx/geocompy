@@ -292,7 +292,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> fiona</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.plot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and load the sample data for this chapter:</p>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>nz <span class="op">=</span> gpd.read_file(<span class="st">'data/nz.gpkg'</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>nz_elev <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/nz_elev.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="introduction" class="level2" data-number="7.2">
@@ -303,12 +309,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="sec-retrieving-open-data" class="level2" data-number="7.3">
 <h2 data-number="7.3" class="anchored" data-anchor-id="sec-retrieving-open-data"><span class="header-section-number">7.3</span> Retrieving open data</h2>
+<p>To complete…</p>
 </section>
 <section id="sec-geographic-data-packages" class="level2" data-number="7.4">
 <h2 data-number="7.4" class="anchored" data-anchor-id="sec-geographic-data-packages"><span class="header-section-number">7.4</span> Geographic data packages</h2>
+<p>To complete…</p>
 </section>
 <section id="geographic-web-services" class="level2" data-number="7.5">
 <h2 data-number="7.5" class="anchored" data-anchor-id="geographic-web-services"><span class="header-section-number">7.5</span> Geographic web services</h2>
+<p>To complete…</p>
 </section>
 <section id="sec-file-formats" class="level2" data-number="7.6">
 <h2 data-number="7.6" class="anchored" data-anchor-id="sec-file-formats"><span class="header-section-number">7.6</span> File formats</h2>
@@ -421,9 +430,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="7.7.1" class="anchored" data-anchor-id="vector-data"><span class="header-section-number">7.7.1</span> Vector data</h3>
 <p>Spatial vector data comes in a wide variety of file formats. Most popular representations such as <code>.shp</code>, <code>.geojson</code>, and <code>.gpkg</code> files can be imported and exported with <code>geopandas</code> functions <code>read_file</code> and <code>to_file</code> (covered in Section @ref(sec-data-output)), respectively.</p>
 <p><code>geopandas</code> uses GDAL to read and write data, via <code>fiona</code> (the <a href="https://github.com/geopandas/geopandas/issues/2217">default</a>) or <code>pyogrio</code> packages (a recently developed alternative to <code>fiona</code>). After <code>fiona</code> is imported, the command <code>fiona.supported_drivers</code> can be used to list drivers available to GDAL, including whether they can (<code>r</code>), append (<code>a</code>), or write (<code>w</code>) data, or all three:</p>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fiona.supported_drivers</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="3">
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fiona.supported_drivers</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>{'DXF': 'rw',
  'CSV': 'raw',
  'OpenFileGDB': 'raw',
@@ -444,10 +453,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Other, less common, drivers can be <a href="https://geopandas.org/en/stable/docs/user_guide/io.html">“activated”</a> by manually supplementing <code>fiona.supported_drivers</code>. The first argument of the <code>geopandas</code> versatile data import function <code>gpd.read_file</code> is <code>filename</code>, which is typically a string, but can also be a file connection. The content of a string could vary between different drivers. In most cases, as with the ESRI Shapefile (<code>.shp</code>) or the GeoPackage format (<code>.gpkg</code>), the <code>filename</code> argument would be a path or a URL to an actual file, such as <code>geodata.gpkg</code>. The driver is automatically selected based on the file extension, as demonstrated for a <code>.gpkg</code> file below:</p>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>world <span class="op">=</span> gpd.read_file(<span class="st">'data/world.gpkg'</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>world</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="4">
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>world <span class="op">=</span> gpd.read_file(<span class="st">'data/world.gpkg'</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>world</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
 <div>
 
 
@@ -543,9 +552,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>For some drivers, such as a File Geodatabase (<code>OpenFileGDB</code>), <code>filename</code> could be provided as a folder name. GeoJSON string can also be read from a character string:</p>
-<div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'{"type":"Point","coordinates":[34.838848,31.296301]}'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="5">
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'{"type":"Point","coordinates":[34.838848,31.296301]}'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
 <div>
 
 
@@ -570,10 +579,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Alternatively, the <code>gpd.read_postgis</code> function can be used to read a vector layer from a PostGIS database.</p>
 <p>Some vector formats, such as GeoPackage, can store multiple data layers. By default, <code>gpd.read_file</code> automatically reads the first layer of the file specified in <code>filename</code>. However, using the <code>layer</code> argument you can specify any other layer.</p>
 <p>The <code>gpd.read_file</code> function also allows for reading just parts of the file into RAM with two possible mechanisms. The first one is related to the <code>where</code> argument, which allows specifying what part of the data to read using an SQL <code>WHERE</code> expression. An example below extracts data for Tanzania only (Figure …). It is done by specifying that we want to get all rows for which <code>name_long</code> equals to <code>"Tanzania"</code>:</p>
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>tanzania <span class="op">=</span> gpd.read_file(<span class="st">'data/world.gpkg'</span>, where<span class="op">=</span><span class="st">'name_long="Tanzania"'</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>tanzania</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="6">
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tanzania <span class="op">=</span> gpd.read_file(<span class="st">'data/world.gpkg'</span>, where<span class="op">=</span><span class="st">'name_long="Tanzania"'</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>tanzania</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
 
@@ -609,27 +618,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>If you do not know the names of the available columns, a good approach is to just read one row of the data using the <code>rows</code> argument, which can be used to read the first N rows, then use the <code>.columns</code> property to examine the column names:</p>
-<div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'data/world.gpkg'</span>, rows<span class="op">=</span><span class="dv">1</span>).columns</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'data/world.gpkg'</span>, rows<span class="op">=</span><span class="dv">1</span>).columns</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
 <pre><code>Index(['iso_a2', 'name_long', 'continent', 'region_un', 'subregion', 'type',
        'area_km2', 'pop', 'lifeExp', 'gdpPercap', 'geometry'],
       dtype='object')</code></pre>
 </div>
 </div>
 <p>The second mechanism uses the <code>mask</code> argument to filter data based on intersection with an existing geometry. This argument expects a geometry (<code>GeoDataFrame</code>, <code>GeoSeries</code>, or <code>shapely</code>) representing the area where we want to extract the data. Let’s try it using a small example—we want to read polygons from our file that intersect with the buffer of 50,000 <span class="math inline">\(m\)</span> of Tanzania’s borders. To do it, we need to (a) transform the geometry to a projected CRS (such as EPSG:32736), (b) prepare our “filter” by creating the buffer (<a href="05-geometry-operations.html#sec-buffers"><span>Section&nbsp;4.3.3</span></a>), and (c) transform back to the original CRS to be used as a mask:</p>
-<div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>tanzania_buf <span class="op">=</span> tanzania.to_crs(<span class="dv">32736</span>).<span class="bu">buffer</span>(<span class="dv">50000</span>).to_crs(<span class="dv">4326</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tanzania_buf.iloc[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="8">
-<p><img src="08-read-write-plot_files/figure-html/cell-9-output-1.svg" class="img-fluid"></p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tanzania_buf <span class="op">=</span> tanzania.to_crs(<span class="dv">32736</span>).<span class="bu">buffer</span>(<span class="dv">50000</span>).to_crs(<span class="dv">4326</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tanzania_buf.iloc[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<p><img src="08-read-write-plot_files/figure-html/cell-10-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 <p>Now, we can apply this “filter” using the <code>mask</code> argument.</p>
-<div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tanzania_neigh <span class="op">=</span> gpd.read_file(<span class="st">'data/world.gpkg'</span>, mask<span class="op">=</span>tanzania_buf)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tanzania_neigh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="9">
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>tanzania_neigh <span class="op">=</span> gpd.read_file(<span class="st">'data/world.gpkg'</span>, mask<span class="op">=</span>tanzania_buf)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>tanzania_neigh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
 
@@ -725,15 +734,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Our result, shown in <a href="#fig-read-shp-query">Figure&nbsp;<span>7.1</span></a>, contains Tanzania and every country within its 50,000 <span class="math inline">\(m\)</span> buffer. Note that the last two expressions are used to add text labels with the <code>name_long</code> of each country, placed at the country centroid:</p>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>tanzania.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'grey'</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>tanzania_neigh.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'grey'</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>tanzania_buf.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'where'</span>)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'mask'</span>)</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>tanzania.<span class="bu">apply</span>(<span class="kw">lambda</span> x: axes[<span class="dv">0</span>].annotate(text<span class="op">=</span>x[<span class="st">'name_long'</span>], xy<span class="op">=</span>x.geometry.centroid.coords[<span class="dv">0</span>], ha<span class="op">=</span><span class="st">'center'</span>), axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>tanzania_neigh.<span class="bu">apply</span>(<span class="kw">lambda</span> x: axes[<span class="dv">1</span>].annotate(text<span class="op">=</span>x[<span class="st">'name_long'</span>], xy<span class="op">=</span>x.geometry.centroid.coords[<span class="dv">0</span>], ha<span class="op">=</span><span class="st">'center'</span>), axis<span class="op">=</span><span class="dv">1</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>tanzania.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'grey'</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>tanzania_neigh.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'grey'</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>tanzania_buf.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'where'</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'mask'</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>tanzania.<span class="bu">apply</span>(<span class="kw">lambda</span> x: axes[<span class="dv">0</span>].annotate(text<span class="op">=</span>x[<span class="st">'name_long'</span>], xy<span class="op">=</span>x.geometry.centroid.coords[<span class="dv">0</span>], ha<span class="op">=</span><span class="st">'center'</span>), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>tanzania_neigh.<span class="bu">apply</span>(<span class="kw">lambda</span> x: axes[<span class="dv">1</span>].annotate(text<span class="op">=</span>x[<span class="st">'name_long'</span>], xy<span class="op">=</span>x.geometry.centroid.coords[<span class="dv">0</span>], ha<span class="op">=</span><span class="st">'center'</span>), axis<span class="op">=</span><span class="dv">1</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-read-shp-query" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -744,24 +753,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Often we need to read CSV files (or other tabular formats) which have x and y coordinate columns, and turn them into a <code>GeoDataFrame</code> with point geometries. To do that, we can import the file using <code>pandas</code> (e.g., <code>pd.read_csv</code> or <code>pd.read_excel</code>), then go from <code>DataFrame</code> to <code>GeoDataFrame</code> using the <code>gpd.points_from_xy</code> function, as shown earlier in the book (See <a href="02-spatial-data.html#sec-vector-layer-from-scratch"><span>Section&nbsp;1.2.6</span></a> and <a href="04-spatial-operations.html#sec-spatial-joining"><span>Section&nbsp;3.3.4</span></a>). For example, the table <code>cycle_hire_xy.csv</code>, where the coordinates are stored in the <code>X</code> and <code>Y</code> columns in EPSG:4326, can be imported, converted to a <code>GeoDataFrame</code>, and plotted, as follows:</p>
-<div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>cycle_hire <span class="op">=</span> pd.read_csv(<span class="st">'data/cycle_hire_xy.csv'</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> gpd.points_from_xy(cycle_hire[<span class="st">'X'</span>], cycle_hire[<span class="st">'Y'</span>], crs<span class="op">=</span><span class="dv">4326</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> gpd.GeoSeries(geom)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>cycle_hire_xy <span class="op">=</span> gpd.GeoDataFrame(data<span class="op">=</span>cycle_hire, geometry<span class="op">=</span>geom)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>cycle_hire_xy.plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cycle_hire <span class="op">=</span> pd.read_csv(<span class="st">'data/cycle_hire_xy.csv'</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> gpd.points_from_xy(cycle_hire[<span class="st">'X'</span>], cycle_hire[<span class="st">'Y'</span>], crs<span class="op">=</span><span class="dv">4326</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> gpd.GeoSeries(geom)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>cycle_hire_xy <span class="op">=</span> gpd.GeoDataFrame(data<span class="op">=</span>cycle_hire, geometry<span class="op">=</span>geom)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>cycle_hire_xy.plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="08-read-write-plot_files/figure-html/cell-12-output-1.png" width="440" height="264"></p>
+<p><img src="08-read-write-plot_files/figure-html/cell-13-output-1.png" width="440" height="264"></p>
 </div>
 </div>
 <p>Instead of columns describing ‘XY’ coordinates, a single column can also contain the geometry information. Well-known text (WKT), well-known binary (WKB), and the GeoJSON formats are examples of this. For instance, the <code>world_wkt.csv</code> file has a column named WKT representing polygons of the world’s countries. To import and convert it to a <code>GeoDataFrame</code>, we can apply the <code>shapely.wkt.loads</code> function (<a href="02-spatial-data.html#sec-geometries"><span>Section&nbsp;1.2.5</span></a>) on WKT strings, to convert them into <code>shapely</code> geometries:</p>
-<div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>world_wkt <span class="op">=</span> pd.read_csv(<span class="st">'data/world_wkt.csv'</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>world_wkt[<span class="st">'geometry'</span>] <span class="op">=</span> world_wkt[<span class="st">'WKT'</span>].<span class="bu">apply</span>(shapely.wkt.loads)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>world_wkt <span class="op">=</span> gpd.GeoDataFrame(world_wkt)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>world_wkt.plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>world_wkt <span class="op">=</span> pd.read_csv(<span class="st">'data/world_wkt.csv'</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>world_wkt[<span class="st">'geometry'</span>] <span class="op">=</span> world_wkt[<span class="st">'WKT'</span>].<span class="bu">apply</span>(shapely.wkt.loads)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>world_wkt <span class="op">=</span> gpd.GeoDataFrame(world_wkt)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>world_wkt.plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="08-read-write-plot_files/figure-html/cell-13-output-1.png" width="429" height="221"></p>
+<p><img src="08-read-write-plot_files/figure-html/cell-14-output-1.png" width="429" height="221"></p>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -778,14 +787,14 @@ Note
 </div>
 </div>
 <p>As a final example, we will show how <code>geopandas</code> also reads KML files. A KML file stores geographic information in XML format—a data format for the creation of web pages and the transfer of data in an application-independent way (Nolan and Lang 2014 …). Here, we access a KML file from the web. First, we need to “activate” the <code>KML</code> driver, which isn’t available by default (see above):</p>
-<div class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>fiona.supported_drivers[<span class="st">'KML'</span>] <span class="op">=</span> <span class="st">'r'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>fiona.supported_drivers[<span class="st">'KML'</span>] <span class="op">=</span> <span class="st">'r'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This file contains more than one layer. To list the available layers, we can use the <code>fiona.listlayers</code> function:</p>
-<div class="cell" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> <span class="st">'https://developers.google.com/kml/documentation/KML_Samples.kml'</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>fiona.listlayers(u)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="14">
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> <span class="st">'https://developers.google.com/kml/documentation/KML_Samples.kml'</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>fiona.listlayers(u)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
 <pre><code>['Placemarks',
  'Highlighted Icon',
  'Paths',
@@ -795,35 +804,35 @@ Note
 </div>
 </div>
 <p>Finally, we can choose the first layer <code>Placemarks</code> and read it, using <code>gpd.read_file</code> with an additional <code>layer</code> argument:</p>
-<div class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>placemarks <span class="op">=</span> gpd.read_file(u, layer<span class="op">=</span><span class="st">'Placemarks'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>placemarks <span class="op">=</span> gpd.read_file(u, layer<span class="op">=</span><span class="st">'Placemarks'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="raster-data" class="level3" data-number="7.7.2">
 <h3 data-number="7.7.2" class="anchored" data-anchor-id="raster-data"><span class="header-section-number">7.7.2</span> Raster data</h3>
 <p>Similar to vector data, raster data comes in many file formats with some of them supporting multilayer files. <code>rasterio.open</code> is used to create a file connection to a raster file, which can be subsequently used to read the metadata and/or the values, as shown previously (<a href="02-spatial-data.html#sec-using-rasterio"><span>Section&nbsp;1.3.2</span></a>). For example:</p>
-<div class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/srtm.tif'</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>src</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="15">
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/srtm.tif'</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>src</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
 <pre><code>&lt;open DatasetReader name='data/srtm.tif' mode='r'&gt;</code></pre>
 </div>
 </div>
 <p>All of the previous examples read spatial information from files stored on your hard drive. However, GDAL also allows reading data directly from online resources, such as HTTP/HTTPS/FTP web resources. The only thing we need to do is to add a <code>/vsicurl/</code> prefix before the path to the file. Let’s try it by connecting to the global monthly snow probability at 500 m resolution for the period 2000-2012 (T. Hengl 2021 add reference…). Snow probability for December is stored as a Cloud Optimized GeoTIFF (COG) file (see <a href="#sec-file-formats"><span>Section&nbsp;7.6</span></a>). To read an online file, we just need to provide its URL together with the <code>/vsicurl/</code> prefix:</p>
-<div class="cell" data-execution_count="17">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">"/vsicurl/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif"</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(url)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>src</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="16">
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">"/vsicurl/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif"</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(url)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>src</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="17">
 <pre><code>&lt;open DatasetReader name='/vsicurl/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif' mode='r'&gt;</code></pre>
 </div>
 </div>
 <p>In the example above <code>rasterio.open</code> creates a connection to the file without obtaining any values, as we did for the local <code>srtm.tif</code> file. The values can read, into an <code>ndarray</code>, using the <code>.read</code> method of the file connection (<a href="02-spatial-data.html#sec-using-rasterio"><span>Section&nbsp;1.3.2</span></a>). This allows us also to just read a small portion of the data without downloading the entire file. This is very useful when working with large datasets hosted online from resource-constrained computing environments such as laptops.</p>
 <p>Another option is to extract raster values at particular points, directly from the file connection, using the <code>.sample</code> method (see <a href="04-spatial-operations.html#sec-spatial-subsetting"><span>Section&nbsp;3.4.1</span></a>). For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying <code>.sample</code>:</p>
-<div class="cell" data-execution_count="18">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> src.sample([(<span class="op">-</span><span class="fl">21.94</span>, <span class="fl">64.15</span>)])</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">list</span>(values)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="17">
+<div class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> src.sample([(<span class="op">-</span><span class="fl">21.94</span>, <span class="fl">64.15</span>)])</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="bu">list</span>(values)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
 <pre><code>[array([70], dtype=uint8)]</code></pre>
 </div>
 </div>
@@ -838,28 +847,28 @@ Note
 <section id="vector-data-1" class="level3" data-number="7.8.1">
 <h3 data-number="7.8.1" class="anchored" data-anchor-id="vector-data-1"><span class="header-section-number">7.8.1</span> Vector data</h3>
 <p>The counterpart of <code>gpd.read_file</code> is the <code>.to_file</code> method that a <code>GeoDataFrame</code> has. It allows you to write <code>GeoDataFrame</code> objects to a wide range of geographic vector file formats, including the most common, such as <code>.geojson</code>, <code>.shp</code> and <code>.gpkg</code>. Based on the file name, <code>.to_file</code> decides automatically which driver to use. The speed of the writing process depends also on the driver.</p>
-<div class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world.gpkg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Note: if you try to write to the same data source again, the function will overwrite the file:</p>
 <div class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world.gpkg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Instead of overwriting the file, we could add a new layer to the file with <code>mode='a'</code> (“append” mode, as opposed to the default <code>mode='w'</code> for “write” mode). Appending is supported by several spatial formats, including GeoPackage. For example:</p>
+<p>Note: if you try to write to the same data source again, the function will overwrite the file:</p>
 <div class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_features.gpkg'</span>)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_features.gpkg'</span>, mode<span class="op">=</span><span class="st">'a'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world.gpkg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Instead of overwriting the file, we could add a new layer to the file with <code>mode='a'</code> (“append” mode, as opposed to the default <code>mode='w'</code> for “write” mode). Appending is supported by several spatial formats, including GeoPackage. For example:</p>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_features.gpkg'</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_features.gpkg'</span>, mode<span class="op">=</span><span class="st">'a'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here, <code>world_many_features.gpkg</code> will contain a polygonal layer named <code>world</code> with two “copies” of each country (that is 177×2=354 features, whereas the <code>world</code> layer has 177 features).</p>
 <p>Alternatively, you can create another, separate, layer, within the same file. The GeoPackage format also supports multiple layers within one file. For example:</p>
-<div class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_layers.gpkg'</span>)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_layers.gpkg'</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>world.to_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world2'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>In this case, <code>world_many_layers.gpkg</code> has two “layers”, <code>world_many_layers</code> (same as the file name, when <code>layer</code> is unspecified) and <code>world2</code>. Incidentally, the contents of the two layers is identical, but this doesn’t have to be so. Each layer from such a file can be imported separately, as in:</p>
-<div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world_many_layers'</span>).head(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="22">
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world_many_layers'</span>).head(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
 <div>
 
 
@@ -894,9 +903,9 @@ Note
 </div>
 </div>
 </div>
-<div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world2'</span>).head(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="23">
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>gpd.read_file(<span class="st">'output/world_many_layers.gpkg'</span>, layer<span class="op">=</span><span class="st">'world2'</span>).head(<span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
 <div>
 
 
@@ -961,53 +970,53 @@ Note
 <li>Reprojecting (<a href="07-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>)—We reprojected a raster into another CRS, by automatically calculating an optimal <code>transform</code> using <code>rasterio.warp.calculate_default_transform</code>, then resampling and writing the output using <code>rasterio.warp.reproject</code>.</li>
 </ul>
 <p>A miminal example of writing a raster file named <code>r.tif</code> from scratch (i.e., the 1<sup>st</sup> scenario), to remind some of these concepts, is given below:</p>
-<div class="cell" data-execution_count="25">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># An array with raster values</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>).astype(np.int8)</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="24">
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># An array with raster values</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>).astype(np.int8)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
 <pre><code>array([[1, 2],
        [3, 4]], dtype=int8)</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating the transform</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=-</span><span class="fl">0.5</span>, </span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span><span class="fl">51.5</span>, </span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span><span class="dv">2</span>, </span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="dv">2</span></span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="25">
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating the transform</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=-</span><span class="fl">0.5</span>, </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span><span class="fl">51.5</span>, </span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span><span class="dv">2</span>, </span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="dv">2</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
 <pre><code>Affine(2.0, 0.0, -0.5,
        0.0, -2.0, 51.5)</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating the file connection with the metadata</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r.tif'</span>, <span class="st">'w'</span>, </span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>dst</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="26">
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creating the file connection with the metadata</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r.tif'</span>, <span class="st">'w'</span>, </span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>dst</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="27">
 <pre><code>&lt;open DatasetWriter name='output/r.tif' mode='w'&gt;</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Writing the array values into the file</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 <div class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Closing the file</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Writing the array values into the file</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Closing the file</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This code section creates a new file <code>output/r.tif</code>, which is a <span class="math inline">\(2 \times 2\)</span> raster, having a 2 decimal degree resolution, with the top-left corner placed over London.</p>
 <p>To summarize, the various scenarios differ in two aspects:</p>
@@ -1076,23 +1085,23 @@ Note
 </table>
 </div>
 <p>The raster data type can be specified when writing a raster (see above). For an existing raster file, the data type is accessible through the <code>.dtype</code> property of the metadata:</p>
-<div class="cell" data-execution_count="30">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).meta[<span class="st">'dtype'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="29">
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).meta[<span class="st">'dtype'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="30">
 <pre><code>'int8'</code></pre>
 </div>
 </div>
 <p>The file <code>r.tif</code> has the data type <code>np.int8</code>, which we specified when creating it according to the data type of the original array:</p>
-<div class="cell" data-execution_count="31">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="30">
+<div class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="31">
 <pre><code>dtype('int8')</code></pre>
 </div>
 </div>
 <p>When reading the data back into the Python session, the array with the same data type is recreated:</p>
-<div class="cell" data-execution_count="32">
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).read().dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="31">
+<div class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).read().dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="32">
 <pre><code>dtype('int8')</code></pre>
 </div>
 </div>
@@ -1103,10 +1112,10 @@ Note
 </ul>
 <p>For completeness, let’s demonstrate writing a multi-band raster named <code>r3.tif</code>, which is similar to <code>r.tif</code>, but having three bands with values <code>r</code>, <code>r*2</code>, and <code>r*3</code> (i.e., the array <code>r</code> multiplied by 1, 2, or 3). Since most of the metadata is going to be the same, this is also a good opportunity to (re-)demonstrate updating an existing metadata object rather than creating one from scratch.</p>
 <p>First, let’s make a copy of the metadata we already have in <code>r.tif</code>:</p>
-<div class="cell" data-execution_count="33">
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>dst_kwds <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).meta.copy()</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>dst_kwds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="32">
+<div class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>dst_kwds <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r.tif'</span>).meta.copy()</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>dst_kwds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="33">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'int8',
  'nodata': None,
@@ -1119,10 +1128,10 @@ Note
 </div>
 </div>
 <p>Second, we update the <code>count</code> entry, replacing <code>1</code> (single-band) with <code>3</code> (three-band):</p>
-<div class="cell" data-execution_count="34">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>dst_kwds.update(count<span class="op">=</span><span class="dv">3</span>)</span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>dst_kwds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="33">
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>dst_kwds.update(count<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>dst_kwds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="34">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'int8',
  'nodata': None,
@@ -1135,49 +1144,49 @@ Note
 </div>
 </div>
 <p>Finally, we can create a file connection using the updated metadata and then write the values of the three bands:</p>
-<div class="cell" data-execution_count="35">
-<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r3.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwds)</span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>dst.write(r,   <span class="dv">1</span>)</span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>dst.write(r<span class="op">*</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>dst.write(r<span class="op">*</span><span class="dv">3</span>, <span class="dv">3</span>)</span>
-<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r3.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwds)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>dst.write(r,   <span class="dv">1</span>)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>dst.write(r<span class="op">*</span><span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>dst.write(r<span class="op">*</span><span class="dv">3</span>, <span class="dv">3</span>)</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>As a result, a three-band raster named <code>r3.tif</code> is created.</p>
 <p>Rasters often contain “No Data” values, representing missing data, e.g., unreliable measurement due to clouds or pixels outside of the photographed extent. In a <strong>numpy</strong> <code>ndarray</code> object, “No Data” values may be represented by the special <code>np.nan</code> value. However, due to computer memory limitations, only arrays of type <code>float</code> can contain <code>np.nan</code>, while arrays of type <code>int</code> cannot. For <code>int</code> rasters containing “No Data”, we typically mark missing data with a specific value beyond the valid range (e.g., <code>-9999</code>). The missing data “flag” is stored in the file (set through the <code>nodata</code> property of the file connection, see above). When reading an <code>int</code> raster with “No Data” back into Python, we need to be aware of these flags. Let’s demonstrate through examples.</p>
 <p>We will start with the simpler case, rasters of type <code>float</code>. Since <code>float</code> arrays may contain the “native” value <code>np.nan</code>, representing “No Data” is straightforward. For example, suppose that we have a <code>float</code> array with <code>np.nan</code>:</p>
-<div class="cell" data-execution_count="36">
-<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="fl">1.1</span>,<span class="fl">2.1</span>,np.nan,<span class="fl">4.1</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>)</span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="35">
+<div class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="fl">1.1</span>,<span class="fl">2.1</span>,np.nan,<span class="fl">4.1</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>)</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="36">
 <pre><code>array([[1.1, 2.1],
        [nan, 4.1]])</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="37">
-<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="36">
+<div class="cell" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="37">
 <pre><code>dtype('float64')</code></pre>
 </div>
 </div>
 <p>When writing the array to file, we do not need to specify any particular <code>nodata</code> value:</p>
-<div class="cell" data-execution_count="38">
-<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r_nodata_float.tif'</span>, <span class="st">'w'</span>, </span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
-<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
-<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
-<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
-<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r_nodata_float.tif'</span>, <span class="st">'w'</span>, </span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This is equivalent to <code>nodata=None</code>:</p>
-<div class="cell" data-execution_count="39">
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_float.tif'</span>).meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="38">
+<div class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_float.tif'</span>).meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="39">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'float64',
  'nodata': None,
@@ -1190,48 +1199,48 @@ Note
 </div>
 </div>
 <p>Reading from the raster back into the Python session reproduces the same exact array, with <code>np.nan</code>:</p>
-<div class="cell" data-execution_count="40">
-<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_float.tif'</span>).read()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="39">
+<div class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_float.tif'</span>).read()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="40">
 <pre><code>array([[[1.1, 2.1],
         [nan, 4.1]]])</code></pre>
 </div>
 </div>
 <p>Now, suppose that we have an <code>np.int32</code> array with missing data, which is inevitably flagged using a specific <code>int</code> value such as <code>-9999</code> (remember that we can’t store <code>np.nan</code> in an <code>int</code> array!):</p>
-<div class="cell" data-execution_count="41">
-<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="dv">1</span>,<span class="dv">2</span>,<span class="op">-</span><span class="dv">9999</span>,<span class="dv">4</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>).astype(np.int32)</span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="40">
+<div class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> np.array([<span class="dv">1</span>,<span class="dv">2</span>,<span class="op">-</span><span class="dv">9999</span>,<span class="dv">4</span>]).reshape(<span class="dv">2</span>,<span class="dv">2</span>).astype(np.int32)</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="41">
 <pre><code>array([[    1,     2],
        [-9999,     4]], dtype=int32)</code></pre>
 </div>
 </div>
-<div class="cell" data-execution_count="42">
-<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="41">
+<div class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>r.dtype</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="42">
 <pre><code>dtype('int32')</code></pre>
 </div>
 </div>
 <p>When writing the array to file, we must specify <code>nodata=-9999</code> to keep track of our “No Data” flag:</p>
-<div class="cell" data-execution_count="43">
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r_nodata_int.tif'</span>, <span class="st">'w'</span>, </span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    nodata <span class="op">=</span> <span class="op">-</span><span class="dv">9999</span>,</span>
-<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
-<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
-<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
-<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'output/r_nodata_int.tif'</span>, <span class="st">'w'</span>, </span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    driver <span class="op">=</span> <span class="st">'GTiff'</span>,</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> r.shape[<span class="dv">0</span>],</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> r.shape[<span class="dv">1</span>],</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>    dtype <span class="op">=</span> r.dtype,</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>    nodata <span class="op">=</span> <span class="op">-</span><span class="dv">9999</span>,</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>    crs <span class="op">=</span> <span class="dv">4326</span>,</span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>    transform <span class="op">=</span> new_transform</span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
+<span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Examining the metadata confirms that the <code>nodata=-9999</code> setting was stored in the file <code>r_nodata_int.tif</code>.</p>
-<div class="cell" data-execution_count="44">
-<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_int.tif'</span>).meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="43">
+<div class="cell" data-execution_count="45">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_int.tif'</span>).meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="44">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'int32',
  'nodata': -9999.0,
@@ -1244,19 +1253,19 @@ Note
 </div>
 </div>
 <p>If you try to open the file in GIS software, such as QGIS, you will see the missing data interpreted (e.g., the pixel shown as blank), meaning that the software is aware of the flag. However, reading the data back into Python reproduces an <code>int</code> array with <code>-9999</code>, for the same reason stated before:</p>
-<div class="cell" data-execution_count="45">
-<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_int.tif'</span>)</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read()</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="44">
+<div class="cell" data-execution_count="46">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/r_nodata_int.tif'</span>)</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read()</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="45">
 <pre><code>array([[[    1,     2],
         [-9999,     4]]], dtype=int32)</code></pre>
 </div>
 </div>
 <p>The Python user must thefore be mindful of “No Data” <code>int</code> rasters, for example to avoid interpreting the value <code>-9999</code> literally. For example, if we “forget” about the <code>nodata</code> flag, the literal calculation of the <code>.mean</code> would incorrectly include the value <code>-9999</code>:</p>
-<div class="cell" data-execution_count="46">
-<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>r.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="45">
+<div class="cell" data-execution_count="47">
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>r.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="46">
 <pre><code>-2498.0</code></pre>
 </div>
 </div>
@@ -1266,28 +1275,28 @@ Note
 <li>Using “No Data” masks</li>
 </ul>
 <p>First, particularly with small rasters where memory constraints are irrelevant, it may be more convenient to go from <code>int</code> to <code>float</code>, to gain the ability of the natural <code>np.nan</code> representation. Here is how we can do this with <code>r_nodata_int.tif</code>. We detect the missing data flag, conver the raster to <code>float</code>, and assign <code>np.nan</code> into the cells that are supposed to be missing:</p>
-<div class="cell" data-execution_count="47">
-<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> r <span class="op">==</span> src.nodata</span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> r.astype(np.float64)</span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>r[mask] <span class="op">=</span> np.nan</span>
-<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="46">
+<div class="cell" data-execution_count="48">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> r <span class="op">==</span> src.nodata</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> r.astype(np.float64)</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>r[mask] <span class="op">=</span> np.nan</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="47">
 <pre><code>array([[[ 1.,  2.],
         [nan,  4.]]])</code></pre>
 </div>
 </div>
 <p>From there on, we deal with <code>np.nan</code> the usual way, such as using <code>np.nanmean</code> to calculate the mean excluding “No Data”:</p>
-<div class="cell" data-execution_count="48">
-<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>np.nanmean(r)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="47">
+<div class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>np.nanmean(r)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="48">
 <pre><code>2.3333333333333335</code></pre>
 </div>
 </div>
 <p>The second approach is to read the values into a so-called <a href="https://numpy.org/doc/stable/reference/maskedarray.generic.html#what-is-a-masked-array">“masked” array</a>, using the argument <code>masked=True</code>. A masked array can be thought of as an extended <code>ndarray</code>, with two components: <code>.data</code> (the values) and <code>.mask</code> (a corresponding boolean array marking “No Data” values):</p>
-<div class="cell" data-execution_count="49">
-<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read(masked<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="48">
+<div class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read(masked<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="49">
 <pre><code>masked_array(
   data=[[[1, 2],
          [--, 4]]],
@@ -1298,9 +1307,9 @@ Note
 </div>
 </div>
 <p>Using masked arrays is beyond the scope of this book. However, the basic idea is that many <strong>numpy</strong> operations “honor” the mask, so that the user does not have to keep track of the way that “No Data” values are marked, similarly to the natural <code>np.nan</code> representation. For example, the <code>.mean</code> of a masked array ignores the value <code>-9999</code>, because it is masked, taking into account just the valid values <code>1</code>, <code>2</code>, and <code>4</code>:</p>
-<div class="cell" data-execution_count="50">
-<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>r.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="49">
+<div class="cell" data-execution_count="51">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>r.mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="50">
 <pre><code>2.3333333333333335</code></pre>
 </div>
 </div>
@@ -1309,7 +1318,32 @@ Note
 </section>
 <section id="sec-visual-outputs" class="level2" data-number="7.9">
 <h2 data-number="7.9" class="anchored" data-anchor-id="sec-visual-outputs"><span class="header-section-number">7.9</span> Visual outputs</h2>
-<p>…</p>
+<p>Visual outputs can be exported to a file using the <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html"><code>plt.savefig</code></a> function. For example, the following code section recreates <a href="#fig-read-shp-query">Figure&nbsp;<span>7.1</span></a> (see above), but this time the last expression saves the image to a JPG image named <code>plot_geopandas.jpg</code>:</p>
+<div class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>,<span class="dv">5</span>))</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>tanzania.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'grey'</span>)</span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>tanzania_neigh.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'grey'</span>)</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>tanzania_buf.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'where'</span>)</span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'mask'</span>)</span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>tanzania.<span class="bu">apply</span>(<span class="kw">lambda</span> x: axes[<span class="dv">0</span>].annotate(text<span class="op">=</span>x[<span class="st">'name_long'</span>], xy<span class="op">=</span>x.geometry.centroid.coords[<span class="dv">0</span>], ha<span class="op">=</span><span class="st">'center'</span>), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>tanzania_neigh.<span class="bu">apply</span>(<span class="kw">lambda</span> x: axes[<span class="dv">1</span>].annotate(text<span class="op">=</span>x[<span class="st">'name_long'</span>], xy<span class="op">=</span>x.geometry.centroid.coords[<span class="dv">0</span>], ha<span class="op">=</span><span class="st">'center'</span>), axis<span class="op">=</span><span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb78-9"><a href="#cb78-9" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'output/plot_geopandas.jpg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Figures with rasters can be exported exactly the same way. For example, the following code section (see next chapter…) creates an image of a raster and a vector layer, which is then exported to a file named <code>plot_rasterio.jpg</code>:</p>
+<div class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">5</span>))</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev, ax<span class="op">=</span>ax)</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>nz.to_crs(nz_elev.crs).plot(ax<span class="op">=</span>ax, facecolor<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'r'</span>)<span class="op">;</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'output/plot_rasterio.jpg'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Image file properties can be controlled through the <code>plt.subplots</code> and <code>plt.savefig</code> parameters. For example, the following code section exports the same raster plot to a file named <code>plot_rasterio2.svg</code>, which has different dimensions (width = 5 <span class="math inline">\(in\)</span>, height = 7 <span class="math inline">\(in\)</span>), a different format (SVG), and different resolution (300 <span class="math inline">\(DPI\)</span>:)</p>
+<div class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">7</span>))</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev, ax<span class="op">=</span>ax)</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>nz.to_crs(nz_elev.crs).plot(ax<span class="op">=</span>ax, facecolor<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'r'</span>)<span class="op">;</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'output/plot_rasterio2.svg'</span>, dpi<span class="op">=</span><span class="dv">300</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 <section id="exercises" class="level2" data-number="7.10">
 <h2 data-number="7.10" class="anchored" data-anchor-id="exercises"><span class="header-section-number">7.10</span> Exercises</h2>
