@@ -32,6 +32,7 @@ and load the sample data for this chapter:
 
 ```{python}
 nz = gpd.read_file('data/nz.gpkg')
+nz_height = gpd.read_file('data/nz_height.gpkg')
 nz_elev = rasterio.open('data/nz_elev.tif')
 ```
 
@@ -74,13 +75,20 @@ nz.plot(color='none', edgecolor='blue');
 nz.plot(color='grey', edgecolor='blue');
 ```
 
-As shown in @sec-using-rasterio, you can plot raster datasets using `rasterio.plot.show`, as follows:
+As shown in @sec-using-rasterio, you can plot raster datasets using `rasterio.plot.show`, as follows (@fig-raster-plot):
 
 ```{python}
+#| label: fig-raster-plot
+#| fig-cap: Plotting a raster using `rasterio.plot.show`
+
 rasterio.plot.show(nz_elev);
 ```
 
-You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers, which we used to explain masking and cropping (@fig-raster-crop):
+You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers, which we already used earlier when explaining masking and cropping (@fig-raster-crop). For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
+
+* The left panel shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)
+* The center panel shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's [territorial waters](https://en.wikipedia.org/wiki/Territorial_waters)
+* The right panel shows the raster with two vector layers: the territorial waters (in red) and elevation measurement points (in yellow)
 
 <!-- 
 Source:
@@ -88,11 +96,38 @@ https://gis.stackexchange.com/questions/294072/how-can-i-superimpose-a-geopandas
 -->
 
 ```{python}
+#| label: fig-plot-raster-and-vector
+#| fig-cap: Combining a raster and vector layers in the same plot
+#| fig-subcap: 
+#| - Raster + vector layer
+#| - Raster + computed vector layer
+#| - Raster + two vector layers
+#| layout-ncol: 3
+
+# Raster + vector layer
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
-nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
-```
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='red');
 
+# Raster + computed vector layer
+fig, ax = plt.subplots(figsize=(5, 5))
+rasterio.plot.show(nz_elev, ax=ax)
+gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
+    .to_crs(nz_elev.crs) \
+    .buffer(22200) \
+    .exterior \
+    .plot(ax=ax, color='red');
+
+# Raster + two vector layers
+fig, ax = plt.subplots(figsize=(5, 5))
+rasterio.plot.show(nz_elev, ax=ax)
+gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
+    .to_crs(nz_elev.crs) \
+    .buffer(22200) \
+    .exterior \
+    .plot(ax=ax, color='red')
+nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
+```
 
 ### Palettes
 
