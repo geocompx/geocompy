@@ -10,6 +10,7 @@ import fiona
 import geopandas as gpd
 import shapely
 import rasterio
+import rasterio.plot
 ```
 
 ```{python}
@@ -20,6 +21,13 @@ pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
 plt.rcParams['figure.figsize'] = (5, 5)
+```
+
+and load the sample data for this chapter:
+
+```{python}
+nz = gpd.read_file('data/nz.gpkg')
+nz_elev = rasterio.open('data/nz_elev.tif')
 ```
 
 ## Introduction
@@ -41,9 +49,15 @@ The final Section @sec-visual-outputs demonstrates methods for saving visual out
 
 ## Retrieving open data {#sec-retrieving-open-data}
 
+To complete...
+
 ## Geographic data packages {#sec-geographic-data-packages}
 
+To complete...
+
 ## Geographic web services
+
+To complete...
 
 ## File formats {#sec-file-formats}
 
@@ -628,6 +642,42 @@ In such cases, the same considerations shown for `int` apply to `float` rasters 
 
 ## Visual outputs {#sec-visual-outputs}
 
-...
+Visual outputs can be exported to a file using the [`plt.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function. For example, the following code section recreates @fig-read-shp-query (see above), but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`:
+
+```{python}
+#| output: false
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+tanzania.plot(ax=axes[0], color='lightgrey', edgecolor='grey')
+tanzania_neigh.plot(ax=axes[1], color='lightgrey', edgecolor='grey')
+tanzania_buf.plot(ax=axes[1], color='none', edgecolor='red')
+axes[0].set_title('where')
+axes[1].set_title('mask')
+tanzania.apply(lambda x: axes[0].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1)
+tanzania_neigh.apply(lambda x: axes[1].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+plt.savefig('output/plot_geopandas.jpg')
+```
+
+Figures with rasters can be exported exactly the same way. For example, the following code section (see next chapter...) creates an image of a raster and a vector layer, which is then exported to a file named `plot_rasterio.jpg`:
+
+```{python}
+#| output: false
+
+fig, ax = plt.subplots(figsize=(5, 5))
+rasterio.plot.show(nz_elev, ax=ax)
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
+plt.savefig('output/plot_rasterio.jpg')
+```
+
+Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters. For example, the following code section exports the same raster plot to a file named `plot_rasterio2.svg`, which has different dimensions (width = 5 $in$, height = 7 $in$), a different format (SVG), and different resolution (300 $DPI$:)
+
+```{python}
+#| output: false
+
+fig, ax = plt.subplots(figsize=(5, 7))
+rasterio.plot.show(nz_elev, ax=ax)
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
+plt.savefig('output/plot_rasterio2.svg', dpi=300)
+```
 
 ## Exercises
