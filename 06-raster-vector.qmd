@@ -27,6 +27,7 @@ import rasterio
 import rasterio.mask
 import rasterstats
 import rasterio.plot
+import rasterio.features
 import math
 import os
 ```
@@ -43,6 +44,8 @@ zion = gpd.read_file('data/zion.gpkg')
 zion_points = gpd.read_file('data/zion_points.gpkg')
 cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
 us_states = gpd.read_file('data/us_states.gpkg')
+nz = gpd.read_file('data/nz.gpkg')
+src_nz_elev = rasterio.open('data/nz_elev.tif')
 ```
 
 ## Introduction
@@ -356,7 +359,7 @@ axes[1].set_title('Categorical data extraction');
 
 ## Rasterization {#sec-rasterization}
 
-### Rasterizing points
+### Rasterizing points {#sec-rasterizing-points}
 
 Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in @sec-spatial-class, the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.
 
@@ -571,6 +574,8 @@ There are three standard methods to convert a raster to a vector layer:
 * Raster to points
 * Raster to contours
 
+### Raster to polygons
+
 The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon. The second method, raster to points, has the additional step of calculating polygon centroids. The third method, raster to contours, is somewhat unrelated. Let us demonstrate the three in the given order.
 
 The `rasterio.features.shapes` function can be used to access to the raster pixel as polygon geometries, as well as raster values. The returned object is a generator, which yields `geometry,value` pairs. The additional `transform` argument is used to yield true spatial coordinates of the polygons, which is usually what we want. 
@@ -627,6 +632,8 @@ The resulting polygon layer is shown in @fig-raster-to-polygons. As shown using 
 result.plot(column='value', edgecolor='black', legend=True);
 ```
 
+### Raster to points {#sec-raster-to-points}
+
 To transform raster to points, we can use `rasterio.features.shapes`, as in conversion to polygons, only with the addition of the `.centroid` method to go from polygons to their centroids. However, to avoid dissolving nearby pixels, we will actually convert a raster with consecutive IDs, then extract the "true" values by point (it is not strictly necessary in this example, since the values of `elev.tif` are all unique):
 
 ```{python}
@@ -669,6 +676,8 @@ rasterio.plot.show(src_elev, transform=src_elev.transform, ax=axes[0])
 result.plot(column='value', legend=True, ax=axes[1])
 rasterio.plot.show(src_elev, cmap='Greys', ax=axes[1]);
 ```
+
+### Raster to contours
 
 Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (isotherms) for example. We will use a real-world digital elevation model (DEM) because the artificial raster elev produces parallel lines (task for the reader: verify this and explain why this happens). Plotting contour lines is straightforward, using the `contour=True` option of `rasterio.plot.show` (@fig-raster-contours1):
 
@@ -719,6 +728,105 @@ Here is a plot of the contour layer in `dem_contour.gpkg` (@fig-raster-contours2
 fig, ax = plt.subplots()
 rasterio.plot.show(src_dem, ax=ax)
 contours.plot(ax=ax, edgecolor='black');
+```
+
+## Distance to nearest geometry {#sec-distance-to-nearest-geometry}
+
+Calculating a raster of distances to the nearest geometry is an example of a "global" raster operation (@sec-global-operations-and-distances). 
+To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand. 
+This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation, raster conversion to points, and rasterizing points.
+
+For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary (which is a `"MultiLineString"` geometry):
+
+```{python}
+coastline = gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
+    .to_crs(src_nz_elev.crs) \
+    .boundary
+coastline
+```
+
+For a "template" raster, we will aggregate the New Zealand DEM, in the `nz_elev.tif` file, to 5 times coarser resolution. 
+The code section below follows the aggeregation example in @sec-raster-agg-disagg, then replaces the original (aggregated) values with unique IDs, which is a preliminary step when converting to points, as explained in @sec-raster-to-points. 
+Finally, we also replace "erase" (i.e., replace with `np.nan`) IDs which were `np.nan` in the aggregated elevation raster, i.e., beyond the land area of New Zealand:
+
+```{python}
+factor = 0.2
+# Reading aggregated array
+r = src_nz_elev.read(1,
+    out_shape=(
+        int(src_nz_elev.height * factor),
+        int(src_nz_elev.width * factor)
+        ),
+    resampling=rasterio.enums.Resampling.average
+)
+# Updating the transform
+new_transform = src_nz_elev.transform * src_nz_elev.transform.scale(
+    (src_nz_elev.width / r.shape[1]),
+    (src_nz_elev.height / r.shape[0])
+)
+# Generating unique IDs per cell
+ids = r.copy()
+ids = np.arange(0, r.size).reshape(r.shape).astype(np.float32)
+# "Erasing" irrelevant IDs
+ids[np.isnan(r)] = np.nan
+ids
+```
+
+The result is an array named `ids` with the IDs, and the corresponding `new_transform`, as plotted in @fig-raster-distances1:
+
+```{python}
+#| label: fig-raster-distances1
+#| fig-cap: Template with cell IDs to calculate distance to nearest geometry
+
+fig, ax = plt.subplots()
+rasterio.plot.show(ids, transform=new_transform, ax=ax)
+gpd.GeoSeries(coastline).plot(ax=ax, edgecolor='black');
+```
+
+To calculate distances, we must convert each pixel to a vector (point) geometry. 
+We use the technique demonstrated in @sec-raster-to-points: 
+
+```{python}
+shapes = rasterio.features.shapes(ids, transform=new_transform)
+pol = list(shapes)
+pnt = [shapely.geometry.shape(i[0]).centroid for i in pol]
+```
+
+The result `pnt` is a `list` of `shapely` geometries, representing raster cell centroids (excluding `np.nan` pixels):
+
+```{python}
+print(pnt[0])
+```
+
+Next we calculate the correspinding `list` of distances, using the `.distance` method from `shapely`:
+
+```{python}
+distances = [(i, i.distance(coastline)) for i in pnt]
+distances[0]
+```
+
+Finally, we rasterize (see @sec-rasterizing-points) the distances into our raster template:
+
+```{python}
+image = rasterio.features.rasterize(
+    distances,
+    out_shape=ids.shape,
+    dtype=np.float_,
+    transform=new_transform,
+    fill=np.nan
+)
+image
+```
+
+The resulting raster of distances is shown in @fig-raster-distances2:
+
+```{python}
+#| label: fig-raster-distances2
+#| fig-cap: Distance to nearest coastline in New Zealand
+
+fig, ax = plt.subplots()
+rasterio.plot.show(image, transform=new_transform, ax=ax)
+gpd.GeoSeries(coastline).plot(ax=ax, edgecolor='black');
 ```
 
 ## Exercises

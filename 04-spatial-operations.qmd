@@ -25,8 +25,9 @@ import numpy as np
 import os
 import rasterio
 import scipy.ndimage
-from rasterio.plot import show
+import rasterio.plot
 import rasterio.merge
+import rasterio.features
 ```
 
 and load the sample data for this chapter:
@@ -34,26 +35,26 @@ and load the sample data for this chapter:
 ```{python}
 #| echo: false
 from pathlib import Path
-data_path = Path("data")
-file_path = Path("data/landsat.tif")
+data_path = Path('data')
+file_path = Path('data/landsat.tif')
 if not file_path.exists():
   if not data_path.is_dir():
      os.mkdir(data_path)
-  print("Attempting to get the data")
+  print('Attempting to get the data')
   import requests
-  r = requests.get("https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif")  
-  with open(file_path, "wb") as f:
+  r = requests.get('https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif')  
+  with open(file_path, 'wb') as f:
     f.write(r.content)
 ```
 
 ```{python}
-nz = gpd.read_file("data/nz.gpkg")
-nz_height = gpd.read_file("data/nz_height.gpkg")
+nz = gpd.read_file('data/nz.gpkg')
+nz_height = gpd.read_file('data/nz_height.gpkg')
 world = gpd.read_file('data/world.gpkg')
 cycle_hire = gpd.read_file('data/cycle_hire.gpkg')
 cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
-src_elev = rasterio.open("data/elev.tif")
-src_multi_rast = rasterio.open("data/landsat.tif")
+src_elev = rasterio.open('data/elev.tif')
+src_multi_rast = rasterio.open('data/landsat.tif')
 src_grain = rasterio.open('data/grain.tif')
 ```
 
@@ -625,15 +626,7 @@ In case we want all values at once we can apply `list`. The result is `16`:
 list(src_elev.sample([(0.1, 0.1)]))
 ```
 
-Raster objects can also be subset with another raster object, as demonstrated in the code chunk below:
-
-...
-
-```{python}
-# ...
-```
-
-Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in Figure .... To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster. For example, let us read the `elev.tif` raster array: 
+Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in @fig-raster-subset. To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster. For example, let us read the `elev.tif` raster array: 
 
 ```{python}
 elev = src_elev.read(1)
@@ -664,15 +657,15 @@ The result is shown in @fig-raster-subset.
 #| fig-cap: Original raster (left). Raster mask (middle). Output of masking a raster (right).
 
 fig, axes = plt.subplots(ncols=3, figsize=(8,4))
-show(elev, ax=axes[0])
-show(mask, ax=axes[1])
-show(elev1, ax=axes[2])
-axes[0].set_title("Original")
-axes[1].set_title("Mask")
-axes[2].set_title("Result");
+rasterio.plot.show(elev, ax=axes[0])
+rasterio.plot.show(mask, ax=axes[1])
+rasterio.plot.show(elev1, ax=axes[2])
+axes[0].set_title('Original')
+axes[1].set_title('Mask')
+axes[2].set_title('Result');
 ```
 
-The above approach can be also used to replace some values (e.g., expected to be wrong) with `nan`:
+The above approach can be also used to replace some values (e.g., expected to be wrong) with `np.nan`:
 
 ```{python}
 elev1 = elev.copy()
@@ -687,7 +680,7 @@ These operations are in fact Boolean local operations, since we compare cell-wis
 
 The term 'map algebra' was coined in the late 1970s to describe a "set of conventions, capabilities, and techniques" for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994). In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.
 
-Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage “raster is faster but vector is corrector”. The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the header). For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
+Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage "raster is faster but vector is corrector". The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the header). For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
 
 This is the way that map algebra works with the terra package. First, the headers of the raster datasets are queried and (in cases where map algebra operations work on more than one dataset) checked to ensure the datasets are compatible. Second, map algebra retains the so-called one-to-one locational correspondence, meaning that cells cannot move. This differs from matrix algebra, in which values change position, for example when multiplying or dividing matrices.
 
@@ -727,17 +720,17 @@ elev + elev
 #| fig-cap: 'Examples of different local operations of the elev raster object: adding two rasters, squaring, applying logarithmic transformation, and performing a logical operation.'
 
 fig, axes = plt.subplots(ncols=4, figsize=(8,4))
-show(elev + elev, ax=axes[0], cmap="Oranges")
-show(elev1 ** 2, ax=axes[1], cmap="Oranges")  # using elev here produces int8 overflows
-show(np.log(elev), ax=axes[2], cmap="Oranges")
-show(elev > 5, ax=axes[3], cmap="Oranges")
-axes[0].set_title("elev+elev")
-axes[1].set_title("elev ** 2")
-axes[2].set_title("np.log(elev)")
-axes[3].set_title("elev > 5");
+rasterio.plot.show(elev + elev, ax=axes[0], cmap='Oranges')
+rasterio.plot.show(elev1 ** 2, ax=axes[1], cmap='Oranges')  # using elev here produces int8 overflows
+rasterio.plot.show(np.log(elev), ax=axes[2], cmap='Oranges')
+rasterio.plot.show(elev > 5, ax=axes[3], cmap='Oranges')
+axes[0].set_title('elev+elev')
+axes[1].set_title('elev ** 2')
+axes[2].set_title('np.log(elev)')
+axes[3].set_title('elev > 5');
 ```
 
-Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges 0–12, 12–24 and 24–36 are reclassified to take values 1, 2 and 3, respectively.
+Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges 0--12, 12--24 and 24--36 are reclassified to take values 1, 2 and 3, respectively.
 
 ```{python}
 recl = elev.copy()
@@ -753,10 +746,10 @@ The reclassified result is shown in @fig-raster-reclassify.
 #| fig-cap: Reclassifying a continuous raster into three categories.
 
 fig, axes = plt.subplots(ncols=2, figsize=(8,4))
-show(elev, ax=axes[0], cmap="Oranges")
-show(recl, ax=axes[1], cmap="Oranges")
-axes[0].set_title("Original")
-axes[1].set_title("Reclassified");
+rasterio.plot.show(elev, ax=axes[0], cmap='Oranges')
+rasterio.plot.show(recl, ax=axes[1], cmap='Oranges')
+axes[0].set_title('Original')
+axes[1].set_title('Reclassified');
 ```
 
 The calculation of the normalized difference vegetation index (NDVI) is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between -1 and 1; positive values indicate the presence of living plants (mostly > 0.2). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula:
@@ -796,10 +789,10 @@ The result is shown in @fig-raster-ndvi.
 #| fig-cap: RGB image (left) and NDVI values (right) calculated for the example satellite file of the Zion National Park.
 
 fig, axes = plt.subplots(ncols=2, figsize=(8,4))
-show(multi_rast_rgb, ax=axes[0], cmap="RdYlGn")
-show(ndvi, ax=axes[1], cmap="Greens")
-axes[0].set_title("RGB image")
-axes[1].set_title("NDVI");
+rasterio.plot.show(multi_rast_rgb, ax=axes[0], cmap='RdYlGn')
+rasterio.plot.show(ndvi, ax=axes[1], cmap='Greens')
+axes[0].set_title('RGB image')
+axes[1].set_title('NDVI');
 ```
 
 ### Focal operations
@@ -915,9 +908,17 @@ z
 
 This returns the statistics for each category, here the mean elevation for each grain size class. For example, the mean elevation in pixels characterized by grain size `0` is `14.8`, and so on.
 
-### Global operations and distances
+### Global operations and distances {#sec-global-operations-and-distances}
 
-...
+Global operations are a special case of zonal operations with the entire raster dataset representing a single zone.
+The most common global operations are descriptive statistics for the entire raster dataset such as the minimum or maximum---we already discussed those in @sec-summarizing-raster-objects.
+
+Aside from that, global operations are also useful for the computation of distance and weight rasters. 
+In the first case, one can calculate the distance from each cell to specific target cells or vector geometries. 
+For example, one might want to compute the distance to the nearest coast (see example in @sec-distance-to-nearest-geometry). 
+We might also want to consider topography, that means, we are not only interested in the pure distance but would like also to avoid the crossing of mountain ranges when going to the coast. 
+To do so, we can weight the distance with elevation so that each additional altitudinal meter "prolongs" the Euclidean distance (this is beyond the scope of the book). 
+Visibility and viewshed computations also belong to the family of global operations (this is also beyond the scope of the book).
 
 ### Map algebra counterparts in vector processing
 
@@ -949,9 +950,9 @@ Both inputs and the result are shown in @fig-raster-merge:
 #| fig-cap: Raster merging
 
 fig, axes = plt.subplots(2, 2, figsize=(8,4))
-show(src_1, ax=axes[0][0])
-show(src_2, ax=axes[0][1])
-show(out_image, transform=out_transform, ax=axes[1][0])
+rasterio.plot.show(src_1, ax=axes[0][0])
+rasterio.plot.show(src_2, ax=axes[0][1])
+rasterio.plot.show(out_image, transform=out_transform, ax=axes[1][0])
 axes[1][1].axis('off')
 axes[0][0].set_title('aut.tif')
 axes[0][1].set_title('ch.tif')
