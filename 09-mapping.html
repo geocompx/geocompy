@@ -291,7 +291,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>and load the sample data for this chapter:</p>
 <div class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>nz <span class="op">=</span> gpd.read_file(<span class="st">'data/nz.gpkg'</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>nz_elev <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/nz_elev.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>nz_height <span class="op">=</span> gpd.read_file(<span class="st">'data/nz_height.gpkg'</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>nz_elev <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/nz_elev.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="introduction" class="level2" data-number="8.2">
@@ -349,24 +350,82 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
-<p>As shown in <a href="02-spatial-data.html#sec-using-rasterio"><span>Section&nbsp;1.3.2</span></a>, you can plot raster datasets using <code>rasterio.plot.show</code>, as follows:</p>
+<p>As shown in <a href="02-spatial-data.html#sec-using-rasterio"><span>Section&nbsp;1.3.2</span></a>, you can plot raster datasets using <code>rasterio.plot.show</code>, as follows (<a href="#fig-raster-plot">Figure&nbsp;<span>8.2</span></a>):</p>
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="09-mapping_files/figure-html/cell-6-output-1.png" width="334" height="442"></p>
+<div id="fig-raster-plot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="09-mapping_files/figure-html/fig-raster-plot-output-1.png" width="334" height="442" class="figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;8.2: Plotting a raster using <code>rasterio.plot.show</code></figcaption>
+</figure>
 </div>
 </div>
-<p>You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers, which we used to explain masking and cropping (<a href="06-raster-vector.html#fig-raster-crop">Figure&nbsp;<span>5.1</span></a>):</p>
+</div>
+<p>You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers, which we already used earlier when explaining masking and cropping (<a href="06-raster-vector.html#fig-raster-crop">Figure&nbsp;<span>5.1</span></a>). For example, <a href="#fig-plot-raster-and-vector">Figure&nbsp;<span>8.3</span></a> demonstrated plotting a raster with increasingly complicated additions:</p>
+<ul>
+<li>The left panel shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)</li>
+<li>The center panel shows the raster with a buffer of 22.2 <span class="math inline">\(km\)</span> around the dissolved administrative borders, representing New Zealand’s <a href="https://en.wikipedia.org/wiki/Territorial_waters">territorial waters</a></li>
+<li>The right panel shows the raster with two vector layers: the territorial waters (in red) and elevation measurement points (in yellow)</li>
+</ul>
 <!-- 
 Source:
 https://gis.stackexchange.com/questions/294072/how-can-i-superimpose-a-geopandas-dataframe-on-a-raster-plot
 -->
-<div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">5</span>))</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev, ax<span class="op">=</span>ax)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>nz.to_crs(nz_elev.crs).plot(ax<span class="op">=</span>ax, facecolor<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'r'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<p><img src="09-mapping_files/figure-html/cell-7-output-1.png" width="334" height="442"></p>
+<div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Raster + vector layer</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">5</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev, ax<span class="op">=</span>ax)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>nz.to_crs(nz_elev.crs).plot(ax<span class="op">=</span>ax, facecolor<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Raster + computed vector layer</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">5</span>))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev, ax<span class="op">=</span>ax)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(nz.unary_union, crs<span class="op">=</span>nz.crs) <span class="op">\</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    .to_crs(nz_elev.crs) <span class="op">\</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">buffer</span>(<span class="dv">22200</span>) <span class="op">\</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    .exterior <span class="op">\</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    .plot(ax<span class="op">=</span>ax, color<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Raster + two vector layers</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">5</span>))</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(nz_elev, ax<span class="op">=</span>ax)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(nz.unary_union, crs<span class="op">=</span>nz.crs) <span class="op">\</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    .to_crs(nz_elev.crs) <span class="op">\</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">buffer</span>(<span class="dv">22200</span>) <span class="op">\</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    .exterior <span class="op">\</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    .plot(ax<span class="op">=</span>ax, color<span class="op">=</span><span class="st">'red'</span>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>nz_height.to_crs(nz_elev.crs).plot(ax<span class="op">=</span>ax, color<span class="op">=</span><span class="st">'yellow'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-plot-raster-and-vector" class="cell quarto-layout-panel" data-execution_count="6">
+<figure class="figure">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 34.7%;justify-content: center;">
+<div id="fig-plot-raster-and-vector-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="09-mapping_files/figure-html/fig-plot-raster-and-vector-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-plot-raster-and-vector" width="334"></p>
+<figcaption class="figure-caption">(a) Raster + vector layer</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 32.6%;justify-content: center;">
+<div id="fig-plot-raster-and-vector-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="09-mapping_files/figure-html/fig-plot-raster-and-vector-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-plot-raster-and-vector" width="314"></p>
+<figcaption class="figure-caption">(b) Raster + computed vector layer</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 32.6%;justify-content: center;">
+<div id="fig-plot-raster-and-vector-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="09-mapping_files/figure-html/fig-plot-raster-and-vector-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-plot-raster-and-vector" width="314"></p>
+<figcaption class="figure-caption">(c) Raster + two vector layers</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;8.3: Combining a raster and vector layers in the same plot</figcaption><p></p>
+</figure>
 </div>
 </div>
 <section id="palettes" class="level3" data-number="8.3.1">
