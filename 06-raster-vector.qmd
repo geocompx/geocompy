@@ -179,7 +179,18 @@ In the following examples, we use a third-party package called `rasterstats`, wh
 
 ### Extraction to points {#sec-extraction-to-points}
 
-The basic example is of extracting the value of a raster cell at specific points. For this purpose, we will use `zion_points`, which contain a sample of 30 locations within the Zion National Park (Figure ...). The following expression extracts elevation values from `srtm`:
+The basic example is of extracting the value of a raster cell at specific points. For this purpose, we will use `zion_points`, which contain a sample of 30 locations within the Zion National Park, which in figure @fig-zion-points: 
+
+```{python}
+#| label: fig-zion-points
+#| fig-cap: 30 point locations within the Zion National Park, with elevation in the background
+
+fig, ax = plt.subplots()
+rasterio.plot.show(src_srtm, ax=ax)
+zion_points.plot(ax=ax, color='black');
+```
+
+The following expression extracts elevation values from `srtm`:
 
 ```{python}
 result = rasterstats.point_query(
@@ -197,7 +208,7 @@ The resulting object is a `list` of raster values, corresponding to `zion_points
 result[:5]
 ```
 
-To create a `DataFrame` with points' IDs (one value per vector's row) and related `srtm` values for each point, we need to assign it:
+To get a `DataFrame` with points geometries (and attributes, if any) and the related `srtm` values for each point, we can assign the extraction result into a new column:
 
 ```{python}
 zion_points['elev'] = result
