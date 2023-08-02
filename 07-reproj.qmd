@@ -17,6 +17,7 @@ import rasterio
 import rasterio.warp
 from rasterio.plot import show
 import pyproj
+import shutil
 ```
 
 ```{python}
@@ -123,16 +124,30 @@ A number is interpreted as an `EPSG` code. We can also use strings, as in `'EPSG
 world4 = world.set_crs('ESRI:54009', allow_override=True)
 ```
 
-In `rasterio`, the CRS information is stored as part of a raster file connection metadata (@sec-using-rasterio). Replacing the CRS definition for a `rasterio` file connection is typically not necessary, because it is not considered in any operation, only the transformation matrix and coordinates are. One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch). However, if we do for some reason need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode:
+In `rasterio`, the CRS information is stored as part of a raster file connection metadata (@sec-using-rasterio). Replacing the CRS definition for a `rasterio` file connection is typically not necessary, because it is not considered in any operation, only the transformation matrix and coordinates are. One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch). However, if we do for some reason need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode. To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`:
 
 ```{python}
-src_nlcd2 = rasterio.open('data/nlcd.tif', 'r+')
+shutil.copy('data/nlcd.tif', 'output/nlcd_modified_crs.tif')
+```
+
+Now, let's examine the existing CRS:
+
+```{python}
+src_nlcd2 = rasterio.open('output/nlcd_modified_crs.tif', 'r+')
 src_nlcd2.crs
 ```
+
+Here is how we replace the definition with a new one, such as `EPSG:3857`:
 
 ```{python}
 src_nlcd2.crs = 3857
 src_nlcd2.crs
+```
+
+Examining the file connection demonstrates that the CRS was indeed changed:
+
+```{python}
+rasterio.open('output/nlcd_modified_crs.tif').crs
 ```
 
 Importantly, the `.set_crs` (for vector layers) or the assignment to `.crs` (for rasters), as shown above, do not alter coordinates' values or geometries. Their role is only to set a metadata information about the object CRS. Consequently, the objects we created, `world3`, `world4`, and `src_nlcd2` are "incorrect", in the sense that the geometries are in fact given in a different CRS than specified in the associated CRS definition.
