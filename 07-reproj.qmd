@@ -674,7 +674,86 @@ axes[1].set_title('Reprojected (EPSG:32612)');
 
 ## Custom map projections {#sec-custom-map-projections}
 
-...
+Established CRSs captured by `AUTHORITY:CODE` identifiers such as `EPSG:4326` are well suited for many applications. 
+However, it is desirable to use alternative projections or to create custom CRSs in some cases. 
+@sec-which-crs-to-use mentioned reasons for using custom CRSs, and provided several possible approaches. 
+Here, we show how to apply these ideas in Python.
+
+One is to take an existing WKT definition of a CRS, modify some of its elements, and then use the new definition for reprojecting, using the reprojection methods shown above for vector layers (@sec-reprojecting-vector-geometries) and rasters (@sec-reprojecting-raster-geometries). 
+
+For example, let's transforms the `zion.gpkg` vector layer to a custom azimuthal equidistant (AEQD) CRS.
+Using a custom AEQD CRS requires knowing the coordinates of the center point of a dataset in degrees (geographic CRS). 
+In our case, this information can be extracted by calculating a centroid of the `zion` area and transforming it into WGS84:
+
+```{python}
+zion_centr = zion.centroid
+zion_centr_wgs84 = zion_centr.to_crs(4326)
+coords = list(zion_centr_wgs84.iloc[0].coords)
+coords
+```
+
+Next, we can use the newly obtained lon/lat coordinates to update the WKT definition of the azimuthal equidistant (AEQD) CRS seen below. 
+Notice that we modified just two values below---`"Central_Meridian"` to the longitude and `"Latitude_Of_Origin"` to the latitude of our centroid:
+
+```{python}
+my_wkt = '''PROJCS["Custom_AEQD",
+ GEOGCS["GCS_WGS_1984",
+  DATUM["WGS_1984",
+   SPHEROID["WGS_1984",6378137.0,298.257223563]],
+  PRIMEM["Greenwich",0.0],
+  UNIT["Degree",0.0174532925199433]],
+ PROJECTION["Azimuthal_Equidistant"],
+ PARAMETER["Central_Meridian",-113.0263],
+ PARAMETER["Latitude_Of_Origin",37.29818],
+ UNIT["Meter",1.0]]'''
+```
+
+This approach's last step is to transform our original object (`zion`) to our new custom CRS (`zion_aeqd`):
+
+```{python}
+zion_aeqd = zion.to_crs(my_wkt)
+```
+
+Custom projections can also be made interactively, for example, using the [Projection Wizard](https://projectionwizard.org/#) web application (Šavrič, Jenny, and Jenny 2016 to add citation...). 
+This website allows you to select a spatial extent of your data and a distortion property, and returns a list of possible projections. 
+The list also contains WKT definitions of the projections that you can copy and use for reprojections. 
+See Open Geospatial Consortium ([2019](https://r.geocompx.org/references.html#ref-opengeospatialconsortium_wellknown_2019)) for details on creating custom CRS definitions with WKT strings.
+
+PROJ strings can also be used to create custom projections, accepting the limitations inherent to projections, especially of geometries covering large geographic areas, mentioned in @sec-coordinate-reference-systems. 
+Many projections have been developed and can be set with the +proj= element of PROJ strings, with dozens of projects described in detail on the [PROJ website](https://proj.org/operations/projections/index.html) alone.
+
+When mapping the world while preserving area relationships the Mollweide projection, illustrated in @fig-mollweide, is a popular and often sensible choice (Jenny et al. 2017 to add citation...). 
+To use this projection, we need to specify it using the proj-string element, `'+proj=moll'`, in the `.to_crs` method:
+
+```{python}
+#| label: fig-mollweide
+#| fig-cap: Mollweide projection of the world
+
+world.to_crs('+proj=moll').plot(color='none', edgecolor='black');
+```
+
+It is often desirable to minimize distortion for all spatial properties (area, direction, distance) when mapping the world. 
+One of the most popular projections to achieve this is [Winkel tripel](http://www.winkel.org/other/Winkel%20Tripel%20Projections.htm), illustrated in @fig-wintri:
+
+```{python}
+#| label: fig-wintri
+#| fig-cap: Winkel tripel projection of the world
+
+world.to_crs('+proj=wintri').plot(color='none', edgecolor='black');
+```
+
+Moreover, proj-string parameters can be modified in most CRS definitions, for example the center of the projection can be adjusted using the `+lon_0` and `+lat_0` parameters. 
+The below code transforms the coordinates to the Lambert azimuthal equal-area projection centered on the longitude and latitude of New York City (@fig-azimuthal-equal-area).
+
+```{python}
+#| label: fig-azimuthal-equal-area
+#| fig-cap: Lambert azimuthal equal-area projection of the world centered on New York City
+
+world.to_crs('+proj=laea +x_0=0 +y_0=0 +lon_0=-74 +lat_0=40') \
+    .plot(color='none', edgecolor='black');
+```
+
+More information on CRS modifications can be found in the [Using PROJ](https://proj.org/usage/index.html) documentation.
 
 ## Exercises
 
