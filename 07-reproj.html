@@ -579,7 +579,7 @@ dtype: geometry</code></pre>
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff <span class="op">=</span> lnd_layer.<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_369/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_367/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer_buff = lnd_layer.buffer(1)</code></pre>
 </div>
@@ -644,10 +644,10 @@ Note
 <div class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>lnd_layer.distance(lnd_layer_proj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_369/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_367/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer.distance(lnd_layer_proj)
-/tmp/ipykernel_369/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
+/tmp/ipykernel_367/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
 Use `to_crs()` to reproject one of the input geometries to match the CRS of the other.
 
 Left CRS: EPSG:4326
@@ -1091,7 +1091,75 @@ Note
 </section>
 <section id="sec-custom-map-projections" class="level2" data-number="6.10">
 <h2 data-number="6.10" class="anchored" data-anchor-id="sec-custom-map-projections"><span class="header-section-number">6.10</span> Custom map projections</h2>
-<p>…</p>
+<p>Established CRSs captured by <code>AUTHORITY:CODE</code> identifiers such as <code>EPSG:4326</code> are well suited for many applications. However, it is desirable to use alternative projections or to create custom CRSs in some cases. <a href="#sec-which-crs-to-use"><span>Section&nbsp;6.7</span></a> mentioned reasons for using custom CRSs, and provided several possible approaches. Here, we show how to apply these ideas in Python.</p>
+<p>One is to take an existing WKT definition of a CRS, modify some of its elements, and then use the new definition for reprojecting, using the reprojection methods shown above for vector layers (<a href="#sec-reprojecting-vector-geometries"><span>Section&nbsp;6.8</span></a>) and rasters (<a href="#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>).</p>
+<p>For example, let’s transforms the <code>zion.gpkg</code> vector layer to a custom azimuthal equidistant (AEQD) CRS. Using a custom AEQD CRS requires knowing the coordinates of the center point of a dataset in degrees (geographic CRS). In our case, this information can be extracted by calculating a centroid of the <code>zion</code> area and transforming it into WGS84:</p>
+<div class="cell" data-execution_count="55">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>zion_centr <span class="op">=</span> zion.centroid</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>zion_centr_wgs84 <span class="op">=</span> zion_centr.to_crs(<span class="dv">4326</span>)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>coords <span class="op">=</span> <span class="bu">list</span>(zion_centr_wgs84.iloc[<span class="dv">0</span>].coords)</span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a>coords</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="55">
+<pre><code>[(-113.02630562788148, 37.298176835277424)]</code></pre>
+</div>
+</div>
+<p>Next, we can use the newly obtained lon/lat coordinates to update the WKT definition of the azimuthal equidistant (AEQD) CRS seen below. Notice that we modified just two values below—<code>"Central_Meridian"</code> to the longitude and <code>"Latitude_Of_Origin"</code> to the latitude of our centroid:</p>
+<div class="cell" data-execution_count="56">
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>my_wkt <span class="op">=</span> <span class="st">'''PROJCS["Custom_AEQD",</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="st"> GEOGCS["GCS_WGS_1984",</span></span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a><span class="st">  DATUM["WGS_1984",</span></span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a><span class="st">   SPHEROID["WGS_1984",6378137.0,298.257223563]],</span></span>
+<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a><span class="st">  PRIMEM["Greenwich",0.0],</span></span>
+<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a><span class="st">  UNIT["Degree",0.0174532925199433]],</span></span>
+<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a><span class="st"> PROJECTION["Azimuthal_Equidistant"],</span></span>
+<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a><span class="st"> PARAMETER["Central_Meridian",-113.0263],</span></span>
+<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a><span class="st"> PARAMETER["Latitude_Of_Origin",37.29818],</span></span>
+<span id="cb93-10"><a href="#cb93-10" aria-hidden="true" tabindex="-1"></a><span class="st"> UNIT["Meter",1.0]]'''</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This approach’s last step is to transform our original object (<code>zion</code>) to our new custom CRS (<code>zion_aeqd</code>):</p>
+<div class="cell" data-execution_count="57">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>zion_aeqd <span class="op">=</span> zion.to_crs(my_wkt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Custom projections can also be made interactively, for example, using the <a href="https://projectionwizard.org/#">Projection Wizard</a> web application (Šavrič, Jenny, and Jenny 2016 to add citation…). This website allows you to select a spatial extent of your data and a distortion property, and returns a list of possible projections. The list also contains WKT definitions of the projections that you can copy and use for reprojections. See Open Geospatial Consortium (<a href="https://r.geocompx.org/references.html#ref-opengeospatialconsortium_wellknown_2019">2019</a>) for details on creating custom CRS definitions with WKT strings.</p>
+<p>PROJ strings can also be used to create custom projections, accepting the limitations inherent to projections, especially of geometries covering large geographic areas, mentioned in <a href="#sec-coordinate-reference-systems"><span>Section&nbsp;6.3</span></a>. Many projections have been developed and can be set with the +proj= element of PROJ strings, with dozens of projects described in detail on the <a href="https://proj.org/operations/projections/index.html">PROJ website</a> alone.</p>
+<p>When mapping the world while preserving area relationships the Mollweide projection, illustrated in <a href="#fig-mollweide">Figure&nbsp;<span>6.4</span></a>, is a popular and often sensible choice (Jenny et al.&nbsp;2017 to add citation…). To use this projection, we need to specify it using the proj-string element, <code>'+proj=moll'</code>, in the <code>.to_crs</code> method:</p>
+<div class="cell" data-execution_count="58">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>world.to_crs(<span class="st">'+proj=moll'</span>).plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-mollweide" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="07-reproj_files/figure-html/fig-mollweide-output-1.png" width="420" height="260" class="figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;6.4: Mollweide projection of the world</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>It is often desirable to minimize distortion for all spatial properties (area, direction, distance) when mapping the world. One of the most popular projections to achieve this is <a href="http://www.winkel.org/other/Winkel%20Tripel%20Projections.htm">Winkel tripel</a>, illustrated in <a href="#fig-wintri">Figure&nbsp;<span>6.5</span></a>:</p>
+<div class="cell" data-execution_count="59">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>world.to_crs(<span class="st">'+proj=wintri'</span>).plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-wintri" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="07-reproj_files/figure-html/fig-wintri-output-1.png" width="433" height="256" class="figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;6.5: Winkel tripel projection of the world</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Moreover, proj-string parameters can be modified in most CRS definitions, for example the center of the projection can be adjusted using the <code>+lon_0</code> and <code>+lat_0</code> parameters. The below code transforms the coordinates to the Lambert azimuthal equal-area projection centered on the longitude and latitude of New York City (<a href="#fig-azimuthal-equal-area">Figure&nbsp;<span>6.6</span></a>).</p>
+<div class="cell" data-execution_count="60">
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>world.to_crs(<span class="st">'+proj=laea +x_0=0 +y_0=0 +lon_0=-74 +lat_0=40'</span>) <span class="op">\</span></span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>    .plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-azimuthal-equal-area" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="07-reproj_files/figure-html/fig-azimuthal-equal-area-output-1.png" width="420" height="442" class="figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;6.6: Lambert azimuthal equal-area projection of the world centered on New York City</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>More information on CRS modifications can be found in the <a href="https://proj.org/usage/index.html">Using PROJ</a> documentation.</p>
 </section>
 <section id="exercises" class="level2" data-number="6.11">
 <h2 data-number="6.11" class="anchored" data-anchor-id="exercises"><span class="header-section-number">6.11</span> Exercises</h2>
