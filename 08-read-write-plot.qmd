@@ -49,7 +49,55 @@ The final Section @sec-visual-outputs demonstrates methods for saving visual out
 
 ## Retrieving open data {#sec-retrieving-open-data}
 
-To complete...
+A vast and ever-increasing amount of geographic data is available on the internet, much of which is free to access and use (with appropriate credit given to its providers).[^gis-open-datasets]
+In some ways there is now too much data, in the sense that there are often multiple places to access the same dataset. 
+Some datasets are of poor quality. 
+In this context, it is vital to know where to look, so the first section covers some of the most important sources. 
+Various 'geoportals' (web services providing geospatial datasets such as [Data.gov](https://catalog.data.gov/dataset?metadata_type=geospatial)) are a good place to start, providing a wide range of data but often only for specific locations (as illustrated in the updated [Wikipedia page](https://en.wikipedia.org/wiki/Geoportal) on the topic).
+
+[^gis-open-datasets]: For example, visit <https://freegisdata.rtwilson.com/> for a list of websites with freely available geographic datasets.
+
+Some global geoportals overcome this issue. 
+The [GEOSS portal](http://www.geoportal.org/) and the [Copernicus Open Access Hub](https://scihub.copernicus.eu/), for example, contain many raster datasets with global coverage. 
+A wealth of vector datasets can be accessed from the [SEDAC](http://sedac.ciesin.columbia.edu/) portal run by the National Aeronautics and Space Administration (NASA) and the European Union's [INSPIRE geoportal](http://inspire-geoportal.ec.europa.eu/), with global and regional coverage.
+
+Most geoportals provide a graphical interface allowing datasets to be queried based on characteristics such as spatial and temporal extent, the United States Geological Survey's [EarthExplorer](https://earthexplorer.usgs.gov/) being a prime example. 
+Exploring datasets interactively on a browser is an effective way of understanding available layers. 
+Downloading data is best done with code, however, from reproducibility and efficiency perspectives. 
+Downloads can be initiated from the command line using a variety of techniques, primarily via URLs and APIs (see the [Sentinel API](https://scihub.copernicus.eu/twiki/do/view/SciHubWebPortal/APIHubDescription) for example). 
+Files hosted on static URLs can be downloaded with the following method, as illustrated in the code chunk below which accesses the [Natural Earth Data](https://www.naturalearthdata.com/) website to download the world airports layer zip file and to extract the contained Shapefile. 
+Note that the download code is complicated by the fact that the server checks the `User-agent` header of the request, basically to make sure that the download takes place through a browser. 
+To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code:
+
+```{python}
+import urllib.request
+import zipfile
+
+# Set URL+filename
+url = 'https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/ne_10m_airports.zip'
+filename = 'output/ne_10m_airports.zip'
+
+# Download
+opener = urllib.request.build_opener()
+opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0')]
+urllib.request.install_opener(opener)
+urllib.request.urlretrieve(url, filename)
+
+# Extract
+f = zipfile.ZipFile(filename, 'r')
+f.extractall('output')
+f.close()
+```
+
+The Shapefile that has been created in the `output` directory can then be imported and plotted (@fig-ne-airports) as follows:
+
+```{python}
+#| label: fig-ne-airports
+#| fig-cap: World airports layer, downloaded using Python from the Natural Earth Data website
+
+ne = gpd.read_file(filename.replace('.zip', '.shp'))
+ne.plot();
+```
 
 ## Geographic data packages {#sec-geographic-data-packages}
 
