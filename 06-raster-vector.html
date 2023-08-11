@@ -925,7 +925,7 @@ Length: 154, dtype: geometry</code></pre>
 <div class="cell" data-execution_count="36">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected[<span class="st">'geometry'</span>].to_list())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="36">
-<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7f19f673c860&gt;</code></pre>
+<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7f3dcafd7370&gt;</code></pre>
 </div>
 </div>
 <p>Therefore, the rasterizing expression is:</p>
@@ -1154,7 +1154,7 @@ dtype: geometry</code></pre>
 <span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>shapes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="49">
-<pre><code>&lt;generator object shapes at 0x7f19f87c7ab0&gt;</code></pre>
+<pre><code>&lt;generator object shapes at 0x7f3dcd097ab0&gt;</code></pre>
 </div>
 </div>
 <p>We can generate all shapes at once, into a <code>list</code> named <code>pol</code>, as follows:</p>
@@ -1340,15 +1340,9 @@ dtype: geometry</code></pre>
 <p>We hereby demonstrate the first and easiest approach, using <code>gdal_contour</code>. Although we deviate from exclusively using the Python language, the benefit of <code>gdal_contour</code> is the proven algorithm, customized to spatial data, and with many relevant options. <code>gdal_contour</code> (along with other GDAL programs) should already be installed on your system since this is a dependency of <code>rasterio</code>. For example, generating 50 <span class="math inline">\(m\)</span> contours of the <code>dem.tif</code> file can be done as follows:</p>
 <div class="cell" data-execution_count="59">
 <div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>sh: 1: gdal_contour: not found</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="59">
-<pre><code>32512</code></pre>
-</div>
 </div>
 <p>Note that we ran the <code>gdal_contour</code> command through <code>os.system</code>, in order to remain in the Python environment. You can also run the standalone command in the command line interface you are using, such as the Anaconda Prompt:</p>
-<div class="sourceCode" id="cb86"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gdal_contour</span> <span class="at">-a</span> elev data/dem.tif output/dem_contour.gpkg <span class="at">-i</span> 50.0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb84"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gdal_contour</span> <span class="at">-a</span> elev data/dem.tif output/dem_contour.gpkg <span class="at">-i</span> 50.0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Like all GDAL programs, <code>gdal_contour</code> works with files. Here:</p>
 <ul>
 <li>The input is the <code>data/dem.tif</code> file</li>
@@ -1356,9 +1350,9 @@ dtype: geometry</code></pre>
 </ul>
 <p>To illustrate the result, let’s read the result back into the Python environment. Note that the layer contains an arrtibute named <code>elev</code> (as specified using <code>-a elev</code>) with the contour elevation values:</p>
 <div class="cell" data-execution_count="60">
-<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>contours <span class="op">=</span> gpd.read_file(<span class="st">'output/dem_contour.gpkg'</span>)</span>
-<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>contours</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="60">
+<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>contours <span class="op">=</span> gpd.read_file(<span class="st">'output/dem_contour.gpkg'</span>)</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>contours</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="59">
 <div>
 
 
@@ -1423,9 +1417,9 @@ dtype: geometry</code></pre>
 </div>
 <p>Here is a plot of the contour layer in <code>dem_contour.gpkg</code> (<a href="#fig-raster-contours2">Figure&nbsp;<span>5.10</span></a>):</p>
 <div class="cell" data-execution_count="61">
-<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_dem, ax<span class="op">=</span>ax)</span>
-<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>contours.plot(ax<span class="op">=</span>ax, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_dem, ax<span class="op">=</span>ax)</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>contours.plot(ax<span class="op">=</span>ax, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-contours2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1442,38 +1436,38 @@ dtype: geometry</code></pre>
 <p>Calculating a raster of distances to the nearest geometry is an example of a “global” raster operation (<a href="04-spatial-operations.html#sec-global-operations-and-distances"><span>Section&nbsp;3.4.6</span></a>). To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand. This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation, raster conversion to points, and rasterizing points.</p>
 <p>For the coastline, we will dissolve the New Zealand administrative division polygon layer and “extract” the boundary (which is a <code>"MultiLineString"</code> geometry):</p>
 <div class="cell" data-execution_count="62">
-<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>coastline <span class="op">=</span> gpd.GeoSeries(nz.unary_union, crs<span class="op">=</span>nz.crs) <span class="op">\</span></span>
-<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>    .to_crs(src_nz_elev.crs) <span class="op">\</span></span>
-<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>    .boundary</span>
-<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>coastline</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="62">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>coastline <span class="op">=</span> gpd.GeoSeries(nz.unary_union, crs<span class="op">=</span>nz.crs) <span class="op">\</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>    .to_crs(src_nz_elev.crs) <span class="op">\</span></span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>    .boundary</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>coastline</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="61">
 <pre><code>0    MULTILINESTRING ((1229997.901 4...
 dtype: geometry</code></pre>
 </div>
 </div>
 <p>For a “template” raster, we will aggregate the New Zealand DEM, in the <code>nz_elev.tif</code> file, to 5 times coarser resolution. The code section below follows the aggeregation example in <a href="05-geometry-operations.html#sec-raster-agg-disagg"><span>Section&nbsp;4.4.3</span></a>, then replaces the original (aggregated) values with unique IDs, which is a preliminary step when converting to points, as explained in <a href="#sec-raster-to-points"><span>Section&nbsp;5.6.2</span></a>. Finally, we also replace “erase” (i.e., replace with <code>np.nan</code>) IDs which were <code>np.nan</code> in the aggregated elevation raster, i.e., beyond the land area of New Zealand:</p>
 <div class="cell" data-execution_count="63">
-<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="fl">0.2</span></span>
-<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading aggregated array</span></span>
-<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src_nz_elev.read(<span class="dv">1</span>,</span>
-<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
-<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src_nz_elev.height <span class="op">*</span> factor),</span>
-<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src_nz_elev.width <span class="op">*</span> factor)</span>
-<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a>        ),</span>
-<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.average</span>
-<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Updating the transform</span></span>
-<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> src_nz_elev.transform <span class="op">*</span> src_nz_elev.transform.scale(</span>
-<span id="cb91-12"><a href="#cb91-12" aria-hidden="true" tabindex="-1"></a>    (src_nz_elev.width <span class="op">/</span> r.shape[<span class="dv">1</span>]),</span>
-<span id="cb91-13"><a href="#cb91-13" aria-hidden="true" tabindex="-1"></a>    (src_nz_elev.height <span class="op">/</span> r.shape[<span class="dv">0</span>])</span>
-<span id="cb91-14"><a href="#cb91-14" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb91-15"><a href="#cb91-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating unique IDs per cell</span></span>
-<span id="cb91-16"><a href="#cb91-16" aria-hidden="true" tabindex="-1"></a>ids <span class="op">=</span> r.copy()</span>
-<span id="cb91-17"><a href="#cb91-17" aria-hidden="true" tabindex="-1"></a>ids <span class="op">=</span> np.arange(<span class="dv">0</span>, r.size).reshape(r.shape).astype(np.float32)</span>
-<span id="cb91-18"><a href="#cb91-18" aria-hidden="true" tabindex="-1"></a><span class="co"># "Erasing" irrelevant IDs</span></span>
-<span id="cb91-19"><a href="#cb91-19" aria-hidden="true" tabindex="-1"></a>ids[np.isnan(r)] <span class="op">=</span> np.nan</span>
-<span id="cb91-20"><a href="#cb91-20" aria-hidden="true" tabindex="-1"></a>ids</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="63">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="fl">0.2</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading aggregated array</span></span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src_nz_elev.read(<span class="dv">1</span>,</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src_nz_elev.height <span class="op">*</span> factor),</span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src_nz_elev.width <span class="op">*</span> factor)</span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.average</span>
+<span id="cb89-9"><a href="#cb89-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb89-10"><a href="#cb89-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Updating the transform</span></span>
+<span id="cb89-11"><a href="#cb89-11" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> src_nz_elev.transform <span class="op">*</span> src_nz_elev.transform.scale(</span>
+<span id="cb89-12"><a href="#cb89-12" aria-hidden="true" tabindex="-1"></a>    (src_nz_elev.width <span class="op">/</span> r.shape[<span class="dv">1</span>]),</span>
+<span id="cb89-13"><a href="#cb89-13" aria-hidden="true" tabindex="-1"></a>    (src_nz_elev.height <span class="op">/</span> r.shape[<span class="dv">0</span>])</span>
+<span id="cb89-14"><a href="#cb89-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb89-15"><a href="#cb89-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Generating unique IDs per cell</span></span>
+<span id="cb89-16"><a href="#cb89-16" aria-hidden="true" tabindex="-1"></a>ids <span class="op">=</span> r.copy()</span>
+<span id="cb89-17"><a href="#cb89-17" aria-hidden="true" tabindex="-1"></a>ids <span class="op">=</span> np.arange(<span class="dv">0</span>, r.size).reshape(r.shape).astype(np.float32)</span>
+<span id="cb89-18"><a href="#cb89-18" aria-hidden="true" tabindex="-1"></a><span class="co"># "Erasing" irrelevant IDs</span></span>
+<span id="cb89-19"><a href="#cb89-19" aria-hidden="true" tabindex="-1"></a>ids[np.isnan(r)] <span class="op">=</span> np.nan</span>
+<span id="cb89-20"><a href="#cb89-20" aria-hidden="true" tabindex="-1"></a>ids</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="62">
 <pre><code>array([[nan, nan, nan, ..., nan, nan, nan],
        [nan, nan, nan, ..., nan, nan, nan],
        [nan, nan, nan, ..., nan, nan, nan],
@@ -1485,9 +1479,9 @@ dtype: geometry</code></pre>
 </div>
 <p>The result is an array named <code>ids</code> with the IDs, and the corresponding <code>new_transform</code>, as plotted in <a href="#fig-raster-distances1">Figure&nbsp;<span>5.11</span></a>:</p>
 <div class="cell" data-execution_count="64">
-<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(ids, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>ax)</span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(coastline).plot(ax<span class="op">=</span>ax, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(ids, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>ax)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(coastline).plot(ax<span class="op">=</span>ax, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-distances1" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1499,22 +1493,22 @@ dtype: geometry</code></pre>
 </div>
 <p>To calculate distances, we must convert each pixel to a vector (point) geometry. We use the technique demonstrated in <a href="#sec-raster-to-points"><span>Section&nbsp;5.6.2</span></a>:</p>
 <div class="cell" data-execution_count="65">
-<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>shapes <span class="op">=</span> rasterio.features.shapes(ids, transform<span class="op">=</span>new_transform)</span>
-<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> <span class="bu">list</span>(shapes)</span>
-<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>pnt <span class="op">=</span> [shapely.geometry.shape(i[<span class="dv">0</span>]).centroid <span class="cf">for</span> i <span class="kw">in</span> pol]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>shapes <span class="op">=</span> rasterio.features.shapes(ids, transform<span class="op">=</span>new_transform)</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> <span class="bu">list</span>(shapes)</span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>pnt <span class="op">=</span> [shapely.geometry.shape(i[<span class="dv">0</span>]).centroid <span class="cf">for</span> i <span class="kw">in</span> pol]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The result <code>pnt</code> is a <code>list</code> of <code>shapely</code> geometries, representing raster cell centroids (excluding <code>np.nan</code> pixels):</p>
 <div class="cell" data-execution_count="66">
-<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pnt[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pnt[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>POINT (1572956.546197626 6189460.927303582)</code></pre>
 </div>
 </div>
 <p>Next we calculate the correspinding <code>list</code> of distances, using the <code>.distance</code> method from <code>shapely</code>:</p>
 <div class="cell" data-execution_count="67">
-<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>distances <span class="op">=</span> [(i, i.distance(coastline)) <span class="cf">for</span> i <span class="kw">in</span> pnt]</span>
-<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>distances[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="67">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>distances <span class="op">=</span> [(i, i.distance(coastline)) <span class="cf">for</span> i <span class="kw">in</span> pnt]</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>distances[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="66">
 <pre><code>(&lt;POINT (1572956.546 6189460.927)&gt;,
  0    826.752396
  dtype: float64)</code></pre>
@@ -1522,15 +1516,15 @@ dtype: geometry</code></pre>
 </div>
 <p>Finally, we rasterize (see <a href="#sec-rasterizing-points"><span>Section&nbsp;5.5.1</span></a>) the distances into our raster template:</p>
 <div class="cell" data-execution_count="68">
-<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> rasterio.features.rasterize(</span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>    distances,</span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>ids.shape,</span>
-<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>    dtype<span class="op">=</span>np.float_,</span>
-<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>new_transform,</span>
-<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span>np.nan</span>
-<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb99-8"><a href="#cb99-8" aria-hidden="true" tabindex="-1"></a>image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="68">
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> rasterio.features.rasterize(</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>    distances,</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>ids.shape,</span>
+<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>    dtype<span class="op">=</span>np.float_,</span>
+<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>new_transform,</span>
+<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span>np.nan</span>
+<span id="cb97-7"><a href="#cb97-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb97-8"><a href="#cb97-8" aria-hidden="true" tabindex="-1"></a>image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="67">
 <pre><code>array([[nan, nan, nan, ..., nan, nan, nan],
        [nan, nan, nan, ..., nan, nan, nan],
        [nan, nan, nan, ..., nan, nan, nan],
@@ -1542,9 +1536,9 @@ dtype: geometry</code></pre>
 </div>
 <p>The resulting raster of distances is shown in <a href="#fig-raster-distances2">Figure&nbsp;<span>5.12</span></a>:</p>
 <div class="cell" data-execution_count="69">
-<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(image, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>ax)</span>
-<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(coastline).plot(ax<span class="op">=</span>ax, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(image, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>ax)</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(coastline).plot(ax<span class="op">=</span>ax, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-distances2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
