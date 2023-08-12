@@ -5,6 +5,8 @@
 Let's import the required packages:
 
 ```{python}
+import urllib.request
+import zipfile
 import numpy as np
 import fiona
 import geopandas as gpd
@@ -12,6 +14,7 @@ import shapely
 import rasterio
 import rasterio.plot
 import cartopy
+import osmnx
 ```
 
 ```{python}
@@ -71,8 +74,7 @@ Note that the download code is complicated by the fact that the server checks th
 To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code:
 
 ```{python}
-import urllib.request
-import zipfile
+#| eval: false
 
 # Set URL+filename
 url = 'https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/ne_10m_airports.zip'
@@ -88,6 +90,12 @@ urllib.request.urlretrieve(url, filename)
 f = zipfile.ZipFile(filename, 'r')
 f.extractall('output')
 f.close()
+```
+
+```{python}
+#| echo: false
+
+filename = 'output/ne_10m_airports.zip'
 ```
 
 The Shapefile that has been created in the `output` directory can then be imported and plotted (@fig-ne-airports) as follows:
@@ -108,7 +116,7 @@ These provide interfaces to one or more spatial libraries or geoportals and aim 
 | Package | Description |
 |---|-----------|
 | `cartopy`  | Download layers from [Natural Earth Data](https://www.naturalearthdata.com/downloads/) |  
-| `...`  | ... |  
+| `osmnx`  | Access to OpenStreetMap data and conversion to spatial networks |  
 | `...`  | ... |  
 | `...`  | ... |  
 : Selected Python packages for geographic data retrieval  {#tbl-data-packages}
@@ -142,7 +150,44 @@ Other layers can be accessed the same way:
 * run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and
 * read the file into the Python environment, e.g., using `gpd.read_file`
 
-This is an alternative approach to "directly" downloading files (@sec-retrieving-open-data).
+This is an alternative approach to "directly" downloading files (@sec-retrieving-open-data). 
+
+A third example uses the `osmnx` package (Padgham et al. 2018) to find parks from the OpenStreetMap (OSM) database. As illustrated in the code-chunk below, queries begin with the function opq() (short for OpenStreetMap query), the first argument of which is bounding box, or text string representing a bounding box (the city of Leeds in this case). The result is passed to a function for selecting which OSM elements we’re interested in (parks in this case), represented by key-value pairs. Next, they are passed to the function osmdata_sf() which does the work of downloading the data and converting it into a list of sf objects (see vignette('osmdata') for further details):
+
+```{python}
+
+```
+
+parks = opq(bbox = "leeds uk") |> 
+  add_osm_feature(key = "leisure", value = "park") |> 
+  osmdata_sf()
+
+A limitation with the osmdata package is that it is rate limited, meaning that it cannot download large OSM datasets (e.g. all the OSM data for a large city). To overcome this limitation, the osmextract package was developed, which can be used to download and import binary .pbf files containing compressed versions of the OSM database for pre-defined regions.
+
+OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the Overpass turbo web service for rapid development and testing of OSM queries to osm2pgsql for importing the data into a PostGIS database. Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers. Using OSM encourages ‘citizen science’ and contributions back to the digital commons (you can start editing data representing a part of the world you know well at www.openstreetmap.org). Further examples of OSM data in action are provided in Chapters 10, 13 and 14.
+
+Sometimes, packages come with built-in datasets. These can be accessed in four ways: by attaching the package (if the package uses ‘lazy loading’ as spData does), with data(dataset, package = mypackage), by referring to the dataset with mypackage::dataset, or with system.file(filepath, package = mypackage) to access raw data files. The following code chunk illustrates the latter two options using the world dataset (already loaded by attaching its parent package with library(spData)):38
+
+world2 = spData::world
+world3 = read_sf(system.file("shapes/world.gpkg", package = "spData"))
+
+The last example, system.file("shapes/world.gpkg", package = "spData"), returns a path to the world.gpkg file, which is stored inside of the "shapes/" folder of the spData package.
+
+Another way to obtain spatial information is to perform geocoding – transform a description of a location, usually an address, into its coordinates. This is usually done by sending a query to an online service and getting the location as a result. Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements. R has several packages for geocoding; however, tidygeocoder seems to allow to connect to the largest number of geocoding services with a consistent interface. The tidygeocoder main function is geocode, which takes a data frame with addresses and adds coordinates as "lat" and "long". This function also allows to select a geocoding service with the method argument and has many additional parameters.
+
+The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London.
+
+library(tidygeocoder)
+geo_df = data.frame(address = "54 Frith St, London W1D 4SJ, UK")
+geo_df = geocode(geo_df, address, method = "osm")
+geo_df
+
+The resulting data frame can be converted into an sf object with st_as_sf().
+
+geo_sf = st_as_sf(geo_df, coords = c("long", "lat"), crs = "EPSG:4326")
+
+This package also allows performing the opposite process called reverse geocoding used to get a set of information (name, address, etc.) based on a pair of coordinates.
+
 
 ## Geographic web services
 
@@ -343,6 +388,8 @@ fiona.listlayers(u)
 Finally, we can choose the first layer `Placemarks` and read it, using `gpd.read_file` with an additional `layer` argument:
 
 ```{python}
+#| eval: false
+
 placemarks = gpd.read_file(u, layer='Placemarks')
 ```
 
