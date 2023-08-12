@@ -14,7 +14,7 @@ import shapely
 import rasterio
 import rasterio.plot
 import cartopy
-import osmnx
+import osmnx as ox
 ```
 
 ```{python}
@@ -152,42 +152,51 @@ Other layers can be accessed the same way:
 
 This is an alternative approach to "directly" downloading files (@sec-retrieving-open-data). 
 
-A third example uses the `osmnx` package (Padgham et al. 2018) to find parks from the OpenStreetMap (OSM) database. As illustrated in the code-chunk below, queries begin with the function opq() (short for OpenStreetMap query), the first argument of which is bounding box, or text string representing a bounding box (the city of Leeds in this case). The result is passed to a function for selecting which OSM elements we’re interested in (parks in this case), represented by key-value pairs. Next, they are passed to the function osmdata_sf() which does the work of downloading the data and converting it into a list of sf objects (see vignette('osmdata') for further details):
+The second example uses the `osmnx` package to find parks from the OpenStreetMap (OSM) database. 
+As illustrated in the code-chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` functin. The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can be used to query a custom area of interest). The second argument specifies the OSM tag(s), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs:
 
 ```{python}
-
+parks = ox.features.features_from_place(
+    query='leeds uk', 
+    tags={'leisure': 'park'}
+)
+parks
 ```
 
-parks = opq(bbox = "leeds uk") |> 
-  add_osm_feature(key = "leisure", value = "park") |> 
-  osmdata_sf()
+The result is a `GeoDataFrame` with numerous properties. The following expression plots the geometries with the `name` property in the tooltips:
 
-A limitation with the osmdata package is that it is rate limited, meaning that it cannot download large OSM datasets (e.g. all the OSM data for a large city). To overcome this limitation, the osmextract package was developed, which can be used to download and import binary .pbf files containing compressed versions of the OSM database for pre-defined regions.
+```{python}
+parks[['name', 'geometry']].explore()
+```
 
-OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the Overpass turbo web service for rapid development and testing of OSM queries to osm2pgsql for importing the data into a PostGIS database. Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers. Using OSM encourages ‘citizen science’ and contributions back to the digital commons (you can start editing data representing a part of the world you know well at www.openstreetmap.org). Further examples of OSM data in action are provided in Chapters 10, 13 and 14.
+It should be noted that the `osmnx` package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas. To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from [Geofabrik](https://download.geofabrik.de/), and then load them from the file into the Python environment.
 
-Sometimes, packages come with built-in datasets. These can be accessed in four ways: by attaching the package (if the package uses ‘lazy loading’ as spData does), with data(dataset, package = mypackage), by referring to the dataset with mypackage::dataset, or with system.file(filepath, package = mypackage) to access raw data files. The following code chunk illustrates the latter two options using the world dataset (already loaded by attaching its parent package with library(spData)):38
+OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the [Overpass turbo](https://overpass-turbo.eu/) web service for rapid development and testing of OSM queries to [osm2pgsql](https://osm2pgsql.org/) for importing the data into a PostGIS database. Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers. Using OSM encourages 'citizen science' and contributions back to the digital commons (you can start editing data representing a part of the world you know well at [www.openstreetmap.org](https://www.openstreetmap.org/)). 
 
-world2 = spData::world
-world3 = read_sf(system.file("shapes/world.gpkg", package = "spData"))
+Sometimes, packages come with built-in datasets. These can be accessed just like any other object (e.g., function) that is imported as part of the package, or in other ways as specified in the package documentation. For example, package `geopandas` comes with few built-in datasets (see `gpd.datasets.available` for a list of names). Using the `gpd.datasets.get_path` function and the dataset name, we can obtain the path to the location of the dataset file on our computer. For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we've alredy met before):
 
-The last example, system.file("shapes/world.gpkg", package = "spData"), returns a path to the world.gpkg file, which is stored inside of the "shapes/" folder of the spData package.
+```{python}
+filename = gpd.datasets.get_path('naturalearth_lowres')
+filename
+```
 
-Another way to obtain spatial information is to perform geocoding – transform a description of a location, usually an address, into its coordinates. This is usually done by sending a query to an online service and getting the location as a result. Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements. R has several packages for geocoding; however, tidygeocoder seems to allow to connect to the largest number of geocoding services with a consistent interface. The tidygeocoder main function is geocode, which takes a data frame with addresses and adds coordinates as "lat" and "long". This function also allows to select a geocoding service with the method argument and has many additional parameters.
+Then, we can import the dataset, just like from any other file:
 
-The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London.
+```{python}
+gpd.read_file(filename)
+```
 
-library(tidygeocoder)
-geo_df = data.frame(address = "54 Frith St, London W1D 4SJ, UK")
-geo_df = geocode(geo_df, address, method = "osm")
-geo_df
+Another way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into its coordinates. This is usually done by sending a query to an online service and getting the location as a result. Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements. [Nominatim](https://nominatim.openstreetmap.org/ui/about.html) is a popular free service, based on OpenStreetMap data. It can be accessed in Python uisng the `osmnx.geocoder.geocode` function. The function returns a `tuple` of the form `(lat,lon)`. The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London:
 
-The resulting data frame can be converted into an sf object with st_as_sf().
+```{python}
+ox.geocoder.geocode('54 Frith St, London W1D 4SJ, UK')
+```
 
-geo_sf = st_as_sf(geo_df, coords = c("long", "lat"), crs = "EPSG:4326")
+If the query returns no results, an `InsufficientResponseError` is raised, a scenario that the user can deal with using [`try`/`except`](https://docs.python.org/3/tutorial/errors.html#handling-exceptions). The alternative function `osmnx.geocoder.geocode_to_gdf` can be used to automatically geocode multiple addresses (accepting a `list` of `string`s) and transforming them into a `GeoDataFrame`:
 
-This package also allows performing the opposite process called reverse geocoding used to get a set of information (name, address, etc.) based on a pair of coordinates.
-
+```{python}
+ox.geocoder.geocode_to_gdf(['54 Frith St, London W1D 4SJ, UK', 'Beer-Sheva, Israel'])
+```
 
 ## Geographic web services
 
