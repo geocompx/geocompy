@@ -343,7 +343,6 @@ fiona.listlayers(u)
 Finally, we can choose the first layer `Placemarks` and read it, using `gpd.read_file` with an additional `layer` argument:
 
 ```{python}
-#| eval: false
 placemarks = gpd.read_file(u, layer='Placemarks')
 ```
 
@@ -402,21 +401,18 @@ The next two sections will demonstrate how to do this.
 The counterpart of `gpd.read_file` is the `.to_file` method that a `GeoDataFrame` has. It allows you to write `GeoDataFrame` objects to a wide range of geographic vector file formats, including the most common, such as `.geojson`, `.shp` and `.gpkg`. Based on the file name, `.to_file` decides automatically which driver to use. The speed of the writing process depends also on the driver.
 
 ```{python}
-#| eval: false
 world.to_file('output/world.gpkg')
 ```
 
 Note: if you try to write to the same data source again, the function will overwrite the file:
 
 ```{python}
-#| eval: false
 world.to_file('output/world.gpkg')
 ```
 
 Instead of overwriting the file, we could add a new layer to the file with `mode='a'` ("append" mode, as opposed to the default `mode='w'` for "write" mode). Appending is supported by several spatial formats, including GeoPackage. For example:
 
 ```{python}
-#| eval: false
 world.to_file('output/world_many_features.gpkg')
 world.to_file('output/world_many_features.gpkg', mode='a')
 ```
@@ -426,7 +422,6 @@ Here, `world_many_features.gpkg` will contain a polygonal layer named `world` wi
 Alternatively, you can create another, separate, layer, within the same file. The GeoPackage format also supports multiple layers within one file. For example:
 
 ```{python}
-#| eval: false
 world.to_file('output/world_many_layers.gpkg')
 world.to_file('output/world_many_layers.gpkg', layer='world2')
 ```
@@ -551,7 +546,12 @@ The raster data type can be specified when writing a raster (see above). For an 
 rasterio.open('output/r.tif').meta['dtype']
 ```
 
-The file `r.tif` has the data type `np.int8`, which we specified when creating it according to the data type of the original array.
+The file `r.tif` has the data type `np.int8`, which we specified when creating it according to the data type of the original array:
+
+```{python}
+r.dtype
+```
+
 When reading the data back into the Python session, the array with the same data type is recreated:
 
 ```{python}
@@ -613,7 +613,6 @@ r.dtype
 When writing the array to file, we do not need to specify any particular `nodata` value:
 
 ```{python}
-#| eval: false
 dst = rasterio.open(
     'output/r_nodata_float.tif', 'w', 
     driver = 'GTiff',
@@ -654,7 +653,6 @@ r.dtype
 When writing the array to file, we must specify `nodata=-9999` to keep track of our "No Data" flag:
 
 ```{python}
-#| eval: false
 dst = rasterio.open(
     'output/r_nodata_int.tif', 'w', 
     driver = 'GTiff',
@@ -766,7 +764,7 @@ For example, the following code section exports the same raster plot to a file n
 
 ```{python}
 #| output: false
-#| eval: false
+
 fig, ax = plt.subplots(figsize=(5, 7))
 rasterio.plot.show(nz_elev, ax=ax)
 nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
