@@ -1007,7 +1007,7 @@ dtype: bool</code></pre>
 </section>
 <section id="non-overlapping-joins" class="level3" data-number="3.3.5">
 <h3 data-number="3.3.5" class="anchored" data-anchor-id="non-overlapping-joins"><span class="header-section-number">3.3.5</span> Non-overlapping joins</h3>
-<p>Sometimes two geographic datasets do not touch but still have a strong geographic relationship. The datasets <code>cycle_hire</code> and <code>cycle_hire_osm</code>, provide a good example. Plotting them shows that they are often closely related but they do not touch, as shown in <a href="#fig-cycle-hire">Figure&nbsp;<span class="quarto-unresolved-ref">fig-cycle-hire</span></a>, which is created with the code below:</p>
+<p>Sometimes two geographic datasets do not touch but still have a strong geographic relationship. The datasets <code>cycle_hire</code> and <code>cycle_hire_osm</code>, provide a good example. Plotting them shows that they are often closely related but they do not touch, as shown in <a href="#fig-cycle-hire">Figure&nbsp;<span class="quarto-unresolved-ref">fig-cycle-hire</span></a>:</p>
 <div class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> cycle_hire.plot(edgecolor<span class="op">=</span><span class="st">'blue'</span>, color<span class="op">=</span><span class="st">'none'</span>)</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm.plot(ax<span class="op">=</span>base, edgecolor<span class="op">=</span><span class="st">'red'</span>, color<span class="op">=</span><span class="st">'none'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1030,16 +1030,16 @@ dtype: bool</code></pre>
 <pre><code>False</code></pre>
 </div>
 </div>
-<p>Imagine that we need to join the capacity variable in <code>cycle_hire_osm</code> onto the official ‘target’ data contained in <code>cycle_hire</code>. This is when a non-overlapping join is needed. Spatial join (<code>gpd.sjoin</code>) along with buffered geometries can be used to do that. This is demonstrated below, using a threshold distance of 20 m. Note that we transform the data to a projected CRS (<code>27700</code>) to use real buffer distances, in meters.</p>
+<p>Imagine that we need to join the capacity variable in <code>cycle_hire_osm</code> onto the official ‘target’ data contained in <code>cycle_hire</code>. This is when a non-overlapping join is needed. Spatial join (<code>gpd.sjoin</code>) along with buffered geometries can be used to do that. This is demonstrated below, using a threshold distance of 20 <span class="math inline">\(m\)</span>. Note that we transform the data to a projected CRS (<code>27700</code>) to use real buffer distances, in meters.</p>
 <div class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>crs <span class="op">=</span> <span class="dv">27700</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>cycle_hire2 <span class="op">=</span> cycle_hire.copy().to_crs(crs)</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>cycle_hire2[<span class="st">'geometry'</span>] <span class="op">=</span> cycle_hire2.<span class="bu">buffer</span>(<span class="dv">20</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>cycle_hire_buffers <span class="op">=</span> cycle_hire.copy().to_crs(crs)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>cycle_hire_buffers[<span class="st">'geometry'</span>] <span class="op">=</span> cycle_hire_buffers.<span class="bu">buffer</span>(<span class="dv">20</span>)</span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> gpd.sjoin(</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  cycle_hire2, </span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  cycle_hire_buffers, </span>
 <span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  cycle_hire_osm.to_crs(crs)</span>
 <span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>z[[<span class="st">'name_left'</span>,<span class="st">'name_right'</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="30">
 <div>
 
@@ -1048,44 +1048,74 @@ dtype: bool</code></pre>
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">id</th>
 <th data-quarto-table-cell-role="th">name_left</th>
-<th data-quarto-table-cell-role="th">name_right</th>
+<th data-quarto-table-cell-role="th">area</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">capacity</th>
+<th data-quarto-table-cell-role="th">cyclestreets_id</th>
+<th data-quarto-table-cell-role="th">description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
+<td>1</td>
 <td>River Street</td>
-<td>River Street</td>
+<td>Clerkenwell</td>
+<td>...</td>
+<td>9.0</td>
+<td>NaN</td>
+<td>NaN</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
+<td>2</td>
 <td>Phillimore Gardens</td>
-<td>Kensington, Phillimore Gardens</td>
+<td>Kensington</td>
+<td>...</td>
+<td>27.0</td>
+<td>NaN</td>
+<td>NaN</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">...</td>
 <td>...</td>
 <td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">729</td>
+<td>765</td>
 <td>Ranelagh Gardens</td>
-<td>Ranelagh Gardens, Fulham</td>
+<td>Fulham</td>
+<td>...</td>
+<td>29.0</td>
+<td>NaN</td>
+<td>NaN</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">737</td>
+<td>773</td>
 <td>Tallis Street</td>
-<td>Tallis Street, Temple</td>
+<td>Temple</td>
+<td>...</td>
+<td>14.0</td>
+<td>NaN</td>
+<td>NaN</td>
 </tr>
 </tbody>
 </table>
 
-<p>458 rows × 2 columns</p>
+<p>458 rows × 12 columns</p>
 </div>
 </div>
 </div>
-<p>The result <code>z</code> shows that there are 438 points in the target object <code>cycle_hire</code> within the threshold distance of <code>cycle_hire_osm</code>. Note that the number of rows in the joined result is greater than the target. This is because some cycle hire stations in <code>cycle_hire</code> have multiple matches in <code>cycle_hire_osm</code>. To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods learned in <span class="citation" data-cites="attr">@attr</span>, resulting in an object with the same number of rows as the target. We also go back from buffers to points using <code>.centroid</code>:</p>
+<p>Note that the number of rows in the joined result is greater than the target. This is because some cycle hire stations in <code>cycle_hire_buffers</code> have multiple matches in <code>cycle_hire_osm</code>. To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods learned in <a href="#sec-vector-attribute-aggregation"><span class="quarto-unresolved-ref">sec-vector-attribute-aggregation</span></a>, resulting in an object with the same number of rows as the target. We also go back from buffers to points using <code>.centroid</code>:</p>
 <div class="cell" data-execution_count="31">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> z[[<span class="st">'id'</span>, <span class="st">'capacity'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'id'</span>, aggfunc<span class="op">=</span><span class="st">'mean'</span>) <span class="op">\</span></span>
@@ -1144,19 +1174,35 @@ dtype: bool</code></pre>
 </div>
 </div>
 <p>The capacity of nearby stations can be verified by comparing a plot of the capacity of the source <code>cycle_hire_osm</code> data with the results in this new object <code>z</code> (<a href="#fig-cycle-hire-z">Figure&nbsp;<span class="quarto-unresolved-ref">fig-cycle-hire-z</span></a>):</p>
-<div class="cell" data-execution_count="32">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">3</span>))</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm.plot(column<span class="op">=</span><span class="st">'capacity'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>z.plot(column<span class="op">=</span><span class="st">'capacity'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Input'</span>)</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Join result'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-cycle-hire-z" class="quarto-figure quarto-figure-center anchored">
+<div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">3</span>))</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm.plot(column<span class="op">=</span><span class="st">'capacity'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Join result</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">3</span>))</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>z.plot(column<span class="op">=</span><span class="st">'capacity'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-cycle-hire-z" class="cell quarto-layout-panel" data-execution_count="32">
 <figure class="figure">
-<p><img src="04-spatial-operations_files/figure-html/fig-cycle-hire-z-output-1.png" width="667" height="241" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;3.7: Non-overlapping join input (left) and result (right)</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 49.4%;justify-content: center;">
+<div id="fig-cycle-hire-z-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-spatial-operations_files/figure-html/fig-cycle-hire-z-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-cycle-hire-z" width="484"></p>
+<figcaption class="figure-caption">(a) Input</figcaption>
 </figure>
 </div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.6%;justify-content: center;">
+<div id="fig-cycle-hire-z-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-spatial-operations_files/figure-html/fig-cycle-hire-z-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-cycle-hire-z" width="496"></p>
+<figcaption class="figure-caption">(b) Join result</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.7: Non-overlapping join</figcaption><p></p>
+</figure>
 </div>
 </div>
 </section>
@@ -1974,7 +2020,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="54">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="54">
-<pre><code>&lt;generator object sample_gen at 0x7f84eab2f480&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f7de1f73480&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>
