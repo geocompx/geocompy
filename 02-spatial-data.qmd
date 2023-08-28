@@ -159,7 +159,7 @@ else:
 gdf = gpd.read_file('data/world.gpkg')
 ```
 
-As  result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code:
+As result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code:
 
 ```{python}
 #| label: typegdf
@@ -183,9 +183,12 @@ The following expression creates a subset based on a condition, such as equality
 gdf[gdf['name_long'] == 'Egypt']
 ```
 
-Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method, as follows:
+Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method (@fig-gdf-plot):
 
 ```{python}
+#| label: fig-gdf-plot
+#| fig-cap: Basic plot of a `GeoDataFrame`
+
 gdf.plot();
 ```
 
@@ -630,9 +633,12 @@ src = rasterio.open('data/srtm.tif')
 src
 ```
 
-To get a first impression of the raster values, we can plot the raster using the `show` function:
+To get a first impression of the raster values, we can plot the raster using the `show` function (@fig-rasterio-plot):
 
 ```{python}
+#| label: fig-rasterio-plot
+#| fig-cap: Basic plot of a raster, the data are coming from a `rasterio` file connection
+
 rasterio.plot.show(src);
 ```
 
@@ -740,15 +746,21 @@ new_transform
 
 Note that, confusingly, $delta_{y}$ is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is eventuially negative (`-0.5`)! 
 
-The raster can now be plotted in its coordinate system, passing the array along with the transformation matrix to `show`:
+The raster can now be plotted in its coordinate system, passing the array `elev` along with the transformation matrix `new_transform` to `show` (@fig-rasterio-plot-elev):
 
 ```{python}
+#| label: fig-rasterio-plot-elev
+#| fig-cap: Plot of the `elev` raster, which was created from scratch
+
 rasterio.plot.show(elev, transform=new_transform);
 ```
 
-The `grain` raster can be plotted the same way, as we are going to use the same transformation matrix for it as well:
+The `grain` raster can be plotted the same way, as we are going to use the same transformation matrix for it as well (@fig-rasterio-plot-grain):
 
 ```{python}
+#| label: fig-rasterio-plot-grain
+#| fig-cap: Plot of the `grain` raster, which was created from scratch
+
 rasterio.plot.show(grain, transform=new_transform);
 ```
 
@@ -890,17 +902,16 @@ And here is an illustration of the layer in the original projected CRS and in a 
 
 ```{python}
 #| label: fig-zion-crs
-#| fig-cap: Examples of geographic (WGS 84; left) and projected (NAD83 / UTM zone 12N; right) coordinate systems for a vector data type. 
+#| fig-cap: Examples of Coordinate Refrence Systems (CRS) for a vector layer 
+#| fig-subcap: 
+#| - geographic (WGS84)
+#| - projected (NAD83 / UTM zone 12N)
+#| layout-ncol: 2
 
-fig, axes = plt.subplots(ncols=2, figsize=(9,4))
-zion.to_crs(4326).plot(ax=axes[0], edgecolor='black', color='lightgrey')
-zion.plot(ax=axes[1], edgecolor='black', color='lightgrey')
-axes[0].set_axisbelow(True)  ## Plot grid below other elements
-axes[1].set_axisbelow(True)
-axes[0].grid()  ## Add grid
-axes[1].grid()
-axes[0].set_title('WGS 84')
-axes[1].set_title('UTM zone 12N');
+# WGS84
+zion.to_crs(4326).plot(edgecolor='black', color='lightgrey').grid()
+# NAD83 / UTM zone 12N
+zion.plot(edgecolor='black', color='lightgrey').grid();
 ```
 
 We are going to elaborate on reprojection from one CRS to another (`.to_crs` in the above code section) in @sec-reproj-geo-data.
