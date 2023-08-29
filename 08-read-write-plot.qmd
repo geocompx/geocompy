@@ -351,14 +351,14 @@ Note that the last two expressions are used to add text labels with the `name_lo
 #| label: fig-read-shp-query
 #| fig-cap: 'Reading a subset of the vector data using a `where` query (left) and a `mask` (right)'
 
-fig, axes = plt.subplots(ncols=2, figsize=(9,5))
-tanzania.plot(ax=axes[0], color='lightgrey', edgecolor='grey')
-tanzania_neigh.plot(ax=axes[1], color='lightgrey', edgecolor='grey')
-tanzania_buf.plot(ax=axes[1], color='none', edgecolor='red')
-axes[0].set_title('where')
-axes[1].set_title('mask')
-tanzania.apply(lambda x: axes[0].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1)
-tanzania_neigh.apply(lambda x: axes[1].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+fig, ax = plt.subplots(ncols=2, figsize=(9,5))
+tanzania.plot(ax=ax[0], color='lightgrey', edgecolor='grey')
+tanzania_neigh.plot(ax=ax[1], color='lightgrey', edgecolor='grey')
+tanzania_buf.plot(ax=ax[1], color='none', edgecolor='red')
+ax[0].set_title('where')
+ax[1].set_title('mask')
+tanzania.apply(lambda x: ax[0].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1)
+tanzania_neigh.apply(lambda x: ax[1].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
 ```
 
 Often we need to read CSV files (or other tabular formats) which have x and y coordinate columns, and turn them into a `GeoDataFrame` with point geometries. 
@@ -792,48 +792,5 @@ r.mean()
 
 Keep in mind that, somewhat confusingly, `float` rasters may represent "No Data" using a specific value (such as `-9999.0`), instead, or in addition to (!), the native `np.nan` representation. 
 In such cases, the same considerations shown for `int` apply to `float` rasters as well. 
-
-## Visual outputs {#sec-visual-outputs}
-
-Visual outputs can be exported to a file using the [`plt.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function. 
-For example, the following code section recreates @fig-read-shp-query (see above), but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`:
-
-```{python}
-#| output: false
-
-fig, axes = plt.subplots(ncols=2, figsize=(9,5))
-tanzania.plot(ax=axes[0], color='lightgrey', edgecolor='grey')
-tanzania_neigh.plot(ax=axes[1], color='lightgrey', edgecolor='grey')
-tanzania_buf.plot(ax=axes[1], color='none', edgecolor='red')
-axes[0].set_title('where')
-axes[1].set_title('mask')
-tanzania.apply(lambda x: axes[0].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1)
-tanzania_neigh.apply(lambda x: axes[1].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
-plt.savefig('output/plot_geopandas.jpg')
-```
-
-Figures with rasters can be exported exactly the same way. 
-For example, the following code section (see next chapter...) creates an image of a raster and a vector layer, which is then exported to a file named `plot_rasterio.jpg`:
-
-```{python}
-#| output: false
-
-fig, ax = plt.subplots(figsize=(5, 5))
-rasterio.plot.show(nz_elev, ax=ax)
-nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
-plt.savefig('output/plot_rasterio.jpg')
-```
-
-Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters. 
-For example, the following code section exports the same raster plot to a file named `plot_rasterio2.svg`, which has different dimensions (width = 5 $in$, height = 7 $in$), a different format (SVG), and different resolution (300 $DPI$:)
-
-```{python}
-#| output: false
-
-fig, ax = plt.subplots(figsize=(5, 7))
-rasterio.plot.show(nz_elev, ax=ax)
-nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
-plt.savefig('output/plot_rasterio2.svg', dpi=300)
-```
 
 ## Exercises

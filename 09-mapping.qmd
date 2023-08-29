@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import rasterio
 import rasterio.plot
+import contextily as ctx
 ```
 
 and load the sample data for this chapter:
@@ -33,6 +34,9 @@ and load the sample data for this chapter:
 nz = gpd.read_file('data/nz.gpkg')
 nz_height = gpd.read_file('data/nz_height.gpkg')
 nz_elev = rasterio.open('data/nz_elev.tif')
+tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
+tanzania_buf = tanzania.to_crs(32736).buffer(50000).to_crs(4326)
+tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
 ```
 
 ## Introduction
@@ -42,24 +46,58 @@ nz_elev = rasterio.open('data/nz_elev.tif')
 
 <!-- Input datasets: https://github.com/geocompx/spDatapy -->
 
-A satisfying and important aspect of geographic research is communicating the results. Map making---the art of cartography---is an ancient skill that involves communication, intuition, and an element of creativity. In addition to being fun and creative, cartography also has important practical applications. A carefully crafted map can be the best way of communicating the results of your work, but poorly designed maps can leave a bad impression. Common design issues include poor placement, size and readability of text and careless selection of colors, as outlined in the style guide of the Journal of Maps. Furthermore, poor map making can hinder the communication of results (Brewer 2015, add citation...):
+A satisfying and important aspect of geographic research is communicating the results. 
+Map making---the art of cartography---is an ancient skill that involves communication, intuition, and an element of creativity. 
+In addition to being fun and creative, cartography also has important practical applications. A carefully crafted map can be the best way of communicating the results of your work, but poorly designed maps can leave a bad impression. 
+Common design issues include poor placement, size and readability of text and careless selection of colors, as outlined in the style guide of the Journal of Maps. 
+Furthermore, poor map making can hinder the communication of results (Brewer 2015, add citation...):
 
-> Amateur-looking maps can undermine your audience's ability to understand important information and weaken the presentation of a professional data investigation. Maps have been used for several thousand years for a wide variety of purposes. Historic examples include maps of buildings and land ownership in the Old Babylonian dynasty more than 3000 years ago and Ptolemy's world map in his masterpiece Geography nearly 2000 years ago (Talbert 2014, add citation...).
+> Amateur-looking maps can undermine your audience's ability to understand important information and weaken the presentation of a professional data investigation. 
+Maps have been used for several thousand years for a wide variety of purposes. 
+Historic examples include maps of buildings and land ownership in the Old Babylonian dynasty more than 3000 years ago and Ptolemy's world map in his masterpiece Geography nearly 2000 years ago (Talbert 2014, add citation...).
 
-Map making has historically been an activity undertaken only by, or on behalf of, the elite. This has changed with the emergence of open source mapping software such as mapping packages in Python, R, and other languages, and the "print composer" in QGIS which enable anyone to make high-quality maps, enabling "citizen science". Maps are also often the best way to present the findings of geocomputational research in a way that is accessible. Map making is therefore a critical part of geocomputation and its emphasis not only on describing, but also changing the world.
+Map making has historically been an activity undertaken only by, or on behalf of, the elite. 
+This has changed with the emergence of open source mapping software such as mapping packages in Python, R, and other languages, and the "print composer" in QGIS which enable anyone to make high-quality maps, enabling "citizen science". 
+Maps are also often the best way to present the findings of geocomputational research in a way that is accessible. 
+Map making is therefore a critical part of geocomputation and its emphasis not only on describing, but also changing the world.
 
-Basic static display of vector layers in Python is done with the `.plot` method or the `rasterio.plot.show` function, for vector layers and rasters, as we saw in Sections @sec-vector-layers and @sec-using-rasterio, respectively. Other, more advaned uses of these methods, were also encountered in later chapters, when demonstrating the various outputs we got. In this chapter, we provide a comprehensive summary of the most useful workflows of these two methods for creating static maps (@sec-static-maps). Then, we move on to elaborate on the `.explore` method for creating interactive maps, which was also briefly introduced earlier (@sec-vector-layers).  
+Basic static display of vector layers in Python is done with the `.plot` method or the `rasterio.plot.show` function, for vector layers and rasters, as we saw in Sections @sec-vector-layers and @sec-using-rasterio, respectively. 
+Other, more advaned uses of these methods, were also encountered in later chapters, when demonstrating the various outputs we got. 
+In this chapter, we provide a comprehensive summary of the most useful workflows of these two methods for creating static maps (@sec-static-maps). 
+Then, we move on to elaborate on the `.explore` method for creating interactive maps, which was also briefly introduced earlier (@sec-vector-layers).  
 
 ## Static maps {#sec-static-maps}
 
-Static maps are the most common type of visual output from geocomputation. Standard formats include `.png` and `.pdf` for raster and vector outputs, respectively. Static maps can be easily shared and viewed (whether digitally or in print), however they can only convey as much information as a static image can. Interactive maps provide much more flexibilty in terms of user experience and amout of information, however they often require more work to design and effectively share.
+Static maps are the most common type of visual output from geocomputation. 
+Standard formats include `.png` and `.pdf` for raster and vector outputs, respectively. 
+Static maps can be easily shared and viewed (whether digitally or in print), however they can only convey as much information as a static image can. Interactive maps provide much more flexibilty in terms of user experience and amout of information, however they often require more work to design and effectively share.
 
 <!-- Decision of whether to use static or interactive. -->
 <!-- Flow diagram? -->
 
 Let's move on to the basics of static mapping with Python. 
 
-A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method. Most common visual properties include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot): 
+## Minimal example
+
+A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method (@sec-vector-layers). A minimal example of a vector layer map is obtained using `.plot` with nothing but the defaults (@fig-vector-minimal):
+
+```{python}
+#| label: fig-vector-minimal
+#| fig-cap: Minimal example of a static vector layer plot with `.plot`
+nz.plot();
+```
+
+A `rasterio` raster file connection, or a numpy `ndarray`, can be displayed using `rasterio.plot.show` (@sec-using-rasterio). Here is a minimal example of a raster plot (@fig-raster-minimal):
+
+```{python}
+#| label: fig-raster-minimal
+#| fig-cap: Minimal example of a static raster plot with `rasterio.plot.show`
+rasterio.plot.show(nz_elev);
+```
+
+## Styling
+
+Most useful visual properties of the geometries that can be specified in `.plot` include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot): 
 
 ```{python}
 #| label: fig-basic-plot
@@ -69,29 +107,34 @@ A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displa
 #| - No fill, blue edge
 #| - Grey fill, blue edge
 #| layout-ncol: 3
+
 nz.plot(color='grey');
 nz.plot(color='none', edgecolor='blue');
 nz.plot(color='grey', edgecolor='blue');
 ```
 
-As shown in @sec-using-rasterio, you can plot raster datasets using `rasterio.plot.show`, as follows (@fig-raster-plot):
+And here is an example of using `markersize` to get larger points (@fig-basic-plot-markersize). This example also demonstrated how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case: 
 
 ```{python}
-#| label: fig-raster-plot
-#| fig-cap: Plotting a raster using `rasterio.plot.show`
-rasterio.plot.show(nz_elev);
+#| label: fig-basic-plot-markersize
+#| fig-cap: Setting `markersize` in a static map of a vector layer
+
+fig, ax = plt.subplots(figsize=(4,4))
+nz_height.plot(markersize=100, ax=ax);
 ```
+
+
+### Symbology
+
+To complete...
+
+### Layers {#sec-plot-static-layers}
 
 You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers, which we already used earlier when explaining masking and cropping (@fig-raster-crop). For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
 
 * The left panel shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)
 * The center panel shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's [territorial waters](https://en.wikipedia.org/wiki/Territorial_waters) (see @sec-global-operations-and-distances)
 * The right panel shows the raster with two vector layers: the territorial waters (in red) and elevation measurement points (in yellow)
-
-<!-- 
-Source:
-https://gis.stackexchange.com/questions/294072/how-can-i-superimpose-a-geopandas-dataframe-on-a-raster-plot
--->
 
 ```{python}
 #| label: fig-plot-raster-and-vector
@@ -127,19 +170,13 @@ gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
 nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
 ```
 
-### Symbology
-
-To complete...
-
-### Layers
-
-To complete...
-
 ### Basemaps
 
 ```{python}
-import contextily as ctx
+nzw = nz.to_crs(epsg=3857)
 ```
+
+@fig-basemap:
 
 ```{python}
 #| label: fig-basemap
@@ -148,55 +185,113 @@ import contextily as ctx
 #| fig-subcap:
 #|   - Default basemap from `contextily`
 #|   - Custom basemap (CartoDB Positron)
-nzw = nz.to_crs(epsg=3857)
-ax = nzw.plot(figsize=(10, 10), color='none', edgecolor='k')
+
+# Default basemap
+fig, ax = plt.subplots(figsize=(7, 7))
+ax = nzw.plot(color='none', edgecolor='k', ax=ax)
 ctx.add_basemap(ax);
-ax2 = nzw.plot(figsize=(10, 10), column='Median_income',
-               legend=True, alpha=0.5)
-ctx.add_basemap(ax2, source=ctx.providers.CartoDB.Positron);
+
+# Specific basemap
+fig, ax = plt.subplots(figsize=(7, 7))
+ax = nzw.plot(column='Median_income', legend=True, alpha=0.5, ax=ax)
+ctx.add_basemap(ax, source=ctx.providers.CartoDB.Positron);
 ```
 
 ### Faceted maps
 
 To complete...
 
-### Exporting maps as images
+### Exporting static maps
 
-To complete...
+Static maps can be exported to a file using the [`matplotlib.pyplot.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function. 
+For example, the following code section recreates @fig-read-shp-query (see previous Chapter), but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`:
+
+```{python}
+#| output: false
+
+fig, axes = plt.subplots(ncols=2, figsize=(9,5))
+tanzania.plot(ax=axes[0], color='lightgrey', edgecolor='grey')
+tanzania_neigh.plot(ax=axes[1], color='lightgrey', edgecolor='grey')
+tanzania_buf.plot(ax=axes[1], color='none', edgecolor='red')
+axes[0].set_title('where')
+axes[1].set_title('mask')
+tanzania.apply(lambda x: axes[0].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1)
+tanzania_neigh.apply(lambda x: axes[1].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+plt.savefig('output/plot_geopandas.jpg')
+```
+
+Figures with rasters can be exported exactly the same way. 
+For example, the following code section (@sec-plot-static-layers) creates an image of a raster and a vector layer, which is then exported to a file named `plot_rasterio.jpg`:
+
+```{python}
+#| output: false
+
+fig, ax = plt.subplots(figsize=(5, 5))
+rasterio.plot.show(nz_elev, ax=ax)
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
+plt.savefig('output/plot_rasterio.jpg')
+```
+
+Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters. 
+For example, the following code section exports the same raster plot to a file named `plot_rasterio2.svg`, which has different dimensions (width = 5 $in$, height = 7 $in$), a different format (SVG), and different resolution (300 $DPI$:)
+
+```{python}
+#| output: false
+
+fig, ax = plt.subplots(figsize=(5, 7))
+rasterio.plot.show(nz_elev, ax=ax)
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
+plt.savefig('output/plot_rasterio2.svg', dpi=300)
+```
 
 <!-- ## Animated maps -->
 
 ## Interactive maps
 
-### GeoPandas explore
+## Minimal example
 
+An interactive map of a `GeoSeries` or `GeoDataFrame` can be created with `.explore` (@sec-vector-layers). Here is a minimal example:
 
 ```{python}
-nz.explore()
+#| label: fig-explore
+#| fig-cap: Minimal example of an interactive vector layer plot with `.explore`
 
+nz.explore()
 ```
 
 ### Layers
 
-To add multiple layers, one on top of another, with `explore()`, use the `m` argument, which stands for the previous map.
+To display multiple layers, one on top of another, with `.explore`, use the `m` argument, which stands for the previous map (@fig-explore-layers):
 
 ```{python}
+#| label: fig-explore-layers
+#| fig-cap: Displaying multiple layers in an interactive map with `.explore`
+
 m = nz.explore()
-nz_height.explore(m = m, color="red")
-m
+nz_height.explore(m=m, color='red')
 ```
 
 ### Symbology
 
+To complete...
+
+### Using other basemaps
+
+To complete...
+
+### Controls
+
+To complete...
 
 ### Publishing interactive maps
 
-...
+To complete...
 
-### Linking geographic and non-geographic visualisations
+<!-- ### Linking geographic and non-geographic visualisations -->
 
 ...
 
 <!-- ## Mapping applications Streamlit? -->
 
 ## Exercises
+
