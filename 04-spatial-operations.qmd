@@ -331,7 +331,7 @@ fig.delaxes(axes[1][1]);
 
 Sometimes two geographic datasets do not touch but still have a strong geographic relationship. 
 The datasets `cycle_hire` and `cycle_hire_osm`, provide a good example.
-Plotting them shows that they are often closely related but they do not touch, as shown in @fig-cycle-hire, which is created with the code below: 
+Plotting them shows that they are often closely related but they do not touch, as shown in @fig-cycle-hire:
 
 ```{python}
 #| label: fig-cycle-hire
@@ -354,24 +354,23 @@ m.to_numpy().any()
 Imagine that we need to join the capacity variable in `cycle_hire_osm` onto the official 'target' data contained in `cycle_hire`.
 This is when a non-overlapping join is needed. 
 Spatial join (`gpd.sjoin`) along with buffered geometries can be used to do that.
-This is demonstrated below, using a threshold distance of 20 m. 
+This is demonstrated below, using a threshold distance of 20 $m$. 
 Note that we transform the data to a projected CRS (`27700`) to use real buffer distances, in meters. 
 
 ```{python}
 crs = 27700
-cycle_hire2 = cycle_hire.copy().to_crs(crs)
-cycle_hire2['geometry'] = cycle_hire2.buffer(20)
+cycle_hire_buffers = cycle_hire.copy().to_crs(crs)
+cycle_hire_buffers['geometry'] = cycle_hire_buffers.buffer(20)
 z = gpd.sjoin(
-  cycle_hire2, 
+  cycle_hire_buffers, 
   cycle_hire_osm.to_crs(crs)
 )
-z[['name_left','name_right']]
+z
 ```
 
-The result `z` shows that there are 438 points in the target object `cycle_hire` within the threshold distance of `cycle_hire_osm`.
 Note that the number of rows in the joined result is greater than the target.
-This is because some cycle hire stations in `cycle_hire` have multiple matches in `cycle_hire_osm`.
-To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods learned in @attr, resulting in an object with the same number of rows as the target.
+This is because some cycle hire stations in `cycle_hire_buffers` have multiple matches in `cycle_hire_osm`.
+To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods learned in @sec-vector-attribute-aggregation, resulting in an object with the same number of rows as the target.
 We also go back from buffers to points using `.centroid`:
 
 ```{python}
@@ -386,13 +385,18 @@ The capacity of nearby stations can be verified by comparing a plot of the capac
 
 ```{python}
 #| label: fig-cycle-hire-z
-#| fig-cap: Non-overlapping join input (left) and result (right)
+#| fig-cap: Non-overlapping join
+#| fig-subcap: 
+#| - Input
+#| - Join result
+#| layout-ncol: 2
 
-fig, axes = plt.subplots(ncols=2, figsize=(8,3))
-cycle_hire_osm.plot(column='capacity', legend=True, ax=axes[0])
-z.plot(column='capacity', legend=True, ax=axes[1])
-axes[0].set_title('Input')
-axes[1].set_title('Join result');
+# Input
+fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+cycle_hire_osm.plot(column='capacity', legend=True, ax=ax);
+# Join result
+fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+z.plot(column='capacity', legend=True, ax=ax);
 ```
 
 ### Spatial aggregation
