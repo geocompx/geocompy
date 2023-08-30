@@ -20,7 +20,7 @@ Let's import the required packages:
 
 ```{python}
 import numpy as np
-import shapely.geometry
+import shapely
 import geopandas as gpd
 import topojson as tp
 import rasterio
@@ -262,9 +262,9 @@ Clipping can only apply to features more complex than points: lines, polygons an
 #| label: fig-overlapping-circles
 #| fig-cap: Overlapping circles.
 
-x = shapely.geometry.Point((0, 0)).buffer(1)
-y = shapely.geometry.Point((1, 0)).buffer(1)
-shapely.geometry.GeometryCollection([x, y])
+x = shapely.Point((0, 0)).buffer(1)
+y = shapely.Point((1, 0)).buffer(1)
+shapely.GeometryCollection([x, y])
 ```
 
 Imagine you want to select not one circle or the other, but the space covered by both x and y. This can be done using the `.intersection` method from `shapely`, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (@fig-intersection).
@@ -317,7 +317,7 @@ coords
 Third, we transform the list of coordinates into a `list` of `shapely` points:
 
 ```{python}
-pnt = [shapely.geometry.Point(i) for i in coords]
+pnt = [shapely.Point(i) for i in coords]
 pnt
 ```
 
@@ -453,26 +453,26 @@ texas_union
 Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. 
 The `shapely` package can be used for geometry casting. 
 The exact expression(s) depend on the specific transformation we are interested in. 
-In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.geometry.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
+In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
 
 Let's create a `"MultiPoint"` to illustrate how geometry casting works on `shapely` geometry objects:
 
 ```{python}
-multipoint = shapely.geometry.MultiPoint([(1,1), (3,3), (5,1)])
+multipoint = shapely.MultiPoint([(1,1), (3,3), (5,1)])
 multipoint
 ```
 
-A `"LineString"` can be created using `shapely.geometry.LineString` from a `list` of points. Consequently, a `"MultiPoint"` can be converted to a `"LineString"` by extracting the individual points into a `list`, then passing them to `shapely.geometry.LineString`:
+A `"LineString"` can be created using `shapely.LineString` from a `list` of points. Consequently, a `"MultiPoint"` can be converted to a `"LineString"` by extracting the individual points into a `list`, then passing them to `shapely.LineString`:
 
 ```{python}
-linestring = shapely.geometry.LineString(list(multipoint.geoms))
+linestring = shapely.LineString(list(multipoint.geoms))
 linestring
 ```
 
-A `"Polygon"` can also be created using function `shapely.geometry.Polygon`, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.geometry.Polygon` is able to complete the last coordinate automatically. Therefore:
+A `"Polygon"` can also be created using function `shapely.Polygon`, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.Polygon` is able to complete the last coordinate automatically. Therefore:
 
 ```{python}
-polygon = shapely.geometry.Polygon([[p.x, p.y] for p in multipoint.geoms])
+polygon = shapely.Polygon([[p.x, p.y] for p in multipoint.geoms])
 polygon
 ```
 
@@ -493,18 +493,18 @@ axes[2].set_title("Polygon");
 
 Conversion from `"MultiPoint"` to `"LineString"` is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from `"MultiPoint"` or `"LineString"` to `"Polygon"` is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
-Our `"LineString"` geometry can be converted bact to a `"MultiPoint"` geometry by passing its coordinates directly to `shapely.geometry.MultiPoint`:
+Our `"LineString"` geometry can be converted bact to a `"MultiPoint"` geometry by passing its coordinates directly to `shapely.MultiPoint`:
 
 ```{python}
 # 'LineString' -> 'MultiPoint'
-shapely.geometry.MultiPoint(linestring.coords)
+shapely.MultiPoint(linestring.coords)
 ```
 
-The `"Polygon"` (exterior) coordinates can be passed to `shapely.geometry.MultiPoint` as well:
+The `"Polygon"` (exterior) coordinates can be passed to `shapely.MultiPoint` as well:
 
 ```{python}
 # 'Polygon' -> 'MultiPoint'
-shapely.geometry.MultiPoint(polygon.exterior.coords)
+shapely.MultiPoint(polygon.exterior.coords)
 ```
 
 Summary / table of possible transformations... (?)
@@ -512,10 +512,10 @@ Summary / table of possible transformations... (?)
 Let's apply another commonly used type transformation to demonstrate. As input, we will create a `"MultiLineString"` geometry composed of three lines:
 
 ```{python}
-l1 = shapely.geometry.LineString([(1, 5), (4, 3)])
-l2 = shapely.geometry.LineString([(4, 4), (4, 1)])
-l3 = shapely.geometry.LineString([(2, 2), (4, 2)])
-ml = shapely.geometry.MultiLineString([l1, l2, l3])
+l1 = shapely.LineString([(1, 5), (4, 3)])
+l2 = shapely.LineString([(4, 4), (4, 1)])
+l3 = shapely.LineString([(2, 2), (4, 2)])
+ml = shapely.MultiLineString([l1, l2, l3])
 ml
 ```
 

@@ -19,7 +19,7 @@ plt.rcParams["figure.figsize"] = (5, 5)
 Let's import the required packages:
 
 ```{python}
-import shapely.geometry
+import shapely
 import geopandas as gpd
 import numpy as np
 import os
@@ -194,15 +194,15 @@ To see how topological relations work in practice, let's create a simple reprodu
 
 ```{python}
 points = gpd.GeoSeries([
-  shapely.geometry.Point(0.2,0.1), 
-  shapely.geometry.Point(0.7,0.2), 
-  shapely.geometry.Point(0.4,0.8)
+  shapely.Point(0.2,0.1), 
+  shapely.Point(0.7,0.2), 
+  shapely.Point(0.4,0.8)
 ])
 line = gpd.GeoSeries([
-  shapely.geometry.LineString([(0.4,0.2), (1,0.5)])
+  shapely.LineString([(0.4,0.2), (1,0.5)])
 ])
 poly = gpd.GeoSeries([
-  shapely.geometry.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)])
+  shapely.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)])
 ])
 ```
 
@@ -236,8 +236,8 @@ In this case, the result is a `DataFrame`, where each row represents a `points` 
 
 ```{python}
 poly = gpd.GeoSeries([
-  shapely.geometry.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)]),
-  shapely.geometry.Polygon([(0,0), (1,0.5), (1,0), (0,0)])
+  shapely.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)]),
+  shapely.Polygon([(0,0), (1,0.5), (1,0), (0,0)])
 ])
 points.apply(lambda x: poly.intersects(x))
 ```
@@ -471,9 +471,9 @@ rows.reverse()
 polygons = []
 for x in cols:
     for y in rows:
-        polygons.append( shapely.geometry.Polygon([(x,y), (x+res, y), (x+res, y-res), (x, y-res)]) )
+        polygons.append( shapely.Polygon([(x,y), (x+res, y), (x+res, y-res), (x, y-res)]) )
 grid = gpd.GeoDataFrame({'geometry': polygons}, crs=nz.crs)
-sel = grid.intersects(shapely.geometry.box(*nz.total_bounds))
+sel = grid.intersects(shapely.box(*nz.total_bounds))
 grid = grid[sel]
 grid['id'] = grid.index
 grid
