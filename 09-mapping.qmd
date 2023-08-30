@@ -144,7 +144,7 @@ The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`
 
 ```{python}
 #| label: fig-plot-symbology-colors
-#| fig-cap: Symbology in a static map created with `.plot`
+#| fig-cap: Symbology in a static map of a vector layer, created with `.plot`
 #| fig-subcap: 
 #| - The `'Reds'` color scale from ColorBrewer
 #| - Reversed `'Reds'` color scale
@@ -163,6 +163,34 @@ Categorical symbology is also supported, such as when `column` points to a `stri
 #| fig-cap: Symbology for a categorical variable
 
 nz.plot(column='Island', legend=True, cmap='Set1');
+```
+
+The `rasterio.plot.show` function, based on `matplotlib` as well, supports the same kinds of `cmap` arguments. For example (@fig-plot-symbology-colors-r): 
+
+```{python}
+#| label: fig-plot-symbology-colors-r
+#| fig-cap: Symbology in a static map of a raster, with `rasterio.plot.show`
+#| fig-subcap: 
+#| - The `'BrBG'` color scale from ColorBrewer
+#| - Reversed `'BrBG_r'` color scale
+#| - The `'nipy_spectral'` color scale from `matplotlib`
+#| layout-ncol: 3
+
+rasterio.plot.show(nz_elev, cmap='BrBG');
+rasterio.plot.show(nz_elev, cmap='BrBG_r');
+rasterio.plot.show(nz_elev, cmap='nipy_spectral');
+```
+
+Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`. The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot-show-with-colorbar), going back to `matplotlib` methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale):
+
+```{python}
+#| label: fig-plot-symbology-colors-r-scale
+#| fig-cap: Adding a legend in `rasterio.plot.show`
+
+fig, ax = plt.subplots(figsize=(5, 5))
+i = ax.imshow(nz_elev.read()[0], cmap='BrBG')
+rasterio.plot.show(nz_elev, cmap='BrBG', ax=ax);
+fig.colorbar(i, ax=ax);
 ```
 
 ### Layers {#sec-plot-static-layers}
