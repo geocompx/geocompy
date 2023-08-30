@@ -77,7 +77,7 @@ Static maps can be easily shared and viewed (whether digitally or in print), how
 
 Let's move on to the basics of static mapping with Python. 
 
-## Minimal example
+### Minimal example
 
 A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method (@sec-vector-layers). A minimal example of a vector layer map is obtained using `.plot` with nothing but the defaults (@fig-vector-minimal):
 
@@ -95,7 +95,7 @@ A `rasterio` raster file connection, or a numpy `ndarray`, can be displayed usin
 rasterio.plot.show(nz_elev);
 ```
 
-## Styling
+### Styling
 
 Most useful visual properties of the geometries that can be specified in `.plot` include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot): 
 
@@ -123,10 +123,47 @@ fig, ax = plt.subplots(figsize=(4,4))
 nz_height.plot(markersize=100, ax=ax);
 ```
 
-
 ### Symbology
 
-To complete...
+We can set symbology in a `.plot` using the following parameters:
+
+* `column`---A column name
+* `legend`---Whether to show a legend
+* `cmap`---Color map
+
+For example, here we plot stops points colored according to their `'Median_income'` attribute (@fig-plot-symbology):
+
+```{python}
+#| label: fig-plot-symbology
+#| fig-cap: Symbology in a static map created with `.plot`
+
+nz.plot(column='Median_income', legend=True);
+```
+
+The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`. However, the `cmap` ("color map") argument can be used to specify any of countless other color scales. A first safe choice is often the [ColorBrewer](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) collection of color scales, specifically chosen for mapping uses. Any color scale can be reversed, using the `_r` suffic. Finally, other color scales are available, see the `matplotlib` [colormaps article](https://matplotlib.org/stable/tutorials/colors/colormaps.html) for details. The following code sections demonstrates these color scale specifications (@fig-plot-symbology-colors):
+
+```{python}
+#| label: fig-plot-symbology-colors
+#| fig-cap: Symbology in a static map created with `.plot`
+#| fig-subcap: 
+#| - The `'Reds'` color scale from ColorBrewer
+#| - Reversed `'Reds'` color scale
+#| - The `'spring'` color scale from `matplotlib`
+#| layout-ncol: 3
+
+nz.plot(column='Median_income', legend=True, cmap='Reds');
+nz.plot(column='Median_income', legend=True, cmap='Reds_r');
+nz.plot(column='Median_income', legend=True, cmap='spring');
+```
+
+Categorical symbology is also supported, such as when `column` points to a `string` attribute. For example, the following expression sets symbology according to the `'Island'` column. In this case, it makes sense to use a qualitative color scale, such as `'Set1'` from ColorBrewer (@fig-plot-symbology-categorical):
+
+```{python}
+#| label: fig-plot-symbology-categorical
+#| fig-cap: Symbology for a categorical variable
+
+nz.plot(column='Island', legend=True, cmap='Set1');
+```
 
 ### Layers {#sec-plot-static-layers}
 
@@ -248,7 +285,7 @@ plt.savefig('output/plot_rasterio2.svg', dpi=300)
 
 ## Interactive maps
 
-## Minimal example
+### Minimal example
 
 An interactive map of a `GeoSeries` or `GeoDataFrame` can be created with `.explore` (@sec-vector-layers). Here is a minimal example:
 
