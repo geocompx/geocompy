@@ -292,7 +292,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Let’s import the required packages:</p>
 <div class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely.geometry</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> topojson <span class="im">as</span> tp</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio</span>
@@ -554,9 +554,9 @@ y' = d x + e y + y_\mathrm{off}
 <p>Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features.</p>
 <p>Clipping can only apply to features more complex than points: lines, polygons and their ‘multi’ equivalents. To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (<a href="#fig-overlapping-circles">Figure&nbsp;<span class="quarto-unresolved-ref">fig-overlapping-circles</span></a>).</p>
 <div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> shapely.geometry.Point((<span class="dv">0</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> shapely.geometry.Point((<span class="dv">1</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>shapely.geometry.GeometryCollection([x, y])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> shapely.Point((<span class="dv">0</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> shapely.Point((<span class="dv">1</span>, <span class="dv">0</span>)).<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>shapely.GeometryCollection([x, y])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="23">
 <div id="fig-overlapping-circles" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -631,7 +631,7 @@ y' = d x + e y + y_\mathrm{off}
 </div>
 <p>Third, we transform the list of coordinates into a <code>list</code> of <code>shapely</code> points:</p>
 <div class="cell" data-execution_count="30">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>pnt <span class="op">=</span> [shapely.geometry.Point(i) <span class="cf">for</span> i <span class="kw">in</span> coords]</span>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>pnt <span class="op">=</span> [shapely.Point(i) <span class="cf">for</span> i <span class="kw">in</span> coords]</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>pnt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="30">
 <pre><code>[&lt;POINT (0.251 -0.162)&gt;,
@@ -878,26 +878,26 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-type-transformations" class="level3" data-number="4.3.8">
 <h3 data-number="4.3.8" class="anchored" data-anchor-id="sec-type-transformations"><span class="header-section-number">4.3.8</span> Type transformations</h3>
-<p>Transformation of geometries, from one type to another, also known as “geometry casting”, is often required to facilitate spatial analysis. The <code>shapely</code> package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the “destination” geometry (e.g., <code>shapely.geometry.LineString</code>, etc.), then reshape the input of the “source” geometry into the right form to be passed to that function.</p>
+<p>Transformation of geometries, from one type to another, also known as “geometry casting”, is often required to facilitate spatial analysis. The <code>shapely</code> package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the “destination” geometry (e.g., <code>shapely.LineString</code>, etc.), then reshape the input of the “source” geometry into the right form to be passed to that function.</p>
 <p>Let’s create a <code>"MultiPoint"</code> to illustrate how geometry casting works on <code>shapely</code> geometry objects:</p>
 <div class="cell" data-execution_count="45">
-<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>multipoint <span class="op">=</span> shapely.geometry.MultiPoint([(<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">3</span>,<span class="dv">3</span>), (<span class="dv">5</span>,<span class="dv">1</span>)])</span>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>multipoint <span class="op">=</span> shapely.MultiPoint([(<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">3</span>,<span class="dv">3</span>), (<span class="dv">5</span>,<span class="dv">1</span>)])</span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>multipoint</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="45">
 <p><img src="05-geometry-operations_files/figure-html/cell-46-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
-<p>A <code>"LineString"</code> can be created using <code>shapely.geometry.LineString</code> from a <code>list</code> of points. Consequently, a <code>"MultiPoint"</code> can be converted to a <code>"LineString"</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.geometry.LineString</code>:</p>
+<p>A <code>"LineString"</code> can be created using <code>shapely.LineString</code> from a <code>list</code> of points. Consequently, a <code>"MultiPoint"</code> can be converted to a <code>"LineString"</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.LineString</code>:</p>
 <div class="cell" data-execution_count="46">
-<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.geometry.LineString(<span class="bu">list</span>(multipoint.geoms))</span>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.LineString(<span class="bu">list</span>(multipoint.geoms))</span>
 <span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>linestring</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="46">
 <p><img src="05-geometry-operations_files/figure-html/cell-47-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
-<p>A <code>"Polygon"</code> can also be created using function <code>shapely.geometry.Polygon</code>, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, <code>shapely.geometry.Polygon</code> is able to complete the last coordinate automatically. Therefore:</p>
+<p>A <code>"Polygon"</code> can also be created using function <code>shapely.Polygon</code>, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, <code>shapely.Polygon</code> is able to complete the last coordinate automatically. Therefore:</p>
 <div class="cell" data-execution_count="47">
-<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> shapely.geometry.Polygon([[p.x, p.y] <span class="cf">for</span> p <span class="kw">in</span> multipoint.geoms])</span>
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> shapely.Polygon([[p.x, p.y] <span class="cf">for</span> p <span class="kw">in</span> multipoint.geoms])</span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>polygon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="47">
 <p><img src="05-geometry-operations_files/figure-html/cell-48-output-1.svg" class="img-fluid"></p>
@@ -922,18 +922,18 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <p>Conversion from <code>"MultiPoint"</code> to <code>"LineString"</code> is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from <code>"MultiPoint"</code> or <code>"LineString"</code> to <code>"Polygon"</code> is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.</p>
-<p>Our <code>"LineString"</code> geometry can be converted bact to a <code>"MultiPoint"</code> geometry by passing its coordinates directly to <code>shapely.geometry.MultiPoint</code>:</p>
+<p>Our <code>"LineString"</code> geometry can be converted bact to a <code>"MultiPoint"</code> geometry by passing its coordinates directly to <code>shapely.MultiPoint</code>:</p>
 <div class="cell" data-execution_count="49">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'LineString' -&gt; 'MultiPoint'</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>shapely.geometry.MultiPoint(linestring.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>shapely.MultiPoint(linestring.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="49">
 <p><img src="05-geometry-operations_files/figure-html/cell-50-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
-<p>The <code>"Polygon"</code> (exterior) coordinates can be passed to <code>shapely.geometry.MultiPoint</code> as well:</p>
+<p>The <code>"Polygon"</code> (exterior) coordinates can be passed to <code>shapely.MultiPoint</code> as well:</p>
 <div class="cell" data-execution_count="50">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'Polygon' -&gt; 'MultiPoint'</span></span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>shapely.geometry.MultiPoint(polygon.exterior.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>shapely.MultiPoint(polygon.exterior.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="50">
 <p><img src="05-geometry-operations_files/figure-html/cell-51-output-1.svg" class="img-fluid"></p>
 </div>
@@ -941,10 +941,10 @@ dtype: geometry</code></pre>
 <p>Summary / table of possible transformations… (?)</p>
 <p>Let’s apply another commonly used type transformation to demonstrate. As input, we will create a <code>"MultiLineString"</code> geometry composed of three lines:</p>
 <div class="cell" data-execution_count="51">
-<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>l1 <span class="op">=</span> shapely.geometry.LineString([(<span class="dv">1</span>, <span class="dv">5</span>), (<span class="dv">4</span>, <span class="dv">3</span>)])</span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>l2 <span class="op">=</span> shapely.geometry.LineString([(<span class="dv">4</span>, <span class="dv">4</span>), (<span class="dv">4</span>, <span class="dv">1</span>)])</span>
-<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>l3 <span class="op">=</span> shapely.geometry.LineString([(<span class="dv">2</span>, <span class="dv">2</span>), (<span class="dv">4</span>, <span class="dv">2</span>)])</span>
-<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>ml <span class="op">=</span> shapely.geometry.MultiLineString([l1, l2, l3])</span>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>l1 <span class="op">=</span> shapely.LineString([(<span class="dv">1</span>, <span class="dv">5</span>), (<span class="dv">4</span>, <span class="dv">3</span>)])</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>l2 <span class="op">=</span> shapely.LineString([(<span class="dv">4</span>, <span class="dv">4</span>), (<span class="dv">4</span>, <span class="dv">1</span>)])</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>l3 <span class="op">=</span> shapely.LineString([(<span class="dv">2</span>, <span class="dv">2</span>), (<span class="dv">4</span>, <span class="dv">2</span>)])</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>ml <span class="op">=</span> shapely.MultiLineString([l1, l2, l3])</span>
 <span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>ml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="51">
 <p><img src="05-geometry-operations_files/figure-html/cell-52-output-1.svg" class="img-fluid"></p>

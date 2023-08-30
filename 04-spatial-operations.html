@@ -295,7 +295,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="3.1" class="anchored" data-anchor-id="prerequisites"><span class="header-section-number">3.1</span> Prerequisites</h2>
 <p>Let’s import the required packages:</p>
 <div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely.geometry</span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
@@ -654,15 +654,15 @@ Length: 101, dtype: bool</code></pre>
 <p>In <strong>shapely</strong>, functions testing for different types of topological relations are known as <a href="https://shapely.readthedocs.io/en/stable/manual.html#relationships">“relationships”</a>. To see how topological relations work in practice, let’s create a simple reproducible example, building on the relations illustrated in Figure 4.2 and consolidating knowledge of how vector geometries are represented from a previous chapter (<a href="#sec-geometry-columns"><span class="quarto-unresolved-ref">sec-geometry-columns</span></a> and <a href="#sec-geometries"><span class="quarto-unresolved-ref">sec-geometries</span></a>):</p>
 <div class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>points <span class="op">=</span> gpd.GeoSeries([</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  shapely.geometry.Point(<span class="fl">0.2</span>,<span class="fl">0.1</span>), </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  shapely.geometry.Point(<span class="fl">0.7</span>,<span class="fl">0.2</span>), </span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  shapely.geometry.Point(<span class="fl">0.4</span>,<span class="fl">0.8</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  shapely.Point(<span class="fl">0.2</span>,<span class="fl">0.1</span>), </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  shapely.Point(<span class="fl">0.7</span>,<span class="fl">0.2</span>), </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  shapely.Point(<span class="fl">0.4</span>,<span class="fl">0.8</span>)</span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>])</span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>line <span class="op">=</span> gpd.GeoSeries([</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  shapely.geometry.LineString([(<span class="fl">0.4</span>,<span class="fl">0.2</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>)])</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  shapely.LineString([(<span class="fl">0.4</span>,<span class="fl">0.2</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>)])</span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>])</span>
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>poly <span class="op">=</span> gpd.GeoSeries([</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  shapely.geometry.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">0</span>,<span class="dv">0</span>)])</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  shapely.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">0</span>,<span class="dv">0</span>)])</span>
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The resulting <code>GeoSeries</code> named <code>points</code>, <code>line</code>, and <code>poly</code> are visualized as follows:</p>
@@ -695,8 +695,8 @@ dtype: bool</code></pre>
 <p>The <code>.apply</code> method can be used to obtain a matrix of <em>pairwise</em> results. In this case, the result is a <code>DataFrame</code>, where each row represents a <code>points</code> geometry and each column represents a <code>poly</code> geometry. We’ll add another polygon to demonstrate:</p>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>poly <span class="op">=</span> gpd.GeoSeries([</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  shapely.geometry.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">0</span>,<span class="dv">0</span>)]),</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  shapely.geometry.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">1</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">0</span>)])</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  shapely.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">0</span>,<span class="dv">0</span>)]),</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  shapely.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">1</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">0</span>)])</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>])</span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>points.<span class="bu">apply</span>(<span class="kw">lambda</span> x: poly.intersects(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="18">
@@ -1414,9 +1414,9 @@ dtype: bool</code></pre>
 <span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>polygons <span class="op">=</span> []</span>
 <span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> cols:</span>
 <span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y <span class="kw">in</span> rows:</span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>        polygons.append( shapely.geometry.Polygon([(x,y), (x<span class="op">+</span>res, y), (x<span class="op">+</span>res, y<span class="op">-</span>res), (x, y<span class="op">-</span>res)]) )</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>        polygons.append( shapely.Polygon([(x,y), (x<span class="op">+</span>res, y), (x<span class="op">+</span>res, y<span class="op">-</span>res), (x, y<span class="op">-</span>res)]) )</span>
 <span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: polygons}, crs<span class="op">=</span>nz.crs)</span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> grid.intersects(shapely.geometry.box(<span class="op">*</span>nz.total_bounds))</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> grid.intersects(shapely.box(<span class="op">*</span>nz.total_bounds))</span>
 <span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> grid[sel]</span>
 <span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>grid[<span class="st">'id'</span>] <span class="op">=</span> grid.index</span>
 <span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>grid</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2020,7 +2020,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="54">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="54">
-<pre><code>&lt;generator object sample_gen at 0x7f814ae47480&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7fc841913320&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>
