@@ -102,8 +102,7 @@ Before writing and running code for creating and working with geographic vector 
 import matplotlib.pyplot as plt
 import pandas as pd
 import geopandas as gpd
-import shapely.geometry
-import shapely.wkt
+import shapely
 ```
 
 We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**:
@@ -372,55 +371,55 @@ The following section demonstrates creating a `shapely` geometry of each type fr
 
 In the examples for the remaining geometries we use the former approach.
 
-Creating a `'Point'` geometry from a list of coordinates uses the `shapely.geometry.Point` function:
+Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function:
 
 ```{python}
-point = shapely.geometry.Point([5, 2])
+point = shapely.Point([5, 2])
 point
 ```
 
-Alternatively, we can use the `shapely.wkt.loads` (stands for "load a WKT *s*tring") to transform a WKT string to a `shapely` geometry object. 
+Alternatively, we can use the `shapely.from_wkt` to transform a WKT string to a `shapely` geometry object. 
 Here is an example of creating the same `'Point'` geometry from WKT:
 
 ```{python}
-point = shapely.wkt.loads('POINT (5 2)')
+point = shapely.from_wkt('POINT (5 2)')
 point
 ```
 
 Here is an example of a `'MultiPoint'` geometry from a list of coordinate tuples:
 
 ```{python}
-multipoint = shapely.geometry.MultiPoint([(5,2), (1,3), (3,4), (3,2)])
+multipoint = shapely.MultiPoint([(5,2), (1,3), (3,4), (3,2)])
 multipoint
 ```
 
 Here is an example of a `'LineString'` geometry from a list of coordinate tuples:
 
 ```{python}
-linestring = shapely.geometry.LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
+linestring = shapely.LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
 linestring
 ```
 
 Here is an example of a `'MultiLineString'` geometry. Note that there is one list of coordinates for each line in the `MultiLineString`:
 
 ```{python}
-linestring = shapely.geometry.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
+linestring = shapely.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
 linestring
 ```
 
 Here is an example of a `'Polygon'` geometry. Note that there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a list of lists of coordinates that define the potential holes in the polygon:
 
 ```{python}
-polygon = shapely.geometry.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
+polygon = shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
 polygon
 ```
 
 Here is an example of a `'MultiPolygon'` geometry:
 
 ```{python}
-multipolygon = shapely.geometry.MultiPolygon([
-    shapely.geometry.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]), 
-    shapely.geometry.Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])
+multipolygon = shapely.MultiPolygon([
+    shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]), 
+    shapely.Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])
 ])
 multipolygon
 ```
@@ -428,9 +427,9 @@ multipolygon
 And, finally, here is an example of a `'GeometryCollection'` geometry:
 
 ```{python}
-multipoint = shapely.geometry.GeometryCollection([
-    shapely.geometry.MultiPoint([(5,2), (1,3), (3,4), (3,2)]),
-    shapely.geometry.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
+multipoint = shapely.GeometryCollection([
+    shapely.MultiPoint([(5,2), (1,3), (3,4), (3,2)]),
+    shapely.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
 ])
 multipoint
 ```
@@ -483,7 +482,7 @@ The final result, a vector layer (`GeoDataFrame`) is therefore a hierarchical st
 Non-geographic attributes represent the name of the feature or other attributes such as measured values, groups, and other things. To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2017. This example contains a geometry (the coordinates), and three attributes with three different classes (place name, temperature and date). Objects of class `GeoDataFrame` represent such data by combining the attributes (`Series`) with the simple feature geometry column (`GeoSeries`). First, we create a point geometry, which we know how to do from @sec-geometries:
 
 ```{python}
-lnd_point = shapely.geometry.Point(0.1, 51.5)
+lnd_point = shapely.Point(0.1, 51.5)
 lnd_point
 ```
 
@@ -517,8 +516,8 @@ What just happened? First, the coordinates were used to create the simple featur
 Just to illustrate how does creating a layer with more than one feature looks like, here is an example where we create a layer with two points, London and Paris:
 
 ```{python}
-lnd_point = shapely.geometry.Point(0.1, 51.5)
-paris_point = shapely.geometry.Point(2.3, 48.9)
+lnd_point = shapely.Point(0.1, 51.5)
+paris_point = shapely.Point(2.3, 48.9)
 towns_geom = gpd.GeoSeries([lnd_point, paris_point], crs=4326)
 d = {
   'name': ['London', 'Paris'],
