@@ -34,6 +34,7 @@ and load the sample data for this chapter:
 seine = gpd.read_file('data/seine.gpkg')
 us_states = gpd.read_file('data/us_states.gpkg')
 nz = gpd.read_file('data/nz.gpkg')
+src = rasterio.open('data/dem.tif')
 ```
 
 ## Introduction
@@ -567,7 +568,55 @@ By the way, the opposite transformation, i.e., "single-part to multi-part", is a
 
 ### Geometric intersections
 
-To complete...
+In @sec-spatial-subsetting we have shown how to extract values from a raster overlaid by other spatial objects. To retrieve a spatial output, we can use almost the same subsetting syntax. The only difference is that we have to make clear that we would like to keep the matrix structure by setting the drop argument to FALSE. This will return a raster object containing the cells whose midpoints overlap with clip. (To edit...)
+
+```{python}
+src
+# elev = rast(system.file("raster/elev.tif", package = "spData"))
+# clip = rast(xmin = 0.9, xmax = 1.8, ymin = -0.45, ymax = 0.45,
+#             resolution = 0.3, vals = rep(1, 9))
+# elev[clip, drop = FALSE]
+```
+
+...
+
+```{python}
+clip = np.array([1] * 9).reshape(3, 3)
+clip
+```
+
+...
+
+```{python}
+new_transform = rasterio.transform.from_origin(
+    west=0.9, 
+    north=0.45, 
+    xsize=0.3, 
+    ysize=0.3
+)
+new_transform
+```
+
+...
+
+```{python}
+bbox = rasterio.transform.array_bounds(clip.shape[1], clip.shape[0], new_transform)
+bbox
+```
+
+...
+
+```{python}
+bbox = shapely.box(*bbox)
+bbox
+```
+...
+
+```{python}
+fig, ax = plt.subplots()
+rasterio.plot.show(src, ax=ax)
+gpd.GeoSeries([bbox]).plot(ax=ax);
+```
 
 ### Extent and origin
 
@@ -587,13 +636,7 @@ To aggregate a raster using `rasterio`, we go through [two steps](https://raster
 * Reading the raster values (using `.read`) into an `out_shape` that is different from the original `.shape`
 * Updating the `transform` according to the `out_shape`
 
-Let's demonstrate. First, we create a file connection to `dem.tif`, using `rasterio.open`:
-
-```{python}
-src = rasterio.open('data/dem.tif')
-```
-
-Note the shape of the raster, it has 117 rows and 117 columns:
+Let's demonstrate, using the `dem.tif` file. Note the shape of the raster, it has 117 rows and 117 columns:
 
 ```{python}
 src.read(1).shape
