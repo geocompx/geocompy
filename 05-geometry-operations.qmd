@@ -26,6 +26,7 @@ import topojson as tp
 import rasterio
 import rasterio.warp
 import rasterio.plot
+import rasterio.mask
 ```
 
 and load the sample data for this chapter:
@@ -35,6 +36,7 @@ seine = gpd.read_file('data/seine.gpkg')
 us_states = gpd.read_file('data/us_states.gpkg')
 nz = gpd.read_file('data/nz.gpkg')
 src = rasterio.open('data/dem.tif')
+src_elev = rasterio.open('data/elev.tif')
 ```
 
 ## Introduction
@@ -568,24 +570,19 @@ By the way, the opposite transformation, i.e., "single-part to multi-part", is a
 
 ### Geometric intersections
 
-In @sec-spatial-subsetting we have shown how to extract values from a raster overlaid by other spatial objects. To retrieve a spatial output, we can use almost the same subsetting syntax. The only difference is that we have to make clear that we would like to keep the matrix structure by setting the drop argument to FALSE. This will return a raster object containing the cells whose midpoints overlap with clip. (To edit...)
+In @sec-spatial-subsetting we have shown how to extract values from a raster overlaid by other spatial objects. In case the area of interest is defined by a raster B, to retrieve a spatial output, that is, a (smaller) subset of raster A, we can:
 
-```{python}
-src
-# elev = rast(system.file("raster/elev.tif", package = "spData"))
-# clip = rast(xmin = 0.9, xmax = 1.8, ymin = -0.45, ymax = 0.45,
-#             resolution = 0.3, vals = rep(1, 9))
-# elev[clip, drop = FALSE]
-```
+* Extract the bounding box polygon of B (hereby, `clip`)
+* Mask and crop A (hereby, `elev.tif`) using B (@sec-raster-cropping)
 
-...
+For example, suppose that we want to get a subset of the `elev.tif` raster using another, smaller, raster. For demonstration, let's create (see @sec-raster-from-scratch) that smaller raster, hereby named `clip`. We first create a $3 \times 3$ array of raster values:
 
 ```{python}
 clip = np.array([1] * 9).reshape(3, 3)
 clip
 ```
 
-...
+Then, we define the transformation matrix, in such a way that `clip` intersects with `elev.tif` (@fig-raster-intersection):
 
 ```{python}
 new_transform = rasterio.transform.from_origin(
@@ -597,25 +594,62 @@ new_transform = rasterio.transform.from_origin(
 new_transform
 ```
 
-...
+Now, for subsetting, we will derive a `shapely` geometry representing the `clip` raster extent, using `rasterio.transform.array_bounds`:
 
 ```{python}
-bbox = rasterio.transform.array_bounds(clip.shape[1], clip.shape[0], new_transform)
+bbox = rasterio.transform.array_bounds(
+    clip.shape[1], # columns
+    clip.shape[0], # rows
+    new_transform
+)
 bbox
 ```
 
-...
+The four numeric values can be transformed into a rectangular `shapely` geometry using `shapely.box`:
 
 ```{python}
 bbox = shapely.box(*bbox)
 bbox
 ```
-...
+
+@fig-raster-intersection shows the alignment of `bbox` and `elev.tif`:
 
 ```{python}
+#| label: fig-raster-intersection
+#| fig-cap: The `elev.tif` raster, and the extent of another (smaller) raster `clip` which we use to subset it
+
 fig, ax = plt.subplots()
-rasterio.plot.show(src, ax=ax)
-gpd.GeoSeries([bbox]).plot(ax=ax);
+rasterio.plot.show(src_elev, ax=ax)
+gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
+```
+
+From here on, subsetting can be done using masking and cropping, just like with any other vector layer, regardless whether it is rectangular or not. We elaborate on masking and cropping in @sec-raster-cropping (check that section for details about `rasterio.mask.mask`), but for completeness let's go through that last step:
+
+```{python}
+out_image, out_transform = rasterio.mask.mask(
+    src_elev, 
+    [bbox], 
+    crop=True,
+    all_touched=True,
+    nodata=0
+)
+```
+
+The resulting subset array `out_image` contains all pixels intersecting with `clip` *pixels* (not necessarily with the centroids!). However, due to the `all_touched=True` argument, those pixels which intersect with `clip`, but their centroid does not, retain their original values (e.g., `17`, `23`) rather than turned into "No Data" (e.g., `0`):
+
+```{python}
+out_image
+```
+
+Therefore, in our case, subset `out_image` dimensions are $2 \times 2$ (@fig-raster-intersection2):
+
+```{python}
+#| label: fig-raster-intersection2
+#| fig-cap: The resulting subset of the `elev.tif` raster
+
+fig, ax = plt.subplots()
+rasterio.plot.show(out_image, transform=out_transform, ax=ax)
+gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
 ```
 
 ### Extent and origin
