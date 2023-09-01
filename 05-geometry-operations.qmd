@@ -200,15 +200,15 @@ Affine transformation is any transformation that preserves lines and parallelism
 
 The `geopandas` package implements affine transformation, for objects of classes `GeoSeries` and `GeoDataFrame`. In both cases, the method is applied on the `GeoSeries` part, returning a new `GeoSeries` of transformed geometries. 
 
-Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function. According to the [documentation](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates:
+Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function. According to the [documentation](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2):
 
 $$
 x' = a x + b y + x_\mathrm{off}
-$$
+$$ {#eq-affine1}
 
 $$
 y' = d x + e y + y_\mathrm{off}
-$$
+$$ {#eq-affine2}
 
 There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations) for specific scenarios: 
 
@@ -263,7 +263,7 @@ Clipping can only apply to features more complex than points: lines, polygons an
 
 ```{python}
 #| label: fig-overlapping-circles
-#| fig-cap: Overlapping circles.
+#| fig-cap: Overlapping polygon (circle) geometries `x` and `y`
 
 x = shapely.Point((0, 0)).buffer(1)
 y = shapely.Point((1, 0)).buffer(1)
@@ -274,7 +274,7 @@ Imagine you want to select not one circle or the other, but the space covered by
 
 ```{python}
 #| label: fig-intersection
-#| fig-cap: Intersection between two circles
+#| fig-cap: Intersection between `x` and `y`
 
 x.intersection(y)
 ```
@@ -283,24 +283,29 @@ The next lines of code demonstrate how this works for the `.difference` (@fig-di
 
 ```{python}
 #| label: fig-difference
-#| fig-cap: Difference between two circles (1st "minus" 2nd) 
+#| fig-cap: Difference between `x` and `y` (namely, `x` "minus" `y`) 
 
 x.difference(y)
 ```
 
 ```{python}
 #| label: fig-union
-#| fig-cap: Union of two circles 
+#| fig-cap: Union of `x` and `y` 
 
 x.union(y)
 ```
 
 ```{python}
 #| label: fig-symmetric-difference
-#| fig-cap: Symmetric difference between two circles 
+#| fig-cap: Symmetric difference between `x` and `y`
 
 x.symmetric_difference(y)
 ```
+
+Keep in mind that `x` and `y` are interchangeable in all predictes except for `.difference`, where:
+
+* `x.difference(y)` means `x` minus `y`, whereas
+* `y.difference(x)` means `y` minus `x`.
 
 ### Subsetting and clipping
 
