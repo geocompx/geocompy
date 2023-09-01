@@ -331,7 +331,7 @@ For example, here is how we can reproduce the last plot, this time in a $2 \time
 
 ```{python}
 #| label: fig-faceted-map2
-#| fig-cap: 2D layout in a faceted map
+#| fig-cap: 2D layout in a faceted map, using a `for` loop
 
 fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
 ax = ax.flatten()
@@ -342,7 +342,26 @@ for i in range(len(vars)):
     ax[i].yaxis.set_visible(False)
 ```
 
-### Exporting static maps
+It is also possible to "manually" specify the properties of each panel, and which row/column it goes to (e.g., @fig-spatial-aggregation-different-functions). This may be more useful when the various panels have different components, or even completely different types of plots (e.g., @fig-zion-transect), making it less practical to automate in a `for` loop. For example, here is the same plot as @fig-faceted-map2, specified without using a `for` loop (@fig-faceted-map3):
+
+```{python}
+#| label: fig-faceted-map3
+#| fig-cap: 2D layout in a faceted map, using "manual" specification of the panels 
+
+fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
+nz.plot(ax=ax[0][0], column=vars[0], legend=True)
+ax[0][0].set_title(vars[0])
+nz.plot(ax=ax[0][1], column=vars[1], legend=True)
+ax[0][1].set_title(vars[1])
+nz.plot(ax=ax[1][0], column=vars[2], legend=True)
+ax[1][0].set_title(vars[2])
+nz.plot(ax=ax[1][1], column=vars[3], legend=True)
+ax[1][1].set_title(vars[3]);
+```
+
+See the first code section in @sec-exporting-static-maps for another example of manual panel contents specification.
+
+### Exporting static maps {#sec-exporting-static-maps}
 
 Static maps can be exported to a file using the [`matplotlib.pyplot.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function. 
 For example, the following code section recreates @fig-read-shp-query (see previous Chapter), but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`:
