@@ -283,7 +283,7 @@ The next lines of code demonstrate how this works for the `.difference` (@fig-di
 
 ```{python}
 #| label: fig-difference
-#| fig-cap: Difference between `x` and `y` (namely, `x` "minus" `y`) 
+#| fig-cap: Difference between `x` and `y` (namely, `x` "minus" `y`)
 
 x.difference(y)
 ```
@@ -306,6 +306,46 @@ Keep in mind that `x` and `y` are interchangeable in all predictes except for `.
 
 * `x.difference(y)` means `x` minus `y`, whereas
 * `y.difference(x)` means `y` minus `x`.
+
+The latter examples demontrate pairwise operations between individual `shapely` geometries. The **geopandas** package, as is often the case, contains wrappers of these **shapely** functions to be applied to multiple, or pairwise, use cases. For example, applying either of the pairwise methods on a `GeoSeries` or `GeoDataFrame` combined with a `shapely` geometry returns the pairwise (many-to-one) results. 
+
+Let's demonstrate by calculating the difference of each geometry in a `GeoSeries` and a "fixed" `shapely` geometry. To creare the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` or `2` units "upwards" on the y-axis:
+
+```{python}
+geom1 = gpd.GeoSeries([x])
+geom2 = geom1.translate(0, 1)
+geom3 = geom1.translate(0, 2)
+geom = pd.concat([geom1, geom2, geom3])
+```
+
+Here is a plot of the `GeoSeries`, with the `shapely` geometry (in red) that we will intersect with it (@fig-geom-intersection):
+
+```{python}
+#| label: fig-geom-intersection
+#| fig-cap: A `GeoSeries` with two circles, and a `shapely` geometry that we will "subtract" from it (in red)
+
+fig, ax = plt.subplots()
+geom.plot(color='none', ax=ax)
+gpd.GeoSeries(y).plot(color='#FF000040', edgecolor='black', ax=ax);
+```
+
+Now, using `.intersection` automatically applies the `shapely` method of the same name on each geometry in `geom`, returning a new `GeoSeries`, which we name `geom_inter_y`, with the pairwise "intersections". Note the empty third geometry (can you explain the meaning of this result?):
+
+```{python}
+geom_inter_y = geom.intersection(y)
+geom_inter_y
+```
+
+Here is a plot of the result (@fig-geom-intersection2):
+
+```{python}
+#| label: fig-geom-intersection2
+#| fig-cap: The output `GeoSeries`, after subtracting a `shapely` geometry using `.intersection`
+
+geom_inter_y.plot(color='none');
+```
+
+The `.overlay` method (see @sec-joining-incongruent-layers) further extends this technique, making it possible to apply many-to-many pairwise geometry generations between all pairs of two `GeoDataFrame`s. The output is a new `GeoDataFrame` with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry. See the [Set operations with overlay](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
 
 ### Subsetting and clipping
 
