@@ -79,7 +79,8 @@ Let's move on to the basics of static mapping with Python.
 
 ### Minimal example
 
-A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method (@sec-vector-layers). A minimal example of a vector layer map is obtained using `.plot` with nothing but the defaults (@fig-vector-minimal):
+A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method (@sec-vector-layers). 
+A minimal example of a vector layer map is obtained using `.plot` with nothing but the defaults (@fig-vector-minimal):
 
 ```{python}
 #| label: fig-vector-minimal
@@ -113,7 +114,8 @@ nz.plot(color='none', edgecolor='blue');
 nz.plot(color='grey', edgecolor='blue');
 ```
 
-And here is an example of using `markersize` to get larger points (@fig-basic-plot-markersize). This example also demonstrated how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case: 
+And here is an example of using `markersize` to get larger points (@fig-basic-plot-markersize). 
+This example also demonstrated how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case: 
 
 ```{python}
 #| label: fig-basic-plot-markersize
@@ -140,7 +142,12 @@ For example, here we plot stops points colored according to their `'Median_incom
 nz.plot(column='Median_income', legend=True);
 ```
 
-The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`. However, the `cmap` ("color map") argument can be used to specify any of countless other color scales. A first safe choice is often the [ColorBrewer](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) collection of color scales, specifically chosen for mapping uses. Any color scale can be reversed, using the `_r` suffic. Finally, other color scales are available, see the `matplotlib` [colormaps article](https://matplotlib.org/stable/tutorials/colors/colormaps.html) for details. The following code sections demonstrates these color scale specifications (@fig-plot-symbology-colors):
+The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`. 
+However, the `cmap` ("color map") argument can be used to specify any of countless other color scales. 
+A first safe choice is often the [ColorBrewer](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) collection of color scales, specifically chosen for mapping uses. 
+Any color scale can be reversed, using the `_r` suffic. 
+Finally, other color scales are available, see the `matplotlib` [colormaps article](https://matplotlib.org/stable/tutorials/colors/colormaps.html) for details. 
+The following code sections demonstrates these color scale specifications (@fig-plot-symbology-colors):
 
 ```{python}
 #| label: fig-plot-symbology-colors
@@ -156,7 +163,8 @@ nz.plot(column='Median_income', legend=True, cmap='Reds_r');
 nz.plot(column='Median_income', legend=True, cmap='spring');
 ```
 
-Categorical symbology is also supported, such as when `column` points to a `string` attribute. For example, the following expression sets symbology according to the `'Island'` column. In this case, it makes sense to use a qualitative color scale, such as `'Set1'` from ColorBrewer (@fig-plot-symbology-categorical):
+Categorical symbology is also supported, such as when `column` points to a `string` attribute. 
+For example, the following expression sets symbology according to the `'Island'` column. In this case, it makes sense to use a qualitative color scale, such as `'Set1'` from ColorBrewer (@fig-plot-symbology-categorical):
 
 ```{python}
 #| label: fig-plot-symbology-categorical
@@ -190,7 +198,8 @@ rasterio.plot.show(nz_elev, cmap='BrBG_r');
 rasterio.plot.show(nz_elev, cmap='nipy_spectral');
 ```
 
-Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`. The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot-show-with-colorbar), going back to `matplotlib` methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale):
+Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`. 
+The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot-show-with-colorbar), going back to `matplotlib` methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale):
 
 ```{python}
 #| label: fig-plot-symbology-colors-r-scale
@@ -204,7 +213,25 @@ fig.colorbar(i, ax=ax);
 
 ### Layers {#sec-plot-static-layers}
 
-You can combine the raster and vector plotting methods shown above into a single visualisation with multiple layers, which we already used earlier when explaining masking and cropping (@fig-raster-crop). For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
+To display more than one layer in the same plot, we need to:
+
+* store the first plot in a variable (e.g., `base`), and
+* pass it as the `ax` argument of any subsequent plot(s) (e.g., `ax=base`).
+
+For example, here is how we can plot `nz` and `nz_height` together (@fig-two-layers):
+
+```{python}
+#| label: fig-two-layers
+#| fig-cap: Plotting two layers, `nz` (polygons) and `nz_height` (points)
+
+base = nz.plot(color='none')
+nz_height.plot(ax=base, color='red');
+```
+
+We can combine the rasters and vector layers inthe same plot as well, which we already used earlier when explaining masking and cropping (@fig-raster-crop). 
+We need to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together. 
+
+For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
 
 * The left panel shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)
 * The center panel shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's [territorial waters](https://en.wikipedia.org/wiki/Territorial_waters) (see @sec-global-operations-and-distances)
@@ -254,8 +281,8 @@ nzw = nz.to_crs(epsg=3857)
 
 ```{python}
 #| label: fig-basemap
-#| layout-ncol: 2
 #| fig-cap: Adding a basemap to a static map
+#| layout-ncol: 2
 #| fig-subcap:
 #|   - Default basemap from `contextily`
 #|   - Custom basemap (CartoDB Positron)
@@ -273,7 +300,47 @@ ctx.add_basemap(ax, source=ctx.providers.CartoDB.Positron);
 
 ### Faceted maps
 
-To complete...
+Faceted maps are multiple maps displaying the same symbology for the same spatial layers, but with different data in each panel.
+The data displayed in the different panels are typically properties or time steps.
+For example, the `nz` layer has several different properties for each polygon:
+
+```{python}
+vars = ['Land_area', 'Population', 'Median_income', 'Sex_ratio']
+vars
+```
+
+We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables. To do that, we initialize the plot with the right number of panels, such as `ncols=len(vars)` to get one row and four columns, and then go over the variables in a `for` loop, each time plotting `vars[i]` into the `ax[i]` panel (@fig-faceted-map):
+
+```{python}
+#| label: fig-faceted-map
+#| fig-cap: Faceted map, four different variables of `nz`
+
+fig, ax = plt.subplots(ncols=4, figsize=(9, 2))
+for i in range(len(vars)):
+    nz.plot(ax=ax[i], column=vars[i], legend=True)
+    ax[i].set_title(vars[i])
+```
+
+In case we prefer a specific layout, rather than one row or one column, we can: 
+
+* initialize the required number or rows and columns, as in `plt.subplots(nrows,ncols)`,
+* "flatten" `ax`, so that the facets are still accessible using a single index `ax[i]` (rather than the default `ax[i][j]`), and
+* plot into `ax[i]`
+
+For example, here is how we can reproduce the last plot, this time in a $2 \times 2$ layout, instead of a $1 \times 4$ layout (@fig-faceted-map2). One more modification we are doing here is hiding the axis ticks and labels, to make the map less "crowded", using `ax[i].xaxis.set_visible(False)` (and same for `y`):
+
+```{python}
+#| label: fig-faceted-map2
+#| fig-cap: 2D layout in a faceted map
+
+fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
+ax = ax.flatten()
+for i in range(len(vars)):
+    nz.plot(ax=ax[i], column=vars[i], legend=True)
+    ax[i].set_title(vars[i])
+    ax[i].xaxis.set_visible(False)
+    ax[i].yaxis.set_visible(False)
+```
 
 ### Exporting static maps
 
