@@ -503,13 +503,13 @@ dtype: geometry</code></pre>
 <h3 data-number="4.3.4" class="anchored" data-anchor-id="sec-affine-transformations"><span class="header-section-number">4.3.4</span> Affine transformations</h3>
 <p>Affine transformation is any transformation that preserves lines and parallelism. However, angles or length are not necessarily preserved. Affine transformations include, among others, shifting (translation), scaling and rotation. Additionally, it is possible to use any combination of these. Affine transformations are an essential part of geocomputation. For example, shifting is needed for labels placement, scaling is used in non-contiguous area cartograms, and many affine transformations are applied when reprojecting or improving the geometry that was created based on a distorted or wrongly projected map.</p>
 <p>The <code>geopandas</code> package implements affine transformation, for objects of classes <code>GeoSeries</code> and <code>GeoDataFrame</code>. In both cases, the method is applied on the <code>GeoSeries</code> part, returning a new <code>GeoSeries</code> of transformed geometries.</p>
-<p>Affine transformations of <code>GeoSeries</code> can be done using the <code>.affine_transform</code> method, which is a wrapper around the <code>shapely.affinity.affine_transform</code> function. According to the <a href="https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform">documentation</a>, a 2D affine transformation requires a six-parameter list <code>[a,b,d,e,xoff,yoff]</code> which represents the following equations for transforming the coordinates:</p>
-<p><span class="math display">\[
+<p>Affine transformations of <code>GeoSeries</code> can be done using the <code>.affine_transform</code> method, which is a wrapper around the <code>shapely.affinity.affine_transform</code> function. According to the <a href="https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform">documentation</a>, a 2D affine transformation requires a six-parameter list <code>[a,b,d,e,xoff,yoff]</code> which represents the following equations for transforming the coordinates (<a href="#eq-affine1">Equation&nbsp;<span>4.1</span></a> and <a href="#eq-affine2">Equation&nbsp;<span>4.2</span></a>):</p>
+<p><span id="eq-affine1"><span class="math display">\[
 x' = a x + b y + x_\mathrm{off}
-\]</span></p>
-<p><span class="math display">\[
+\tag{4.1}\]</span></span></p>
+<p><span id="eq-affine2"><span class="math display">\[
 y' = d x + e y + y_\mathrm{off}
-\]</span></p>
+\tag{4.2}\]</span></span></p>
 <p>There are also simplified <code>GeoSeries</code> <a href="https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations">methods</a> for specific scenarios:</p>
 <ul>
 <li><code>GeoSeries.translate(xoff=0.0, yoff=0.0, zoff=0.0)</code></li>
@@ -564,7 +564,7 @@ y' = d x + e y + y_\mathrm{off}
 <div id="fig-overlapping-circles" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="05-geometry-operations_files/figure-html/fig-overlapping-circles-output-1.svg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.6: Overlapping circles.</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.6: Overlapping polygon (circle) geometries <code>x</code> and <code>y</code></figcaption>
 </figure>
 </div>
 </div>
@@ -576,7 +576,7 @@ y' = d x + e y + y_\mathrm{off}
 <div id="fig-intersection" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="05-geometry-operations_files/figure-html/fig-intersection-output-1.svg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.7: Intersection between two circles</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.7: Intersection between <code>x</code> and <code>y</code></figcaption>
 </figure>
 </div>
 </div>
@@ -588,7 +588,7 @@ y' = d x + e y + y_\mathrm{off}
 <div id="fig-difference" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="05-geometry-operations_files/figure-html/fig-difference-output-1.svg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.8: Difference between two circles (1st “minus” 2nd)</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.8: Difference between <code>x</code> and <code>y</code> (namely, <code>x</code> “minus” <code>y</code>)</figcaption>
 </figure>
 </div>
 </div>
@@ -599,7 +599,7 @@ y' = d x + e y + y_\mathrm{off}
 <div id="fig-union" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="05-geometry-operations_files/figure-html/fig-union-output-1.svg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.9: Union of two circles</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.9: Union of <code>x</code> and <code>y</code></figcaption>
 </figure>
 </div>
 </div>
@@ -610,11 +610,16 @@ y' = d x + e y + y_\mathrm{off}
 <div id="fig-symmetric-difference" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="05-geometry-operations_files/figure-html/fig-symmetric-difference-output-1.svg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.10: Symmetric difference between two circles</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.10: Symmetric difference between <code>x</code> and <code>y</code></figcaption>
 </figure>
 </div>
 </div>
 </div>
+<p>Keep in mind that <code>x</code> and <code>y</code> are interchangeable in all predictes except for <code>.difference</code>, where:</p>
+<ul>
+<li><code>x.difference(y)</code> means <code>x</code> minus <code>y</code>, whereas</li>
+<li><code>y.difference(x)</code> means <code>y</code> minus <code>x</code>.</li>
+</ul>
 </section>
 <section id="subsetting-and-clipping" class="level3" data-number="4.3.6">
 <h3 data-number="4.3.6" class="anchored" data-anchor-id="subsetting-and-clipping"><span class="header-section-number">4.3.6</span> Subsetting and clipping</h3>
