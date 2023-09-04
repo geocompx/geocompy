@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import rasterio
 import rasterio.plot
-import contextily as ctx
+import contextily as cx
 ```
 
 and load the sample data for this chapter:
@@ -133,7 +133,7 @@ We can set symbology in a `.plot` using the following parameters:
 * `legend`---Whether to show a legend
 * `cmap`---Color map
 
-For example, here we plot stops points colored according to their `'Median_income'` attribute (@fig-plot-symbology):
+For example, here we plot the polygons colored according to the `'Median_income'` attribute (@fig-plot-symbology):
 
 ```{python}
 #| label: fig-plot-symbology
@@ -273,30 +273,42 @@ nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
 
 ### Basemaps
 
+Basemaps, or background layers, are often useful to provide context to the displayed layers (which are in the "foreground"). Basemaps are ubiquitous in interactive maps (see @sec-interactive-maps). However, they are often useful in static maps too. 
+
+Basemaps can be added to **geopandas** static plots using the [**contextily**](https://contextily.readthedocs.io/en/latest/index.html) package. A preliminary step is to convert our layers to `EPSG:3857` (["Web Mercator"](https://en.wikipedia.org/wiki/Web_Mercator_projection)), to be in agreement with the basemaps, which are typically provided in this CRS. For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it to `3857`:
+
 ```{python}
-nzw = nz.to_crs(epsg=3857)
+nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)
 ```
 
-@fig-basemap:
+To add a basemap, we use the `contextily.add_basemap` function, similarly to the way we added muliple layers (@sec-plot-static-layers). The default basemap is "Stamen Terrain". You can specify a different basemap using the `source` parameter. The possible values are given in the `cx.providers`. Also check out the [gallery](https://xyzservices.readthedocs.io/en/stable/gallery.html). Finally, custom basemaps (such as from your own raster tile server) can be specified using a [URL](https://contextily.readthedocs.io/en/latest/providers_deepdive.html#Manually-specifying-a-provider). For example (@fig-basemap):
 
 ```{python}
 #| label: fig-basemap
-#| fig-cap: Adding a basemap to a static map
-#| layout-ncol: 2
+#| fig-cap: Adding a basemap to a static map, using `contextily`
+#| layout-ncol: 3
 #| fig-subcap:
-#|   - Default basemap from `contextily`
-#|   - Custom basemap (CartoDB Positron)
+#|   - Default basemap (Stamen Terrain)
+#|   - Custom basemap 1 (OpenStreetMap)
+#|   - Custom basemap 2 (CartoDB Positron)
 
 # Default basemap
 fig, ax = plt.subplots(figsize=(7, 7))
-ax = nzw.plot(color='none', edgecolor='k', ax=ax)
-ctx.add_basemap(ax);
+ax = nzw.plot(color='none', ax=ax)
+cx.add_basemap(ax);
 
-# Specific basemap
+# Specific basemap 1
 fig, ax = plt.subplots(figsize=(7, 7))
-ax = nzw.plot(column='Median_income', legend=True, alpha=0.5, ax=ax)
-ctx.add_basemap(ax, source=ctx.providers.CartoDB.Positron);
+ax = nzw.plot(color='none', ax=ax)
+cx.add_basemap(ax, source=cx.providers.OpenStreetMap.Mapnik);
+
+# Specific basemap 2
+fig, ax = plt.subplots(figsize=(7, 7))
+ax = nzw.plot(color='none', ax=ax)
+cx.add_basemap(ax, source=cx.providers.CartoDB.Positron);
 ```
+
+Check out the [Adding a background map to plots](https://geopandas.org/en/stable/gallery/plotting_basemap_background.html) tutorial for more examples.
 
 ### Faceted maps
 
