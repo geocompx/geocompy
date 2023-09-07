@@ -99,7 +99,7 @@ rasterio.plot.show(nz_elev);
 
 ### Styling
 
-Most useful visual properties of the geometries that can be specified in `.plot` include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot): 
+The most useful visual properties of the geometries, that can be specified in `.plot`, include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot): 
 
 ```{python}
 #| label: fig-basic-plot
@@ -434,26 +434,58 @@ nz.explore()
 
 ### Styling
 
-To complete... 
+The `.explore` method also has a `color` parameter, which affects both the fill and outline color. Other styling properties are specified using a `dict` through `style_kwds` (for general properties) and the `marker_kwds` (point-layer specific properties), as follows.
+
+The `style_kwds` keys are mostly used to control the color and opacity of the outline and the fill:
+
+* `stroke`---Whether to draw the outline
+* `color`---Outline color
+* `weight`---Outline width (in pixels)
+* `opacity`---Outline opacity (from `0` to `1`)
+* `fill`---Whether to draw fill
+* `fillColor`---Fill color
+* `fillOpacity`---Fill opacity (from `0` to `1`)
+
+For example, here is how we can set green fill color and 30% opaque black outline of polygons in `.explore` (@fig-explore-styling-polygons):
 
 ```{python}
 #| label: fig-explore-styling-polygons
-#| fig-cap: Styling in `.explore`
+#| fig-cap: Styling of polygons in `.explore`
 
 nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})
 ```
 
-To complete... 
+The `dict` passed to `marker_kwds` controls the way that points are displayed:
+
+* `radius`---Curcle radius (in $m$ for `circle`, see below) or in pixels (for `circle_marker`)
+* `fill`---Whether to draw fill (for `circle` or `circle_marker`)
+
+Additionally, for points, we can set the `marker_type`, to one of:
+
+* `'marker'`---A PNG image of a marker
+* `'circle'`---A vector circle with radius specified in $m$
+* `'circle_marker'`---A vector circle with radius specified in pixels (the default)
+
+For example, the following expression draws `'circe_marker`' points with 20 pixel radius, green fill, and black outline (@fig-explore-styling-points):
 
 ```{python}
 #| label: fig-explore-styling-points
-#| fig-cap: Styling in `.explore`
+#| fig-cap: Styling of points in `.explore` (using `circle_marker`)
 
 nz_height.explore(
     color='green', 
     style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, 
     marker_kwds={'color':'black', 'radius':20}
 )
+```
+
+The following expression demonstrates the `'marker'` option (@fig-explore-styling-points2). Note that the above-mentioned styling properties (other then `opacity`) are not applicable when using `marker_type='marker'`, because the markers are fixed PNG images:
+
+```{python}
+#| label: fig-explore-styling-points2
+#| fig-cap: Styling of points in `.explore` (using `marker`)
+
+nz_height.explore(marker_type='marker')
 ```
 
 ### Layers
