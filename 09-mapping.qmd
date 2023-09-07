@@ -26,6 +26,7 @@ import geopandas as gpd
 import rasterio
 import rasterio.plot
 import contextily as cx
+import folium
 ```
 
 and load the sample data for this chapter:
@@ -450,7 +451,7 @@ To complete...
 
 nz_height.explore(
     color='green', 
-    style_kwds={'color':'black', 'opacity': 0.5, 'fillOpacity':0.1}, 
+    style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, 
     marker_kwds={'color':'black', 'radius':20}
 )
 ```
@@ -465,6 +466,18 @@ To display multiple layers, one on top of another, with `.explore`, use the `m` 
 
 m = nz.explore()
 nz_height.explore(m=m, color='red')
+```
+
+One of the advantages of interactive maps is the ability to turn layers "on" and "off". This capability is implemented in `folium.LayerControl` from package **folium**, which the **geopandas** `.explore` method is a wrapper of. For example, this is how we can add a layer control for the `nz` and `nz_height` layers (@fig-explore-layers-controls). Note the `name` properties, used to specify layer names in the control, and the `collapsed` property, used to specify whether the control is fully visible at all times (`False`) or on mouse hover (`True`):
+
+```{python}
+#| label: fig-explore-layers-controls
+#| fig-cap: Displaying multiple layers in an interactive map with `.explore`
+
+m = nz.explore(name='Polygons (adm. areas)')
+nz_height.explore(m=m, color='red', name='Points (elevation)')
+folium.LayerControl(collapsed=False).add_to(m)
+m
 ```
 
 ### Symbology {#sec-explore-symbology}
@@ -482,7 +495,7 @@ Fixed styling (@sec-explore-symbology) can be combined with symbology settings. 
 
 ```{python}
 #| label: fig-explore-symbology2
-#| fig-cap: 'Symbology in an interactive map of a vector layer, created with `.explore`'
+#| fig-cap: 'Symbology combined with fixed styling in `.explore`'
 
 nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color':'black', 'weight': 0.5})
 ```
