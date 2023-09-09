@@ -565,7 +565,30 @@ The `"Polygon"` (exterior) coordinates can be passed to `shapely.MultiPoint` as 
 shapely.MultiPoint(polygon.exterior.coords)
 ```
 
-Summary / table of possible transformations... (?)
+Using these methods, we can transform between `"Point"`, `"LineString"`, and `"Polygon"` geometries, assuming there is a sufficient number of points (at least two to form a line, and at least three to form a polygon). 
+When dealing with multi-part geometries, we can:
+
+* Access single-part geometries (e.g., each `"Polygion"` in a `"MultiPolygon"` geometry) using `.geoms[i]`, where `i` is the index of the geometry
+* Combine single-part geometries into a multi-part geometry, by passing a `list` of the latter to the constructor function
+
+For example, here is how we combine two `"Polygon"` geometries into a `"MultiPolygon"`:
+
+```{python}
+multipolygon = shapely.MultiPolygon([polygon, polygon])
+multipolygon
+```
+
+and here is how we can get back the `"Polygon"` parts:
+
+```{python}
+multipolygon.geoms[0]
+```
+
+```{python}
+multipolygon.geoms[1]
+```
+
+However, dealing with multi-part geometries is easier with **geopandas**, since that way we can keep track of the associated attributes: duplicating them when going from multi-part to single-part (using `.explode`, see below), or collapsing them through aggregation when going from single-part to multi-part (using `.dissolve`, see @sec-geometry-unions). 
 
 Let's apply another commonly used type transformation to demonstrate. As input, we will create a `"MultiLineString"` geometry composed of three lines:
 
@@ -587,7 +610,7 @@ geom
 and finally into a `GeoDataFrame` with an attribute called `"id"`:
 
 ```{python}
-dat = gpd.GeoDataFrame(geometry = geom, data = pd.DataFrame({'id': [1]}))
+dat = gpd.GeoDataFrame(geometry=geom, data=pd.DataFrame({'id': [1]}))
 dat
 ```
 
@@ -619,7 +642,55 @@ axes[0].set_title('MultiLineString\n1 feature')
 axes[1].set_title('LineString\n3 features');
 ```
 
-By the way, the opposite transformation, i.e., "single-part to multi-part", is acheived using the `.dissolve` method (@sec-geometry-unions).
+The opposite transformation, i.e., "single-part to multi-part", is acheived using the `.dissolve` method (@sec-geometry-unions). For example, here is how we can get back to the `"MultiLineString"` geometry:
+
+```{python}
+dat1.dissolve(by='id').reset_index()
+```
+
+Here is another example, dissolving the `nz` north and south parts into `"MultiPolygon"` geometries:
+
+```{python}
+nz_dis1 = nz[['Island', 'Population', 'geometry']] \
+    .dissolve(by='Island', aggfunc='sum') \
+    .reset_index()
+nz_dis1
+```
+
+Note that `.dissolve` not only combines single-part into multi-part geometries, but also dissolves any internal borders. 
+So, in fact, the result may single-part (in case when all parts touch each other, unlike in `nz`). 
+If, for some reason, we want to combine geometries into multi-part *without* dissolving, we can fall back to the **pandas** `.agg` method (custom table aggregation), supplemented with a **shapely** function specifying how exactly we want to transform each group of geometries into a new single geometry. 
+In the following example, for instance, we choose to collect all `"Polygon"`, and `"MultiPolygon"` parts, into a single `"MultiPolygon"` geometry with many parts:
+
+```{python}
+#| warning: false
+
+nz_dis2 = nz \
+    .groupby('Island') \
+    .agg({
+        'Population': 'sum',
+        'geometry': lambda x: shapely.MultiPolygon(x.explode().to_list())
+    }) \
+    .reset_index()
+nz_dis2 = gpd.GeoDataFrame(nz_dis2).set_geometry('geometry').set_crs(nz.crs)
+nz_dis2
+```
+
+The difference between the last two results (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type `"MultiPolygon"`. 
+However, in the first case internal borders were dissolved, while in the second case they were not. 
+This is illustrated in @fig-combine-geoms:
+
+```{python}
+#| label: fig-combine-geoms
+#| fig-cap: Combining New Zealand geometries into one, for each island
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Dissolving (using `.dissolve`)
+#| - Combining without dissolving (using `agg` with a custom function)
+
+nz_dis1.plot(color='none', edgecolor='black');
+nz_dis2.plot(color='none', edgecolor='black');
+```
 
 ## Geometric operations on raster data {#sec-geo-ras}
 
