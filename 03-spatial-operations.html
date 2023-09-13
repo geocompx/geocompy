@@ -366,7 +366,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Does each 'nz_height' point intersect with 'canterbury'?</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.intersects(canterbury[<span class="st">'geometry'</span>].iloc[<span class="dv">0</span>])</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.intersects(canterbury.geometry.iloc[<span class="dv">0</span>])</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>sel</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <pre><code>0      False
@@ -453,7 +453,7 @@ Length: 101, dtype: bool</code></pre>
 <p>Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected. These include touches, crosses or within, as we will see shortly in <a href="#sec-topological-relations"><span>Section&nbsp;3.3.2</span></a>. The most commonly used method <code>.intersects</code> method which we used in the last example is a ‘catch all’ topological relation, that will return features in the target that touch, cross or are within the source ‘subsetting’ object. Alternatively, we can evaluate other methods, such as <code>.disjoint</code> to obtain all points that <em>do not</em> intersect with Canterbury:</p>
 <div class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Is each 'nz_height' point disjoint from 'canterbury'?</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.disjoint(canterbury[<span class="st">'geometry'</span>].iloc[<span class="dv">0</span>])</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.disjoint(canterbury.geometry.iloc[<span class="dv">0</span>])</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>canterbury_height2 <span class="op">=</span> nz_height[sel]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>as shown in <a href="#fig-spatial-subset-disjoint">Figure&nbsp;<span>3.2</span></a>:</p>
@@ -1022,8 +1022,8 @@ dtype: bool</code></pre>
 </div>
 <p>We can check if any of the points are the same by creating a pairwise boolean matrix of <code>.intersects</code> relations, then evaluating whether any of the values in it is <code>True</code>. Note that the <code>.to_numpy</code> method is applied to go from a <code>DataFrame</code> to a <code>numpy</code> array, for which <code>.any</code> gives a global rather than a row-wise summary, which is what we want in this case:</p>
 <div class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>m <span class="op">=</span> cycle_hire[<span class="st">'geometry'</span>].<span class="bu">apply</span>(</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">lambda</span> x: cycle_hire_osm[<span class="st">'geometry'</span>].intersects(x)</span>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>m <span class="op">=</span> cycle_hire.geometry.<span class="bu">apply</span>(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">lambda</span> x: cycle_hire_osm.geometry.intersects(x)</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>m.to_numpy().<span class="bu">any</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="29">
@@ -1034,7 +1034,7 @@ dtype: bool</code></pre>
 <div class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>crs <span class="op">=</span> <span class="dv">27700</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>cycle_hire_buffers <span class="op">=</span> cycle_hire.copy().to_crs(crs)</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>cycle_hire_buffers[<span class="st">'geometry'</span>] <span class="op">=</span> cycle_hire_buffers.<span class="bu">buffer</span>(<span class="dv">20</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>cycle_hire_buffers.geometry <span class="op">=</span> cycle_hire_buffers.<span class="bu">buffer</span>(<span class="dv">20</span>)</span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> gpd.sjoin(</span>
 <span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  cycle_hire_buffers, </span>
 <span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  cycle_hire_osm.to_crs(crs)</span>
@@ -1120,7 +1120,7 @@ dtype: bool</code></pre>
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> z[[<span class="st">'id'</span>, <span class="st">'capacity'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'id'</span>, aggfunc<span class="op">=</span><span class="st">'mean'</span>) <span class="op">\</span></span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>z[<span class="st">'geometry'</span>] <span class="op">=</span> z.centroid</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>z.geometry <span class="op">=</span> z.centroid</span>
 <span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="31">
 <div>
@@ -1966,7 +1966,7 @@ dtype: float64</code></pre>
 </div>
 <p>The distance matrix <code>d</code> is obtained as follows (technically speaking, this is a <code>DataFrame</code>). In plain language, we take the geometry from each each row in <code>nz_height.iloc[:3, :]</code>, and apply the <code>.distance</code> method on <code>co</code> with that row as the argument:</p>
 <div class="cell" data-execution_count="52">
-<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> nz_height.iloc[:<span class="dv">3</span>, :].<span class="bu">apply</span>(<span class="kw">lambda</span> x: co.distance(x[<span class="st">'geometry'</span>]), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> nz_height.iloc[:<span class="dv">3</span>, :].<span class="bu">apply</span>(<span class="kw">lambda</span> x: co.distance(x.geometry), axis<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>d</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="52">
 <div>
@@ -2020,7 +2020,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="54">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="54">
-<pre><code>&lt;generator object sample_gen at 0x7fe1382366c0&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f8dfef4e6c0&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>

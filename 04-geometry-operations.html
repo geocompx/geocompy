@@ -462,7 +462,7 @@ dtype: geometry</code></pre>
 <p>In the common scenario when the original attributes of the input features need to be retained, you can replace the existing geometry with the new <code>GeoSeries</code> as in:</p>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>seine_buff_5km <span class="op">=</span> seine.copy()</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>seine_buff_5km[<span class="st">'geometry'</span>] <span class="op">=</span> seine.<span class="bu">buffer</span>(<span class="dv">5000</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>seine_buff_5km.geometry <span class="op">=</span> seine.<span class="bu">buffer</span>(<span class="dv">5000</span>)</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>seine_buff_5km</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="18">
 <div>
@@ -904,7 +904,7 @@ dtype: geometry</code></pre>
 <p>What is going on in terms of the geometries? Behind the scenes, <code>.dissolve</code> combines the geometries and dissolve the boundaries between them using the <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union"><code>.unary_union</code></a> method per group. This is demonstrated in the code chunk below which creates a united western US using the standalone <code>unary_union</code> operation:</p>
 <div class="cell" data-execution_count="44">
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>us_west <span class="op">=</span> us_states[us_states[<span class="st">'REGION'</span>] <span class="op">==</span> <span class="st">'West'</span>]</span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>us_west_union <span class="op">=</span> us_west[<span class="st">'geometry'</span>].unary_union</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>us_west_union <span class="op">=</span> us_west.geometry.unary_union</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Note that the result is a <code>shapely</code> geometry, as the individual attributes are “lost” as part of dissolving. The result is shown in <a href="#fig-dissolve2">Figure&nbsp;<span>4.16</span></a>.</p>
 <div class="cell" data-execution_count="45">
@@ -922,7 +922,7 @@ dtype: geometry</code></pre>
 <div class="cell" data-execution_count="46">
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> (us_states[<span class="st">'REGION'</span>] <span class="op">==</span> <span class="st">'West'</span>) <span class="op">|</span> (us_states[<span class="st">'NAME'</span>] <span class="op">==</span> <span class="st">'Texas'</span>)</span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>texas_union <span class="op">=</span> us_states[sel]</span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>texas_union <span class="op">=</span> texas_union[<span class="st">'geometry'</span>].unary_union</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>texas_union <span class="op">=</span> texas_union.geometry.unary_union</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>or concatenate the two separate subsets:</p>
 <div class="cell" data-execution_count="47">

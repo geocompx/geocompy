@@ -339,7 +339,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>out_image_mask, out_transform_mask <span class="op">=</span> rasterio.mask.mask(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    src_srtm, </span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    zion[<span class="st">'geometry'</span>], </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    zion.geometry, </span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    crop<span class="op">=</span><span class="va">False</span>, </span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    nodata<span class="op">=</span><span class="dv">9999</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -777,7 +777,7 @@ Length: 154, dtype: geometry</code></pre>
 <div class="cell" data-execution_count="29">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.mask.mask(</span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    src_nlcd, </span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    zion[<span class="st">'geometry'</span>].to_crs(src_nlcd.crs), </span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    zion.geometry.to_crs(src_nlcd.crs), </span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    crop<span class="op">=</span><span class="va">False</span>, </span>
 <span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    nodata<span class="op">=</span><span class="dv">9999</span></span>
 <span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -950,15 +950,15 @@ Length: 154, dtype: geometry</code></pre>
 <p>Now, we can rasterize. Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel “activation” method, and the function applied when there is more than one match.</p>
 <p>To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of <code>1</code> to all pixels where at least one point falls in. To transform the point <code>GeoDataFrame</code> into a generator of <code>shapely</code> geometries and the (fixed) values, we use the following expression:</p>
 <div class="cell" data-execution_count="36">
-<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected[<span class="st">'geometry'</span>].to_list())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry.to_list())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="36">
-<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7fb45eba5080&gt;</code></pre>
+<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7fdfecc453c0&gt;</code></pre>
 </div>
 </div>
 <p>Therefore, the rasterizing expression is:</p>
 <div class="cell" data-execution_count="37">
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>ch_raster1 <span class="op">=</span> rasterio.features.rasterize(</span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected[<span class="st">'geometry'</span>].to_list()),</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry.to_list()),</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
 <span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>transform</span>
 <span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -983,7 +983,7 @@ Length: 154, dtype: geometry</code></pre>
 <p>To count the number of stations, we can use the fixed value of <code>1</code> combined with the <code>merge_alg=rasterio.enums.MergeAlg.add</code>, which means that multiple values burned into the same pixel are <em>summed</em>, rather than replaced keeping last (the default):</p>
 <div class="cell" data-execution_count="39">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>ch_raster2 <span class="op">=</span> rasterio.features.rasterize(</span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected[<span class="st">'geometry'</span>].to_list()),</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry.to_list()),</span>
 <span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
 <span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>transform,</span>
 <span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    merge_alg<span class="op">=</span>rasterio.enums.MergeAlg.add</span>
@@ -1083,7 +1083,7 @@ Length: 154, dtype: geometry</code></pre>
 </div>
 <p>Second, we “cast” the polygon into a <code>"MultiLineString"</code> geometry, using the <code>.boundary</code> property that <code>GeoSeries</code> have:</p>
 <div class="cell" data-execution_count="44">
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>california_borders <span class="op">=</span> california[<span class="st">'geometry'</span>].boundary</span>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>california_borders <span class="op">=</span> california.geometry.boundary</span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>california_borders</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="44">
 <pre><code>26    MULTILINESTRING ((-118.60337 33...
@@ -1121,7 +1121,7 @@ dtype: geometry</code></pre>
 <p>Compare it to a polygon rasterization, with <code>all_touched=False</code> by default, which selects only raster cells whose centroids are inside the selector polygon, as illustrated in <a href="#fig-rasterize-lines-polygons">Figure&nbsp;<span>5.6</span></a> (right):</p>
 <div class="cell" data-execution_count="47">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>california_raster2 <span class="op">=</span> rasterio.features.rasterize(</span>
-<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> california[<span class="st">'geometry'</span>].to_list()),</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> california.geometry.to_list()),</span>
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
 <span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    transform<span class="op">=</span>transform,</span>
 <span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span>np.nan</span>
@@ -1181,7 +1181,7 @@ dtype: geometry</code></pre>
 <span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>shapes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="49">
-<pre><code>&lt;generator object shapes at 0x7fb45ca7ebd0&gt;</code></pre>
+<pre><code>&lt;generator object shapes at 0x7fdfeaa6ebd0&gt;</code></pre>
 </div>
 </div>
 <p>We can generate all shapes at once, into a <code>list</code> named <code>pol</code>, as follows:</p>
