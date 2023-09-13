@@ -74,7 +74,7 @@ To mask the image, i.e., convert all pixels which do not intersect with the `zio
 ```{python}
 out_image_mask, out_transform_mask = rasterio.mask.mask(
     src_srtm, 
-    zion['geometry'], 
+    zion.geometry, 
     crop=False, 
     nodata=9999
 )
@@ -351,7 +351,7 @@ To count occurrences of categorical raster values within polygons, we can use ma
 ```{python}
 out_image, out_transform = rasterio.mask.mask(
     src_nlcd, 
-    zion['geometry'].to_crs(src_nlcd.crs), 
+    zion.geometry.to_crs(src_nlcd.crs), 
     crop=False, 
     nodata=9999
 )
@@ -435,14 +435,14 @@ Now, we can rasterize. Rasterization is a very flexible operation: the results d
 To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of `1` to all pixels where at least one point falls in. To transform the point `GeoDataFrame` into a generator of `shapely` geometries and the (fixed) values, we use the following expression:
 
 ```{python}
-((g, 1) for g in cycle_hire_osm_projected['geometry'].to_list())
+((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
 ```
 
 Therefore, the rasterizing expression is:
 
 ```{python}
 ch_raster1 = rasterio.features.rasterize(
-    ((g, 1) for g in cycle_hire_osm_projected['geometry'].to_list()),
+    ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list()),
     out_shape=shape,
     transform=transform
 )
@@ -458,7 +458,7 @@ To count the number of stations, we can use the fixed value of `1` combined with
 
 ```{python}
 ch_raster2 = rasterio.features.rasterize(
-    ((g, 1) for g in cycle_hire_osm_projected['geometry'].to_list()),
+    ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list()),
     out_shape=shape,
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
@@ -514,7 +514,7 @@ california
 Second, we "cast" the polygon into a `"MultiLineString"` geometry, using the `.boundary` property that `GeoSeries` have: 
 
 ```{python}
-california_borders = california['geometry'].boundary
+california_borders = california.geometry.boundary
 california_borders
 ```
 
@@ -551,7 +551,7 @@ Compare it to a polygon rasterization, with `all_touched=False` by default, whic
 
 ```{python}
 california_raster2 = rasterio.features.rasterize(
-    ((g, 1) for g in california['geometry'].to_list()),
+    ((g, 1) for g in california.geometry.to_list()),
     out_shape=shape,
     transform=transform,
     fill=np.nan

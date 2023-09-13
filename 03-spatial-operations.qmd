@@ -78,7 +78,7 @@ canterbury
 
 ```{python}
 # Does each 'nz_height' point intersect with 'canterbury'?
-sel = nz_height.intersects(canterbury['geometry'].iloc[0])
+sel = nz_height.intersects(canterbury.geometry.iloc[0])
 sel
 ```
 
@@ -112,7 +112,7 @@ Alternatively, we can evaluate other methods, such as `.disjoint` to obtain all 
 
 ```{python}
 # Is each 'nz_height' point disjoint from 'canterbury'?
-sel = nz_height.disjoint(canterbury['geometry'].iloc[0])
+sel = nz_height.disjoint(canterbury.geometry.iloc[0])
 canterbury_height2 = nz_height[sel]
 ```
 
@@ -345,8 +345,8 @@ We can check if any of the points are the same by creating a pairwise boolean ma
 Note that the `.to_numpy` method is applied to go from a `DataFrame` to a `numpy` array, for which `.any` gives a global rather than a row-wise summary, which is what we want in this case:
 
 ```{python}
-m = cycle_hire['geometry'].apply(
-  lambda x: cycle_hire_osm['geometry'].intersects(x)
+m = cycle_hire.geometry.apply(
+  lambda x: cycle_hire_osm.geometry.intersects(x)
 )
 m.to_numpy().any()
 ```
@@ -360,7 +360,7 @@ Note that we transform the data to a projected CRS (`27700`) to use real buffer 
 ```{python}
 crs = 27700
 cycle_hire_buffers = cycle_hire.copy().to_crs(crs)
-cycle_hire_buffers['geometry'] = cycle_hire_buffers.buffer(20)
+cycle_hire_buffers.geometry = cycle_hire_buffers.buffer(20)
 z = gpd.sjoin(
   cycle_hire_buffers, 
   cycle_hire_osm.to_crs(crs)
@@ -377,7 +377,7 @@ We also go back from buffers to points using `.centroid`:
 z = z[['id', 'capacity', 'geometry']] \
     .dissolve(by='id', aggfunc='mean') \
     .reset_index()
-z['geometry'] = z.centroid
+z.geometry = z.centroid
 z
 ```
 
@@ -598,7 +598,7 @@ co
 The distance matrix `d` is obtained as follows (technically speaking, this is a `DataFrame`). In plain language, we take the geometry from each each row in `nz_height.iloc[:3, :]`, and apply the `.distance` method on `co` with that row as the argument:
 
 ```{python}
-d = nz_height.iloc[:3, :].apply(lambda x: co.distance(x['geometry']), axis=1)
+d = nz_height.iloc[:3, :].apply(lambda x: co.distance(x.geometry), axis=1)
 d
 ```
 

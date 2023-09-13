@@ -222,16 +222,18 @@ gdf[gdf['name_long'] == 'Egypt'].explore()
 
 A vital column in a `GeoDataFrame` is the geometry column, of class `GeoSeries`.
 The geometry column contains the geometric part of the vector layer.
+The geometry column can be accessed by name, which typically (e.g., when reading from a file) is `'geometry'`, as in `gdf['geometry']`.
+However, the recommendation is to use the fixed `.geometry` property, which refers to the geometry column regardless whether its name is `'geometry'` or any other name.
 In the case of the `gdf` object, the geometry column contains `'MultiPolygon'`s  associated with each country:
 
 ```{python}
-gdf['geometry']
+gdf.geometry
 ```
 
 The geometry column also contains the spatial reference information, if any:
 
 ```{python}
-gdf['geometry'].crs
+gdf.geometry.crs
 ```
 
 Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
@@ -243,14 +245,14 @@ gdf.centroid
 ```
 
 ```{python}
-gdf['geometry'].centroid
+gdf.geometry.centroid
 ```
 
-Note that `.centroid`, and other similar operators in `geopandas` such as `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data. In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we don't need the original ones, as in `gdf['geometry']=gdf.centroid`):
+Note that `.centroid`, and other similar operators in `geopandas` such as `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data. In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we don't need the original ones, as in `gdf.geometry=gdf.centroid`):
 
 ```{python}
 gdf2 = gdf.copy()
-gdf2['geometry'] = gdf.centroid
+gdf2.geometry = gdf.centroid
 gdf2
 ```
 
@@ -259,13 +261,13 @@ Note that the types of geometries contained in a geometry column (and, thus, a v
 Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value:
 
 ```{python}
-gdf['geometry'].type
+gdf.geometry.type
 ```
 
 To summarize the occurrence of different geometry types in a geometry column, we can use the **pandas** method called `value_counts`:
 
 ```{python}
-gdf['geometry'].type.value_counts()
+gdf.geometry.type.value_counts()
 ```
 
 In this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
@@ -353,13 +355,13 @@ Each element in the geometry column is a geometry object, of class `shapely`.
 For example, here is one specific geometry selected by implicit index (that of Canada):
 
 ```{python}
-gdf['geometry'].iloc[3]
+gdf.geometry.iloc[3]
 ```
 
 We can also select a specific geometry based on the `'name_long'` attribute:
 
 ```{python}
-gdf[gdf['name_long'] == 'Egypt']['geometry'].iloc[0]
+gdf[gdf['name_long'] == 'Egypt'].geometry.iloc[0]
 ```
 
 The **shapely** package is compatible with the Simple Features standard.
