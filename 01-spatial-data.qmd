@@ -230,7 +230,7 @@ In the case of the `gdf` object, the geometry column contains `'MultiPolygon'`s 
 gdf.geometry
 ```
 
-The geometry column also contains the spatial reference information, if any:
+The geometry column also contains the spatial reference information, if any (also accessible with the shortcut `gdf.crs`):
 
 ```{python}
 gdf.geometry.crs
@@ -238,7 +238,7 @@ gdf.geometry.crs
 
 Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
 Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
-The two following commands therefore return exactly the same result, a `GeoSeries` with country centroids:
+For example, the two following commands return exactly the same result, a `GeoSeries` with country centroids:
 
 ```{python}
 gdf.centroid
@@ -258,7 +258,7 @@ gdf2
 
 Another useful property of the geometry column is the geometry type, as shown in the following code. 
 Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same for every row.
-Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value:
+Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value (the same can be done with the shortcut `gdf.geom_type`):
 
 ```{python}
 gdf.geometry.type
@@ -271,7 +271,8 @@ gdf.geometry.type.value_counts()
 ```
 
 In this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
-It is possible to have multiple geometry types in a single `GeoSeries` and a `GeoDataFrame` can have multiple `GeoSeries`:
+It is possible to have multiple geometry types in a single `GeoSeries`. 
+A `GeoDataFrame` can also have multiple `GeoSeries`:
 
 ```{python}
 gdf['centroids'] = gdf.centroid
@@ -279,18 +280,25 @@ gdf['polygons'] = gdf.geometry
 gdf
 ```
 
-To switch the geometry column from one ``GeoSeries` column to another, we use `set_geometry`:
+Only one geometry column at a time is "active", in the sense that it is being accessed in operations involving the geometries (such as `.centroid`, `.crs`, etc.).
+To switch the active geometry column from one `GeoSeries` column to another, we use `set_geometry`. 
+For example (@fig-switch-to-centroids, @fig-switch-to-polygons):
 
 ```{python}
-gdf.set_geometry('centroids', inplace=True)
+#| label: fig-switch-to-centroids
+#| fig-cap: Switching to the `'centroids'` geometry column in the `world` layer, and plotting it
+
+gdf = gdf.set_geometry('centroids')
 gdf.explore()
 ```
 
 ```{python}
-gdf.set_geometry('polygons', inplace=True)
+#| label: fig-switch-to-polygons
+#| fig-cap: Switching to the `'polygons'` geometry column in the `world` layer, and plotting it
+
+gdf = gdf.set_geometry('polygons')
 gdf.explore()
 ```
-
 
 ### The Simple Features standard {#sec-simple-features}
 
