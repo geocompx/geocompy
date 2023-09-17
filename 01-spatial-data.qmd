@@ -493,32 +493,47 @@ In the previous sections we started with a vector layer (`GeoDataFrame`), from a
 In this section, we will demonstrate the opposite process, constructing a `GeoDataFrame` from `shapely` geometries, combined into a `GeoSeries`.
 This will:
 
-* Help you better understand the structure of a `GeoDataFrame`, and
-* May come in handy when you need to programmatically construct simple vector layers, such as a line between two given points, etc.
+* help you better understand the structure of a `GeoDataFrame`, and
+* may come in handy when you need to programmatically construct simple vector layers, such as a line between two given points, etc.
 
-Vector layers consist of two main parts: geometries and non-geographic attributes. @fig-gdf-flow shows how a `GeoDataFrame` object is created---geometries come from a `GeoSeries` object (which consists of `shapely` geometries), while attributes are taken from `Series` objects. 
+Vector layers consist of two main parts: geometries and non-geographic attributes. 
+@fig-gdf-flow shows how a `GeoDataFrame` object is created---geometries come from a `GeoSeries` object (which consists of `shapely` geometries), while attributes are taken from `Series` objects. 
 
 ![Creating a `GeoDataFrame` from scratch](images/gdf-flow.svg){#fig-gdf-flow}
 
-The final result, a vector layer (`GeoDataFrame`) is therefore a hierarchical structure (@fig-gdf-structure), containing the geometry column (`GeoSeries`), which in turn contains geometries (`shapely`). Each of the "internal" components can be accessed, or "extracted", which is sometimes necessary, as we will see later on.
+The final result, a vector layer (`GeoDataFrame`) is therefore a hierarchical structure (@fig-gdf-structure), containing the geometry column (`GeoSeries`), which in turn contains geometries (`shapely`). 
+Each of the "internal" components can be accessed, or "extracted", which is sometimes necessary, as we will see later on.
 
 ![Structure of a `GeoDataFrame`](images/gdf-structure.svg){#fig-gdf-structure}
 
-Non-geographic attributes represent the name of the feature or other attributes such as measured values, groups, and other things. To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2017. This example contains a geometry (the coordinates), and three attributes with three different classes (place name, temperature and date). Objects of class `GeoDataFrame` represent such data by combining the attributes (`Series`) with the simple feature geometry column (`GeoSeries`). First, we create a point geometry, which we know how to do from @sec-geometries:
+Non-geographic attributes represent the name of the feature, or other attributes such as measured values, groups, and other things. 
+To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2017. 
+This example contains a geometry (the coordinates), and three attributes with three different classes (place name, temperature and date). 
+Objects of class `GeoDataFrame` represent such data by combining the attributes (`Series`) with the simple feature geometry column (`GeoSeries`). 
+First, we create a point geometry, which we know how to do from @sec-geometries (@fig-point-lnd):
 
 ```{python}
+#| label: fig-point-lnd
+#| fig-cap: A `shapely` point representing London
+
 lnd_point = shapely.Point(0.1, 51.5)
 lnd_point
 ```
 
-Next, we create a `GeoSeries` (of length 1), containing the point. Note that a `GeoSeries` stores a CRS definition, in this case WGS84 (defined using its EPSG code `4326`). Also note that the `shapely` geometries go into a `list`, to illustrate that there can be more than one (unlike in this example):
+Next, we create a `GeoSeries` (of length 1), containing the point. 
+Note that a `GeoSeries` stores a CRS definition, in this case WGS84 (defined using its EPSG code `4326`). 
+Also note that the `shapely` geometries go into a `list`, to illustrate that there can be more than one (unlike in this example):
 
 ```{python}
 lnd_geom = gpd.GeoSeries([lnd_point], crs=4326)
 lnd_geom
 ```
 
-Next, we combine the `GeoSeries` with other attributes into a `dict`. The geometry column is a `GeoSeries`, named `geometry`. The other attributes (if any) may be defined using `list` or `Series` objects. Here, for simplicity, we use the `list` option for defining the three attributes `name`, `temperature`, and `date`. Again, note that the `list` can be of length >1, in case we are creating a layer with more than one feature:
+Next, we combine the `GeoSeries` with other attributes into a `dict`. 
+The geometry column is a `GeoSeries`, named `geometry`. 
+The other attributes (if any) may be defined using `list` or `Series` objects. 
+Here, for simplicity, we use the `list` option for defining the three attributes `name`, `temperature`, and `date`. 
+Again, note that the `list` can be of length >1, in case we are creating a layer with more than one feature:
 
 ```{python}
 d = {
@@ -536,7 +551,11 @@ lnd_layer = gpd.GeoDataFrame(d)
 lnd_layer
 ```
 
-What just happened? First, the coordinates were used to create the simple feature geometry (`shapely`). Second, the geometry was converted into a simple feature geometry column (`GeoSeries`), with a CRS. Third, attributes were combined with `GeoSeries`. This results in an `GeoDataFrame` object, named `lnd_layer`.
+What just happened? 
+First, the coordinates were used to create the simple feature geometry (`shapely`). 
+Second, the geometry was converted into a simple feature geometry column (`GeoSeries`), with a CRS. 
+Third, attributes were combined with `GeoSeries`. 
+This results in an `GeoDataFrame` object, named `lnd_layer`.
 
 Just to illustrate how does creating a layer with more than one feature looks like, here is an example where we create a layer with two points, London and Paris:
 
@@ -554,7 +573,8 @@ towns_layer = gpd.GeoDataFrame(d)
 towns_layer
 ```
 
-The following expression creates an interactive map with the result (@fig-layer-from-scratch-explore). To make the points easier to see, we are setting a different fill color and larger size (we elaborate on `.explore` options in @sec-interactive-maps):
+The following expression creates an interactive map with the result (@fig-layer-from-scratch-explore). 
+To make the points easier to see, we are setting a different fill color and larger size (we elaborate on `.explore` options in @sec-interactive-maps):
 
 ```{python}
 #| label: fig-layer-from-scratch-explore
@@ -563,7 +583,7 @@ The following expression creates an interactive map with the result (@fig-layer-
 towns_layer.explore(color='red', marker_kwds={'radius': 10})
 ```
 
-Alternatively, we can first create a `pandas.DataFrame` and turn it into a `GeoDataFrame` like this:
+Alternatively, we can first create a `pandas.DataFrame` and turn it into a `GeoDataFrame`, like this:
 
 ```{python}
 towns_table = pd.DataFrame({
@@ -583,7 +603,7 @@ which gives the same result `towns_layer`:
 towns_layer
 ```
 
-This approach is particularly useful when we need to read data from a CSV file, e.g., using `pandas.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame`.
+This approach is particularly useful when we need to read data from a CSV file, e.g., using `pandas.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame` (see another example in @sec-spatial-joining).
 
 ### Derived numeric properties {#sec-area-length}
 
