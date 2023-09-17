@@ -304,8 +304,7 @@ gdf.explore()
 
 Geometries are the basic building blocks of vector layers. 
 Although the Simple Features standard defines about 20 types of geometries, we will focus on the seven most commonly used types: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` and `GEOMETRYCOLLECTION`. 
-Find the whole list of possible feature types in the PostGIS manual.
-<!-- TODO: add a hyperlink -->
+A useful list of possible geometry types can be found in R's **sf** package [documentation](https://r-spatial.github.io/sf/articles/sf1.html#simple-feature-geometry-types).
 
 Well-known binary (WKB) and well-known text (WKT) are the standard encodings for simple feature geometries.
 <!-- TODO: add reference or at least link to OGC document on this? -->
@@ -315,31 +314,26 @@ WKT, on the other hand, is a human-readable text markup description of simple fe
 Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
 
 The foundation of each geometry type is the point. 
-A point is simply a coordinate in 2D, 3D, or 4D space such as:
-<!-- TODO: (see the left panel in Figure ...): -->
+A point is simply a coordinate in 2D, 3D, or 4D space such as (@fig-point, @fig-point2):
 
 ```text
 POINT (5 2)
 ```
 
-A linestring is a sequence of points with a straight line connecting the points, for example:
-<!-- TODO: (see middle panel in Figure ...): -->
+A linestring is a sequence of points with a straight line connecting the points, for example (@fig-linestring):
 
 ```text
 LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)
 ```
 
-A polygon is a sequence of points that form a closed, non-intersecting ring. Closed means that the first and the last point of a polygon have the same coordinates (see right panel in Figure ...).
+A polygon is a sequence of points that form a closed, non-intersecting ring. Closed means that the first and the last point of a polygon have the same coordinates (@fig-polygon).
 
 ```text
 POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5))
 ```
 
-<!-- TODO: Illustration of point, linestring and polygon geometries...
-FIGURE ...: Illustration of point, linestring and polygon geometries... -->
-
 So far we have created geometries with only one geometric entity per feature. 
-However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type, as illustrated below:
+However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type, as illustrated below (@fig-multipoint, @fig-multilinestring, @fig-multipolygon):
 
 ```text
 MULTIPOINT (5 2, 1 3, 3 4, 3 2)
@@ -347,11 +341,7 @@ MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))
 MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5), (0 2, 1 2, 1 3, 0 3, 0 2)))
 ```
 
-<!-- TODO: Illustration of multi* geometries...
-FIGURE ...: Illustration of multi* geometries... -->
-
-Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings:
-<!-- TODO: (see Figure ...): -->
+Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings (@fig-geometrycollection):
 
 ```text
 GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
@@ -384,6 +374,9 @@ In the examples for the remaining geometries we use the former approach.
 Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function:
 
 ```{python}
+#| label: fig-point
+#| fig-cap: A `Point` geometry (created from a `list`)
+
 point = shapely.Point([5, 2])
 point
 ```
@@ -392,41 +385,59 @@ Alternatively, we can use the `shapely.from_wkt` to transform a WKT string to a 
 Here is an example of creating the same `'Point'` geometry from WKT:
 
 ```{python}
+#| label: fig-point2
+#| fig-cap: A `Point` geometry (created from a WKT string)
+
 point = shapely.from_wkt('POINT (5 2)')
 point
-```
-
-Here is an example of a `'MultiPoint'` geometry from a list of coordinate tuples:
-
-```{python}
-multipoint = shapely.MultiPoint([(5,2), (1,3), (3,4), (3,2)])
-multipoint
 ```
 
 Here is an example of a `'LineString'` geometry from a list of coordinate tuples:
 
 ```{python}
+#| label: fig-linestring
+#| fig-cap: A `LineString` geometry
+
 linestring = shapely.LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
 linestring
+```
+
+Here is an example of a `'Polygon'` geometry. Note that there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a list of lists of coordinates that define the holes (if any) in the polygon:
+
+```{python}
+#| label: fig-polygon
+#| fig-cap: A `Polygon` geometry
+
+polygon = shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
+polygon
+```
+
+Here is an example of a `'MultiPoint'` geometry from a list of coordinate tuples:
+
+```{python}
+#| label: fig-multipoint
+#| fig-cap: A `MultiPoint` geometry
+
+multipoint = shapely.MultiPoint([(5,2), (1,3), (3,4), (3,2)])
+multipoint
 ```
 
 Here is an example of a `'MultiLineString'` geometry. Note that there is one list of coordinates for each line in the `MultiLineString`:
 
 ```{python}
-linestring = shapely.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
-linestring
-```
+#| label: fig-multilinestring
+#| fig-cap: A `MultiLineString` geometry
 
-Here is an example of a `'Polygon'` geometry. Note that there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a list of lists of coordinates that define the potential holes in the polygon:
-
-```{python}
-polygon = shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
-polygon
+multilinestring = shapely.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
+multilinestring
 ```
 
 Here is an example of a `'MultiPolygon'` geometry:
 
 ```{python}
+#| label: fig-multipolygon
+#| fig-cap: A `MultiPolygon` geometry
+
 multipolygon = shapely.MultiPolygon([
     shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]), 
     shapely.Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])
@@ -434,14 +445,14 @@ multipolygon = shapely.MultiPolygon([
 multipolygon
 ```
 
-And, finally, here is an example of a `'GeometryCollection'` geometry:
+And, finally, here is an example of a `'GeometryCollection'` geometry. Note that the input is a `list` with one or more of the other six geometry types:
 
 ```{python}
-multipoint = shapely.GeometryCollection([
-    shapely.MultiPoint([(5,2), (1,3), (3,4), (3,2)]),
-    shapely.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
-])
-multipoint
+#| label: fig-geometrycollection
+#| fig-cap: A `GeometryCollection` geometry
+
+geometrycollection = shapely.GeometryCollection([multipoint, multilinestring])
+geometrycollection
 ```
 
 `shapely` geometries act as atomic units of vector data, as spatial operations on a geometry return a single new geometry.
