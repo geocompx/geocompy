@@ -350,28 +350,29 @@ GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 
 ### Geometries {#sec-geometries}
 
 Each element in the geometry column is a geometry object, of class `shapely`.
-For example, here is one specific geometry selected by implicit index (that of Canada):
+For example, here is one specific geometry selected by implicit index (that of Canada) (i.e., the 4^th^ element in `gdf`'s geometry column'):
 
 ```{python}
 gdf.geometry.iloc[3]
 ```
 
-We can also select a specific geometry based on the `'name_long'` attribute:
+We can also select a specific geometry based on the `'name_long'` attribute (i.e., the 1^st^ and only element in the subset of `gdf` where the country name is equal to `Egypt`):
 
 ```{python}
 gdf[gdf['name_long'] == 'Egypt'].geometry.iloc[0]
 ```
 
-The **shapely** package is compatible with the Simple Features standard.
+The **shapely** package is compatible with the Simple Features standard (@sec-simple-features).
 Accordingly, seven types of geometries are supported.
-The following section demonstrates creating a `shapely` geometry of each type from scratch. In the first example (a `'Point'`) we demonstrate two types of inputs for geometry creation:
+The following section demonstrates creating a `shapely` geometry of each type from scratch. 
+In the first example (a `'Point'`) we demonstrate two types of inputs for geometry creation:
 
 * a list of coordinates
-* a `string` in the WKT format and 
+* a `string` in the WKT format 
 
 In the examples for the remaining geometries we use the former approach.
 
-Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function:
+Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function, as follows (@fig-point):
 
 ```{python}
 #| label: fig-point
@@ -382,7 +383,7 @@ point
 ```
 
 Alternatively, we can use the `shapely.from_wkt` to transform a WKT string to a `shapely` geometry object. 
-Here is an example of creating the same `'Point'` geometry from WKT:
+Here is an example of creating the same `'Point'` geometry from WKT (@fig-point2):
 
 ```{python}
 #| label: fig-point2
@@ -392,7 +393,7 @@ point = shapely.from_wkt('POINT (5 2)')
 point
 ```
 
-Here is an example of a `'LineString'` geometry from a list of coordinate tuples:
+Here is an example of a `'LineString'` geometry from a list of coordinate tuples (@fig-linestring):
 
 ```{python}
 #| label: fig-linestring
@@ -402,7 +403,7 @@ linestring = shapely.LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
 linestring
 ```
 
-Here is an example of a `'Polygon'` geometry. Note that there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a list of lists of coordinates that define the holes (if any) in the polygon:
+Here is an example of a `'Polygon'` geometry. Note that there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a `list` of `list`s of coordinates that define the holes (if any) in the polygon (@fig-polygon):
 
 ```{python}
 #| label: fig-polygon
@@ -412,7 +413,7 @@ polygon = shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (
 polygon
 ```
 
-Here is an example of a `'MultiPoint'` geometry from a list of coordinate tuples:
+Here is an example of a `'MultiPoint'` geometry from a list of coordinate tuples (@fig-multipoint):
 
 ```{python}
 #| label: fig-multipoint
@@ -422,7 +423,7 @@ multipoint = shapely.MultiPoint([(5,2), (1,3), (3,4), (3,2)])
 multipoint
 ```
 
-Here is an example of a `'MultiLineString'` geometry. Note that there is one list of coordinates for each line in the `MultiLineString`:
+Here is an example of a `'MultiLineString'` geometry. Note that there is one list of coordinates for each line in the `MultiLineString` (@fig-multilinestring):
 
 ```{python}
 #| label: fig-multilinestring
@@ -432,7 +433,7 @@ multilinestring = shapely.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], 
 multilinestring
 ```
 
-Here is an example of a `'MultiPolygon'` geometry:
+Here is an example of a `'MultiPolygon'` geometry (@fig-multipolygon):
 
 ```{python}
 #| label: fig-multipolygon
@@ -445,7 +446,7 @@ multipolygon = shapely.MultiPolygon([
 multipolygon
 ```
 
-And, finally, here is an example of a `'GeometryCollection'` geometry. Note that the input is a `list` with one or more of the other six geometry types:
+And, finally, here is an example of a `'GeometryCollection'` geometry. Note that the input is a `list` with one or more of the other six geometry types (@fig-geometrycollection):
 
 ```{python}
 #| label: fig-geometrycollection
@@ -456,9 +457,12 @@ geometrycollection
 ```
 
 `shapely` geometries act as atomic units of vector data, as spatial operations on a geometry return a single new geometry.
-For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.2`) and itself:
+For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.2`) and itself (@fig-mpol-buffer-difference):
 
 ```{python}
+#| label: fig-mpol-buffer-difference
+#| fig-cap: The difference between a buffered `MultiPolygon` and itself
+
 multipolygon.buffer(0.2).difference(multipolygon)
 ```
 
