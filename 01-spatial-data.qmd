@@ -750,14 +750,14 @@ The relation between a `rasterio` file connection and the derived properties is 
 
 ### Raster from scratch {#sec-raster-from-scratch}
 
-In this section, we are going to demonstrate creation of rasters from scratch. We are going to create two small rasters, `elev` and `grain`, which we are going to use in examples later on in the book. Unlike creating a vector layer, creating a raster from scratch is rarely needed in practive because aligning a raster with the right spatial extent is difficult to do programmatically (GIS software is a better fit for the job). Nevertheless, the examples will be useful to become more familiar with the `rasterio` data structures.
+In this section, we are going to demonstrate creation of rasters from scratch. We are going to create two small rasters, `elev` and `grain`, which we are going to use in examples later on in the book. Unlike creating a vector layer (see @sec-vector-layer-from-scratch), creating a raster from scratch is rarely needed in practice because aligning a raster with the right spatial extent is difficult to do programmatically ("georeferencing" tools in GIS software are a better fit for the job). Nevertheless, the examples will be useful to become more familiar with the **rasterio** data structures.
 
-A raster is basically an array combined with georeferencing information, namely:
+Conceptually, a raster is an array combined with georeferencing information, whereas the latter comprises:
 
-* A transformation matrix (linking pixel indices with coordinates)
-* A CRS definition
+* A transformation matrix, linking pixel indices with coordinates in a particular coordinate system
+* A CRS definition, specifying the association of that coordinate system with the surface of the earth (optional)
 
-Therefore, to create a raster, we first need to have an array with the values, then supplement it with the georeferencing information. Let's create the arrays `elev` and `grain`. The `elev` array is a 6 by 6 array with sequential values from 1 to 36. It can be created as follows:
+Therefore, to create a raster, we first need to have an array with the values, then supplement it with the georeferencing information. Let's create the arrays `elev` and `grain`. The `elev` array is a $6 \times 6$ array with sequential values from `1` to `36`. It can be created as follows:
 
 ```{python}
 elev = np.arange(1, 37, dtype=np.uint8).reshape(6, 6)
@@ -798,9 +798,9 @@ new_transform = rasterio.transform.from_origin(
 new_transform
 ```
 
-Note that, confusingly, $delta_{y}$ is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is eventuially negative (`-0.5`)! 
+Note that, confusingly, $delta_{y}$ (i.e., `ysize`) is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is eventuially negative (`-0.5`)! 
 
-The raster can now be plotted in its coordinate system, passing the array `elev` along with the transformation matrix `new_transform` to `show` (@fig-rasterio-plot-elev):
+The raster can now be plotted in its coordinate system, passing the array `elev` along with the transformation matrix `new_transform` to `rasterio.plot.show` (@fig-rasterio-plot-elev):
 
 ```{python}
 #| label: fig-rasterio-plot-elev
@@ -818,7 +818,7 @@ The `grain` raster can be plotted the same way, as we are going to use the same 
 rasterio.plot.show(grain, transform=new_transform);
 ```
 
-At this point, we can work with the raster using `rasterio`:
+At this point, we have two rasters, each composed of an array and its transformation matrix. We can work with the raster using `rasterio`:
 
 * Passing the transformation matrix wherever true raster pixel coordinates are important (such as in function `show` above)
 * Keeping in mind that any other layer we use in the analysis is in the same CRS of those coordinates
@@ -877,35 +877,36 @@ Note that the transform matrices and dimensions of `elev` and `grain` are identi
 
 Vector and raster spatial data types share concepts intrinsic to spatial data. 
 Perhaps the most fundamental of these is the Coordinate Reference System (CRS), which defines how the spatial elements of the data relate to the surface of the Earth (or other bodies).
-CRSs are either geographic or projected, as introduced at the beginning of this chapter (see ...).
+CRSs are either geographic or projected, as introduced at the beginning of this chapter (@sec-vector-data).
 This section explains each type, laying the foundations for @sec-reproj-geo-data, which provides a deep dive into setting, transforming, and querying CRSs.
 
 ### Geographic coordinate systems
 
 Geographic coordinate systems identify any location on the Earth's surface using two values---longitude and latitude (see left panel of @fig-zion-crs). Longitude is a location in the East-West direction in angular distance from the Prime Meridian plane, while latitude is an angular distance North or South of the equatorial plane.
 Distances in geographic CRSs are therefore not measured in meters. 
-This has important consequences, as demonstrated in Section 7.
+This has important consequences, as demonstrated in @sec-reproj-geo-data.
 
 A spherical or ellipsoidal surface represents the surface of the Earth in geographic coordinate systems. 
 Spherical models assume that the Earth is a perfect sphere of a given radius---they have the advantage of simplicity, but, at the same time, they are inaccurate: the Earth is not a sphere!
 Ellipsoidal models are defined by two parameters: the equatorial radius and the polar radius. 
-These are suitable because the Earth is compressed: the equatorial radius is around 11.5 km longer than the polar radius.
+These are suitable because the Earth is compressed: the equatorial radius is around 11.5 $km$ longer than the polar radius.
 <!-- TODO: add reference, (Maling 1992...). -->
 
 Ellipsoids are part of a broader component of CRSs: the datum. 
 This contains information on what ellipsoid to use and the precise relationship between the Cartesian coordinates and location on the Earth's surface.
 There are two types of datum---geocentric (such as WGS84) and local (such as NAD83). 
-You can see examples of these two types of datums in Figure .... 
+You can see examples of these two types of datums in @fig-geocentric-vs-local. 
 Black lines represent a geocentric datum, whose center is located in the Earth's center of gravity and is not optimized for a specific location.
 In a local datum, shown as a purple dashed line, the ellipsoidal surface is shifted to align with the surface at a particular location. 
 These allow local variations on Earth's surface, such as large mountain ranges, to be accounted for in a local CRS. 
-<!-- This can be seen in Figure ..., where the local datum is fitted to the area of Philippines, but is misaligned with most of the rest of the planet's surface. Both datums in Figure ... are put on top of a geoid - a model of global mean sea level. -->
+This can be seen in @fig-geocentric-vs-local, where the local datum is fitted to the area of Philippines, but is misaligned with most of the rest of the planet's surface. Both datums in @fig-geocentric-vs-local are put on top of a geoid---a model of global mean sea level.
+
+![Geocentric and local geodetic datums shown on top of a geoid (in false color and the vertical exaggeration by 10,000 scale factor). Image of the geoid is adapted from the work of Ince et al. (2019). (add citation...)](https://r.geocompx.org/figures/02_datum_fig.png){#fig-geocentric-vs-local}
 
 ### Projected coordinate reference systems {#sec-projected-coordinate-reference-systems}
 
 All projected CRSs are based on a geographic CRS, described in the previous section, and rely on map projections to convert the three-dimensional surface of the Earth into Easting and Northing (x and y) values in a projected CRS.
 Projected CRSs are based on Cartesian coordinates on an implicitly flat surface (see right panel of @fig-zion-crs).
- <!-- TODO (right panel of Figure ...).  -->
 They have an origin, x and y axes, and a linear unit of measurement such as meters.
 
 This transition cannot be done without adding some deformations. 
@@ -929,8 +930,8 @@ Using its functions, we can examine the list of supported projections:
 
 ```{python}
 import pyproj
-epsg_codes = pyproj.get_codes('EPSG', 'CRS')  ## List of supported EPSG codes
-epsg_codes[:5]  ## print first five
+epsg_codes = pyproj.get_codes('EPSG', 'CRS')  ## Supported EPSG codes
+epsg_codes[:5]  ## Print first five
 ```
 
 ```{python}
@@ -938,7 +939,7 @@ pyproj.CRS.from_epsg(4326)  ## Printout of WGS84 CRS (EPSG:4326)
 ```
 
 A quick summary of different projections, their types, properties, and suitability can be found in "Map Projections" (1993) and at <https://www.geo-projections.com/>.
-We will expand on CRSs and explain how to project from one CRS to another in Chapter 7. 
+We will expand on CRSs and explain how to project from one CRS to another in @sec-reproj-geo-data. 
 But, for now, it is sufficient to know:
 
 * That coordinate systems are a key component of geographic objects
@@ -958,8 +959,8 @@ And here is an illustration of the layer in the original projected CRS and in a 
 #| label: fig-zion-crs
 #| fig-cap: Examples of Coordinate Refrence Systems (CRS) for a vector layer 
 #| fig-subcap: 
-#| - geographic (WGS84)
-#| - projected (NAD83 / UTM zone 12N)
+#| - Geographic (WGS84)
+#| - Projected (NAD83 / UTM zone 12N)
 #| layout-ncol: 2
 
 # WGS84
@@ -977,19 +978,20 @@ Clearly, it is vital to know whether a house's measurements are in feet or meter
 It is a good cartographic practice to add a scale bar or some other distance indicator onto maps to demonstrate the relationship between distances on the page or screen and distances on the ground. 
 Likewise, it is important for the user to be aware of the units in which the geometry coordinates are, to ensure that subsequent calculations are done in the right context.
 
-Python spatial data structures in **geopandas** and **rasterio** do not natively support the concept of measurement.
+Python spatial data structures in **geopandas** and **rasterio** do not natively support the concept of measurement units.
 The coordinates of a vector layer or a raster are plain numbers, referring to an arbitrary plane.
-For example, according to the `.transform` matrix of `srtm.tif` we can see that the raster resolution is `0.000833` and that its CRS is WGS84 (EPSG: `4326`). 
-We may know (or can find out) that the units of WGS84 are decimal degrees. 
-However, that information is not encoded in any numeric calculation.
+For example, according to the `.transform` matrix of `srtm.tif` we can see that the raster resolution is `0.000833` and that its CRS is WGS84 (EPSG: `4326`): 
 
 ```{python}
 src.meta
 ```
 
+We may already know (or can find out) that the units of WGS84 are decimal degrees. 
+However, that information is not encoded in any numeric calculation (i.e., the results are always unitless numbers).
+
 Consequently, we need to be aware of the CRS units we are working with. Typically, these are decimal degrees, in a geographic CRS, or $m$, in a projected CRS, although there are exceptions.
 Geometric calculations such as length, area, or distance, return plain numbers in the same units of the CRS (such as $m$ or $m^2$). 
-It is up to the user to determine which units the result is given in and treat the result accordingly. 
+It is up to the user to determine which units the result is given in, and treat the result accordingly. 
 For example, if the area output was in $m^2$ and we need the result in $km^2$, then we need to divide the result by $1000^2$. 
 
 ## Exercises
