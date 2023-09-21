@@ -1447,7 +1447,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="sec-vector-attribute-aggregation" class="level3" data-number="2.3.2">
 <h3 data-number="2.3.2" class="anchored" data-anchor-id="sec-vector-attribute-aggregation"><span class="header-section-number">2.3.2</span> Vector attribute aggregation</h3>
-<p>Aggregation involves summarizing data based on one or more <em>grouping variables</em> (typically values in a column; geographic aggregation is covered in <a href="03-spatial-operations.html#sec-vector-spatial-aggregation"><span>Section&nbsp;3.3.6</span></a>). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country). The <code>world</code> dataset contains the necessary ingredients: the columns <code>pop</code> and <code>continent</code>, the population and the grouping variable, respectively. The aim is to find the <code>sum()</code> of country populations for each continent, resulting in a smaller table or vector layer (of continents). (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). The aggregation can be achieved using a combination of <code>.groupby</code> and <code>.sum</code>:</p>
+<p>Aggregation involves summarizing data based on one or more <em>grouping variables</em> (typically values in a column; geographic aggregation is covered in <a href="03-spatial-operations.html#sec-vector-spatial-aggregation"><span>Section&nbsp;3.3.6</span></a>). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country). The <code>world</code> dataset contains the necessary ingredients: the columns <code>pop</code> and <code>continent</code>, the population and the grouping variable, respectively. The aim is to find the <code>sum()</code> of country populations for each continent, resulting in a smaller table or vector layer (of continents). (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets).</p>
+<p>Non-spatial aggregation can be achieved using a combination of <code>.groupby</code> and <code>.sum</code>:</p>
 <div class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>world_agg1 <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'pop'</span>]].groupby(<span class="st">'continent'</span>).<span class="bu">sum</span>()</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>world_agg1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1575,7 +1576,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><a href="#fig-spatial-aggregation">Figure&nbsp;<span>2.1</span></a> shows the result:</p>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">3</span>))</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>world_agg2.plot(column<span class="op">=</span><span class="st">'pop'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>world_agg2.plot(column<span class="op">=</span><span class="st">'pop'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-spatial-aggregation" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1600,12 +1601,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>As a more complex example, here is how we can calculate the total population, area, and count of countries, per continent:</p>
 <div class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>world_agg3 <span class="op">=</span> world.dissolve(</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span>{</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">"name_long"</span>: <span class="st">"count"</span>,</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">"pop"</span>: <span class="st">"sum"</span>,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">'area_km2'</span>: <span class="st">"sum"</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>     }).rename(columns<span class="op">=</span>{<span class="st">'name_long'</span>: <span class="st">'n'</span>})</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>world_agg3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">'continent'</span>, </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    aggfunc<span class="op">=</span>{</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">'name_long'</span>: <span class="st">'count'</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">'pop'</span>: <span class="st">'sum'</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'area_km2'</span>: <span class="st">'sum'</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    }).rename(columns<span class="op">=</span>{<span class="st">'name_long'</span>: <span class="st">'n'</span>})</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>world_agg3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="23">
 <div>
 
@@ -1685,22 +1687,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Figure <a href="#fig-spatial-aggregation-different-functions">Figure&nbsp;<span>2.2</span></a> visualizes the resulting layer (<code>world_agg3</code>) of continents with the three aggregated attributes.</p>
-<div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">5</span>))</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'pop'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">0</span>])</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'area_km2'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>])</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'n'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>][<span class="dv">0</span>])</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">0</span>].set_title(<span class="st">'Summed population'</span>)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">1</span>].set_title(<span class="st">'Summed area'</span>)</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>][<span class="dv">0</span>].set_title(<span class="st">'Count of countries'</span>)</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>fig.delaxes(axes[<span class="dv">1</span>][<span class="dv">1</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-spatial-aggregation-different-functions" class="quarto-figure quarto-figure-center anchored">
+<div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summed population</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="fl">2.5</span>))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'pop'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Summed area</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="fl">2.5</span>))</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'area_km2'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Count of countries</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="fl">2.5</span>))</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'n'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-spatial-aggregation-different-functions" class="cell quarto-layout-panel" data-execution_count="24">
 <figure class="figure">
-<p><img src="02-attribute-operations_files/figure-html/fig-spatial-aggregation-different-functions-output-1.png" width="707" height="403" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;2.2: Continent properties, calculated using spatial aggregation using different functions</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-spatial-aggregation-different-functions-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="02-attribute-operations_files/figure-html/fig-spatial-aggregation-different-functions-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-spatial-aggregation-different-functions" width="400"></p>
+<figcaption class="figure-caption">(a) Summed population</figcaption>
 </figure>
 </div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-spatial-aggregation-different-functions-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="02-attribute-operations_files/figure-html/fig-spatial-aggregation-different-functions-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-spatial-aggregation-different-functions" width="400"></p>
+<figcaption class="figure-caption">(b) Summed area</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-spatial-aggregation-different-functions-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="02-attribute-operations_files/figure-html/fig-spatial-aggregation-different-functions-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-spatial-aggregation-different-functions" width="408"></p>
+<figcaption class="figure-caption">(c) Count of countries</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;2.2: Continent properties, calculated using spatial aggregation using different functions</figcaption><p></p>
+</figure>
 </div>
 </div>
 <p>Let’s proceed with the last result to demonstrate other table-related operations. Given the <code>world_agg3</code> continent summary (<a href="#fig-spatial-aggregation-different-functions">Figure&nbsp;<span>2.2</span></a>), we:</p>
