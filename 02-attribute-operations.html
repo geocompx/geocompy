@@ -100,6 +100,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
@@ -306,7 +308,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Attribute data is non-spatial information associated with geographic (geometry) data. A bus stop provides a simple example: its position would typically be represented by latitude and longitude coordinates (geometry data), in addition to its name. The Elephant &amp; Castle / New Kent Road stop in London, for example has coordinates of <code>-0.098</code> degrees longitude and <code>51.495</code> degrees latitude which can be represented as <code>POINT (-0.098 51.495)</code> in the Simple Feature representation described in <a href="01-spatial-data.html"><span>Chapter&nbsp;1</span></a>. Attributes such as the name attribute of the <code>POINT</code> feature (to use Simple Features terminology) are the topic of this chapter.</p>
 <p>Another example is the elevation value (attribute) for a specific grid cell in raster data. Unlike the vector data model, the raster data model stores the coordinate of the grid cell indirectly, meaning the distinction between attribute and spatial information is less clear. To illustrate the point, think of a pixel in the 3rd row and the 4th column of a raster matrix. Its spatial location is defined by its index in the matrix: move from the origin four cells in the x direction (typically east and right on maps) and three cells in the y direction (typically south and down). The raster’s resolution defines the distance for each x- and y-step which is specified in a header. The header is a vital component of raster datasets which specifies how pixels relate to geographic coordinates (see also <a href="03-spatial-operations.html"><span>Chapter&nbsp;3</span></a>).</p>
 <p>This chapter teaches how to manipulate geographic objects based on attributes such as the names of bus stops in a vector dataset and elevations of pixels in a raster dataset. For vector data, this means techniques such as subsetting and aggregation (see <a href="#sec-vector-attribute-subsetting"><span>Section&nbsp;2.3.1</span></a> and <a href="#sec-vector-attribute-aggregation"><span>Section&nbsp;2.3.2</span></a>). <a href="#sec-vector-attribute-joining"><span>Section&nbsp;2.3.3</span></a> and <a href="#sec-creating-attributes-and-removing-spatial-information"><span>Section&nbsp;2.3.4</span></a> demonstrate how to join data onto simple feature objects using a shared ID and how to create new variables, respectively. Each of these operations has a spatial equivalent: <code>[</code> operator for subsetting a <code>(Geo)DataFrame</code> using a boolean <code>Series</code>, for example, is applicable both for subsetting objects based on their attribute and spatial relations derived using methods such as <code>.intersects</code>; you can also join attributes in two geographic datasets using spatial joins. This is good news: skills developed in this chapter are cross-transferable. <a href="03-spatial-operations.html"><span>Chapter&nbsp;3</span></a> extends the methods presented here to the spatial world.</p>
-<p>After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in <a href="#sec-manipulating-raster-objects"><span>Section&nbsp;2.4</span></a>, which demonstrates how to create raster layers containing continuous and categorical attributes and extracting cell values from one or more layer (raster subsetting). <a href="#sec-summarizing-raster-objects"><span>Section&nbsp;2.4.2</span></a> provides an overview of ‘global’ raster operations which can be used to summarize entire raster datasets.</p>
+<p>After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in <a href="#sec-manipulating-raster-objects"><span>Section&nbsp;2.4</span></a>, which demonstrates extracting cell values from one or more layer (raster subsetting). <a href="#sec-summarizing-raster-objects"><span>Section&nbsp;2.4.2</span></a> provides an overview of ‘global’ raster operations which can be used to summarize entire raster datasets.</p>
 </section>
 <section id="vector-attribute-manipulation" class="level2" data-number="2.3">
 <h2 data-number="2.3" class="anchored" data-anchor-id="vector-attribute-manipulation"><span class="header-section-number">2.3</span> Vector attribute manipulation</h2>
@@ -316,17 +318,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>pandas</strong> supports several subsetting interfaces, though the most <a href="https://stackoverflow.com/questions/38886080/python-pandas-series-why-use-loc">recommended</a> ones are:</p>
 <ul>
 <li><code>.loc</code>, which uses pandas indices, and</li>
-<li><code>.iloc</code>, which uses (implicit) numpy-style numeric indices.</li>
+<li><code>.iloc</code>, which uses (implicit) <strong>numpy</strong>-style numeric indices.</li>
 </ul>
-<p>In both cases the method is followed by square brackets, and two indices, separated by a comma. Each index can comprise:</p>
+<p>In both cases, the method is followed by square brackets, and two indices, separated by a comma. Each index can comprise:</p>
 <ul>
 <li>A specific value, as in <code>1</code></li>
-<li>A slice, as in <code>0:3</code></li>
 <li>A <code>list</code>, as in <code>[0,2,4]</code></li>
+<li>A slice, as in <code>0:3</code></li>
 <li><code>:</code>—indicating “all” indices</li>
 </ul>
-<p>An exception to this rule is selecting columns using a list, as in <code>df[['a','b']]</code>, instead of <code>df.loc[:, ['a','b']]</code>, to select columns <code>'a'</code> and <code>'b'</code> from <code>df</code>.</p>
-<p>Here are few examples of subsetting the <code>GeoDataFrame</code> of world countries.</p>
+<p>An exception to this rule is selecting columns using a list, which we do using shorter notation, as in <code>df[['a','b']]</code>, instead of <code>df.loc[:, ['a','b']]</code>, to select columns <code>'a'</code> and <code>'b'</code> from <code>df</code>.</p>
+<p>Here are few examples of subsetting the <code>GeoDataFrame</code> of world countries (<a href="01-spatial-data.html#fig-gdf-plot">Figure&nbsp;<span>1.1</span></a>).</p>
 <p>Subsetting rows by position, e.g., the first three rows:</p>
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>world.iloc[<span class="dv">0</span>:<span class="dv">3</span>, :]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -764,7 +766,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>Subsetting by a list of boolean values (0 and 1 or True and False):</p>
+<p>Subsetting by a list of boolean values (<code>0</code> and <code>1</code>, or <code>True</code> and <code>False</code>):</p>
 <div class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>] </span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>world.iloc[:, x]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1120,7 +1122,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The standard <strong>numpy</strong> comparison operators can be used in boolean subsetting, as illustrated in Table <a href="#tbl-comparison-operators">Table&nbsp;<span>2.1</span></a>.</p>
 <div id="tbl-comparison-operators" class="anchored">
 <table class="table">
-<caption>Table&nbsp;2.1: Comparison operators that return Booleans (<code>True</code>/<code>False</code>).</caption>
+<caption>Table&nbsp;2.1: Comparison operators that return boolean values (<code>True</code>/<code>False</code>).</caption>
 <thead>
 <tr class="header">
 <th><code>Symbol</code></th>
@@ -1151,7 +1153,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </div>
-<p>The following example demonstrates logical vectors for subsetting by creating a new <code>GeoDataFrame</code> object called <code>small_countries</code> that contains only those countries whose surface area is smaller than 10,000 km<sup>2</sup>:</p>
+<p>The following example demonstrates logical vectors for subsetting by creating a new <code>GeoDataFrame</code> object called <code>small_countries</code> that contains only those countries whose surface area is smaller than 10,000 <span class="math inline">\(km^2\)</span>:</p>
 <div class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>idx_small <span class="op">=</span> world[<span class="st">'area_km2'</span>] <span class="op">&lt;</span> <span class="dv">10000</span>  <span class="co">## a logical 'Series'</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>small_countries <span class="op">=</span> world[idx_small]</span>
@@ -1445,7 +1447,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="sec-vector-attribute-aggregation" class="level3" data-number="2.3.2">
 <h3 data-number="2.3.2" class="anchored" data-anchor-id="sec-vector-attribute-aggregation"><span class="header-section-number">2.3.2</span> Vector attribute aggregation</h3>
-<p>Aggregation involves summarizing data based on one or more <em>grouping variables</em> (typically values in a column;geographic aggregation is covered in the next chapter). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country). The <code>world</code> dataset contains the necessary ingredients: the columns <code>pop</code> and <code>continent</code>, the population and the grouping variable, respectively. The aim is to find the <code>sum()</code> of country populations for each continent, resulting in a smaller data frame. (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). This aggregation can be achieved using a combination of <code>.groupby</code> and <code>.sum</code>:</p>
+<p>Aggregation involves summarizing data based on one or more <em>grouping variables</em> (typically values in a column; geographic aggregation is covered in <a href="03-spatial-operations.html#sec-vector-spatial-aggregation"><span>Section&nbsp;3.3.6</span></a>). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country). The <code>world</code> dataset contains the necessary ingredients: the columns <code>pop</code> and <code>continent</code>, the population and the grouping variable, respectively. The aim is to find the <code>sum()</code> of country populations for each continent, resulting in a smaller table or vector layer (of continents). (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). The aggregation can be achieved using a combination of <code>.groupby</code> and <code>.sum</code>:</p>
 <div class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>world_agg1 <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'pop'</span>]].groupby(<span class="st">'continent'</span>).<span class="bu">sum</span>()</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>world_agg1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1500,69 +1502,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>If you dislike the scientific notation used by default to display the population sums, you can change the Pandas display format for float values like this:</p>
-<div class="cell" data-execution_count="21">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">'display.float_format'</span>, <span class="st">'</span><span class="sc">{:.0f}</span><span class="st">'</span>.<span class="bu">format</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>world_agg1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="21">
-<div>
-
-
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">pop</th>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">continent</th>
-<th data-quarto-table-cell-role="th"></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">Africa</td>
-<td>1154946633</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">Antarctica</td>
-<td>0</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">Asia</td>
-<td>4311408059</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">...</td>
-<td>...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">Oceania</td>
-<td>37757833</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">Seven seas (open ocean)</td>
-<td>0</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">South America</td>
-<td>412060811</td>
-</tr>
-</tbody>
-</table>
-
-<p>8 rows × 1 columns</p>
-</div>
-</div>
-</div>
 <p>The result is a (non-spatial) table with eight rows, one per continent, and two columns reporting the name and population of each continent.</p>
 <p>If we want to include the geometry in the aggregation result, we can use the <code>.dissolve</code> method. That way, in addition to the summed population, we also get the associated geometry per continent, i.e., the union of all countries. Note that we use the <code>by</code> parameter to choose which column(s) are used for grouping, and the <code>aggfunc</code> parameter to choose the aggregation function for non-geometry columns:</p>
-<div class="cell" data-execution_count="22">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>world_agg2 <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'pop'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>) <span class="op">\</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>world_agg2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="22">
+<div class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>world_agg2 <span class="op">=</span> world[[<span class="st">'continent'</span>, <span class="st">'pop'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>) <span class="op">\</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>world_agg2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
 <div>
 
 
@@ -1580,19 +1527,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td data-quarto-table-cell-role="th">0</td>
 <td>Africa</td>
 <td>MULTIPOLYGON (((-11.43878 6.785...</td>
-<td>1154946633</td>
+<td>1.154947e+09</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
 <td>Antarctica</td>
 <td>MULTIPOLYGON (((-61.13898 -79.9...</td>
-<td>0</td>
+<td>0.000000e+00</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
 <td>Asia</td>
 <td>MULTIPOLYGON (((48.67923 14.003...</td>
-<td>4311408059</td>
+<td>4.311408e+09</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">...</td>
@@ -1604,19 +1551,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td data-quarto-table-cell-role="th">5</td>
 <td>Oceania</td>
 <td>MULTIPOLYGON (((147.91405 -43.2...</td>
-<td>37757833</td>
+<td>3.775783e+07</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">6</td>
 <td>Seven seas (open ocean)</td>
 <td>POLYGON ((68.93500 -48.62500, 6...</td>
-<td>0</td>
+<td>0.000000e+00</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">7</td>
 <td>South America</td>
 <td>MULTIPOLYGON (((-68.63999 -55.5...</td>
-<td>412060811</td>
+<td>4.120608e+08</td>
 </tr>
 </tbody>
 </table>
@@ -1626,9 +1573,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p><a href="#fig-spatial-aggregation">Figure&nbsp;<span>2.1</span></a> shows the result:</p>
-<div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">3</span>))</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>world_agg2.plot(column<span class="op">=</span><span class="st">'pop'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">3</span>))</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>world_agg2.plot(column<span class="op">=</span><span class="st">'pop'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-spatial-aggregation" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1651,15 +1598,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Additionally, we can pass custom functions.</p>
 <p>As a more complex example, here is how we can calculate the total population, area, and count of countries, per continent:</p>
-<div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>world_agg3 <span class="op">=</span> world.dissolve(</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span>{</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">"name_long"</span>: <span class="st">"count"</span>,</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">"pop"</span>: <span class="st">"sum"</span>,</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">'area_km2'</span>: <span class="st">"sum"</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>     }).rename(columns<span class="op">=</span>{<span class="st">'name_long'</span>: <span class="st">'n'</span>})</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>world_agg3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="24">
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>world_agg3 <span class="op">=</span> world.dissolve(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    by<span class="op">=</span><span class="st">'continent'</span>, aggfunc<span class="op">=</span>{</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">"name_long"</span>: <span class="st">"count"</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">"pop"</span>: <span class="st">"sum"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">'area_km2'</span>: <span class="st">"sum"</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>     }).rename(columns<span class="op">=</span>{<span class="st">'name_long'</span>: <span class="st">'n'</span>})</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>world_agg3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="23">
 <div>
 
 
@@ -1685,22 +1632,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td data-quarto-table-cell-role="th">Africa</td>
 <td>MULTIPOLYGON (((-11.43878 6.785...</td>
 <td>51</td>
-<td>1154946633</td>
-<td>29946198</td>
+<td>1.154947e+09</td>
+<td>2.994620e+07</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">Antarctica</td>
 <td>MULTIPOLYGON (((-61.13898 -79.9...</td>
 <td>1</td>
-<td>0</td>
-<td>12335956</td>
+<td>0.000000e+00</td>
+<td>1.233596e+07</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">Asia</td>
 <td>MULTIPOLYGON (((48.67923 14.003...</td>
 <td>47</td>
-<td>4311408059</td>
-<td>31252459</td>
+<td>4.311408e+09</td>
+<td>3.125246e+07</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">...</td>
@@ -1713,22 +1660,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td data-quarto-table-cell-role="th">Oceania</td>
 <td>MULTIPOLYGON (((147.91405 -43.2...</td>
 <td>7</td>
-<td>37757833</td>
-<td>8504489</td>
+<td>3.775783e+07</td>
+<td>8.504489e+06</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">Seven seas (open ocean)</td>
 <td>POLYGON ((68.93500 -48.62500, 6...</td>
 <td>1</td>
-<td>0</td>
-<td>11603</td>
+<td>0.000000e+00</td>
+<td>1.160257e+04</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">South America</td>
 <td>MULTIPOLYGON (((-68.63999 -55.5...</td>
 <td>13</td>
-<td>412060811</td>
-<td>17762592</td>
+<td>4.120608e+08</td>
+<td>1.776259e+07</td>
 </tr>
 </tbody>
 </table>
@@ -1738,15 +1685,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Figure <a href="#fig-spatial-aggregation-different-functions">Figure&nbsp;<span>2.2</span></a> visualizes the resulting layer (<code>world_agg3</code>) of continents with the three aggregated attributes.</p>
-<div class="cell" data-execution_count="25">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">5</span>))</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'pop'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">0</span>])</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'area_km2'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>])</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'n'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>][<span class="dv">0</span>])</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">0</span>].set_title(<span class="st">'Summed population'</span>)</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">1</span>].set_title(<span class="st">'Summed area'</span>)</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>][<span class="dv">0</span>].set_title(<span class="st">'Count of countries'</span>)</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>fig.delaxes(axes[<span class="dv">1</span>][<span class="dv">1</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">5</span>))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'pop'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">0</span>])</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'area_km2'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>])</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>world_agg3.plot(column<span class="op">=</span><span class="st">'n'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>][<span class="dv">0</span>])</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">0</span>].set_title(<span class="st">'Summed population'</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>][<span class="dv">1</span>].set_title(<span class="st">'Summed area'</span>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>][<span class="dv">0</span>].set_title(<span class="st">'Count of countries'</span>)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>fig.delaxes(axes[<span class="dv">1</span>][<span class="dv">1</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-spatial-aggregation-different-functions" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1763,13 +1710,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>arrange continents by the number countries they contain, and</li>
 <li>keep only the 3 most populous continents.</li>
 </ul>
-<div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>world_agg4 <span class="op">=</span> world_agg3.drop(columns<span class="op">=</span>[<span class="st">'geometry'</span>])</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>world_agg4[<span class="st">'density'</span>] <span class="op">=</span> world_agg4[<span class="st">'pop'</span>] <span class="op">/</span> world_agg4[<span class="st">'area_km2'</span>]</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>world_agg4 <span class="op">=</span> world_agg4.sort_values(by<span class="op">=</span><span class="st">'n'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>world_agg4 <span class="op">=</span> world_agg4.head(<span class="dv">3</span>)</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>world_agg4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="26">
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>world_agg4 <span class="op">=</span> world_agg3.drop(columns<span class="op">=</span>[<span class="st">'geometry'</span>])</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>world_agg4[<span class="st">'density'</span>] <span class="op">=</span> world_agg4[<span class="st">'pop'</span>] <span class="op">/</span> world_agg4[<span class="st">'area_km2'</span>]</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>world_agg4 <span class="op">=</span> world_agg4.sort_values(by<span class="op">=</span><span class="st">'n'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>world_agg4 <span class="op">=</span> world_agg4.head(<span class="dv">3</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>world_agg4</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
 <div>
 
 
@@ -1794,23 +1741,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td data-quarto-table-cell-role="th">Africa</td>
 <td>51</td>
-<td>1154946633</td>
-<td>29946198</td>
-<td>39</td>
+<td>1.154947e+09</td>
+<td>2.994620e+07</td>
+<td>38.567388</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">Asia</td>
 <td>47</td>
-<td>4311408059</td>
-<td>31252459</td>
-<td>138</td>
+<td>4.311408e+09</td>
+<td>3.125246e+07</td>
+<td>137.954201</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">Europe</td>
 <td>39</td>
-<td>669036256</td>
-<td>23065219</td>
-<td>29</td>
+<td>6.690363e+08</td>
+<td>2.306522e+07</td>
+<td>29.006283</td>
 </tr>
 </tbody>
 </table>
@@ -1823,10 +1770,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="2.3.3" class="anchored" data-anchor-id="sec-vector-attribute-joining"><span class="header-section-number">2.3.3</span> Vector attribute joining</h3>
 <p>Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared ‘key’ variable. <strong>pandas</strong> has a function named <code>pd.merge</code> for joining <code>(Geo)DataFrames</code> based on common column(s). The <code>pd.merge</code> function follows conventions used in the database language SQL (Grolemund and Wickham 2016). The <code>pd.merge</code> function works the same on <code>DataFrame</code> and <code>GeoDataFrame</code> objects. The result of <code>pd.merge</code> can be either a <code>DataFrame</code> or a <code>GeoDataFrame</code> object, depending on the inputs.</p>
 <p>A common type of attribute join on spatial data is to join <code>DataFrames</code> to <code>GeoDataFrames</code>. To achieve this, we use <code>pd.merge</code> with a <code>GeoDataFrame</code> as the first argument and add columns to it from a <code>DataFrame</code> specified as the second argument. In the following example, we combine data on coffee production with the <code>world</code> dataset. The coffee data is in a <code>DataFrame</code> called <code>coffee_data</code> imported from a CSV file of major coffee-producing nations:</p>
-<div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>coffee_data <span class="op">=</span> pd.read_csv(<span class="st">'data/coffee_data.csv'</span>)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>coffee_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="27">
+<div class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>coffee_data <span class="op">=</span> pd.read_csv(<span class="st">'data/coffee_data.csv'</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>coffee_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="26">
 <div>
 
 
@@ -1849,14 +1796,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
 <td>Bolivia</td>
-<td>3</td>
-<td>4</td>
+<td>3.0</td>
+<td>4.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
 <td>Brazil</td>
-<td>3277</td>
-<td>2786</td>
+<td>3277.0</td>
+<td>2786.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">...</td>
@@ -1867,20 +1814,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td data-quarto-table-cell-role="th">44</td>
 <td>Zambia</td>
-<td>3</td>
+<td>3.0</td>
 <td>NaN</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">45</td>
 <td>Zimbabwe</td>
-<td>1</td>
-<td>1</td>
+<td>1.0</td>
+<td>1.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">46</td>
 <td>Others</td>
-<td>23</td>
-<td>26</td>
+<td>23.0</td>
+<td>26.0</td>
 </tr>
 </tbody>
 </table>
@@ -1895,10 +1842,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>coffee_production_2016</code> and <code>coffee_production_2017</code> contain estimated values for coffee production in units of 60-kg bags per year.</li>
 </ul>
 <p>A left join, which preserves the first dataset, merges <code>world</code> with <code>coffee_data</code>, based on the common <code>'name_long'</code> column:</p>
-<div class="cell" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>world_coffee <span class="op">=</span> pd.merge(world, coffee_data, on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'left'</span>)</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>world_coffee</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="28">
+<div class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>world_coffee <span class="op">=</span> pd.merge(world, coffee_data, on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'left'</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>world_coffee</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="27">
 <div>
 
 
@@ -1933,8 +1880,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((33.90371 -0.950...</td>
-<td>81</td>
-<td>66</td>
+<td>81.0</td>
+<td>66.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -1994,10 +1941,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>The result is a <code>GeoDataFrame</code> object identical to the original <code>world</code> object, but with two new variables (<code>coffee_production_2016</code> and <code>coffee_production_2017</code>) on coffee production. This can be plotted as a map, as illustrated in <a href="#fig-join-coffee-production">Figure&nbsp;<span>2.3</span></a>:</p>
-<div class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world_coffee.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>coffee_map <span class="op">=</span> world_coffee.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'coffee_production_2017'</span>)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>coffee_map.set_title(<span class="st">'Coffee production'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world_coffee.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>coffee_map <span class="op">=</span> world_coffee.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'coffee_production_2017'</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>coffee_map.set_title(<span class="st">'Coffee production'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-join-coffee-production" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -2011,9 +1958,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>In case where column names are not the same, you can use <code>left_on</code> and <code>right_on</code> to specify the respective columns.</p>
 <p>Note that the result <code>world_coffee</code> has the same number of rows as the original dataset <code>world</code>. Although there are only 47 rows in <code>coffee_data</code>, all 177 country records are kept intact in <code>world_coffee</code>. Rows in the original dataset with no match are assigned <code>np.nan</code> values for the new coffee production variables. This is a characteristic of a left join (specified with <code>how='left'</code>) and is what we typically want to do.</p>
 <p>What if we only want to keep countries that have a match in the key variable? In that case an inner join can be used:</p>
-<div class="cell" data-execution_count="30">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>pd.merge(world, coffee_data, on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'inner'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="30">
+<div class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>pd.merge(world, coffee_data, on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'inner'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="29">
 <div>
 
 
@@ -2038,8 +1985,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((33.90371 -0.950...</td>
-<td>81</td>
-<td>66</td>
+<td>81.0</td>
+<td>66.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
@@ -2048,8 +1995,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Oceania</td>
 <td>...</td>
 <td>MULTIPOLYGON (((141.00021 -2.60...</td>
-<td>114</td>
-<td>74</td>
+<td>114.0</td>
+<td>74.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -2058,8 +2005,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Asia</td>
 <td>...</td>
 <td>MULTIPOLYGON (((104.36999 -1.08...</td>
-<td>742</td>
-<td>360</td>
+<td>742.0</td>
+<td>360.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">...</td>
@@ -2078,8 +2025,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((47.78942 8.0030...</td>
-<td>215</td>
-<td>283</td>
+<td>215.0</td>
+<td>283.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">43</td>
@@ -2088,8 +2035,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((33.90371 -0.950...</td>
-<td>408</td>
-<td>443</td>
+<td>408.0</td>
+<td>443.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">44</td>
@@ -2098,8 +2045,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((30.41910 -1.134...</td>
-<td>36</td>
-<td>42</td>
+<td>36.0</td>
+<td>42.0</td>
 </tr>
 </tbody>
 </table>
@@ -2109,9 +2056,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>An alternative way to join two (Geo)DataFrames is the aptly called <code>join</code> function:</p>
-<div class="cell" data-execution_count="31">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>world.join(coffee_data.set_index(<span class="st">'name_long'</span>), on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'inner'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="31">
+<div class="cell" data-execution_count="30">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>world.join(coffee_data.set_index(<span class="st">'name_long'</span>), on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'inner'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="30">
 <div>
 
 
@@ -2136,8 +2083,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((33.90371 -0.950...</td>
-<td>81</td>
-<td>66</td>
+<td>81.0</td>
+<td>66.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">7</td>
@@ -2146,8 +2093,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Oceania</td>
 <td>...</td>
 <td>MULTIPOLYGON (((141.00021 -2.60...</td>
-<td>114</td>
-<td>74</td>
+<td>114.0</td>
+<td>74.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">8</td>
@@ -2156,8 +2103,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Asia</td>
 <td>...</td>
 <td>MULTIPOLYGON (((104.36999 -1.08...</td>
-<td>742</td>
-<td>360</td>
+<td>742.0</td>
+<td>360.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">...</td>
@@ -2176,8 +2123,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((47.78942 8.0030...</td>
-<td>215</td>
-<td>283</td>
+<td>215.0</td>
+<td>283.0</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">168</td>
@@ -2186,8 +2133,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((33.90371 -0.950...</td>
-<td>408</td>
-<td>443</td>
+<td>408.0</td>
+<td>443.0</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">169</td>
@@ -2196,8 +2143,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((30.41910 -1.134...</td>
-<td>36</td>
-<td>42</td>
+<td>36.0</td>
+<td>42.0</td>
 </tr>
 </tbody>
 </table>
@@ -2211,11 +2158,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="sec-creating-attributes-and-removing-spatial-information" class="level3" data-number="2.3.4">
 <h3 data-number="2.3.4" class="anchored" data-anchor-id="sec-creating-attributes-and-removing-spatial-information"><span class="header-section-number">2.3.4</span> Creating attributes and removing spatial information</h3>
 <p>Often, we would like to create a new column based on already existing columns. For example, we want to calculate population density for each country. For this we need to divide a population column, here <code>pop</code>, by an area column, here <code>area_km2</code>. Note that we are working on a copy of <code>world</code> named <code>world2</code> so that we do not modify the original layer:</p>
-<div class="cell" data-execution_count="32">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world.copy()</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>world2[<span class="st">'pop_dens'</span>] <span class="op">=</span> world2[<span class="st">'pop'</span>] <span class="op">/</span> world2[<span class="st">'area_km2'</span>]</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="32">
+<div class="cell" data-execution_count="31">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world.copy()</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>world2[<span class="st">'pop_dens'</span>] <span class="op">=</span> world2[<span class="st">'pop'</span>] <span class="op">/</span> world2[<span class="st">'area_km2'</span>]</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="31">
 <div>
 
 
@@ -2239,9 +2186,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Fiji</td>
 <td>Oceania</td>
 <td>...</td>
-<td>8222</td>
+<td>8222.253784</td>
 <td>MULTIPOLYGON (((-180.00000 -16....</td>
-<td>46</td>
+<td>45.920547</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
@@ -2249,9 +2196,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Tanzania</td>
 <td>Africa</td>
 <td>...</td>
-<td>2402</td>
+<td>2402.099404</td>
 <td>MULTIPOLYGON (((33.90371 -0.950...</td>
-<td>56</td>
+<td>56.001184</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -2279,9 +2226,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Kosovo</td>
 <td>Europe</td>
 <td>...</td>
-<td>8698</td>
+<td>8698.291559</td>
 <td>MULTIPOLYGON (((20.59025 41.855...</td>
-<td>162</td>
+<td>162.222400</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">175</td>
@@ -2289,9 +2236,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Trinidad and Tobago</td>
 <td>North America</td>
 <td>...</td>
-<td>31182</td>
+<td>31181.821196</td>
 <td>MULTIPOLYGON (((-61.68000 10.76...</td>
-<td>175</td>
+<td>175.048628</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">176</td>
@@ -2299,9 +2246,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>South Sudan</td>
 <td>Africa</td>
 <td>...</td>
-<td>1936</td>
+<td>1935.879400</td>
 <td>MULTIPOLYGON (((30.83385 3.5091...</td>
-<td>18</td>
+<td>18.452237</td>
 </tr>
 </tbody>
 </table>
@@ -2311,11 +2258,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>To paste (i.e., concatenate) together existing columns, we can use the ordinary Python string operator <code>+</code>, as if we are working with individual strings rather than <code>Series</code>. For example, we want to combine the <code>continent</code> and <code>region_un</code> columns into a new column named <code>con_reg</code>, using <code>':'</code> as a separator. Subsequesntly, we remove the original columns using <code>.drop</code>:</p>
-<div class="cell" data-execution_count="33">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>world2[<span class="st">'con_reg'</span>] <span class="op">=</span> world[<span class="st">'continent'</span>] <span class="op">+</span> <span class="st">':'</span> <span class="op">+</span> world2[<span class="st">'region_un'</span>]</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2.drop([<span class="st">'continent'</span>, <span class="st">'region_un'</span>], axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="33">
+<div class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>world2[<span class="st">'con_reg'</span>] <span class="op">=</span> world[<span class="st">'continent'</span>] <span class="op">+</span> <span class="st">':'</span> <span class="op">+</span> world2[<span class="st">'region_un'</span>]</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2.drop([<span class="st">'continent'</span>, <span class="st">'region_un'</span>], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="32">
 <div>
 
 
@@ -2340,7 +2287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Melanesia</td>
 <td>...</td>
 <td>MULTIPOLYGON (((-180.00000 -16....</td>
-<td>46</td>
+<td>45.920547</td>
 <td>Oceania:Oceania</td>
 </tr>
 <tr class="even">
@@ -2350,7 +2297,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Eastern Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((33.90371 -0.950...</td>
-<td>56</td>
+<td>56.001184</td>
 <td>Africa:Africa</td>
 </tr>
 <tr class="odd">
@@ -2380,7 +2327,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Southern Europe</td>
 <td>...</td>
 <td>MULTIPOLYGON (((20.59025 41.855...</td>
-<td>162</td>
+<td>162.222400</td>
 <td>Europe:Europe</td>
 </tr>
 <tr class="even">
@@ -2390,7 +2337,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Caribbean</td>
 <td>...</td>
 <td>MULTIPOLYGON (((-61.68000 10.76...</td>
-<td>175</td>
+<td>175.048628</td>
 <td>North America:Americas</td>
 </tr>
 <tr class="odd">
@@ -2400,7 +2347,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Eastern Africa</td>
 <td>...</td>
 <td>MULTIPOLYGON (((30.83385 3.5091...</td>
-<td>18</td>
+<td>18.452237</td>
 <td>Africa:Africa</td>
 </tr>
 </tbody>
@@ -2411,11 +2358,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>The resulting sf object has a new column called <code>con_reg</code> representing the continent and region of each country, e.g., <code>'South America:Americas'</code> for Argentina and other South America countries. The opposite operation, splitting one column into multiple columns based on a separator string, is done using the <code>.str.split</code> method. As a result we go back to the previous state of two separate <code>continent</code> and <code>region_un</code> columns (only that their position is now last, since they are newly created):</p>
-<div class="cell" data-execution_count="34">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>world2[[<span class="st">'continent'</span>, <span class="st">'region_un'</span>]] <span class="op">=</span> world2[<span class="st">'con_reg'</span>] <span class="op">\</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">str</span>.split(<span class="st">':'</span>, expand<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="34">
+<div class="cell" data-execution_count="33">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>world2[[<span class="st">'continent'</span>, <span class="st">'region_un'</span>]] <span class="op">=</span> world2[<span class="st">'con_reg'</span>] <span class="op">\</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">str</span>.split(<span class="st">':'</span>, expand<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="33">
 <div>
 
 
@@ -2511,9 +2458,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Renaming one or more columns can be done using the <code>.rename</code> method combined with the <code>columns</code> argument, which should be a dictionary of the form <code>old_name:new_name</code>. The following command, for example, renames the lengthy <code>name_long</code> column to simply <code>name</code>:</p>
-<div class="cell" data-execution_count="35">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>world2.rename(columns<span class="op">=</span>{<span class="st">'name_long'</span>: <span class="st">'name'</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="35">
+<div class="cell" data-execution_count="34">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>world2.rename(columns<span class="op">=</span>{<span class="st">'name_long'</span>: <span class="st">'name'</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="34">
 <div>
 
 
@@ -2609,11 +2556,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>To change all column names at once, we assign a <code>list</code> of the “new” column names into the <code>.columns</code> property. The <code>list</code> must be of the same length as the number of columns (i.e., <code>world.shape[1]</code>). This is illustrated below, which outputs the same <code>world2</code> object, but with very short names:</p>
-<div class="cell" data-execution_count="36">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>new_names <span class="op">=</span> [<span class="st">'a'</span>, <span class="st">'b'</span>, <span class="st">'c'</span>, <span class="st">'d'</span>, <span class="st">'e'</span>, <span class="st">'f'</span>, <span class="st">'g'</span>, <span class="st">'h'</span>, <span class="st">'geom'</span>, <span class="st">'i'</span>, <span class="st">'j'</span>, <span class="st">'k'</span>, <span class="st">'l'</span>]</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>world2.columns <span class="op">=</span> new_names</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="36">
+<div class="cell" data-execution_count="35">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>new_names <span class="op">=</span> [<span class="st">'a'</span>, <span class="st">'b'</span>, <span class="st">'c'</span>, <span class="st">'d'</span>, <span class="st">'e'</span>, <span class="st">'f'</span>, <span class="st">'g'</span>, <span class="st">'h'</span>, <span class="st">'geom'</span>, <span class="st">'i'</span>, <span class="st">'j'</span>, <span class="st">'k'</span>, <span class="st">'l'</span>]</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>world2.columns <span class="op">=</span> new_names</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="35">
 <div>
 
 
@@ -2709,11 +2656,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>To reorder columns, we can pass a modified columns list to the subsetting operator <code>[</code>. For example, the following expressions reorder <code>world2</code> columns in reverse alphabetical order:</p>
-<div class="cell" data-execution_count="37">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>names <span class="op">=</span> <span class="bu">sorted</span>(world2.columns, reverse<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2[names]</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="37">
+<div class="cell" data-execution_count="36">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>names <span class="op">=</span> <span class="bu">sorted</span>(world2.columns, reverse<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2[names]</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="36">
 <div>
 
 
@@ -2814,11 +2761,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Convert from <code>GeoDataFrame</code> into a <code>DataFrame</code></li>
 </ol>
 <p>For example:</p>
-<div class="cell" data-execution_count="38">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2.drop(<span class="st">'geom'</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> pd.DataFrame(world2)</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="38">
+<div class="cell" data-execution_count="37">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2.drop(<span class="st">'geom'</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> pd.DataFrame(world2)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>world2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="37">
 <div>
 
 
@@ -2920,10 +2867,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="sec-raster-subsetting" class="level3" data-number="2.4.1">
 <h3 data-number="2.4.1" class="anchored" data-anchor-id="sec-raster-subsetting"><span class="header-section-number">2.4.1</span> Raster subsetting</h3>
 <p>When using <code>rasterio</code>, raster values are accessible through a <code>numpy</code> array, which can be imported with the <code>.read</code> method:</p>
-<div class="cell" data-execution_count="39">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="39">
+<div class="cell" data-execution_count="38">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>elev <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="38">
 <pre><code>array([[ 1,  2,  3,  4,  5,  6],
        [ 7,  8,  9, 10, 11, 12],
        [13, 14, 15, 16, 17, 18],
@@ -2933,17 +2880,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Then, we can access any subset of cell values using <code>numpy</code> methods, e.g.:</p>
-<div class="cell" data-execution_count="40">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>elev[<span class="dv">0</span>, <span class="dv">0</span>]  <span class="co">## Value at row 1, column 1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="40">
+<div class="cell" data-execution_count="39">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>elev[<span class="dv">0</span>, <span class="dv">0</span>]  <span class="co">## Value at row 1, column 1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="39">
 <pre><code>1</code></pre>
 </div>
 </div>
 <p>Cell values can be modified by overwriting existing values in conjunction with a subsetting operation, e.g.&nbsp;to set the upper left cell of elev to 0:</p>
-<div class="cell" data-execution_count="41">
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>elev[<span class="dv">0</span>, <span class="dv">0</span>] <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="41">
+<div class="cell" data-execution_count="40">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>elev[<span class="dv">0</span>, <span class="dv">0</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="40">
 <pre><code>array([[ 0,  2,  3,  4,  5,  6],
        [ 7,  8,  9, 10, 11, 12],
        [13, 14, 15, 16, 17, 18],
@@ -2953,10 +2900,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Multiple cells can also be modified in this way:</p>
-<div class="cell" data-execution_count="42">
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>elev[<span class="dv">0</span>, <span class="dv">0</span>:<span class="dv">3</span>] <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="42">
+<div class="cell" data-execution_count="41">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>elev[<span class="dv">0</span>, <span class="dv">0</span>:<span class="dv">3</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>elev</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="41">
 <pre><code>array([[ 0,  0,  0,  4,  5,  6],
        [ 7,  8,  9, 10, 11, 12],
        [13, 14, 15, 16, 17, 18],
@@ -2969,18 +2916,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="sec-summarizing-raster-objects" class="level3" data-number="2.4.2">
 <h3 data-number="2.4.2" class="anchored" data-anchor-id="sec-summarizing-raster-objects"><span class="header-section-number">2.4.2</span> Summarizing raster objects</h3>
 <p>Global summaries of raster values can be calculated by applying <code>numpy</code> summary functions on the array with raster values, e.g.&nbsp;<code>np.mean</code>:</p>
-<div class="cell" data-execution_count="43">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>np.mean(elev)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="43">
+<div class="cell" data-execution_count="42">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>np.mean(elev)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="42">
 <pre><code>18.333333333333332</code></pre>
 </div>
 </div>
 <p>Note that “No Data”-safe functions–such as <code>np.nanmean</code>—should be used in case the raster contains “No Data” values which need to be ignored. Before we can demontrate that, we must convert the array from <code>int</code> to <code>float</code>, as <code>int</code> arrays cannot contain <code>np.nan</code> (due to computer memory limitations):</p>
-<div class="cell" data-execution_count="44">
-<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>elev1 <span class="op">=</span> elev.copy()</span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>elev1 <span class="op">=</span> elev1.astype(<span class="st">'float64'</span>)</span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>elev1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="44">
+<div class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>elev1 <span class="op">=</span> elev.copy()</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>elev1 <span class="op">=</span> elev1.astype(<span class="st">'float64'</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>elev1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="43">
 <pre><code>array([[ 0.,  0.,  0.,  4.,  5.,  6.],
        [ 7.,  8.,  9., 10., 11., 12.],
        [13., 14., 15., 16., 17., 18.],
@@ -2990,10 +2937,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Now we can insert an <code>np.nan</code> value into the array. (Trying to do so in the original <code>elev</code> array raises an error, try it to see for yourself)</p>
-<div class="cell" data-execution_count="45">
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>elev1[<span class="dv">0</span>, <span class="dv">2</span>] <span class="op">=</span> np.nan</span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>elev1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="45">
+<div class="cell" data-execution_count="44">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>elev1[<span class="dv">0</span>, <span class="dv">2</span>] <span class="op">=</span> np.nan</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>elev1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="44">
 <pre><code>array([[ 0.,  0., nan,  4.,  5.,  6.],
        [ 7.,  8.,  9., 10., 11., 12.],
        [13., 14., 15., 16., 17., 18.],
@@ -3003,25 +2950,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>With the <code>np.nan</code> value inplace, the summary value becomes unknown:</p>
-<div class="cell" data-execution_count="46">
-<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>np.mean(elev1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="46">
+<div class="cell" data-execution_count="45">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>np.mean(elev1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="45">
 <pre><code>nan</code></pre>
 </div>
 </div>
 <p>Therefore, we need to ignore the “No Data” value(s):</p>
-<div class="cell" data-execution_count="47">
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>np.nanmean(elev1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="47">
+<div class="cell" data-execution_count="46">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>np.nanmean(elev1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="46">
 <pre><code>18.857142857142858</code></pre>
 </div>
 </div>
 <p>Raster value statistics can be visualized in a variety of ways. One approach is to “flatten” the raster values into a one-dimensional array, then use a graphical function such as <code>plt.hist</code> or <code>plt.boxplot</code> (from <code>matplotlib.pyplot</code>). For example:</p>
-<div class="cell" data-execution_count="48">
-<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> elev.flatten()</span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>plt.hist(x)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="47">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> elev.flatten()</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>plt.hist(x)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<p><img src="02-attribute-operations_files/figure-html/cell-49-output-1.png" width="422" height="411"></p>
+<p><img src="02-attribute-operations_files/figure-html/cell-48-output-1.png" width="422" height="411"></p>
 </div>
 </div>
 </section>
