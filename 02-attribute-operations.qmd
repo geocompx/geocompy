@@ -311,9 +311,9 @@ world_agg4
 
 ### Vector attribute joining {#sec-vector-attribute-joining}
 
-Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared 'key' variable. 
+Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared "key" variable. 
 **pandas** has a function named `pd.merge` for joining `(Geo)DataFrames` based on common column(s).
-The `pd.merge` function follows conventions used in the database language SQL (Grolemund and Wickham 2016). 
+The `pd.merge` function follows conventions used in the database language SQL (Grolemund and Wickham 2016, add citation...). 
 The `pd.merge` function works the same on `DataFrame` and `GeoDataFrame` objects.
 The result of `pd.merge` can be either a `DataFrame` or a `GeoDataFrame` object, depending on the inputs.
 
@@ -327,10 +327,10 @@ coffee_data = pd.read_csv('data/coffee_data.csv')
 coffee_data
 ```
 
-Its three columns are: 
+Its columns are: 
 
-* `name_long` country name 
-* `coffee_production_2016` and `coffee_production_2017` contain estimated values for coffee production in units of 60-kg bags per year.
+* `name_long`---country name
+* `coffee_production_2016` and `coffee_production_2017`---estimated values for coffee production in units of 60-kg bags per year, for 2016 and 2017, respectively
 
 A left join, which preserves the first dataset, merges `world` with `coffee_data`, based on the common `'name_long'` column:
 
@@ -340,7 +340,7 @@ world_coffee
 ```
 
 The result is a `GeoDataFrame` object identical to the original `world` object, but with two new variables (`coffee_production_2016` and `coffee_production_2017`) on coffee production.
-This can be plotted as a map, as illustrated in @fig-join-coffee-production:
+This can be plotted as a map, as illustrated (for `coffee_production_2017`) in @fig-join-coffee-production:
 
 ```{python}
 #| label: fig-join-coffee-production
@@ -351,7 +351,7 @@ coffee_map = world_coffee.plot(ax=base, column='coffee_production_2017')
 coffee_map.set_title('Coffee production');
 ```
 
-To work, attribute-based joins need a 'key variable' in both datasets (`on` parameter of `pd.merge`). 
+To work, attribute-based joins need a "key variable" in both datasets (`on` parameter of `pd.merge`). 
 In the above example, both `world_coffee` and `world` DataFrames contained a column called `name_long`.
 (By default `pd.merge` uses all columns with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example.)
 
@@ -368,13 +368,13 @@ In that case an inner join can be used:
 pd.merge(world, coffee_data, on='name_long', how='inner')
 ```
 
-An alternative way to join two (Geo)DataFrames is the aptly called `join` function: 
+An alternative way to join two `(Geo)DataFrame`s is the aptly called `join` function: 
 
 ```{python}
 world.join(coffee_data.set_index('name_long'), on='name_long', how='inner')
 ```
 
-Note that in this case, we need to set the index of `coffee_data` to the `name_long` values to avoid error messages.
+Note that in this case, we need to set the index of `coffee_data` to the `name_long` values.
 
 ### Creating attributes and removing spatial information {#sec-creating-attributes-and-removing-spatial-information}
 
@@ -394,7 +394,7 @@ world2 = world2.drop(['continent', 'region_un'], axis=1)
 world2
 ```
 
-The resulting sf object has a new column called `con_reg` representing the continent and region of each country, e.g., `'South America:Americas'` for Argentina and other South America countries. The opposite operation, splitting one column into multiple columns based on a separator string, is done using the `.str.split` method. As a result we go back to the previous state of two separate `continent` and `region_un` columns (only that their position is now last, since they are newly created):
+The resulting `GeoDataFrame` object has a new column called `con_reg` representing the continent and region of each country, e.g., `'South America:Americas'` for Argentina and other South America countries. The opposite operation, splitting one column into multiple columns based on a separator string, is done using the `.str.split` method. As a result we go back to the previous state of two separate `continent` and `region_un` columns (only that their position is now last, since they are newly created):
 
 ```{python}
 world2[['continent', 'region_un']] = world2['con_reg'] \
@@ -429,7 +429,7 @@ Each of these attribute data operations, even though they are defined in the `pa
 1. Drop the geometry column
 1. Convert from `GeoDataFrame` into a `DataFrame`
 
-For example:
+For example, by the end of the following code section `world2` becomes a `DataFrame`:
 
 ```{python}
 world2 = world2.drop('geom', axis=1)
