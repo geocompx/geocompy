@@ -210,7 +210,9 @@ world.loc[idx_small & idx_asia, ['name_long', 'continent', 'area_km2']]
 ### Vector attribute aggregation {#sec-vector-attribute-aggregation}
 
 Aggregation involves summarizing data based on one or more *grouping variables* (typically values in a column; geographic aggregation is covered in @sec-vector-spatial-aggregation). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country).
-The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller table or vector layer (of continents). (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). The aggregation can be achieved using a combination of `.groupby` and `.sum`:
+The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller table or vector layer (of continents). (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). 
+
+Non-spatial aggregation can be achieved using a combination of `.groupby` and `.sum`:
 
 ```{python}
 world_agg1 = world[['continent', 'pop']].groupby('continent').sum()
@@ -237,7 +239,7 @@ world_agg2
 #| fig-cap: Continents with summed population
 
 fig, ax = plt.subplots(figsize=(6, 3))
-world_agg2.plot(column='pop', legend=True, ax=ax);
+world_agg2.plot(column='pop', edgecolor='black', legend=True, ax=ax);
 ```
 
 The resulting `world_agg2` object is a `GeoDataFrame` containing 8 features representing the continents of the world (and the open ocean). 
@@ -258,11 +260,12 @@ As a more complex example, here is how we can calculate the total population, ar
 
 ```{python}
 world_agg3 = world.dissolve(
-    by='continent', aggfunc={
-         "name_long": "count",
-         "pop": "sum",
-         'area_km2': "sum"
-     }).rename(columns={'name_long': 'n'})
+    by='continent', 
+    aggfunc={
+        'name_long': 'count',
+        'pop': 'sum',
+        'area_km2': 'sum'
+    }).rename(columns={'name_long': 'n'})
 world_agg3
 ```
 
@@ -272,15 +275,23 @@ Figure @fig-spatial-aggregation-different-functions visualizes the resulting lay
 ```{python}
 #| label: fig-spatial-aggregation-different-functions
 #| fig-cap: 'Continent properties, calculated using spatial aggregation using different functions'
+#| fig-subcap: 
+#| - Summed population
+#| - Summed area
+#| - Count of countries
+#| layout-ncol: 2
 
-fig, axes = plt.subplots(2, 2, figsize=(9, 5))
-world_agg3.plot(column='pop', edgecolor='black', legend=True, ax=axes[0][0])
-world_agg3.plot(column='area_km2', edgecolor='black', legend=True, ax=axes[0][1])
-world_agg3.plot(column='n', edgecolor='black', legend=True, ax=axes[1][0])
-axes[0][0].set_title('Summed population')
-axes[0][1].set_title('Summed area')
-axes[1][0].set_title('Count of countries')
-fig.delaxes(axes[1][1]);
+# Summed population
+fig, ax = plt.subplots(figsize=(5, 2.5))
+world_agg3.plot(column='pop', edgecolor='black', legend=True, ax=ax);
+
+# Summed area
+fig, ax = plt.subplots(figsize=(5, 2.5))
+world_agg3.plot(column='area_km2', edgecolor='black', legend=True, ax=ax);
+
+# Count of countries
+fig, ax = plt.subplots(figsize=(5, 2.5))
+world_agg3.plot(column='n', edgecolor='black', legend=True, ax=ax);
 ```
 
 Let's proceed with the last result to demonstrate other table-related operations. Given the `world_agg3` continent summary (@fig-spatial-aggregation-different-functions), we:
