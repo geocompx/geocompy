@@ -1798,7 +1798,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="sec-vector-attribute-joining" class="level3" data-number="2.3.3">
 <h3 data-number="2.3.3" class="anchored" data-anchor-id="sec-vector-attribute-joining"><span class="header-section-number">2.3.3</span> Vector attribute joining</h3>
-<p>Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared ‘key’ variable. <strong>pandas</strong> has a function named <code>pd.merge</code> for joining <code>(Geo)DataFrames</code> based on common column(s). The <code>pd.merge</code> function follows conventions used in the database language SQL (Grolemund and Wickham 2016). The <code>pd.merge</code> function works the same on <code>DataFrame</code> and <code>GeoDataFrame</code> objects. The result of <code>pd.merge</code> can be either a <code>DataFrame</code> or a <code>GeoDataFrame</code> object, depending on the inputs.</p>
+<p>Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared “key” variable. <strong>pandas</strong> has a function named <code>pd.merge</code> for joining <code>(Geo)DataFrames</code> based on common column(s). The <code>pd.merge</code> function follows conventions used in the database language SQL (Grolemund and Wickham 2016, add citation…). The <code>pd.merge</code> function works the same on <code>DataFrame</code> and <code>GeoDataFrame</code> objects. The result of <code>pd.merge</code> can be either a <code>DataFrame</code> or a <code>GeoDataFrame</code> object, depending on the inputs.</p>
 <p>A common type of attribute join on spatial data is to join <code>DataFrames</code> to <code>GeoDataFrames</code>. To achieve this, we use <code>pd.merge</code> with a <code>GeoDataFrame</code> as the first argument and add columns to it from a <code>DataFrame</code> specified as the second argument. In the following example, we combine data on coffee production with the <code>world</code> dataset. The coffee data is in a <code>DataFrame</code> called <code>coffee_data</code> imported from a CSV file of major coffee-producing nations:</p>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>coffee_data <span class="op">=</span> pd.read_csv(<span class="st">'data/coffee_data.csv'</span>)</span>
@@ -1866,10 +1866,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>Its three columns are:</p>
+<p>Its columns are:</p>
 <ul>
-<li><code>name_long</code> country name</li>
-<li><code>coffee_production_2016</code> and <code>coffee_production_2017</code> contain estimated values for coffee production in units of 60-kg bags per year.</li>
+<li><code>name_long</code>—country name</li>
+<li><code>coffee_production_2016</code> and <code>coffee_production_2017</code>—estimated values for coffee production in units of 60-kg bags per year, for 2016 and 2017, respectively</li>
 </ul>
 <p>A left join, which preserves the first dataset, merges <code>world</code> with <code>coffee_data</code>, based on the common <code>'name_long'</code> column:</p>
 <div class="cell" data-execution_count="27">
@@ -1970,7 +1970,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>The result is a <code>GeoDataFrame</code> object identical to the original <code>world</code> object, but with two new variables (<code>coffee_production_2016</code> and <code>coffee_production_2017</code>) on coffee production. This can be plotted as a map, as illustrated in <a href="#fig-join-coffee-production">Figure&nbsp;<span>2.3</span></a>:</p>
+<p>The result is a <code>GeoDataFrame</code> object identical to the original <code>world</code> object, but with two new variables (<code>coffee_production_2016</code> and <code>coffee_production_2017</code>) on coffee production. This can be plotted as a map, as illustrated (for <code>coffee_production_2017</code>) in <a href="#fig-join-coffee-production">Figure&nbsp;<span>2.3</span></a>:</p>
 <div class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world_coffee.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>coffee_map <span class="op">=</span> world_coffee.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'coffee_production_2017'</span>)</span>
@@ -1984,7 +1984,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>To work, attribute-based joins need a ‘key variable’ in both datasets (<code>on</code> parameter of <code>pd.merge</code>). In the above example, both <code>world_coffee</code> and <code>world</code> DataFrames contained a column called <code>name_long</code>. (By default <code>pd.merge</code> uses all columns with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example.)</p>
+<p>To work, attribute-based joins need a “key variable” in both datasets (<code>on</code> parameter of <code>pd.merge</code>). In the above example, both <code>world_coffee</code> and <code>world</code> DataFrames contained a column called <code>name_long</code>. (By default <code>pd.merge</code> uses all columns with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example.)</p>
 <p>In case where column names are not the same, you can use <code>left_on</code> and <code>right_on</code> to specify the respective columns.</p>
 <p>Note that the result <code>world_coffee</code> has the same number of rows as the original dataset <code>world</code>. Although there are only 47 rows in <code>coffee_data</code>, all 177 country records are kept intact in <code>world_coffee</code>. Rows in the original dataset with no match are assigned <code>np.nan</code> values for the new coffee production variables. This is a characteristic of a left join (specified with <code>how='left'</code>) and is what we typically want to do.</p>
 <p>What if we only want to keep countries that have a match in the key variable? In that case an inner join can be used:</p>
@@ -2085,7 +2085,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>An alternative way to join two (Geo)DataFrames is the aptly called <code>join</code> function:</p>
+<p>An alternative way to join two <code>(Geo)DataFrame</code>s is the aptly called <code>join</code> function:</p>
 <div class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>world.join(coffee_data.set_index(<span class="st">'name_long'</span>), on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'inner'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="30">
@@ -2183,7 +2183,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>Note that in this case, we need to set the index of <code>coffee_data</code> to the <code>name_long</code> values to avoid error messages.</p>
+<p>Note that in this case, we need to set the index of <code>coffee_data</code> to the <code>name_long</code> values.</p>
 </section>
 <section id="sec-creating-attributes-and-removing-spatial-information" class="level3" data-number="2.3.4">
 <h3 data-number="2.3.4" class="anchored" data-anchor-id="sec-creating-attributes-and-removing-spatial-information"><span class="header-section-number">2.3.4</span> Creating attributes and removing spatial information</h3>
@@ -2387,7 +2387,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>The resulting sf object has a new column called <code>con_reg</code> representing the continent and region of each country, e.g., <code>'South America:Americas'</code> for Argentina and other South America countries. The opposite operation, splitting one column into multiple columns based on a separator string, is done using the <code>.str.split</code> method. As a result we go back to the previous state of two separate <code>continent</code> and <code>region_un</code> columns (only that their position is now last, since they are newly created):</p>
+<p>The resulting <code>GeoDataFrame</code> object has a new column called <code>con_reg</code> representing the continent and region of each country, e.g., <code>'South America:Americas'</code> for Argentina and other South America countries. The opposite operation, splitting one column into multiple columns based on a separator string, is done using the <code>.str.split</code> method. As a result we go back to the previous state of two separate <code>continent</code> and <code>region_un</code> columns (only that their position is now last, since they are newly created):</p>
 <div class="cell" data-execution_count="33">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>world2[[<span class="st">'continent'</span>, <span class="st">'region_un'</span>]] <span class="op">=</span> world2[<span class="st">'con_reg'</span>] <span class="op">\</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">str</span>.split(<span class="st">':'</span>, expand<span class="op">=</span><span class="va">True</span>)</span>
@@ -2790,7 +2790,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Drop the geometry column</li>
 <li>Convert from <code>GeoDataFrame</code> into a <code>DataFrame</code></li>
 </ol>
-<p>For example:</p>
+<p>For example, by the end of the following code section <code>world2</code> becomes a <code>DataFrame</code>:</p>
 <div class="cell" data-execution_count="37">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world2.drop(<span class="st">'geom'</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> pd.DataFrame(world2)</span>
