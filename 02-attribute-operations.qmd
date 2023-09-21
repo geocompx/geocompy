@@ -69,7 +69,7 @@ For vector data, this means techniques such as subsetting and aggregation (see @
 Each of these operations has a spatial equivalent: `[` operator for subsetting a `(Geo)DataFrame` using a boolean `Series`, for example, is applicable both for subsetting objects based on their attribute and spatial relations derived using methods such as `.intersects`; you can also join attributes in two geographic datasets using spatial joins. This is good news: skills developed in this chapter are cross-transferable.
 @sec-spatial-operations extends the methods presented here to the spatial world.
 
-After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in @sec-manipulating-raster-objects, which demonstrates how to create raster layers containing continuous and categorical attributes and extracting cell values from one or more layer (raster subsetting). 
+After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in @sec-manipulating-raster-objects, which demonstrates extracting cell values from one or more layer (raster subsetting). 
 @sec-summarizing-raster-objects provides an overview of 'global' raster operations which can be used to summarize entire raster datasets.
 
 ## Vector attribute manipulation
@@ -82,18 +82,19 @@ Since `GeoDataFrame` extends `DataFrame`, all ordinary table-related operations 
 **pandas** supports several subsetting interfaces, though the most [recommended](https://stackoverflow.com/questions/38886080/python-pandas-series-why-use-loc) ones are:
 
 * `.loc`, which uses pandas indices, and
-* `.iloc`, which uses (implicit) numpy-style numeric indices.
+* `.iloc`, which uses (implicit) **numpy**-style numeric indices.
 
-In both cases the method is followed by square brackets, and two indices, separated by a comma. Each index can comprise:
+In both cases, the method is followed by square brackets, and two indices, separated by a comma. 
+Each index can comprise:
 
 * A specific value, as in `1`
-* A slice, as in `0:3`
 * A `list`, as in `[0,2,4]`
+* A slice, as in `0:3`
 * `:`—indicating "all" indices
 
-An exception to this rule is selecting columns using a list, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
+An exception to this rule is selecting columns using a list, which we do using shorter notation, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
 
-Here are few examples of subsetting the `GeoDataFrame` of world countries.
+Here are few examples of subsetting the `GeoDataFrame` of world countries (@fig-gdf-plot).
 
 Subsetting rows by position, e.g., the first three rows:
 
@@ -137,7 +138,7 @@ world[['name_long', 'geometry']]
 world.loc[:, 'name_long':'pop']
 ```
 
-Subsetting by a list of boolean values (0 and 1 or True and False):
+Subsetting by a list of boolean values (`0` and `1`, or `True` and `False`):
 
 ```{python}
 x = [1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0] 
@@ -172,9 +173,9 @@ The standard **numpy** comparison operators can be used in boolean subsetting, a
 | `>=`, `<=` | Greater/Less than or equal |
 | `&`, `|`, `~` | Logical operators: And, Or, Not |
 
-: Comparison operators that return Booleans (`True`/`False`). {#tbl-comparison-operators}
+: Comparison operators that return boolean values (`True`/`False`). {#tbl-comparison-operators}
 
-The following example demonstrates logical vectors for subsetting by creating a new `GeoDataFrame` object called `small_countries` that contains only those countries whose surface area is smaller than 10,000 km^2^:
+The following example demonstrates logical vectors for subsetting by creating a new `GeoDataFrame` object called `small_countries` that contains only those countries whose surface area is smaller than 10,000 $km^2$:
 
 ```{python}
 idx_small = world['area_km2'] < 10000  ## a logical 'Series'
@@ -208,18 +209,11 @@ world.loc[idx_small & idx_asia, ['name_long', 'continent', 'area_km2']]
 
 ### Vector attribute aggregation {#sec-vector-attribute-aggregation}
 
-Aggregation involves summarizing data based on one or more *grouping variables* (typically values in a column;geographic aggregation is covered in the next chapter). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country).
-The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller data frame. (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). This aggregation can be achieved using a combination of `.groupby` and `.sum`:
+Aggregation involves summarizing data based on one or more *grouping variables* (typically values in a column; geographic aggregation is covered in @sec-vector-spatial-aggregation). A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country).
+The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively. The aim is to find the `sum()` of country populations for each continent, resulting in a smaller table or vector layer (of continents). (Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets). The aggregation can be achieved using a combination of `.groupby` and `.sum`:
 
 ```{python}
 world_agg1 = world[['continent', 'pop']].groupby('continent').sum()
-world_agg1
-```
-
-If you dislike the scientific notation used by default to display the population sums, you can change the Pandas display format for float values like this: 
-
-```{python}
-pd.set_option('display.float_format', '{:.0f}'.format)
 world_agg1
 ```
 
