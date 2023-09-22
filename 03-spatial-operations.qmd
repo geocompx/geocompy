@@ -65,40 +65,49 @@ src_grain = rasterio.open('data/grain.tif')
 ### Spatial subsetting {#sec-spatial-subsetting}
 
 Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object. 
-Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is the 'subsetting object'. 
-`y`, in turn, can be created using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations). 
+Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is a boolean `Series`. 
+The difference is, that, in spatial subsetting `y` is created based on another geometry and using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations), rather based on comparison based on ordinary columns. 
 
-To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset), in a projected coordinate system. 
-The following lines of code create an object representing Canterbury (`canterbury`), then use spatial subsetting to return all high points in the region (`canterbury_height`):
+To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset (a)), in a projected coordinate system. 
+The following expression creates an object representing Canterbury (`canterbury`): 
 
 ```{python}
 canterbury = nz[nz['Name'] == 'Canterbury']
 canterbury
 ```
 
+Then, we use the `.intersects` method evaluate, for each of the `nz_height` points, whether they intersect with Canterbury. The result `canterbury_height` is a boolean `Series` with the "answers":
+
 ```{python}
-# Does each 'nz_height' point intersect with 'canterbury'?
 sel = nz_height.intersects(canterbury.geometry.iloc[0])
 sel
 ```
+
+Finally, we can subset `nz_height` using the latter series, resulting in the subset `canterbury_height` with only those points that intersect with Canterbury:
 
 ```{python}
 canterbury_height = nz_height[sel]
 canterbury_height
 ```
 
+The result is shown in @fig-spatial-subset (b):
+
 ```{python}
 #| label: fig-spatial-subset
 #| fig-cap: Spatial subsetting of points by intersection with polygon
+#| fig-subcap: 
+#| - Original points (red)
+#| - Spatial subset based on intersection (red), geometry used for subsetting (Canterbury) (grey)
+#| layout-ncol: 2
 
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
-nz_height.plot(ax=base, color='None', edgecolor='red')
-base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
-canterbury.plot(ax=base, color='grey', edgecolor='none')
-canterbury_height.plot(ax=base, color='None', edgecolor='red')
-axes[0].set_title('Original')
-axes[1].set_title('Subset (intersects)');
+# Original
+base = nz.plot(color='white', edgecolor='lightgrey')
+nz_height.plot(ax=base, color='None', edgecolor='red');
+
+# Subset (intersects)
+base = nz.plot(color='white', edgecolor='lightgrey')
+canterbury.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
+canterbury_height.plot(ax=base, color='None', edgecolor='red');
 ```
 
 Like in attribute subsetting (@sec-vector-attribute-subsetting), we are using a boolean series (`sel`), of the same length as the number of rows in the filtered table (`nz_height`), created based on a condition applied on itself. 
@@ -106,51 +115,49 @@ The difference is that the condition is not a comparison of attribute values, bu
 Namely, we evaluate whether each geometry of `nz_height` intersects with `canterbury` geometry, using the `.intersects` method.
 
 Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected. 
-These include touches, crosses or within, as we will see shortly in @sec-topological-relations. 
-The most commonly used method `.intersects` method which we used in the last example is a 'catch all' topological relation, that will return features in the target that touch, cross or are within the source 'subsetting' object. 
-Alternatively, we can evaluate other methods, such as `.disjoint` to obtain all points that *do not* intersect with Canterbury:
+These include touches, crosses, or within, as we will see shortly in @sec-topological-relations. 
+The most commonly used method is `.intersects`, which we used in the last example.
+This is a 'catch all' topological relation, that will return features in the target that touch, cross or are within the source 'subsetting' object. 
+As an example of another method, we can use `.disjoint` to obtain all points that *do not* intersect with Canterbury:
 
 ```{python}
-# Is each 'nz_height' point disjoint from 'canterbury'?
 sel = nz_height.disjoint(canterbury.geometry.iloc[0])
 canterbury_height2 = nz_height[sel]
 ```
 
-as shown in @fig-spatial-subset-disjoint:
+The result is shown in @fig-spatial-subset-disjoint:
 
 ```{python}
 #| label: fig-spatial-subset-disjoint
 #| fig-cap: Spatial subsetting of points disjoint from a polygon
+#| fig-subcap: 
+#| - Original points (red)
+#| - Spatial subset based on disjoint (red), geometry used for subsetting (Canterbury) (grey)
+#| layout-ncol: 2
 
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
-nz_height.plot(ax=base, color='None', edgecolor='red')
-base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
-canterbury.plot(ax=base, color='grey', edgecolor='none')
+# Original
+base = nz.plot(color='white', edgecolor='lightgrey')
+nz_height.plot(ax=base, color='None', edgecolor='red');
+
+# Subset (disjoint)
+base = nz.plot(color='white', edgecolor='lightgrey')
+canterbury.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
 canterbury_height2.plot(ax=base, color='None', edgecolor='red');
-axes[0].set_title('Original')
-axes[1].set_title('Subset (disjoint)');
 ```
 
-In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset before applying the `.intersects` (or any other) operator:
+In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using `.unary_union`, before applying the `.intersects` (or any other) operator. 
+For example, here is how we can subset the `nz_height` points which intersect with Canterbury or Southland:
 
 ```{python}
-canterbury_southland = nz[(nz['Name'] == 'Canterbury') | (nz['Name'] == 'Southland')]
-canterbury_southland = canterbury_southland.unary_union
-canterbury_southland
-```
-
-```{python}
-sel = nz_height.intersects(canterbury_southland)
+canterbury_southland = nz[nz['Name'].isin(['Canterbury', 'Southland'])]
+sel = nz_height.intersects(canterbury_southland.unary_union)
 canterbury_southland_height = nz_height[sel]
 canterbury_southland_height
 ```
 
-or, alternatively, we can use the `.isin` function to filter the regions and use `.overlay` to calculate the pairwise intersection between the `canterbury_southland` GeoDataFrame (with two rows for Canterbury and Southland, respectively) and the `nz_height` GeoDataFrame: 
+Alternatively, we can use `.overlay` to calculate the pairwise intersection between the `canterbury_southland` subset and `nz_height`. This approach is applicable for points (such as in the present example), where the intersection is the point itself, or when we are interested in line or polygon geometries (i.e., just the parts that intersect with the subsetting object) rather than complete geometries (such as in the example in @sec-joining-incongruent-layers)
 
 ```{python}
-canterbury_southland = nz[nz['Name'].isin(['Canterbury', 'Southland'])]
-canterbury_southland
 nz_height.overlay(canterbury_southland)
 ```
 
@@ -159,38 +166,44 @@ The resulting subset is shown in @fig-spatial-subset2:
 ```{python}
 #| label: fig-spatial-subset2
 #| fig-cap: Spatial subsetting of points by intersection with more that one polygon
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[0])
-nz_height.plot(ax=base, color='None', edgecolor='red')
-base = nz.plot(color='white', edgecolor='lightgrey', ax=axes[1])
-canterbury_southland.plot(ax=base, color='grey', edgecolor='none')
-canterbury_southland_height.plot(ax=base, color='None', edgecolor='red')
-axes[0].set_title('Original')
-axes[1].set_title('Subset (intersects)');
+#| fig-subcap: 
+#| - Original points (red)
+#| - Spatial subset based on intersection (red), geometry used for subsetting (Canterbury and Southland) (grey)
+#| layout-ncol: 2
+
+# Original
+base = nz.plot(color='white', edgecolor='lightgrey')
+nz_height.plot(ax=base, color='None', edgecolor='red');
+
+# Subset by intersection with two polygons
+base = nz.plot(color='white', edgecolor='lightgrey')
+canterbury_southland.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
+canterbury_southland_height.plot(ax=base, color='None', edgecolor='red');
 ```
 
 The next section further explores different types of spatial relation, also known as binary predicates (of which `.intersects` and `.disjoint` are two examples), that can be used to identify whether or not two features are spatially related or not.
 
 ### Topological relations {#sec-topological-relations}
 
-<!--toDo: references should be fixed-->
+<!--toDo: references should be fixed--> 
 Topological relations describe the spatial relationships between objects. 
 "Binary topological relationships", to give them their full name, are logical statements (in that the answer can only be `True` or `False`) about the spatial relationships between two objects defined by ordered sets of points (typically forming points, lines and polygons) in two or more dimensions (Egenhofer and Herring 1990).
 That may sound rather abstract and, indeed, the definition and classification of topological relations is based on mathematical foundations first published in book form in 1966 (Spanier 1995), with the field of algebraic topology continuing into the 21st century (Dieck 2008).
 
 Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships.
 <!--toDo: update references to figures-->
-Figure 4.2 shows a variety of geometry pairs and their associated relations.
-The third and fourth pairs in Figure 4.2 (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if function(x, y) is true, function(y, x) will also by true, relations in which the order of the geometries are important such as contains and within are not. 
-Notice that each geometry pair has a “DE-9IM” string such as FF2F11212, described in the next section. 
+@fig-spatial-relations shows a variety of geometry pairs and their associated relations.
+The third and fourth pairs in @fig-spatial-relations (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if `x.relation(y)` is true, `y.relation(x)` will also be true, relations in which the order of the geometries are important such as contains and within are not. 
+Notice that each geometry pair has a ["DE-9IM"](https://en.wikipedia.org/wiki/DE-9IM) string such as FF2F11212. DE-9IM strings describe the dimensionality (0=points, 1=lines, 2=polygons) of the pairwise intersections of the interior, boundary, and exterior, of two geometries (i.e., nine values of 0/1/2 encoded into a string). This is an advanced topic beyond the scope of this book, which can be useful to understand the difference between relation types, or define custom types of relations. See the [DE-9IM strings](https://r.geocompx.org/spatial-operations#de-9im-strings) section in Geocomputation with R (add citation...). 
 
 ![Topological relations between vector geometries, inspired by Figures 1 and 2 in Egenhofer and Herring (1990). 
-The relations for which the function(x, y) is true are printed for each geometry pair, with x represented in pink and y represented in blue.
+The relations for which the `x.relation(y)` is true are printed for each geometry pair, with `x` represented in pink and `y` represented in blue.
 <!--toDo: move the used images from geocompr to the geocompy repo (this will make it more stable)-->
-The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](https://r.geocompx.org/04-spatial-operations_files/figure-html/relations-1.png)
+The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](https://r.geocompx.org/04-spatial-operations_files/figure-html/relations-1.png){#fig-spatial-relations}
 
-In **shapely**, functions testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships).
-To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in Figure 4.2 and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries):
+In **shapely**, methods testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships). 
+**geopandas** provides warppers (with the same method name) which can be applied on multimple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting).
+To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in @fig-spatial-relations and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries):
 
 ```{python}
 points = gpd.GeoSeries([
@@ -206,43 +219,65 @@ poly = gpd.GeoSeries([
 ])
 ```
 
-The resulting `GeoSeries` named `points`, `line`, and `poly` are visualized as follows:
+The sample dataset which we created is composed of three is `GeoSeries`: named `points`, `line`, and `poly`, which are visualized in @fig-spatial-relations-geoms:
 
 ```{python}
 #| label: fig-spatial-relations-geoms
 #| fig-cap: Points, line and polygon objects arranged to illustrate topological relations
 
-ax = poly.plot(color='grey', edgecolor='red')
-ax = line.plot(ax=ax, color='black', linewidth=7)
-points.plot(ax=ax, color='none', edgecolor='black')
+base = poly.plot(color='grey', edgecolor='red')
+line.plot(ax=base, color='black', linewidth=7)
+points.plot(ax=base, color='none', edgecolor='black')
 for x, y, label in zip(points.x, points.y, [1,2,3]):
-    ax.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords="offset points")
+    base.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords='offset points')
 ```
 
 A simple query is: which of the points in `points` intersect in some way with polygon `poly`?
 The question can be answered by inspection (points 1 and 3 are touching and within the polygon, respectively). 
 This question can be answered with the `.intersects` method, which reports whether or not each geometry in a `GeoSeries` (`points`) intersects with a single `shapely` geometry (`poly.iloc[0]`). 
-When both inputs are a `GeoSeries` object, a pairwise evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`):
 
 ```{python}
 points.intersects(poly.iloc[0])
 ```
 
-The result shown above is a boolean `Series`. Its contents should match your intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second are outside the polygon's border.
+The result shown above is a boolean `Series`. 
+Its contents should match your intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second are outside the polygon's border.
 Each value in this `Series` represents a feature in the first input (`points`).
 
-The `.apply` method can be used to obtain a matrix of *pairwise* results.
-In this case, the result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry. We'll add another polygon to demonstrate:
+The last example, and all other earlier examples in this chapter, demonstrate the "many-to-one" mode of `.intersects` and analogous methods, where the relation is evaluated between each of several geometries in a `GeoSeries`/`GeoDataFrame`, and an individual `shapely` geometry. A second mode of those methods (not demonstrated here) is when both inputs are `GeoSeries`/`GeoDataFrame` objects. In such case, a "pairwise" evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`). For example, the expression `nz.intersects(nz)` returns a `Series` of 16 `True` values, indicating (unsurprisingly) that each geometry in `nz` intersects with itself.
+
+A third mode is when we are interested in a "many-to-many" evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two `GeoSeries`/`GeoDataFrame` objects. 
+At the time of writing, there is no built-in method to do this in **geopandas**. 
+However, the `.apply` method can be used to repeat a "many-to-one" evaluation over all geometries in the second layer,resulting in a matrix of *pairwise* results.
+We'll create another `GeoSeries` with two polygons, named `poly2`, to demonstrate:
 
 ```{python}
-poly = gpd.GeoSeries([
+poly2 = gpd.GeoSeries([
   shapely.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)]),
   shapely.Polygon([(0,0), (1,0.5), (1,0), (0,0)])
 ])
-points.apply(lambda x: poly.intersects(x))
+points.apply(lambda x: poly2.intersects(x))
 ```
 
-The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in Figure 4.2.
+The inputs for this example, `points` and `poly2`, are illustrated in @fig-spatial-relations-geoms2:
+
+```{python}
+#| label: fig-spatial-relations-geoms2
+#| fig-cap: Inputs for demonstrating the evaluation of all pairwise intersection relations between three points (`points`) and two polygons (`poly2`)
+
+base = poly2.plot(color='none', edgecolor='red')
+points.plot(ax=base, color='none', edgecolor='black')
+for x, y, label in zip(points.x, points.y, [1,2,3]):
+    base.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords="offset points")
+```
+
+And here is how we can use `.apply` to get the intersection relations matrix. The result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry. We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each:
+
+```{python}
+points.apply(lambda x: poly2.intersects(x))
+```
+
+The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in @fig-spatial-relations.
 More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it?
 These can be answered as follows:
 
@@ -262,24 +297,20 @@ points.disjoint(poly.iloc[0])
 ```
 
 Another useful type of relation is "within distance", where we detect features that intersect with the target buffered by particular distance.
-Buffer distance determines how close target objects need to be before they are selected. This can be done by literally buffering (@sec-geometries) the target geometry, and evaluating intersection (`.intersects`, see above).
+Buffer distance determines how close target objects need to be before they are selected. This can be done by literally buffering (@sec-geometries) the target geometry, and evaluating intersection (`.intersects`).
 Another way is to calculate the distances and compare them to the distance threshold:
 
 ```{python}
 points.distance(poly.iloc[0]) < 0.2
 ```
 
-Note that although point 2 is more than 0.2 units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to 0.2. 
-This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure 4.2.
-We can verify the actual distance between point 2 and the polygon is 0.13, as follows:
+Note that although the second point is more than `0.2` units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to `0.2`. 
+This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure @fig-spatial-relations.
+We can verify the actual distance between the second point and the polygon is `0.13`, as follows:
 
 ```{python}
 points.iloc[1].distance(poly.iloc[0])
 ```
-
-### DE-9IM strings
-
-To complete...
 
 ### Spatial joining {#sec-spatial-joining}
 
