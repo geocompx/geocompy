@@ -451,13 +451,13 @@ elev
 Then, we can access any subset of cell values using `numpy` methods, e.g.:
 
 ```{python}
-elev[0, 0]  ## Value at row 1, column 1
+elev[1, 2]  ## Value at row 2, column 3
 ```
 
-Cell values can be modified by overwriting existing values in conjunction with a subsetting operation, e.g. to set the upper left cell of elev to 0:
+Cell values can be modified by overwriting existing values in conjunction with a subsetting operation, e.g. to set cell at row 2, column 3 of `elev` to `0`:
 
 ```{python}
-elev[0, 0] = 0
+elev[1, 2] = 0
 elev
 ```
 
@@ -484,7 +484,7 @@ elev1 = elev1.astype('float64')
 elev1
 ```
 
-Now we can insert an `np.nan` value into the array. (Trying to do so in the original `elev` array raises an error, try it to see for yourself)
+Now we can insert an `np.nan` value into the array. (Trying to do so in the original `elev` array raises an error, try it to see for yourself.)
 
 ```{python}
 elev1[0, 2] = np.nan
@@ -497,7 +497,7 @@ With the `np.nan` value inplace, the summary value becomes unknown:
 np.mean(elev1)
 ```
 
-Therefore, we need to ignore the "No Data" value(s):
+To get a summary of all non-missing values, we need to use the specialized **numpy** functions that ignore "No Data" values:
 
 ```{python}
 np.nanmean(elev1)
@@ -505,9 +505,12 @@ np.nanmean(elev1)
 
 Raster value statistics can be visualized in a variety of ways. 
 One approach is to "flatten" the raster values into a one-dimensional array, then use a graphical function such as `plt.hist` or `plt.boxplot` (from `matplotlib.pyplot`).
-For example:
+For example, the following code section shows the distribution of values in `elev` using a histogram (@fig-raster-hist):
 
 ```{python}
+#| label: fig-raster-hist
+#| fig-cap: Distribution of cell values in `elev`
+
 x = elev.flatten()
 plt.hist(x);
 ```
