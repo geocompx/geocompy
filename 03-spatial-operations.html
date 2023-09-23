@@ -881,16 +881,15 @@ dtype: bool</code></pre>
 <section id="sec-spatial-joining" class="level3" data-number="3.3.3">
 <h3 data-number="3.3.3" class="anchored" data-anchor-id="sec-spatial-joining"><span class="header-section-number">3.3.3</span> Spatial joining</h3>
 <p>Joining two non-spatial datasets relies on a shared ‘key’ variable, as described in <a href="02-attribute-operations.html#sec-vector-attribute-joining"><span>Section&nbsp;2.3.3</span></a>. Spatial data joining applies the same concept, but instead relies on spatial relations, described in the previous section. As with attribute data, joining adds new columns to the target object (the argument x in joining functions), from a source object (y).</p>
-<p>The process is illustrated by the following example: imagine you have ten points randomly distributed across the Earth’s surface and you ask, for the points that are on land, which countries are they in? Implementing this idea in a reproducible example will build your geographic data handling skills and show how spatial joins work. The starting point is to create points that are randomly scattered over the Earth’s surface:</p>
+<p>The process is illustrated by the following example: imagine you have ten points randomly distributed across the Earth’s surface and you ask, for the points that are on land, which countries are they in? Implementing this idea in a reproducible example will build your geographic data handling skills and show how spatial joins work. The starting point is to create points that are randomly scattered over the Earth’s surface (<a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> (a)):</p>
 <div class="cell" data-execution_count="26">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">11</span>)  <span class="co">## set seed for reproducibility</span></span>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">11</span>)       <span class="co">## set seed for reproducibility</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>bb <span class="op">=</span> world.total_bounds  <span class="co">## the world's bounds</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.random.uniform(low<span class="op">=</span>bb[<span class="dv">0</span>], high<span class="op">=</span>bb[<span class="dv">2</span>], size<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> np.random.uniform(low<span class="op">=</span>bb[<span class="dv">1</span>], high<span class="op">=</span>bb[<span class="dv">3</span>], size<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>random_points <span class="op">=</span> gpd.points_from_xy(x, y, crs<span class="op">=</span><span class="dv">4326</span>)</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>random_points <span class="op">=</span> gpd.GeoSeries(random_points)</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>random_points <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: random_points})</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>random_points</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>random_points <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: random_points})</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>random_points</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="26">
 <div>
 
@@ -930,11 +929,10 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>The scenario illustrated in <a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> shows that the <code>random_points</code> object (top left) lacks attribute data, while the world (top right) has attributes, including country names shown for a sample of countries in the legend. Spatial joins are implemented with <code>gpd.sjoin</code>, as illustrated in the code chunk below. The output is the <code>random_joined</code> object which is illustrated in <a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> (bottom left). Before creating the joined dataset, we use spatial subsetting to create world_random, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of <a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a>).</p>
+<p>The scenario illustrated in <a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> shows that the <code>random_points</code> object (top left) lacks attribute data, while the world (top right) has attributes, including country names shown for a sample of countries in the legend. Spatial joins are implemented with <code>x.sjoin(y)</code>, as illustrated in the code chunk below. The output is the <code>random_joined</code> object which is illustrated in <a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> (c). Before creating the joined dataset, we use spatial subsetting to create <code>world_random</code>, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of <a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> (b)):</p>
 <div class="cell" data-execution_count="27">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>world_random <span class="op">=</span> world[world.intersects(random_points.unary_union)]</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>world_random</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>world_random <span class="op">=</span> world[world.intersects(random_points.unary_union)]</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>world_random</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="27">
 <div>
 
@@ -1000,10 +998,10 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
+<p>Now we can do the spatial join:</p>
 <div class="cell" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Spatial join</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>random_joined <span class="op">=</span> gpd.sjoin(random_points, world, how<span class="op">=</span><span class="st">'left'</span>)</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>random_joined</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>random_joined <span class="op">=</span> random_points.sjoin(world, how<span class="op">=</span><span class="st">'left'</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>random_joined</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="28">
 <div>
 
@@ -1079,23 +1077,52 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<div class="cell" data-execution_count="29">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">0</span>])</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>random_points.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>, ax<span class="op">=</span>axes[<span class="dv">0</span>][<span class="dv">1</span>])</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>world_random.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'name_long'</span>)</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>][<span class="dv">0</span>])</span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>random_joined.geometry.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'grey'</span>)<span class="op">;</span></span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>random_joined.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'name_long'</span>, legend<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>fig.delaxes(axes[<span class="dv">1</span>][<span class="dv">1</span>])<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-spatial-join" class="quarto-figure quarto-figure-center anchored">
+<p>The input points and countries, the illustration of intersecting countries, and the join result, are shown in <a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a>:</p>
+<div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Random points</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>random_points.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="co"># World countries intersecting with the points</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>world_random.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'name_long'</span>)<span class="op">;</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Points with joined country names</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>random_joined.geometry.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'grey'</span>)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>random_joined.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'name_long'</span>, legend<span class="op">=</span><span class="va">True</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-spatial-join" class="cell quarto-layout-panel" data-execution_count="29">
 <figure class="figure">
-<p><img src="03-spatial-operations_files/figure-html/fig-spatial-join-output-1.png" width="652" height="335" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;3.7: Illustration of a spatial join. A new attribute variable is added to random points (top left) from source world object (top right) resulting in the data represented in the final panel.</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-spatial-join-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-spatial-join-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-spatial-join" width="429"></p>
+<figcaption class="figure-caption">(a) A new attribute variable is added to random points,</figcaption>
 </figure>
 </div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-spatial-join-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-spatial-join-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-spatial-join" width="429"></p>
+<figcaption class="figure-caption">(b) from source world object,</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-spatial-join-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-spatial-join-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-spatial-join" width="429"></p>
+<figcaption class="figure-caption">(c) resulting in points associated with country names</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.7: Illustration of a spatial join</figcaption><p></p>
+</figure>
 </div>
 </div>
 </section>
@@ -2114,7 +2141,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="56">
 <div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="56">
-<pre><code>&lt;generator object sample_gen at 0x7f09b5426820&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f2203e02820&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once we can apply <code>list</code>. The result is <code>16</code>:</p>
