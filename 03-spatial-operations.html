@@ -312,7 +312,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>cycle_hire <span class="op">=</span> gpd.read_file(<span class="st">'data/cycle_hire.gpkg'</span>)</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm <span class="op">=</span> gpd.read_file(<span class="st">'data/cycle_hire_osm.gpkg'</span>)</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>src_elev <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/elev.tif'</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>src_multi_rast <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/landsat.tif'</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>src_landsat <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/landsat.tif'</span>)</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>src_grain <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/grain.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -2291,7 +2291,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="59">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="59">
-<pre><code>&lt;generator object sample_gen at 0x7fbfd6a96820&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f5ac60e6820&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once, we can apply <code>list</code>. Since there was just one point, the result is just one extracted value, in this case <code>16</code>:</p>
@@ -2485,85 +2485,135 @@ dtype: float64</code></pre>
        [ 961, 1024, 1089, 1156, 1225, 1296]])</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-local-operations">Figure&nbsp;<span>3.18</span></a> demonstrates these two examples, and two other ones.</p>
-<div class="cell" data-execution_count="72">
-<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev <span class="op">+</span> elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">'Oranges'</span>)</span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev1 <span class="op">**</span> <span class="dv">2</span>, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">'Oranges'</span>)  <span class="co"># using elev here produces int8 overflows</span></span>
-<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(np.log(elev), ax<span class="op">=</span>axes[<span class="dv">2</span>], cmap<span class="op">=</span><span class="st">'Oranges'</span>)</span>
-<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev <span class="op">&gt;</span> <span class="dv">5</span>, ax<span class="op">=</span>axes[<span class="dv">3</span>], cmap<span class="op">=</span><span class="st">'Oranges'</span>)</span>
-<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'elev+elev'</span>)</span>
-<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'elev ** 2'</span>)</span>
-<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">'np.log(elev)'</span>)</span>
-<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">3</span>].set_title(<span class="st">'elev &gt; 5'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-raster-local-operations" class="quarto-figure quarto-figure-center anchored">
+<p><a href="#fig-raster-local-operations">Figure&nbsp;<span>3.18</span></a> demonstrates the result of the last two examples (<code>elev+elev</code> and <code>elev.astype(int)**2</code>), and two other ones (<code>np.log(elev)</code> and <code>elev&gt;5</code>):</p>
+<div>
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev <span class="op">+</span> elev, cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev.astype(<span class="bu">int</span>)<span class="op">**</span><span class="dv">2</span>, cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(np.log(elev), cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev <span class="op">&gt;</span> <span class="dv">5</span>, cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-raster-local-operations" class="cell quarto-layout-panel" data-execution_count="72">
 <figure class="figure">
-<p><img src="03-spatial-operations_files/figure-html/fig-raster-local-operations-output-1.png" width="632" height="191" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;3.18: Examples of different local operations of the elev raster object: adding two rasters, squaring, applying logarithmic transformation, and performing a logical operation.</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 25.0%;justify-content: center;">
+<div id="fig-raster-local-operations-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-local-operations-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-raster-local-operations" width="407"></p>
+<figcaption class="figure-caption">(a) <code>elev+elev</code></figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 25.0%;justify-content: center;">
+<div id="fig-raster-local-operations-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-local-operations-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-raster-local-operations" width="407"></p>
+<figcaption class="figure-caption">(b) <code>elev.astype(int)**2</code></figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 25.0%;justify-content: center;">
+<div id="fig-raster-local-operations-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-local-operations-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-raster-local-operations" width="407"></p>
+<figcaption class="figure-caption">(c) <code>np.log(elev)</code></figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 25.0%;justify-content: center;">
+<div id="fig-raster-local-operations-4" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-local-operations-output-4.png" class="img-fluid figure-img" data-ref-parent="fig-raster-local-operations" width="407"></p>
+<figcaption class="figure-caption">(d) <code>elev&gt;5</code></figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges 0–12, 12–24 and 24–36 are reclassified to take values 1, 2 and 3, respectively.</p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.18: Examples of different local operations of the elev raster object: adding two rasters, squaring, applying logarithmic transformation, and performing a logical operation.</figcaption><p></p>
+</figure>
+</div>
+</div>
+<p>Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3). Here, we assign the raster values in the ranges <code>0</code>–<code>12</code>, <code>12</code>–<code>24</code> and <code>24</code>–<code>36</code> are reclassified to take values <code>1</code>, <code>2</code> and <code>3</code>, respectively.</p>
 <div class="cell" data-execution_count="73">
 <div class="sourceCode cell-code" id="cb94"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>recl <span class="op">=</span> elev.copy()</span>
 <span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">0</span>)  <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">12</span>)] <span class="op">=</span> <span class="dv">1</span></span>
 <span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">12</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">24</span>)] <span class="op">=</span> <span class="dv">2</span></span>
 <span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>recl[(elev <span class="op">&gt;</span> <span class="dv">24</span>) <span class="op">&amp;</span> (elev <span class="op">&lt;=</span> <span class="dv">36</span>)] <span class="op">=</span> <span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The reclassified result is shown in <a href="#fig-raster-reclassify">Figure&nbsp;<span>3.19</span></a>.</p>
-<div class="cell" data-execution_count="74">
-<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">'Oranges'</span>)</span>
-<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(recl, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">'Oranges'</span>)</span>
-<span id="cb95-4"><a href="#cb95-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Original'</span>)</span>
-<span id="cb95-5"><a href="#cb95-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Reclassified'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-raster-reclassify" class="quarto-figure quarto-figure-center anchored">
+<p>The reclassified result is shown in <a href="#fig-raster-reclassify">Figure&nbsp;<span>3.19</span></a>:</p>
+<div>
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev, cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(recl, cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-raster-reclassify" class="cell quarto-layout-panel" data-execution_count="74">
 <figure class="figure">
-<p><img src="03-spatial-operations_files/figure-html/fig-raster-reclassify-output-1.png" width="632" height="332" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;3.19: Reclassifying a continuous raster into three categories.</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-raster-reclassify-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-reclassify-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-raster-reclassify" width="407"></p>
+<figcaption class="figure-caption">(a) Original</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-raster-reclassify-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-reclassify-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-raster-reclassify" width="407"></p>
+<figcaption class="figure-caption">(b) Reclassified</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>The calculation of the normalized difference vegetation index (NDVI) is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between -1 and 1; positive values indicate the presence of living plants (mostly &gt; 0.2). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula (<a href="#eq-ndvi">Equation&nbsp;<span>3.1</span></a>):</p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.19: Reclassifying a continuous raster into three categories.</figcaption><p></p>
+</figure>
+</div>
+</div>
+<p>The calculation of the <a href="https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index">Normalized Difference Vegetation Index (NDVI)</a> is a well-known local (pixel-by-pixel) raster operation. It returns a raster with values between <code>-1</code> and <code>1</code>; positive values indicate the presence of living plants (mostly &gt; <code>0.2</code>). NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula (<a href="#eq-ndvi">Equation&nbsp;<span>3.1</span></a>):</p>
 <p><span id="eq-ndvi"><span class="math display">\[NDVI=\frac{NIR-Red} {NIR+Red} \tag{3.1}\]</span></span></p>
-<p>Let’s calculate NDVI for the multispectral satellite file of the Zion National Park.</p>
+<p>Let’s calculate NDVI for the multispectral Landsat satellite file (<code>landsat.tif</code>) of the Zion National Park:</p>
 <div class="cell" data-execution_count="75">
-<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>multi_rast <span class="op">=</span> src_multi_rast.read()</span>
-<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>nir <span class="op">=</span> multi_rast[<span class="dv">3</span>,:,:]</span>
-<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>red <span class="op">=</span> multi_rast[<span class="dv">2</span>,:,:]</span>
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>landsat <span class="op">=</span> src_landsat.read()</span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>nir <span class="op">=</span> landsat[<span class="dv">3</span>]</span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>red <span class="op">=</span> landsat[<span class="dv">2</span>]</span>
 <span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> (nir<span class="op">-</span>red)<span class="op">/</span>(nir<span class="op">+</span>red)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Convert values &gt;1 to “No Data”:</p>
+<p>Convert values &gt;<code>1</code> to “No Data”:</p>
 <div class="cell" data-execution_count="76">
 <div class="sourceCode cell-code" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>ndvi[ndvi<span class="op">&gt;</span><span class="dv">1</span>] <span class="op">=</span> np.nan</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>When plotting an RGB image using the <code>show</code> function, the function assumes that:</p>
+<p>When plotting an RGB image using the <code>rasterio.plot.show</code> function, the function assumes that:</p>
 <ul>
 <li>Values are in the range <code>[0,1]</code> for floats, or <code>[0,255]</code> for integers (otherwise clipped)</li>
 <li>The order of bands is RGB</li>
 </ul>
-<p>To “prepare” the multi-band raster for <code>show</code>, we therefore reverse the order of bands (which is originally BGR+NIR), and divided by the maximum to set the maximum value at <code>1</code>:</p>
+<p>To “prepare” the multi-band raster for <code>rasterio.plot.show</code>, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), uisng the <code>[:3]</code> slice to select the first three bands and then the <code>[::-1]</code> slice to reverse the bands order, and divide by the maximum to set the maximum value at <code>1</code>:</p>
 <div class="cell" data-execution_count="77">
-<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>multi_rast_rgb <span class="op">=</span> multi_rast[(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">0</span>), :, :] <span class="op">/</span> multi_rast.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>landsat_rgb <span class="op">=</span> landsat[:<span class="dv">3</span>][::<span class="op">-</span><span class="dv">1</span>] <span class="op">/</span> landsat.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The result is shown in <a href="#fig-raster-ndvi">Figure&nbsp;<span>3.20</span></a>.</p>
-<div class="cell" data-execution_count="78">
-<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(multi_rast_rgb, ax<span class="op">=</span>axes[<span class="dv">0</span>], cmap<span class="op">=</span><span class="st">'RdYlGn'</span>)</span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(ndvi, ax<span class="op">=</span>axes[<span class="dv">1</span>], cmap<span class="op">=</span><span class="st">'Greens'</span>)</span>
-<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'RGB image'</span>)</span>
-<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'NDVI'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-raster-ndvi" class="quarto-figure quarto-figure-center anchored">
+<p>The result is shown in the right panel of <a href="#fig-raster-ndvi">Figure&nbsp;<span>3.20</span></a>:</p>
+<div>
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(landsat_rgb, cmap<span class="op">=</span><span class="st">'RdYlGn'</span>)<span class="op">;</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(ndvi, cmap<span class="op">=</span><span class="st">'Greens'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-raster-ndvi" class="cell quarto-layout-panel" data-execution_count="78">
 <figure class="figure">
-<p><img src="03-spatial-operations_files/figure-html/fig-raster-ndvi-output-1.png" width="621" height="357" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;3.20: RGB image (left) and NDVI values (right) calculated for the example satellite file of the Zion National Park.</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-raster-ndvi-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-ndvi-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-raster-ndvi" width="354"></p>
+<figcaption class="figure-caption">(a) RGB image</figcaption>
 </figure>
 </div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-raster-ndvi-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-ndvi-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-raster-ndvi" width="354"></p>
+<figcaption class="figure-caption">(b) NDVI</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.20: RGB image and NDVI values calculated for the Landsat satellite image of the Zion National Park</figcaption><p></p>
+</figure>
 </div>
 </div>
 </section>
