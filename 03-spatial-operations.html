@@ -2291,7 +2291,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="59">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="59">
-<pre><code>&lt;generator object sample_gen at 0x7f5ac60e6820&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f66201e6820&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once, we can apply <code>list</code>. Since there was just one point, the result is just one extracted value, in this case <code>16</code>:</p>
@@ -2584,7 +2584,7 @@ dtype: float64</code></pre>
 <li>Values are in the range <code>[0,1]</code> for floats, or <code>[0,255]</code> for integers (otherwise clipped)</li>
 <li>The order of bands is RGB</li>
 </ul>
-<p>To “prepare” the multi-band raster for <code>rasterio.plot.show</code>, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), uisng the <code>[:3]</code> slice to select the first three bands and then the <code>[::-1]</code> slice to reverse the bands order, and divide by the maximum to set the maximum value at <code>1</code>:</p>
+<p>To “prepare” the multi-band raster for <code>rasterio.plot.show</code>, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the <code>[:3]</code> slice to select the first three bands and then the <code>[::-1]</code> slice to reverse the bands order, and divide by the maximum to set the maximum value at <code>1</code>:</p>
 <div class="cell" data-execution_count="77">
 <div class="sourceCode cell-code" id="cb98"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>landsat_rgb <span class="op">=</span> landsat[:<span class="dv">3</span>][::<span class="op">-</span><span class="dv">1</span>] <span class="op">/</span> landsat.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -2619,7 +2619,13 @@ dtype: float64</code></pre>
 </section>
 <section id="sec-focal-operations" class="level3" data-number="3.4.4">
 <h3 data-number="3.4.4" class="anchored" data-anchor-id="sec-focal-operations"><span class="header-section-number">3.4.4</span> Focal operations</h3>
-<p>While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. The neighborhood (also named kernel, filter or moving window) under consideration is typically of size 3-by-3 cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (Figure …). Other names for this operation are spatial filtering and convolution (Burrough, McDonnell, and Lloyd 2015).</p>
+<p>While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. The neighborhood (also named kernel, filter or moving window) under consideration is typically of <span class="math inline">\(3 \times 3\)</span> cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (<a href="#fig-focal-filter">Figure&nbsp;<span>3.21</span></a>). Other names for this operation are spatial filtering and convolution (Burrough, McDonnell, and Lloyd 2015).</p>
+<div id="fig-focal-filter" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="https://r.geocompx.org/figures/04_focal_example.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;3.21: Input raster (left) and resulting output raster (right) due to a focal operation—finding the minimum value in <span class="math inline">\(3 \times 3\)</span> moving windows.</figcaption>
+</figure>
+</div>
 <p>In Python, the <code>scipy.ndimage</code> package has a comprehensive collection of <a href="https://docs.scipy.org/doc/scipy/reference/ndimage.html#filters">functions</a> to perform filtering of <code>numpy</code> arrays, such as:</p>
 <ul>
 <li><code>minimum_filter</code></li>
@@ -2759,7 +2765,7 @@ dtype: float64</code></pre>
 <span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>src_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/ch.tif'</span>)</span>
 <span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.merge.merge([src_1, src_2])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Both inputs and the result are shown in <a href="#fig-raster-merge">Figure&nbsp;<span>3.21</span></a>:</p>
+<p>Both inputs and the result are shown in <a href="#fig-raster-merge">Figure&nbsp;<span>3.22</span></a>:</p>
 <div>
 <div class="sourceCode cell-code" id="cb115"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_1)<span class="op">;</span></span>
 <span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_2)<span class="op">;</span></span>
@@ -2792,7 +2798,7 @@ dtype: float64</code></pre>
 </div>
 </div>
 </div>
-<p></p><figcaption class="figure-caption">Figure&nbsp;3.21: Raster merging</figcaption><p></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.22: Raster merging</figcaption><p></p>
 </figure>
 </div>
 </div>
