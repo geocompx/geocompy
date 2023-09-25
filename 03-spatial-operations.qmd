@@ -799,42 +799,59 @@ These operations are in fact Boolean local operations, since we compare, cell-wi
 
 ### Map algebra {#sec-map-algebra}
 
-The term 'map algebra' was coined in the late 1970s to describe a "set of conventions, capabilities, and techniques" for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994). In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.
+The term 'map algebra' was coined in the late 1970s to describe a "set of conventions, capabilities, and techniques" for the analysis of geographic raster and (although less prominently) vector data (Tomlin 1994, to add citation...). 
+In this context, we define map algebra more narrowly, as operations that modify or summarise raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.
 
-Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage "raster is faster but vector is corrector". The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the header). For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
+Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage "raster is faster but vector is corrector". 
+The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the raster metadata, @sec-using-rasterio). 
+For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing. 
+Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
 
-This is the way that map algebra works with the terra package. First, the headers of the raster datasets are queried and (in cases where map algebra operations work on more than one dataset) checked to ensure the datasets are compatible. Second, map algebra retains the so-called one-to-one locational correspondence, meaning that cells cannot move. This differs from matrix algebra, in which values change position, for example when multiplying or dividing matrices.
+<!-- This is the way that map algebra works with the terra package. First, the headers of the raster datasets are queried and (in cases where map algebra operations work on more than one dataset) checked to ensure the datasets are compatible. Second, map algebra retains the so-called one-to-one locational correspondence, meaning that cells cannot move. This differs from matrix algebra, in which values change position, for example when multiplying or dividing matrices. -->
 
-Map algebra (or cartographic modeling with raster data) divides raster operations into four subclasses (Tomlin 1990), with each working on one or several grids simultaneously:
+Map algebra (or cartographic modeling with raster data) divides raster operations into four subclasses (Tomlin 1990, to add citation...), with each working on one or several grids simultaneously:
 
-* Local or per-cell operations
-* Focal or neighborhood operations. Most often the output cell value is the result of a 3 x 3 input cell block
-* Zonal operations are similar to focal operations, but the surrounding pixel grid on which new values are computed can have irregular sizes and shapes
-* Global or per-raster operations; that means the output cell derives its value potentially from one or several entire rasters
+* Local or per-cell operations (@sec-raster-local-operations)
+* Focal or neighborhood operations. Most often the output cell value is the result of a $3 \times 3$ input cell block (@sec-focal-operations)
+* Zonal operations are similar to focal operations, but the surrounding pixel grid on which new values are computed can have irregular sizes and shapes (@sec-zonal-operations)
+* Global or per-raster operations; that means the output cell derives its value potentially from one or several entire rasters (@sec-global-operations-and-distances)
 
-This typology classifies map algebra operations by the number of cells used for each pixel processing step and the type of the output. For the sake of completeness, we should mention that raster operations can also be classified by discipline such as terrain, hydrological analysis, or image classification. The following sections explain how each type of map algebra operations can be used, with reference to worked examples.
+This typology classifies map algebra operations by the number of cells used for each pixel processing step and the type of the output. 
+For the sake of completeness, we should mention that raster operations can also be classified by discipline such as terrain, hydrological analysis, or image classification. 
+The following sections explain how each type of map algebra operations can be used, with reference to worked examples.
 
 ### Local operations {#sec-raster-local-operations}
 
 Local operations comprise all cell-by-cell operations in one or several layers. 
-Raster algebra is a classical use case of local operations - this includes adding or subtracting values from a raster, squaring and multipling rasters. 
-Raster algebra also allows logical operations such as finding all raster cells that are greater than a specific value (5 in our example below). 
-Local operations are applied using the `numpy` array operations syntax, as demonstrated below:
+Raster algebra is a classical use case of local operations---this includes adding or subtracting values from a raster, squaring and multipling rasters. 
+Raster algebra also allows logical operations such as finding all raster cells that are greater than a specific value (e.g., `5` in our example below). 
+Local operations are applied using the `numpy` array operations syntax, as demonstrated below.
 
-First, we need to read raster values:
+First, let's take the array of `elev.tif` raster values, which we already read earlier (@sec-spatial-subsetting):
 
 ```{python}
-elev = src_elev.read(1)
 elev
 ```
 
-Now, any element-wise array operation can be applied. For example:
+Now, any element-wise array operation can be applied using **numpy** arithmetic or conditional operators and functions, comprising local raster operations in spatial analysis terminology. For example:
 
 ```{python}
 elev + elev
 ```
 
-@fig-raster-local-operations demonstrates a few more examples.
+Note that some functions and operators automatically change the data type to accomodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as `255` for `int8`). For example, `elev**2` (`elev` squared) results in overflow:
+
+```{python}
+elev**2
+```
+
+To accomodate the results, we can, for instance, transform `elev` to the standard `int64` data type before applying the operator. Now we get correct results:
+
+```{python}
+elev.astype(int)**2
+```
+
+@fig-raster-local-operations demonstrates these two examples, and two other ones.
 
 ```{python}
 #| label: fig-raster-local-operations
@@ -916,7 +933,7 @@ axes[0].set_title('RGB image')
 axes[1].set_title('NDVI');
 ```
 
-### Focal operations
+### Focal operations {#sec-focal-operations}
 
 While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. 
 The neighborhood (also named kernel, filter or moving window) under consideration is typically of size 3-by-3 cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. 
@@ -992,7 +1009,7 @@ The `TerrainAttribute` function from package `richdem` can be used to calculate 
 * `planform_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
 * `profile_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
 
-### Zonal operations
+### Zonal operations {#sec-zonal-operations}
 
 Just like focal operations, zonal operations apply an aggregation function to multiple raster cells. 
 However, a second raster, usually with categorical values, defines the zonal filters (or 'zones') in the case of zonal operations, as opposed to a predefined neighborhood window in the case of focal operation presented in the previous section. 
@@ -1055,7 +1072,7 @@ In the easiest case, we can just merge these scenes, that is put them side by si
 However, the procedure is the same regardless of the number of scenes. 
 In case when all scenes are "aligned" (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes are resampled (see @sec-raster-resampling) to the grid defined by the first scene. 
 
-For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (`aut.tif`) and Switzerland (`ch.tif`). 
+For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (`'aut.tif'`) and Switzerland (`'ch.tif'`). 
 Merging can be done using function `rasterio.merge.merge`, which accepts a `list` of raster file connections, and returns the new `ndarray` and a "transform":
 
 ```{python}
@@ -1069,15 +1086,15 @@ Both inputs and the result are shown in @fig-raster-merge:
 ```{python}
 #| label: fig-raster-merge
 #| fig-cap: Raster merging
+#| layout-ncol: 3
+#| fig-subcap: 
+#| - '`aut.tif`'
+#| - '`ch.tif`'
+#| - Mosaic (`aut.tif`+`ch.tif`)
 
-fig, axes = plt.subplots(2, 2, figsize=(8,4))
-rasterio.plot.show(src_1, ax=axes[0][0])
-rasterio.plot.show(src_2, ax=axes[0][1])
-rasterio.plot.show(out_image, transform=out_transform, ax=axes[1][0])
-axes[1][1].axis('off')
-axes[0][0].set_title('aut.tif')
-axes[0][1].set_title('ch.tif')
-axes[1][0].set_title('Mosaic (aut.tif+ch.tif)');
+rasterio.plot.show(src_1);
+rasterio.plot.show(src_2);
+rasterio.plot.show(out_image, transform=out_transform);
 ```
 
 By default (`method='first'`), areas of overlap retain the value of the *first* raster. Other possible methods are:
