@@ -41,17 +41,19 @@ src_elev = rasterio.open('data/elev.tif')
 
 ## Introduction
 
-So far the book has explained the structure of geographic datasets (Chapter 2), and how to manipulate them based on their non-geographic attributes (Chapter 3) and spatial relations (Chapter 4). 
-This chapter focusses on manipulating the geographic elements of geographic objects, for example by simplifying and converting vector geometries, cropping raster datasets, and converting vector objects into rasters and from rasters into vectors. 
-After reading it---and attempting the exercises at the end---you should understand and have control over the geometry column in vector layers and the extent and geographic location of pixels represented in rasters in relation to other geographic objects.
+So far the book has explained the structure of geographic datasets (@sec-spatial-class), and how to manipulate them based on their non-geographic attributes (@sec-attr) and spatial relations (@sec-spatial-operations). 
+This chapter focusses on manipulating the geographic elements of geographic objects, for example by simplifying and converting vector geometries, and by cropping raster datasets.
+After reading it you should understand and have control over the geometry column in vector layers and the extent and geographic location of pixels represented in rasters in relation to other geographic objects.
 
 @sec-geo-vec covers transforming vector geometries with 'unary' and 'binary' operations. Unary operations work on a single geometry in isolation, including simplification (of lines and polygons), the creation of buffers and centroids, and shifting/scaling/rotating single geometries using 'affine transformations' (@sec-simplification to @sec-affine-transformations). Binary transformations modify one geometry based on the shape of another, including clipping and geometry unions, covered in @sec-clipping and @sec-geometry-unions, respectively. Type transformations (from a polygon to a line, for example) are demonstrated in Section @sec-type-transformations.
 
-@sec-geo-ras covers geometric transformations on raster objects. This involves changing the size and number of the underlying pixels, and assigning them new values. It teaches how to change the resolution (also called raster aggregation and disaggregation), the extent and the origin of a raster. These operations are especially useful if one would like to align raster datasets from diverse sources. Aligned raster objects share a one-to-one correspondence between pixels, allowing them to be processed using map algebra operations, described in Section 4.3.2. The final Section 6 connects vector and raster objects. It shows how raster values can be 'masked' and 'extracted' by vector geometries. Importantly it shows how to 'polygonize' rasters and 'rasterize' vector datasets, making the two data models more interchangeable.
+@sec-geo-ras covers geometric transformations on raster objects. This involves changing the size and number of the underlying pixels, and assigning them new values. It teaches how to change the extent and the origin of a raster "manually" (@sec-extent-and-origin), how to change the resolution in fixed "steps" through aggregation and disaggregation (@sec-raster-agg-disagg), and finally how to resample a raster into any existing template, which is the most general and often most practical approach (@sec-raster-resampling). These operations are especially useful if one would like to align raster datasets from diverse sources. Aligned raster objects share a one-to-one correspondence between pixels, allowing them to be processed using map algebra operations (@sec-raster-local-operations). 
+
+In the next chapter (@sec-raster-vector), we deal with the special case of geometry operations that involve both a raster and a vector layer together. It shows how raster values can be 'masked' and 'extracted' by vector geometries. Importantly it shows how to 'polygonize' rasters and 'rasterize' vector datasets, making the two data models more interchangeable.
 
 ## Geometric operations on vector data {#sec-geo-vec}
 
-This section is about operations that in some way change the geometry of vector layers. It is more advanced than the spatial data operations presented in the previous chapter (in @sec-spatial-vec), because here we drill down into the geometry: the functions discussed in this section work on the geometric (`GeoSeries`) part, either as standalone object or as part of a `GeoDataFrame`.
+This section is about operations that in some way change the geometry of vector layers. It is more advanced than the spatial data operations presented in the previous chapter (in @sec-spatial-vec), because here we drill down into the geometry: the functions discussed in this section work on the geometric part (the geometry column, which is a `GeoSeries` object), either as standalone object or as part of a `GeoDataFrame`.
 
 ### Simplification {#sec-simplification}
 
@@ -778,7 +780,7 @@ rasterio.plot.show(out_image, transform=out_transform, ax=ax)
 gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
 ```
 
-### Extent and origin
+### Extent and origin {#sec-extent-and-origin}
 
 When merging or performing map algebra on rasters, their resolution, projection, origin and/or extent have to match. 
 Otherwise, how should we add the values of one raster with a resolution of 0.2 decimal degrees to a second raster with a resolution of 1 decimal degree? 
