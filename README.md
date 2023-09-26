@@ -19,7 +19,7 @@ Detailed instructions are provided below.
 To reproduce this book you can simply click on the link below to see the code running in your web browser (see details of how this works at [mybinder.org](https://mybinder.org/)):
 
 [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb)
- -->
+ --> 
 
 ## Reproduce the book with GitHub Codespaces
 
