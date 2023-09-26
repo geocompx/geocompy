@@ -64,7 +64,7 @@ src_grain = rasterio.open('data/grain.tif')
 
 ## Spatial operations on vector data {#sec-spatial-vec}
 
-### Spatial subsetting {#sec-spatial-subsetting}
+### Spatial subsetting {#sec-spatial-subsetting-vector}
 
 Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object. 
 Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is a boolean `Series`. 
@@ -204,7 +204,7 @@ The relations for which the `x.relation(y)` is true are printed for each geometr
 The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](https://r.geocompx.org/04-spatial-operations_files/figure-html/relations-1.png){#fig-spatial-relations}
 
 In **shapely**, methods testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships). 
-**geopandas** provides warppers (with the same method name) which can be applied on multimple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting).
+**geopandas** provides warppers (with the same method name) which can be applied on multimple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting-vector).
 To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in @fig-spatial-relations and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries):
 
 ```{python}
@@ -661,7 +661,7 @@ nz_highest = nz_height \
 nz_highest
 ```
 
-and the geographic centroid of the Canterbury region (`canterbury`, created in @sec-spatial-subsetting): 
+and the geographic centroid of the Canterbury region (`canterbury`, created in @sec-spatial-subsetting-vector): 
 
 ```{python}
 canterbury_centroid = canterbury.centroid.iloc[0]
@@ -700,7 +700,7 @@ nz_height.iloc[1:3, :].plot(ax=base, color='none', edgecolor='black');
 
 ## Spatial operations on raster data {#sec-spatial-ras}
 
-### Spatial subsetting {#sec-spatial-subsetting}
+### Spatial subsetting {#sec-spatial-subsetting-raster}
 
 The previous chapter (Section @sec-manipulating-raster-objects) demonstrated how to retrieve values associated with specific cell IDs, or row and column combinations, from a raster. 
 Raster values can also be extracted by location (coordinates) and other spatial objects. 
@@ -830,7 +830,7 @@ Raster algebra is a classical use case of local operations---this includes addin
 Raster algebra also allows logical operations such as finding all raster cells that are greater than a specific value (e.g., `5` in our example below). 
 Local operations are applied using the `numpy` array operations syntax, as demonstrated below.
 
-First, let's take the array of `elev.tif` raster values, which we already read earlier (@sec-spatial-subsetting):
+First, let's take the array of `elev.tif` raster values, which we already read earlier (@sec-spatial-subsetting-raster):
 
 ```{python}
 elev
@@ -1090,17 +1090,21 @@ fig.colorbar(i, ax=ax);
 Just like focal operations, zonal operations apply an aggregation function to multiple raster cells. 
 However, a second raster, usually with categorical values, defines the zonal filters (or 'zones') in the case of zonal operations, as opposed to a predefined neighborhood window in the case of focal operation presented in the previous section. 
 Consequently, raster cells defining the zonal filter do not necessarily have to be neighbors. 
-Our grain size raster is a good example, as illustrated in the right panel of Figure 3.2: different grain sizes are spread irregularly throughout the raster. 
-Finally, the result of a zonal operation is a summary table grouped by zone which is why this operation is also known as zonal statistics in the GIS world. This is in contrast to focal operations which return a raster object.
+Our `grain.tif` raster is a good example, as illustrated in @fig-rasterio-plot-elev: different grain sizes are spread irregularly throughout the raster. 
+Finally, the result of a zonal operation is a summary table grouped by zone, which is why this operation is also known as zonal statistics in the GIS world. This is in contrast to focal operations (@sec-focal-operations) which return a raster object.
 
-To demonstrate, let us get back to the `grain` and `elev` rasters (Figure 3.2). To calculate zonal statistics, we use the arrays with raster values. The `elev` array was already imported earlier:
+To demonstrate, let's get back to the `grain.tif` and `elev.tif` rasters. To calculate zonal statistics, we use the arrays with raster values, which we already imported earlier:
 
 ```{python}
-grain = src_grain.read(1)
 grain
 ```
 
-Our interntion is to calculate the average (or any other summary function, for that matter) of *elevation* in each zone defined by *grain* values. First, we can obtain the unique values defining the zones using `np.unique`: 
+```{python}
+elev
+```
+
+Our interntion is to calculate the average (or any other summary function, for that matter) of *elevation* in each zone defined by *grain* values. 
+To do that, first we first obtain the unique values defining the zones, using [`np.unique`](https://numpy.org/doc/stable/reference/generated/numpy.unique.html): 
 
 ```{python}
 np.unique(grain)
@@ -1113,10 +1117,11 @@ z = {i: elev[grain == i] for i in np.unique(grain)}
 z
 ```
 
-At this stage, we can expand the dictionary comprehension expression to calculate the mean elevation associated with each grain size class. Instead of placing the elevation values (`elev[grain==i]`) into the dictionary values, we place their mean (`elev[grain==i].mean()`):
+At this stage, we can expand the dictionary comprehension expression to calculate the mean elevation associated with each grain size class. 
+Namely, instead of placing the elevation values (`elev[grain==i]`) into the dictionary values, we place their (rounded) mean (`elev[grain==i].mean().round(1)`):
 
 ```{python}
-z = {i: elev[grain == i].mean() for i in np.unique(grain)}
+z = {i: elev[grain == i].mean().round(1) for i in np.unique(grain)}
 z
 ```
 
@@ -1129,14 +1134,14 @@ The most common global operations are descriptive statistics for the entire rast
 
 Aside from that, global operations are also useful for the computation of distance and weight rasters. 
 In the first case, one can calculate the distance from each cell to specific target cells or vector geometries. 
-For example, one might want to compute the distance to the nearest coast (see example in @sec-distance-to-nearest-geometry). 
+For example, one might want to compute the distance to the nearest coast (see @sec-distance-to-nearest-geometry). 
 We might also want to consider topography, that means, we are not only interested in the pure distance but would like also to avoid the crossing of mountain ranges when going to the coast. 
 To do so, we can weight the distance with elevation so that each additional altitudinal meter "prolongs" the Euclidean distance (this is beyond the scope of the book). 
-Visibility and viewshed computations also belong to the family of global operations (this is also beyond the scope of the book).
+Visibility and viewshed computations also belong to the family of global operations (also beyond the scope of the book).
 
 ### Map algebra counterparts in vector processing
 
-Many map algebra operations have a counterpart in vector processing (Liu and Mason 2009 to add citation...). Computing a distance raster (global operation) while only considering a maximum distance (logical focal operation) is the equivalent to a vector buffer operation (@sec-buffers). Reclassifying raster data (either local or zonal function depending on the input) is equivalent to dissolving vector data (Section @sec-geometry-unions). Overlaying two rasters (local operation), where one contains "No Data" values representing a mask, is similar to vector clipping (Section @sec-clipping). Quite similar to spatial clipping is intersecting two layers (Section @sec-spatial-subsetting). The difference is that these two layers (vector or raster) simply share an overlapping area. However, be careful with the wording. Sometimes the same words have slightly different meanings for raster and vector data models. While aggregating polygon geometries means dissolving boundaries, for raster data geometries it means increasing cell sizes and thereby reducing spatial resolution. Zonal operations dissolve the cells of one raster in accordance with the zones (categories) of another raster dataset using an aggregating function.
+Many map algebra operations have a counterpart in vector processing [@liu_essential_2009]. Computing a distance raster (global operation) while only considering a maximum distance (logical focal operation) is the equivalent to a vector buffer operation (@sec-buffers). Reclassifying raster data (either local or zonal function depending on the input) is equivalent to dissolving vector data (@sec-geometry-unions). Overlaying two rasters (local operation), where one contains "No Data" values representing a mask, is similar to vector clipping (Section @sec-clipping). Quite similar to spatial clipping is intersecting two layers (@sec-spatial-subsetting-vector, @sec-joining-incongruent-layers). The difference is that these two layers (vector or raster) simply share an overlapping area. However, be careful with the wording. Sometimes the same words have slightly different meanings for raster and vector data models. While aggregating polygon geometries means dissolving boundaries, for raster data geometries it means increasing cell sizes and thereby reducing spatial resolution. Zonal operations dissolve the cells of one raster in accordance with the zones (categories) of another raster dataset using an aggregating function.
 
 ### Merging rasters
 
@@ -1144,12 +1149,12 @@ Suppose we would like to compute the NDVI (see @sec-raster-local-operations), an
 Such computations rely on remotely sensed information. 
 The corresponding imagery is often divided into scenes covering a specific spatial extent (i.e., "tiles"), and frequently, a study area covers more than one scene. 
 Then, we would need to merge (also known as "mosaic") the scenes covered by our study area. 
-In the easiest case, we can just merge these scenes, that is put them side by side. 
-However, the procedure is the same regardless of the number of scenes. 
+<!-- In the easiest case, we can just merge these scenes, that is put them side by side.  -->
+<!-- However, the procedure is the same regardless of the number of scenes.  -->
 In case when all scenes are "aligned" (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes are resampled (see @sec-raster-resampling) to the grid defined by the first scene. 
 
 For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (`'aut.tif'`) and Switzerland (`'ch.tif'`). 
-Merging can be done using function `rasterio.merge.merge`, which accepts a `list` of raster file connections, and returns the new `ndarray` and a "transform":
+Merging can be done using function `rasterio.merge.merge`, which accepts a `list` of raster file connections, and returns the new `ndarray` and a "transform", representing the resulting mosaic:
 
 ```{python}
 src_1 = rasterio.open('data/aut.tif')
@@ -1173,16 +1178,16 @@ rasterio.plot.show(src_2);
 rasterio.plot.show(out_image, transform=out_transform);
 ```
 
-By default (`method='first'`), areas of overlap retain the value of the *first* raster. Other possible methods are:
+By default in `rasterio.merge.merge` (`method='first'`), areas of overlap retain the value of the *first* raster. Other possible methods are:
 
 * `'last'`---Value of the last raster
 * `'min'`---Minimum value
 * `'max'`---Maximum value
 
-When dealing with non-overlapping tiles, such as `aut.tif` and `ch.tif` (above), the `method` argument has no practical effect. However, it becomes relevant when we want to combine spectral imagery from scenes that were taken on different dates. The above four options for `method` do not cover the commonly required scenario when we would like to compute the mean value---for example to calculate a seasonal average NDVI image from a set of partially overlapping satellite images (such as Landsat). An alternative worflow to `rasterio.merge.merge`, for calculating a mosaic as well as "averaging" any overlaps, could be to go through two steps:
+When dealing with non-overlapping tiles, such as `aut.tif` and `ch.tif` (above), the `method` argument has no practical effect. However, it becomes relevant when we want to combine spectral imagery from scenes that were taken on different dates. The above four options for `method` do not cover the commonly required scenario when we would like to compute the *mean* value---for example to calculate a seasonal average NDVI image from a set of partially overlapping satellite images (such as Landsat). An alternative worflow to `rasterio.merge.merge`, for calculating a mosaic as well as "averaging" any overlaps, is to go through two steps:
 
 * Resampling all scenes into a common "global" grid (@sec-raster-resampling), thereby producing a series of "matching" rasters (with the area surrounding each scene set as "No Data")
-* Averaging the rasters through raster algebra (@sec-raster-local-operations), as in `np.mean(m,axis=0)` or `np.nanmean(m,axis=0)`, where `m` is the multi-band array, which would return a single-band array of averages
+* Averaging the rasters through raster algebra (@sec-raster-local-operations), using `np.mean(m,axis=0)` or `np.nanmean(m,axis=0)` (depending whether we prefer to ignore "No Data" or not), where `m` is the multi-band array, which would return a single-band array of averages
 
 ## Exercises
 
