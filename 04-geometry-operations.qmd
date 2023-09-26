@@ -27,6 +27,7 @@ import rasterio
 import rasterio.warp
 import rasterio.plot
 import rasterio.mask
+import sys
 ```
 
 and load the sample data for this chapter:
@@ -45,77 +46,90 @@ So far the book has explained the structure of geographic datasets (@sec-spatial
 This chapter focusses on manipulating the geographic elements of geographic objects, for example by simplifying and converting vector geometries, and by cropping raster datasets.
 After reading it you should understand and have control over the geometry column in vector layers and the extent and geographic location of pixels represented in rasters in relation to other geographic objects.
 
-@sec-geo-vec covers transforming vector geometries with 'unary' and 'binary' operations. Unary operations work on a single geometry in isolation, including simplification (of lines and polygons), the creation of buffers and centroids, and shifting/scaling/rotating single geometries using 'affine transformations' (@sec-simplification to @sec-affine-transformations). Binary transformations modify one geometry based on the shape of another, including clipping and geometry unions, covered in @sec-clipping and @sec-geometry-unions, respectively. Type transformations (from a polygon to a line, for example) are demonstrated in Section @sec-type-transformations.
+@sec-geo-vec covers transforming vector geometries with 'unary' and 'binary' operations. 
+Unary operations work on a single geometry in isolation, including simplification (of lines and polygons), the creation of buffers and centroids, and shifting/scaling/rotating single geometries using 'affine transformations' (@sec-simplification to @sec-affine-transformations). 
+Binary transformations modify one geometry based on the shape of another, including clipping and geometry unions, covered in @sec-clipping and @sec-geometry-unions, respectively. 
+Type transformations (from a polygon to a line, for example) are demonstrated in Section @sec-type-transformations.
 
-@sec-geo-ras covers geometric transformations on raster objects. This involves changing the size and number of the underlying pixels, and assigning them new values. It teaches how to change the extent and the origin of a raster "manually" (@sec-extent-and-origin), how to change the resolution in fixed "steps" through aggregation and disaggregation (@sec-raster-agg-disagg), and finally how to resample a raster into any existing template, which is the most general and often most practical approach (@sec-raster-resampling). These operations are especially useful if one would like to align raster datasets from diverse sources. Aligned raster objects share a one-to-one correspondence between pixels, allowing them to be processed using map algebra operations (@sec-raster-local-operations). 
+@sec-geo-ras covers geometric transformations on raster objects. 
+This involves changing the size and number of the underlying pixels, and assigning them new values. 
+It teaches how to change the extent and the origin of a raster "manually" (@sec-extent-and-origin), how to change the resolution in fixed "steps" through aggregation and disaggregation (@sec-raster-agg-disagg), and finally how to resample a raster into any existing template, which is the most general and often most practical approach (@sec-raster-resampling). 
+These operations are especially useful if one would like to align raster datasets from diverse sources. 
+Aligned raster objects share a one-to-one correspondence between pixels, allowing them to be processed using map algebra operations (@sec-raster-local-operations). 
 
-In the next chapter (@sec-raster-vector), we deal with the special case of geometry operations that involve both a raster and a vector layer together. It shows how raster values can be 'masked' and 'extracted' by vector geometries. Importantly it shows how to 'polygonize' rasters and 'rasterize' vector datasets, making the two data models more interchangeable.
+In the next chapter (@sec-raster-vector), we deal with the special case of geometry operations that involve both a raster and a vector layer together. 
+It shows how raster values can be 'masked' and 'extracted' by vector geometries. 
+Importantly it shows how to 'polygonize' rasters and 'rasterize' vector datasets, making the two data models more interchangeable.
 
 ## Geometric operations on vector data {#sec-geo-vec}
 
-This section is about operations that in some way change the geometry of vector layers. It is more advanced than the spatial data operations presented in the previous chapter (in @sec-spatial-vec), because here we drill down into the geometry: the functions discussed in this section work on the geometric part (the geometry column, which is a `GeoSeries` object), either as standalone object or as part of a `GeoDataFrame`.
+This section is about operations that in some way change the geometry of vector layers. 
+It is more advanced than the spatial data operations presented in the previous chapter (in @sec-spatial-vec), because here we drill down into the geometry: the functions discussed in this section work on the geometric part (the geometry column, which is a `GeoSeries` object), either as standalone object or as part of a `GeoDataFrame`.
 
 ### Simplification {#sec-simplification}
 
-Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps. Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps. The `geopandas` package provides the `.simplify` method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count. `.simplify` uses the `tolerance` to control the level of generalization in map units (see Douglas and Peucker 1973 for details). 
+Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps. 
+Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps. 
+The **geopandas** package provides the `.simplify` method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count. `.simplify` uses the `tolerance` to control the level of generalization in map units (see [@douglas_algorithms_1973] for details). 
 
-For example, a simplified geometry of a `"LineString"` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can created using the following command:
+For example, a simplified geometry of a `'LineString'` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the following command:
 
 ```{python}
-seine_simp = seine.simplify(2000) # meters
+seine_simp = seine.simplify(2000)
 ```
 
 Figure @fig-simplify-lines illustrates the input and the result of the simplification:
 
 ```{python}
 #| label: fig-simplify-lines
-#| fig-cap: Comparison of the original and simplified geometry of the seine object. 
+#| fig-cap: Simplification of the `seine` line layer 
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Original
+#| - Simplified (tolerance = 2000 $m$)
 
-fig, axes = plt.subplots(ncols=2)
-seine.plot(ax=axes[0])
-seine_simp.plot(ax=axes[1])
-axes[0].set_title('Original')
-axes[1].set_title('Simplified (d=2000 m)');
+seine.plot();
+seine_simp.plot();
 ```
 
-The resulting `seine_simp` object is a copy of the original `seine` but with fewer vertices. This is apparent, with the result being visually simpler (@fig-simplify-lines, right) and consuming less memory than the original object, as verified below:
+The resulting `seine_simp` object is a copy of the original `seine` but with fewer vertices. 
+This is apparent, with the result being visually simpler (@fig-simplify-lines, right) and consuming about twice less memory than the original object, as shown below:
 
 ```{python}
-import sys
 print(f'Original: {sys.getsizeof(seine)} bytes')
-```
-
-```{python}
 print(f'Simplified: {sys.getsizeof(seine_simp)} bytes')
 ```
 
-Simplification is also applicable for polygons. This is illustrated using `us_states`, representing the contiguous United States. As we show in @sec-reproj-geo-data, GEOS assumes that the data is in a projected CRS and this could lead to unexpected results when using a geographic CRS. Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (epsg = `2163`) (on the left in Figure @fig-simplify-polygons):
+Simplification is also applicable for polygons. 
+This is illustrated using `us_states`, representing the contiguous United States. 
+As we show in @sec-reproj-geo-data, **geopandas** (through **shapely**, and ultimately GEOS) assumes that the data is in a projected CRS and this could lead to unexpected results when applying distance-related operators. 
+Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (EPSG:`9311`) (on the left in Figure @fig-simplify-polygons):
 
 ```{python}
-us_states2163 = us_states.to_crs(2163)
+us_states9311 = us_states.to_crs(9311)
 ```
 
-The `.simplify` method from `geopandas` works the same way with a `"Polygon"`/`"MultiPolygon"` layer such as `us_states2163`:
+The `.simplify` method from `geopandas` works the same way with a `"Polygon"`/`"MultiPolygon"` layer such as `us_states9311`:
 
 ```{python}
-us_states_simp1 = us_states2163.simplify(100000)
+us_states_simp1 = us_states9311.simplify(100000)
 ```
 
-A limitation with `.simplify` is that it simplifies objects on a per-geometry basis. This means the "topology" is lost, resulting in overlapping and "holey" areal units illustrated in Figure @fig-simplify-polygons (middle panel). The `toposimplify` function from `topojson` provides an alternative that overcomes this issue. By [default](https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm) it uses the Douglas-Peucker algorithm like the `.simplify` method. Another algorithm known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm (Visvalingam and Whyatt 1993), is also available in `toposimplify`. The main advanatage of `toposimplify`, however, is that it is topologically "aware". That is, it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained. The following code chunk uses this function to simplify `us_states2163`:
+A limitation with `.simplify` is that it simplifies objects on a per-geometry basis. This means the "topology" is lost, resulting in overlapping and "holey" areal units illustrated in Figure @fig-simplify-polygons (middle panel). The `toposimplify` function from `topojson` provides an alternative that overcomes this issue. By [default](https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm) it uses the Douglas-Peucker algorithm like the `.simplify` method. Another algorithm known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm (Visvalingam and Whyatt 1993), is also available in `toposimplify`. The main advanatage of `toposimplify`, however, is that it is topologically "aware". That is, it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained. The following code chunk uses this function to simplify `us_states9311`:
 
 ```{python}
-topo = tp.Topology(us_states2163, prequantize=False)
+topo = tp.Topology(us_states9311, prequantize=False)
 us_states_simp2 = topo.toposimplify(100000).to_gdf()
 ```
 
-Figure @fig-simplify-polygons demonstrates the two simplification methods applied to `us_states2163`.
+Figure @fig-simplify-polygons demonstrates the two simplification methods applied to `us_states9311`.
 
 ```{python}
 #| label: fig-simplify-polygons
 #| fig-cap: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the GeoPandas (middle), and TopoJSON (right), packages. 
 
 fig, axes = plt.subplots(ncols=3, figsize=(8,4))
-us_states2163.plot(ax=axes[0], color='lightgrey', edgecolor='black')
+us_states9311.plot(ax=axes[0], color='lightgrey', edgecolor='black')
 us_states_simp1.plot(ax=axes[1], color='lightgrey', edgecolor='black')
 us_states_simp2.plot(ax=axes[2], color='lightgrey', edgecolor='black')
 axes[0].set_title("Original")
