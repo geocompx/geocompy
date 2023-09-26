@@ -24,10 +24,12 @@ import geopandas as gpd
 import numpy as np
 import os
 import rasterio
-import scipy.ndimage
 import rasterio.plot
 import rasterio.merge
 import rasterio.features
+import scipy.ndimage
+import scipy.stats
+import richdem as rd
 ```
 
 and load the sample data for this chapter:
@@ -742,10 +744,11 @@ We will also introduce a more user-friendly and general method to extract raster
 
 Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in @fig-raster-subset. 
 To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster. 
-For example, let us read (@sec-using-rasterio) the `elev.tif` raster values into an array named `elev`: 
+For example, let us read (@sec-using-rasterio) the `elev.tif` raster values into an array named `elev` (we will also close the connection, to avoid too many open connections in this chapter which may lead to an error): 
 
 ```{python}
 elev = src_elev.read(1)
+src_elev.close()
 elev
 ```
 
@@ -906,6 +909,7 @@ Let's calculate NDVI for the multispectral Landsat satellite file (`landsat.tif`
 
 ```{python}
 landsat = src_landsat.read()
+src_landsat.close()
 nir = landsat[3]
 red = landsat[2]
 ndvi = (nir-red)/(nir+red)
@@ -945,42 +949,38 @@ rasterio.plot.show(ndvi, cmap='Greens');
 ### Focal operations {#sec-focal-operations}
 
 While local functions operate on one cell, though possibly from multiple layers, focal operations take into account a central (focal) cell and its neighbors. 
-The neighborhood (also named kernel, filter or moving window) under consideration is typically of $3 \times 3$ cells (that is the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. 
+The neighborhood (also named kernel, filter or moving window) under consideration is typically of $3 \times 3$ cells (that is, the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user. 
 A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (@fig-focal-filter). 
-Other names for this operation are spatial filtering and convolution (Burrough, McDonnell, and Lloyd 2015).
+Other names for this operation are spatial filtering and convolution [@burrough_principles_2015].
 
 ![Input raster (left) and resulting output raster (right) due to a focal operation---finding the minimum value in $3 \times 3$ moving windows.](https://r.geocompx.org/figures/04_focal_example.png){#fig-focal-filter} 
 
-In Python, the `scipy.ndimage` package has a comprehensive collection of [functions](https://docs.scipy.org/doc/scipy/reference/ndimage.html#filters) to perform filtering of `numpy` arrays, such as:
+In Python, the [**scipy.ndimage**](https://docs.scipy.org/doc/scipy/tutorial/ndimage.html) package has a comprehensive collection of [functions](https://docs.scipy.org/doc/scipy/reference/ndimage.html#filters) to perform filtering of `numpy` arrays, such as:
 
-* `minimum_filter`
-* `maximum_filter`
-* `uniform_filter` (i.e., mean filter)
-* `median_filter`
+* [`scipy.ndimage.minimum_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.minimum_filter.html)
+* [`scipy.ndimage.maximum_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.maximum_filter.html)
+* [`scipy.ndimage.uniform_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.uniform_filter.html) (i.e., mean filter)
+* [`scipy.ndimage.median_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.median_filter.html)
 etc.
 
 In this group of functions, we define the shape of the moving window with either one of:
 
-* `size`---a single number or tuple, implying a filter of those dimensions
+* `size`---a single number (e.g., `3`), or tuple (e.g., `(3,3)`), implying a filter of those dimensions
 * `footprint`---a boolean array, representing both the window shape and the identity of elements being included
 
 In addition to specific built-in filters, 
 
 * `convolve` applies the sum function after multiplying by a custom `weights` array
-* `generic_filter` makes it possible to pass any custom function, where the user can specify any type of custom window-based calculatio.
+* `generic_filter` makes it possible to pass any custom function, where the user can specify any type of custom window-based calculation.
 
-For example, here we apply the minimum filter with window size of `3` on `elev`: 
-
-```{python}
-elev
-```
+For example, here we apply the minimum filter with window size of `3` on `elev`. As a result, we now have a new array `elev_min`, where each value is the minimum in the corresponding $3 \times 3$ neighborhood in `elev`:
 
 ```{python}
 elev_min = scipy.ndimage.minimum_filter(elev, size=3)
 elev_min
 ```
 
-Special care should be given to the edge pixels. How should they be calculated? `scipy.ndimage` gives several options through the `mode` parameter:
+Special care should be given to the edge pixels. How should they be calculated? The **scipy.ndimage** filtering functions give several options through the `mode` parameter (see the documentation of any filtering function, such as [scipy.ndimage.median_filter](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.median_filter.html), for the definition of each mode):
 
 * `reflect` (the default)
 * `constant`
@@ -990,12 +990,12 @@ Special care should be given to the edge pixels. How should they be calculated? 
 
 Sometimes artificially extending raster edges is considered unsuitable. 
 In other words, we may wish the resulting raster to contain pixel values with "complete" windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations). 
-There is no specific option *not* to extend edges in `scipy.ndimage`. 
-However, to get the same effect, the edges of the filtered array can be assigned with `nan`, in a number of rows and columns according to filter size. 
-For example, when using a filter of `size=3`, the first "layer" of pixels may be assigned with `nan`, reflecting the fact that these pixels have incomplete 3*3 neighborhoods:
+There is no specific option *not* to extend edges in **scipy.ndimage**. 
+However, to get the same effect, the edges of the filtered array can be assigned with `np.nan`, in a number of rows and columns according to filter size. 
+For example, when using a filter of `size=3`, the outermost "layer" of pixels may be assigned with `np.nan`, reflecting the fact that these pixels have incomplete $3 \times 3$ neighborhoods:
 
 ```{python}
-elev_min = elev_min.astype('float')
+elev_min = elev_min.astype(float)
 elev_min[:, [0, -1]] = np.nan
 elev_min[[0, -1], :] = np.nan
 elev_min
@@ -1004,21 +1004,85 @@ elev_min
 We can quickly check if the output meets our expectations. 
 In our example, the minimum value has to be always the upper left corner of the moving window (remember we have created the input raster by row-wise incrementing the cell values by one starting at the upper left corner). 
 
-Focal functions or filters play a dominant role in image processing. Low-pass or smoothing filters use the mean function to remove extremes. 
+Focal functions or filters play a dominant role in image processing. 
+Low-pass or smoothing filters use the mean function to remove extremes. 
 In the case of categorical data, we can replace the mean with the mode, which is the most common value. 
+
+To demonstrate applying a mode filter, let's read the small sample categorical raster `grain.tif`:
+
+```{python}
+grain = src_grain.read(1)
+grain
+```
+
+There is no built-in filter function for a mode filter in **scipy.ndimage**, but we can use the `scipy.ndimage.generic_filter` function along with a custom filtering function, internally utilizing `scipy.stats.mode`:
+
+```{python}
+grain_mode = scipy.ndimage.generic_filter(
+    grain, 
+    lambda x: scipy.stats.mode(x.flatten())[0], 
+    size=3
+)
+grain_mode = grain_mode.astype(float)
+grain_mode[:, [0, -1]] = np.nan
+grain_mode[[0, -1], :] = np.nan
+grain_mode
+```
+
 By contrast, high-pass filters accentuate features. The line detection Laplace and Sobel filters might serve as an example here. 
 
 Terrain processing, the calculation of topographic characteristics such as slope, aspect and flow directions, relies on focal functions. 
-The `TerrainAttribute` function from package `richdem` can be used to calculate common [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute), specified through the `attrib` argument, namely:
+These are specialized functions that are beyond the scope of **scipy.ndimage**, found in more narrow-scope packages.
+For example, the `TerrainAttribute` function from package **richdem** can be used to calculate common terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute), specified through the `attrib` argument, namely:
 
-* `slope_riserun` 	Horn (1981) doi: 10.1109/PROC.1981.11918
-* `slope_percentage` 	Horn (1981) doi: 10.1109/PROC.1981.11918
-* `slope_degrees` 	Horn (1981) doi: 10.1109/PROC.1981.11918
-* `slope_radians` 	Horn (1981) doi: 10.1109/PROC.1981.11918
-* `aspect` 	Horn (1981) doi: 10.1109/PROC.1981.11918
-* `curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
-* `planform_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
-* `profile_curvature` 	Zevenbergen and Thorne (1987) doi: 10.1002/esp.3290120107
+* `slope_riserun` [@horn_1981]
+* `slope_percentage` [@horn_1981]
+* `slope_degrees` [@horn_1981]
+* `slope_radians` [@horn_1981]
+* `aspect` [@horn_1981]
+* `curvature` [@zevenbergen_1987]
+* `planform_curvature` [@zevenbergen_1987]
+* `profile_curvature` [@zevenbergen_1987]
+
+Full description of the **richdem** package is beyond the scope of this book. 
+However, you can get an idea of how it works in the following code section. 
+You can see that **richdem** has its own data structure for rasters (also **numpy**-based, like **rasterio**), and consequently its own import and export functions. 
+In the example, we import the `srtm_32612.tif` file (which we are going to create in @sec-reprojecting-raster-geometries), calculates slope (in decimal degrees), and exports the result to a new file `srtm_32612_slope.tif`:
+
+```{python}
+srtm = rd.LoadGDAL('output/srtm_32612.tif')
+srtm_slope = rd.TerrainAttribute(srtm, 'slope_degrees')
+rd.SaveGDAL('output/srtm_32612_slope.tif', srtm_slope)
+```
+
+@fig-raster-slope shows the result, using our more familiar plotting methods from `rasterio`. The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them:
+
+```{python}
+#| label: fig-raster-slope
+#| fig-cap: Slope calculation
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Input---DEM
+#| - Output---Slope, in degrees
+
+# Input (DEM)
+src_srtm = rasterio.open('output/srtm_32612.tif')
+srtm = src_srtm.read(1).astype(float)
+srtm[srtm == src_srtm.nodata] = np.nan
+fig, ax = plt.subplots()
+i = ax.imshow(srtm, cmap='Spectral')
+rasterio.plot.show(src_srtm, cmap='Spectral', ax=ax)
+fig.colorbar(i, ax=ax);
+
+# Output (slope)
+src_srtm_slope = rasterio.open('output/srtm_32612_slope.tif')
+srtm_slope = src_srtm_slope.read(1)
+srtm_slope[srtm_slope == src_srtm_slope.nodata] = np.nan
+fig, ax = plt.subplots()
+i = ax.imshow(srtm_slope, cmap='Spectral')
+rasterio.plot.show(src_srtm_slope, cmap='Spectral', ax=ax)
+fig.colorbar(i, ax=ax);
+```
 
 ### Zonal operations {#sec-zonal-operations}
 
@@ -1122,4 +1186,6 @@ When dealing with non-overlapping tiles, such as `aut.tif` and `ch.tif` (above),
 ## Exercises
 
 * Write a function which accepts and array and an `int` specifying the number of rows/columns to erase along an array edges. The function needs to return the modified array with `np.nan` values along its edges.
+
+## References
 
