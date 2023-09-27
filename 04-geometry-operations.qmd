@@ -194,26 +194,32 @@ seine_centroid.plot(ax=base, color='None', edgecolor='black');
 
 ### Buffers {#sec-buffers}
 
-Buffers are polygons representing the area within a given distance of a geometric feature: regardless of whether the input is a point, line or polygon, the output is a polygon. Unlike simplification (which is often used for visualization and reducing file size) buffering tends to be used for geographic data analysis. How many points are within a given distance of this line? Which demographic groups are within travel distance of this new shop? These kinds of questions can be answered and visualized by creating buffers around the geographic entities of interest.
+Buffers are polygons representing the area within a given distance of a geometric feature: regardless of whether the input is a point, line or polygon, the output is a polygon (when using positive buffer distance). 
+Unlike simplification (which is often used for visualization and reducing file size) buffering tends to be used for geographic data analysis. 
+How many points are within a given distance of this line? 
+Which demographic groups are within travel distance of this new shop? 
+These kinds of questions can be answered and visualized by creating buffers around the geographic entities of interest.
 
-@fig-buffers illustrates buffers of different sizes (5 and 50 km) surrounding the river Seine and tributaries. These buffers were created with commands below, which show that the `.buffer` method, applied to a `GeoSeries` (or `GeoDataFrame`) requires one important argument: the buffer distance, provided in the units of the CRS (in this case meters):
+@fig-buffers illustrates buffers of different sizes (5 and 50 $km$) surrounding the river Seine and tributaries. These buffers were created with commands below, using the `.buffer` method, applied to a `GeoSeries` (or `GeoDataFrame`).
+The `.buffer` method requires one important argument: the buffer distance, provided in the units of the CRS (in this case, meters):
 
 ```{python}
 seine_buff_5km = seine.buffer(5000)
 seine_buff_50km = seine.buffer(50000)
 ```
 
-The 5 and 50 km buffers are visualized in @fig-buffers:
+The 5 and 50 $km$ buffers are visualized in @fig-buffers:
 
 ```{python}
 #| label: fig-buffers
 #| fig-cap: Buffers around the Seine dataset of 5 km (left) and 50 km (right). Note the colors, which reflect the fact that one buffer is created per geometry feature.
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - 5 $km$ buffer
+#| - 50 $km$ buffer
 
-fig, axes = plt.subplots(ncols=2)
-seine_buff_5km.plot(ax=axes[0], color='none', edgecolor=['red', 'green', 'blue'])
-seine_buff_50km.plot(ax=axes[1], color='none', edgecolor=['red', 'green', 'blue'])
-axes[0].set_title('5 km buffer')
-axes[1].set_title('50 km buffer');
+seine_buff_5km.plot(color='none', edgecolor=['red', 'green', 'blue']);
+seine_buff_50km.plot(color='none', edgecolor=['red', 'green', 'blue']);
 ```
 
 Note that both `.centroid` and `.buffer` return a `GeoSeries` object, even when the input is a `GeoDataFrame`:
@@ -228,6 +234,27 @@ In the common scenario when the original attributes of the input features need t
 seine_buff_5km = seine.copy()
 seine_buff_5km.geometry = seine.buffer(5000)
 seine_buff_5km
+```
+
+Another option is to add a secondary geometry column:
+
+```{python}
+seine['geometry_5km'] = seine.buffer(5000)
+seine
+```
+
+You can then switch to either geometry column (i.e., make it the "active" geometry column) using `.set_geometry`, as in:
+
+```{python}
+seine = seine.set_geometry('geometry_5km')
+```
+
+Let's revert to the original state of `seine` before moving on:
+
+```{python}
+seine = seine.set_geometry('geometry')
+seine = seine.drop('geometry_5km', axis=1)
+seine
 ```
 
 ### Affine transformations {#sec-affine-transformations}
