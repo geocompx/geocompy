@@ -29,6 +29,10 @@ import rasterio.merge
 import rasterio.features
 import scipy.ndimage
 import scipy.stats
+```
+
+```{python}
+#| eval: false
 import richdem as rd
 ```
 
@@ -732,7 +736,6 @@ The location of the two sample points on top of the `elev.tif` raster is illustr
 ```{python}
 #| label: fig-elev-sample-points
 #| fig-cap: The `elev.tif` raster, and two points where we extract its values
-
 fig, ax = plt.subplots()
 rasterio.plot.show(src_elev, ax=ax)
 gpd.GeoSeries([shapely.Point(0.1, 0.1)]).plot(color='black', ax=ax)
@@ -783,7 +786,6 @@ The result is shown in @fig-raster-subset:
 #| - Original raster
 #| - Raster mask
 #| - Output masked raster
-
 rasterio.plot.show(elev);
 rasterio.plot.show(mask);
 rasterio.plot.show(elev1);
@@ -867,7 +869,6 @@ elev.astype(int)**2
 #| - '`elev.astype(int)**2`'
 #| - '`np.log(elev)`'
 #| - '`elev>5`'
-
 rasterio.plot.show(elev + elev, cmap='Oranges');
 rasterio.plot.show(elev.astype(int)**2, cmap='Oranges');
 rasterio.plot.show(np.log(elev), cmap='Oranges');
@@ -893,7 +894,6 @@ The reclassified result is shown in @fig-raster-reclassify:
 #| fig-subcap: 
 #| - Original
 #| - Reclassified
-
 rasterio.plot.show(elev, cmap='Oranges');
 rasterio.plot.show(recl, cmap='Oranges');
 ```
@@ -903,7 +903,15 @@ It returns a raster with values between `-1` and `1`; positive values indicate t
 NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel. 
 Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula (@eq-ndvi):
 
-$$NDVI=\frac{NIR-Red} {NIR+Red}$${#eq-ndvi}
+::: {#eq-ndvi}
+
+$$
+NDVI=\frac{NIR-Red} {NIR+Red}
+$$
+
+:::
+
+where $NIR$ is the near-infrared band and $Red$ is the red band.
 
 Let's calculate NDVI for the multispectral Landsat satellite file (`landsat.tif`) of the Zion National Park:
 
@@ -1050,6 +1058,7 @@ You can see that **richdem** has its own data structure for rasters (also **nump
 In the example, we import the `srtm_32612.tif` file (which we are going to create in @sec-reprojecting-raster-geometries), calculates slope (in decimal degrees), and exports the result to a new file `srtm_32612_slope.tif`:
 
 ```{python}
+#| eval: false
 srtm = rd.LoadGDAL('output/srtm_32612.tif')
 srtm_slope = rd.TerrainAttribute(srtm, 'slope_degrees')
 rd.SaveGDAL('output/srtm_32612_slope.tif', srtm_slope)
@@ -1058,6 +1067,7 @@ rd.SaveGDAL('output/srtm_32612_slope.tif', srtm_slope)
 @fig-raster-slope shows the result, using our more familiar plotting methods from `rasterio`. The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them:
 
 ```{python}
+#| eval: false
 #| label: fig-raster-slope
 #| fig-cap: Slope calculation
 #| layout-ncol: 2
