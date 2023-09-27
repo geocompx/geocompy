@@ -444,24 +444,28 @@ The `.overlay` method (see @sec-joining-incongruent-layers) further extends this
 The output is a new `GeoDataFrame` with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry. 
 See the [Set operations with overlay](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
 
-### Subsetting and clipping
+### Subsetting vs. clipping
 
-Clipping objects can change their geometry but it can also subset objects, returning only features that intersect (or partly intersect) with a clipping/subsetting object. 
-To illustrate this point, we will subset points that cover the bounding box of the circles x and y in @fig-overlapping-circles. 
+In this section, we illustrate the difference between the two types of operators introduced in the last two chapters: boolean, such as `.intersects` (@sec-spatial-subsetting-vector), and geometry-generating, such as `.intersection` (@sec-clipping). 
+We do this using the specific scenario of subsetting points by polygons, where (unlike in other cases) both methods can be used for the same purpose and giving the same result.
+
+<!-- Clipping objects can change their geometry but it can also subset objects, returning only features that intersect (or partly intersect) with a clipping/subsetting object.  -->
+To illustrate the point, we will subset points that cover the bounding box of the circles `x` and `y` in @fig-overlapping-circles. 
 Some points will be inside just one circle, some will be inside both and some will be inside neither. 
-The following code sections generates a simple random distribution of points within the extent of circles x and y, resulting in output illustrated in @fig-random-points. 
-We do this in two steps. First, we figure out the bounds where random points are to be generated:
+The following code sections generates the sample data for this section, a simple random distribution of points within the extent of circles `x` and `y`, resulting in output illustrated in @fig-random-points. 
+We create the sample points in two steps. 
+First, we figure out the bounds where random points are to be generated:
 
 ```{python}
 bounds = x.union(y).bounds
 bounds
 ```
 
-Second, we use `np.random.uniform` to calculate `n` random x and y coordinates within the given bounds:
+Second, we use `np.random.uniform` to calculate `n` random x- and y-coordinates within the given bounds:
 
 ```{python}
 np.random.seed(1)
-n = 10  ## Number of points to generate
+n = 10
 coords_x = np.random.uniform(bounds[0], bounds[2], n)
 coords_y = np.random.uniform(bounds[1], bounds[3], n)
 coords = list(zip(coords_x, coords_y))
@@ -482,7 +486,7 @@ pnt = gpd.GeoSeries(pnt)
 pnt
 ```
 
-The result is shown in @fig-random-points:
+The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-random-points:
 
 ```{python}
 #| label: fig-random-points
@@ -493,9 +497,9 @@ gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
 ```
 
-Now, we get back to our question: how to subset the points to only return the point that intersects with both x and y? 
-The code chunks below demonstrate three ways to achieve the same result. 
-We can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of x and y: 
+Now, we get back to our question: how to subset the points to only return the point that intersects with both `x` and `y`? 
+The code chunks below demonstrate two ways to achieve the same result. 
+We can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of `x` and `y` (see @sec-spatial-subsetting-vector): 
 
 ```{python}
 sel = pnt.intersects(x.intersection(y))
@@ -509,14 +513,15 @@ pnt1 = pnt[sel]
 pnt1
 ```
 
-We can also find the intersection between the input points represented by `pnt`, using the intersection of `x` and `y` as the subsetting/clipping object. Since the second argument is an individual `shapely` geometry (`x.intersection(y)`), we get "pairwise" intersections of each `pnt` with it: 
+We can also find the intersection between the input points represented by `pnt`, using the intersection of `x` and `y` as the subsetting/clipping object. 
+Since the second argument is an individual `shapely` geometry (`x.intersection(y)`), we get "pairwise" intersections of each `pnt` with it (see @sec-clipping): 
 
 ```{python}
 pnt2 = pnt.intersection(x.intersection(y))
 pnt2
 ```
 
-The result is shown in @fig-intersection-points:
+The subset `pnt2` is shown in @fig-intersection-points:
 
 ```{python}
 #| label: fig-intersection-points
@@ -528,16 +533,17 @@ gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
 pnt2.plot(ax=base, color='red');
 ```
 
-Empty geometries can be filtered out to retain the required subset, and to get `pnt2` which is identical to `pnt1`:
+The only difference between the two approaches is that `.intersection` returns all "intersections", even if they are empty. When these are filtered out, `pnt2` becomes identical to `pnt1`:
 
 ```{python}
-pnt2 = pnt2[~pnt2.is_empty]  ## Subset non-empty geometries
+pnt2 = pnt2[~pnt2.is_empty]
 pnt2
 ```
 
-This second approach will return features that partly intersect with `x.intersection(y)` but with modified geometries for spatially extensive features that cross the border of the subsetting object. The results are identical, but the implementation differs substantially.
+<!-- This second approach will return features that partly intersect with `x.intersection(y)` but with modified geometries for spatially extensive features that cross the border of the subsetting object. The results are identical, but the implementation differs substantially. -->
 
-Although the example above is rather contrived and provided for educational rather than applied purposes, and we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in R, it raises an important question: which implementation to use? Generally, more concise implementations should be favored, meaning the first approach above. We will return to the question of choosing between different implementations of the same technique or algorithm in Chapter 11.
+Although the example above is rather contrived and provided for educational rather than applied purposes, and we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in Python, it raises an important question: which implementation to use? 
+Generally, more concise implementations should be favored, meaning the first approach above. 
 
 ### Geometry unions {#sec-geometry-unions}
 
