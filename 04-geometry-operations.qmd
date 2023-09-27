@@ -343,9 +343,10 @@ nz_rotate.plot(ax=base, color='red', edgecolor='darkgrey');
 
 ### Pairwise geometry-generating operations {#sec-clipping}
 
-Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features.
+Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features. 
 
-Clipping can only apply to features more complex than points: lines, polygons and their 'multi' equivalents. To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (@fig-overlapping-circles).
+Clipping can only apply to features more complex than points: lines, polygons and their 'multi' equivalents. 
+To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (@fig-overlapping-circles).
 
 ```{python}
 #| label: fig-overlapping-circles
@@ -356,7 +357,8 @@ y = shapely.Point((1, 0)).buffer(1)
 shapely.GeometryCollection([x, y])
 ```
 
-Imagine you want to select not one circle or the other, but the space covered by both x and y. This can be done using the `.intersection` method from `shapely`, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (@fig-intersection).
+Imagine you want to select not one circle or the other, but the space covered by both x and y. 
+This can be done using the `.intersection` method from `shapely`, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (@fig-intersection).
 
 ```{python}
 #| label: fig-intersection
@@ -365,7 +367,9 @@ Imagine you want to select not one circle or the other, but the space covered by
 x.intersection(y)
 ```
 
-The next lines of code demonstrate how this works for the `.difference` (@fig-difference), `.union` (@fig-union), and `.symmetric_difference` (@fig-symmetric-difference) operators:
+More generally, clipping is an example of a 'pairwise geometry-generating operation', where new geometries are generated from two inputs. 
+Other than `.intersection` (@fig-intersection), there are three other standard pairwise operators: `.difference` (@fig-difference), `.union` (@fig-union), and `.symmetric_difference` (@fig-symmetric-difference). 
+For example, applied to `x` and `y`:
 
 ```{python}
 #| label: fig-difference
@@ -393,9 +397,12 @@ Keep in mind that `x` and `y` are interchangeable in all predictes except for `.
 * `x.difference(y)` means `x` minus `y`, whereas
 * `y.difference(x)` means `y` minus `x`.
 
-The latter examples demontrate pairwise operations between individual `shapely` geometries. The **geopandas** package, as is often the case, contains wrappers of these **shapely** functions to be applied to multiple, or pairwise, use cases. For example, applying either of the pairwise methods on a `GeoSeries` or `GeoDataFrame` combined with a `shapely` geometry returns the pairwise (many-to-one) results. 
+The latter examples demontrate pairwise operations between individual `shapely` geometries. 
+The **geopandas** package, as is often the case, contains wrappers of these **shapely** functions to be applied to multiple, or pairwise, use cases. 
+For example, applying either of the pairwise methods on a `GeoSeries` or `GeoDataFrame`, combined with a `shapely` geometry, returns the pairwise (many-to-one) results (which is analogous to other operators, like `.intersects` or `.distance`, see @sec-spatial-subsetting-vector and @sec-distance-relations, respectively). 
 
-Let's demonstrate by calculating the difference of each geometry in a `GeoSeries` and a "fixed" `shapely` geometry. To creare the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` or `2` units "upwards" on the y-axis:
+Let's demonstrate the "many-to-one" scenario by calculating the difference between each geometry in a `GeoSeries` and a "fixed" `shapely` geometry. 
+To creare the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` or `2` units "upwards" on the y-axis:
 
 ```{python}
 geom1 = gpd.GeoSeries([x])
@@ -416,14 +423,15 @@ geom.plot(color='none', ax=ax)
 gpd.GeoSeries(y).plot(color='#FF000040', edgecolor='black', ax=ax);
 ```
 
-Now, using `.intersection` automatically applies the `shapely` method of the same name on each geometry in `geom`, returning a new `GeoSeries`, which we name `geom_inter_y`, with the pairwise "intersections". Note the empty third geometry (can you explain the meaning of this result?):
+Now, using `.intersection` automatically applies the `shapely` method of the same name on each geometry in `geom`, returning a new `GeoSeries`, which we name `geom_inter_y`, with the pairwise "intersections". 
+Note the empty third geometry (can you explain the meaning of this result?):
 
 ```{python}
 geom_inter_y = geom.intersection(y)
 geom_inter_y
 ```
 
-Here is a plot of the result (@fig-geom-intersection2):
+Here is a plot of the result `geom_inter_y` (@fig-geom-intersection2):
 
 ```{python}
 #| label: fig-geom-intersection2
@@ -432,7 +440,9 @@ Here is a plot of the result (@fig-geom-intersection2):
 geom_inter_y.plot(color='none');
 ```
 
-The `.overlay` method (see @sec-joining-incongruent-layers) further extends this technique, making it possible to apply many-to-many pairwise geometry generations between all pairs of two `GeoDataFrame`s. The output is a new `GeoDataFrame` with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry. See the [Set operations with overlay](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
+The `.overlay` method (see @sec-joining-incongruent-layers) further extends this technique, making it possible to apply "many-to-many" pairwise geometry generations between all pairs of two `GeoDataFrame`s. 
+The output is a new `GeoDataFrame` with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry. 
+See the [Set operations with overlay](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
 
 ### Subsetting and clipping
 
