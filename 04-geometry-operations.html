@@ -341,7 +341,7 @@ div.csl-indent {
 <p>This section is about operations that in some way change the geometry of vector layers. It is more advanced than the spatial data operations presented in the previous chapter (in <a href="03-spatial-operations.html#sec-spatial-vec"><span>Section&nbsp;3.3</span></a>), because here we drill down into the geometry: the functions discussed in this section work on the geometric part (the geometry column, which is a <code>GeoSeries</code> object), either as standalone object or as part of a <code>GeoDataFrame</code>.</p>
 <section id="sec-simplification" class="level3" data-number="4.3.1">
 <h3 data-number="4.3.1" class="anchored" data-anchor-id="sec-simplification"><span class="header-section-number">4.3.1</span> Simplification</h3>
-<p>Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps. Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps. The <strong>geopandas</strong> package provides the <code>.simplify</code> method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count. <code>.simplify</code> uses the <code>tolerance</code> to control the level of generalization in map units (see <span class="citation" data-cites="douglas_algorithms_1973">(<a href="#ref-douglas_algorithms_1973" role="doc-biblioref">Douglas and Peucker 1973</a>)</span> for details).</p>
+<p>Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps. Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps. The <strong>geopandas</strong> package provides the <code>.simplify</code> method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count. <code>.simplify</code> uses the <code>tolerance</code> to control the level of generalization in map units <span class="citation" data-cites="douglas_algorithms_1973">(<a href="#ref-douglas_algorithms_1973" role="doc-biblioref">Douglas and Peucker 1973</a>)</span>.</p>
 <p>For example, a simplified geometry of a <code>'LineString'</code> geometry, representing the river Seine and tributaries, using tolerance of <code>2000</code> meters, can be created using the following command:</p>
 <div class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>seine_simp <span class="op">=</span> seine.simplify(<span class="dv">2000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -383,15 +383,15 @@ div.csl-indent {
 Simplified: 188 bytes</code></pre>
 </div>
 </div>
-<p>Simplification is also applicable for polygons. This is illustrated using <code>us_states</code>, representing the contiguous United States. As we show in <a href="06-reproj.html"><span>Chapter&nbsp;6</span></a>, <strong>geopandas</strong> (through <strong>shapely</strong>, and ultimately GEOS) assumes that the data is in a projected CRS and this could lead to unexpected results when applying distance-related operators. Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (EPSG:<code>9311</code>) (on the left in Figure <a href="#fig-simplify-polygons">Figure&nbsp;<span>4.2</span></a>):</p>
+<p>Simplification is also applicable for polygons. This is illustrated using <code>us_states</code>, representing the contiguous United States. As we show in <a href="06-reproj.html"><span>Chapter&nbsp;6</span></a>, <strong>geopandas</strong> (through <strong>shapely</strong>, and, ultimately, GEOS) assumes that the data is in a projected CRS and this could lead to unexpected results when applying distance-related operators. Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (EPSG:<code>9311</code>) (on the left in Figure <a href="#fig-simplify-polygons">Figure&nbsp;<span>4.2</span></a>):</p>
 <div class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>us_states9311 <span class="op">=</span> us_states.to_crs(<span class="dv">9311</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The <code>.simplify</code> method from <code>geopandas</code> works the same way with a <code>"Polygon"</code>/<code>"MultiPolygon"</code> layer such as <code>us_states9311</code>:</p>
+<p>The <code>.simplify</code> method from <strong>geopandas</strong> works the same way with a <code>'Polygon'</code>/<code>'MultiPolygon'</code> layer such as <code>us_states9311</code>:</p>
 <div class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>us_states_simp1 <span class="op">=</span> us_states9311.simplify(<span class="dv">100000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>A limitation with <code>.simplify</code> is that it simplifies objects on a per-geometry basis. This means the “topology” is lost, resulting in overlapping and “holey” areal units illustrated in Figure <a href="#fig-simplify-polygons">Figure&nbsp;<span>4.2</span></a> (middle panel). The <code>toposimplify</code> function from <code>topojson</code> provides an alternative that overcomes this issue. By <a href="https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm">default</a> it uses the Douglas-Peucker algorithm like the <code>.simplify</code> method. Another algorithm known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm (Visvalingam and Whyatt 1993), is also available in <code>toposimplify</code>. The main advanatage of <code>toposimplify</code>, however, is that it is topologically “aware”. That is, it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained. The following code chunk uses this function to simplify <code>us_states9311</code>:</p>
+<p>A limitation with <code>.simplify</code>, however, is that it simplifies objects on a per-geometry basis. This means the “topology” is lost, resulting in overlapping and “holey” areal units illustrated in <a href="#fig-simplify-polygons">Figure&nbsp;<span>4.2</span></a> (b). The <code>.toposimplify</code> method from package <strong>topojson</strong> provides an alternative that overcomes this issue. By <a href="https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm">default</a> it uses the Douglas-Peucker algorithm like the <code>.simplify</code> method. Another algorithm, known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm <span class="citation" data-cites="visvalingam_line_1993">(<a href="#ref-visvalingam_line_1993" role="doc-biblioref">Visvalingam and Whyatt 1993</a>)</span>, is also available in <code>.toposimplify</code>. The main advanatage of <code>.toposimplify</code>, however, is that it is topologically “aware”. That is, it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained. The following code chunk uses <code>.toposimplify</code> to simplify <code>us_states9311</code>:</p>
 <div class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>topo <span class="op">=</span> tp.Topology(us_states9311, prequantize<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>us_states_simp2 <span class="op">=</span> topo.toposimplify(<span class="dv">100000</span>).to_gdf()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -400,22 +400,41 @@ Simplified: 188 bytes</code></pre>
   data["bookkeeping_shared_arcs"] = array_bk_sarcs.astype(np.int64).tolist()</code></pre>
 </div>
 </div>
-<p>Figure <a href="#fig-simplify-polygons">Figure&nbsp;<span>4.2</span></a> demonstrates the two simplification methods applied to <code>us_states9311</code>.</p>
-<div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>us_states9311.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>us_states_simp1.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>us_states_simp2.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Original"</span>)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Simplified (w/ GeoPandas)"</span>)</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Simplified (w/ TopoJSON)"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-simplify-polygons" class="quarto-figure quarto-figure-center anchored">
+<p><a href="#fig-simplify-polygons">Figure&nbsp;<span>4.2</span></a> demonstrates the two simplification methods applied to <code>us_states9311</code>.</p>
+<div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>us_states9311.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>us_states_simp1.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>us_states_simp2.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-simplify-polygons" class="cell quarto-layout-panel" data-execution_count="10">
 <figure class="figure">
-<p><img src="04-geometry-operations_files/figure-html/fig-simplify-polygons-output-1.png" width="654" height="203" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.2: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the GeoPandas (middle), and TopoJSON (right), packages.</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.3%;justify-content: center;">
+<div id="fig-simplify-polygons-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-simplify-polygons-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-simplify-polygons" width="433"></p>
+<figcaption class="figure-caption">(a) Original</figcaption>
 </figure>
 </div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.3%;justify-content: center;">
+<div id="fig-simplify-polygons-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-simplify-polygons-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-simplify-polygons" width="433"></p>
+<figcaption class="figure-caption">(b) Simplified using <strong>geopandas</strong></figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.3%;justify-content: center;">
+<div id="fig-simplify-polygons-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-simplify-polygons-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-simplify-polygons" width="433"></p>
+<figcaption class="figure-caption">(c) Simplified using <strong>topojson</strong></figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.2: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the <strong>geopandas</strong> (middle), and <strong>topojson</strong> (right), packages.</figcaption><p></p>
+</figure>
 </div>
 </div>
 </section>
@@ -1855,6 +1874,9 @@ dtype: geometry</code></pre>
 <div id="refs" class="references csl-bib-body hanging-indent" role="list">
 <div id="ref-douglas_algorithms_1973" class="csl-entry" role="listitem">
 Douglas, David H, and Thomas K Peucker. 1973. <span>“Algorithms for the Reduction of the Number of Points Required to Represent a Digitized Line or Its Caricature.”</span> <em>Cartographica: The International Journal for Geographic Information and Geovisualization</em> 10 (2): 112–22. <a href="https://doi.org/bjwv52">https://doi.org/bjwv52</a>.
+</div>
+<div id="ref-visvalingam_line_1993" class="csl-entry" role="listitem">
+Visvalingam, M., and J. D. Whyatt. 1993. <span>“Line Generalisation by Repeated Elimination of Points.”</span> <em>The Cartographic Journal</em> 30 (1): 46–51. <a href="https://doi.org/fx74gh">https://doi.org/fx74gh</a>.
 </div>
 </div>
 </section>
