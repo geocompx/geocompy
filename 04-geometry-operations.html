@@ -764,7 +764,7 @@ y' = d x + e y + y_\mathrm{off}
 </div>
 </div>
 </div>
-<p>The next lines of code demonstrate how this works for the <code>.difference</code> (<a href="#fig-difference">Figure&nbsp;<span>4.8</span></a>), <code>.union</code> (<a href="#fig-union">Figure&nbsp;<span>4.9</span></a>), and <code>.symmetric_difference</code> (<a href="#fig-symmetric-difference">Figure&nbsp;<span>4.10</span></a>) operators:</p>
+<p>More generally, clipping is an example of a ‘pairwise geometry-generating operation’, where new geometries are generated from two inputs. Other than <code>.intersection</code> (<a href="#fig-intersection">Figure&nbsp;<span>4.7</span></a>), there are three other standard pairwise operators: <code>.difference</code> (<a href="#fig-difference">Figure&nbsp;<span>4.8</span></a>), <code>.union</code> (<a href="#fig-union">Figure&nbsp;<span>4.9</span></a>), and <code>.symmetric_difference</code> (<a href="#fig-symmetric-difference">Figure&nbsp;<span>4.10</span></a>). For example, applied to <code>x</code> and <code>y</code>:</p>
 <div class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>x.difference(y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="27">
@@ -803,8 +803,8 @@ y' = d x + e y + y_\mathrm{off}
 <li><code>x.difference(y)</code> means <code>x</code> minus <code>y</code>, whereas</li>
 <li><code>y.difference(x)</code> means <code>y</code> minus <code>x</code>.</li>
 </ul>
-<p>The latter examples demontrate pairwise operations between individual <code>shapely</code> geometries. The <strong>geopandas</strong> package, as is often the case, contains wrappers of these <strong>shapely</strong> functions to be applied to multiple, or pairwise, use cases. For example, applying either of the pairwise methods on a <code>GeoSeries</code> or <code>GeoDataFrame</code> combined with a <code>shapely</code> geometry returns the pairwise (many-to-one) results.</p>
-<p>Let’s demonstrate by calculating the difference of each geometry in a <code>GeoSeries</code> and a “fixed” <code>shapely</code> geometry. To creare the latter, let’s take <code>x</code> and combine it with itself translated (<a href="#sec-affine-transformations"><span>Section&nbsp;4.3.4</span></a>) to a distance of <code>1</code> or <code>2</code> units “upwards” on the y-axis:</p>
+<p>The latter examples demontrate pairwise operations between individual <code>shapely</code> geometries. The <strong>geopandas</strong> package, as is often the case, contains wrappers of these <strong>shapely</strong> functions to be applied to multiple, or pairwise, use cases. For example, applying either of the pairwise methods on a <code>GeoSeries</code> or <code>GeoDataFrame</code>, combined with a <code>shapely</code> geometry, returns the pairwise (many-to-one) results (which is analogous to other operators, like <code>.intersects</code> or <code>.distance</code>, see <a href="03-spatial-operations.html#sec-spatial-subsetting-vector"><span>Section&nbsp;3.3.1</span></a> and <a href="03-spatial-operations.html#sec-distance-relations"><span>Section&nbsp;3.3.7</span></a>, respectively).</p>
+<p>Let’s demonstrate the “many-to-one” scenario by calculating the difference between each geometry in a <code>GeoSeries</code> and a “fixed” <code>shapely</code> geometry. To creare the latter, let’s take <code>x</code> and combine it with itself translated (<a href="#sec-affine-transformations"><span>Section&nbsp;4.3.4</span></a>) to a distance of <code>1</code> or <code>2</code> units “upwards” on the y-axis:</p>
 <div class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>geom1 <span class="op">=</span> gpd.GeoSeries([x])</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>geom2 <span class="op">=</span> geom1.translate(<span class="dv">0</span>, <span class="dv">1</span>)</span>
@@ -843,7 +843,7 @@ dtype: geometry</code></pre>
 dtype: geometry</code></pre>
 </div>
 </div>
-<p>Here is a plot of the result (<a href="#fig-geom-intersection2">Figure&nbsp;<span>4.12</span></a>):</p>
+<p>Here is a plot of the result <code>geom_inter_y</code> (<a href="#fig-geom-intersection2">Figure&nbsp;<span>4.12</span></a>):</p>
 <div class="cell" data-execution_count="33">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>geom_inter_y.plot(color<span class="op">=</span><span class="st">'none'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
@@ -855,7 +855,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>The <code>.overlay</code> method (see <a href="03-spatial-operations.html#sec-joining-incongruent-layers"><span>Section&nbsp;3.3.6</span></a>) further extends this technique, making it possible to apply many-to-many pairwise geometry generations between all pairs of two <code>GeoDataFrame</code>s. The output is a new <code>GeoDataFrame</code> with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry. See the <a href="https://geopandas.org/en/stable/docs/user_guide/set_operations.html">Set operations with overlay</a> article in the <strong>geopandas</strong> documentation for examples of <code>.overlay</code>.</p>
+<p>The <code>.overlay</code> method (see <a href="03-spatial-operations.html#sec-joining-incongruent-layers"><span>Section&nbsp;3.3.6</span></a>) further extends this technique, making it possible to apply “many-to-many” pairwise geometry generations between all pairs of two <code>GeoDataFrame</code>s. The output is a new <code>GeoDataFrame</code> with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry. See the <a href="https://geopandas.org/en/stable/docs/user_guide/set_operations.html">Set operations with overlay</a> article in the <strong>geopandas</strong> documentation for examples of <code>.overlay</code>.</p>
 </section>
 <section id="subsetting-and-clipping" class="level3" data-number="4.3.6">
 <h3 data-number="4.3.6" class="anchored" data-anchor-id="subsetting-and-clipping"><span class="header-section-number">4.3.6</span> Subsetting and clipping</h3>
