@@ -622,90 +622,122 @@ texas_union
 ### Type transformations {#sec-type-transformations}
 
 Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. 
-The `shapely` package can be used for geometry casting. 
+Eithyer the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation. 
 The exact expression(s) depend on the specific transformation we are interested in. 
 In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
+Or, when available, you can use a wrapper from **geopandas**.
 
-Let's create a `"MultiPoint"` to illustrate how geometry casting works on `shapely` geometry objects:
+Let's create a `'MultiPoint'` to illustrate how geometry casting works on **shapely** geometry objects (@fig-type-transform-multipoint):
 
 ```{python}
+#| label: fig-type-transform-multipoint
+#| fig-cap: A `'MultiPoint'` geometry used to demonstrate **shapely** type transformations
+
 multipoint = shapely.MultiPoint([(1,1), (3,3), (5,1)])
 multipoint
 ```
 
-A `"LineString"` can be created using `shapely.LineString` from a `list` of points. Consequently, a `"MultiPoint"` can be converted to a `"LineString"` by extracting the individual points into a `list`, then passing them to `shapely.LineString`:
+A `'LineString'` can be created using `shapely.LineString` from a `list` of points. Consequently, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring):
 
 ```{python}
+#| label: fig-type-transform-linestring
+#| fig-cap: A `'LineString'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
+
 linestring = shapely.LineString(list(multipoint.geoms))
 linestring
 ```
 
-A `"Polygon"` can also be created using function `shapely.Polygon`, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.Polygon` is able to complete the last coordinate automatically. Therefore:
+Similarly, a `'Polygon'` can be created using function `shapely.Polygon`, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.Polygon` is able to complete the last coordinate automatically. Therefore (@fig-type-transform-polygon):
 
 ```{python}
+#| label: fig-type-transform-polygon
+#| fig-cap: A `'Polygon'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
+
 polygon = shapely.Polygon([[p.x, p.y] for p in multipoint.geoms])
 polygon
 ```
 
-The source `"MultiPoint"` geometry, and the derived `"LineString"` and `"Polygon"` geometries are shown in @fig-casting1. Note that we convert the `shapely` geometries to `GeoSeries` for easier multi-panel plotting:
+The source `'MultiPoint'` geometry, and the derived `'LineString'` and `'Polygon'` geometries are shown in @fig-casting1. Note that we convert the `shapely` geometries to `GeoSeries` to use the **geopandas** plotting method:
 
 ```{python}
 #| label: fig-casting1
-#| fig-cap: Examples of linestring and polygon casted from a multipoint geometry.
+#| fig-cap: Examples of `'LineString`' and `'Polygon'` casted from a `'MultiPoint'` geometry
+#| layout-ncol: 3
+#| fig-subcap: 
+#| - 'MultiPoint'
+#| - 'LineString'
+#| - 'Polygon'
 
-fig, axes = plt.subplots(ncols=3, figsize=(8,4))
-gpd.GeoSeries(multipoint).plot(ax=axes[0])
-gpd.GeoSeries(linestring).plot(ax=axes[1])
-gpd.GeoSeries(polygon).plot(ax=axes[2])
-axes[0].set_title("MultiPoint")
-axes[1].set_title("LineString")
-axes[2].set_title("Polygon");
+gpd.GeoSeries(multipoint).plot();
+gpd.GeoSeries(linestring).plot();
+gpd.GeoSeries(polygon).plot();
 ```
 
-Conversion from `"MultiPoint"` to `"LineString"` is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from `"MultiPoint"` or `"LineString"` to `"Polygon"` is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
+Conversion from `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring) is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. 
+This allows spatial operations such as the length of the path traveled. 
+Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
-Our `"LineString"` geometry can be converted bact to a `"MultiPoint"` geometry by passing its coordinates directly to `shapely.MultiPoint`:
+Our `'LineString'` geometry can be converted bact to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2):
 
 ```{python}
-# 'LineString' -> 'MultiPoint'
+#| label: fig-type-transform-multipoint2
+#| fig-cap: A `'MultiPoint'` created from the `'LineString'` in @fig-type-transform-linestring
+
 shapely.MultiPoint(linestring.coords)
 ```
 
-The `"Polygon"` (exterior) coordinates can be passed to `shapely.MultiPoint` as well:
+A `'Polygon'` (exterior) coordinates can be passed to `shapely.MultiPoint`, to go back to a `'MultiPoint'` geometry, as well (@fig-type-transform-polygon2):
 
 ```{python}
-# 'Polygon' -> 'MultiPoint'
+#| label: fig-type-transform-polygon2
+#| fig-cap: A `'MultiPoint'` created from the `'Polygon'` in @fig-type-transform-polygon
+
 shapely.MultiPoint(polygon.exterior.coords)
 ```
 
-Using these methods, we can transform between `"Point"`, `"LineString"`, and `"Polygon"` geometries, assuming there is a sufficient number of points (at least two to form a line, and at least three to form a polygon). 
-When dealing with multi-part geometries, we can:
+Using these methods, we can transform between `'Point'`, `'LineString'`, and `'Polygon'` geometries, assuming there is a sufficient number of points (at least two to form a line, and at least three to form a polygon). 
+When dealing with multi-part geometries using **shapely**, we can:
 
-* Access single-part geometries (e.g., each `"Polygion"` in a `"MultiPolygon"` geometry) using `.geoms[i]`, where `i` is the index of the geometry
+* Access single-part geometries (e.g., each `'Polygion'` in a `'MultiPolygon'` geometry) using `.geoms[i]`, where `i` is the index of the geometry
 * Combine single-part geometries into a multi-part geometry, by passing a `list` of the latter to the constructor function
 
-For example, here is how we combine two `"Polygon"` geometries into a `"MultiPolygon"`:
+For example, here is how we combine two `'Polygon'` geometries into a `'MultiPolygon'` (while also using a **shapely** affine function `shapely.affinity.translate`, which is underlying the **geopandas** `.translate` method used earlier, see @sec-affine-transformations) (@fig-type-transform-multipolygon):
 
 ```{python}
-multipolygon = shapely.MultiPolygon([polygon, polygon])
+#| label: fig-type-transform-multipolygon
+#| fig-cap: A `'MultiPolygon'` created from the `'Polygon'` in @fig-type-transform-polygon and another polygon
+
+multipolygon = shapely.MultiPolygon([
+    polygon, 
+    shapely.affinity.translate(polygon.centroid.buffer(1.5), 3, 2)
+])
 multipolygon
 ```
 
-and here is how we can get back the `"Polygon"` parts:
+and here is how we can get back the `'Polygon'` parts:
 
 ```{python}
+#| label: fig-type-transform-multipolygon1
+#| fig-cap: The 1^st^ "part" extracted from the `'MultiPolygon'` in @fig-type-transform-multipolygon
+
 multipolygon.geoms[0]
 ```
 
 ```{python}
+#| label: fig-type-transform-multipolygon2
+#| fig-cap: The 2^nd^ "part" extracted from the `'MultiPolygon'` in @fig-type-transform-multipolygon
+
 multipolygon.geoms[1]
 ```
 
 However, dealing with multi-part geometries is easier with **geopandas**, since that way we can keep track of the associated attributes: duplicating them when going from multi-part to single-part (using `.explode`, see below), or collapsing them through aggregation when going from single-part to multi-part (using `.dissolve`, see @sec-geometry-unions). 
 
-Let's apply another commonly used type transformation to demonstrate. As input, we will create a `"MultiLineString"` geometry composed of three lines:
+Let's apply another commonly used type transformation to demonstrate. As input, we will create a `'MultiLineString'` geometry composed of three lines (@fig-type-transform-multilinestring3):
 
 ```{python}
+#| label: fig-type-transform-multilinestring3
+#| fig-cap: A `'MultiLineString'` geometry composed of three lines
+
 l1 = shapely.LineString([(1, 5), (4, 3)])
 l2 = shapely.LineString([(4, 4), (4, 1)])
 l3 = shapely.LineString([(2, 2), (4, 2)])
@@ -720,48 +752,55 @@ geom = gpd.GeoSeries([ml])
 geom
 ```
 
-and finally into a `GeoDataFrame` with an attribute called `"id"`:
+and finally into a `GeoDataFrame` with an attribute called `'id'`:
 
 ```{python}
 dat = gpd.GeoDataFrame(geometry=geom, data=pd.DataFrame({'id': [1]}))
 dat
 ```
 
-You can imagine it as a road or river network. The above layer `dat` has only one row that defines all the lines. This restricts the number of operations that can be done, for example it prevents adding names to each line segment or calculating lengths of single lines. Using `shapely` methods which we are already familiar with (see above), the individual single-part geometries (i.e., the "parts") can be accessed through the `.geoms` property:
+You can imagine it as a road or river network. 
+The above layer `dat` has only one row that defines all the lines. 
+This restricts the number of operations that can be done, for example it prevents adding names to each line segment or calculating lengths of single lines. 
+Using `shapely` methods which we are already familiar with (see above), the individual single-part geometries (i.e., the "parts") can be accessed through the `.geoms` property:
 
 ```{python}
 list(ml.geoms)
 ```
 
-However, spoecifically for the "multi-part to single part" type transformation scenarios, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one. The advantage is that the original attributes (such as `id`) are retained, so that we can keep track of the original multi-part geometry properties that each part came from. The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively:
+However, specifically for the "multi-part to single part" type transformation scenarios, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one. 
+The advantage is that the original attributes (such as `id`) are retained, so that we can keep track of the original multi-part geometry properties that each part came from. 
+The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively:
 
 ```{python}
 dat1 = dat.explode(index_parts=True).reset_index()
 dat1
 ```
 
-For example, here we see that all `"LineString"` geometries came from the same multi-part geometry (`level_0`=`0`), which had three parts (`level_1`=`0`,`1`,`2`).
+For example, here we see that all `'LineString'` geometries came from the same multi-part geometry (`level_0`=`0`), which had three parts (`level_1`=`0`,`1`,`2`).
 
 @fig-multilinestring-to-linestring demonstrates the effect of `.explode` in converting a layer with multi-part geometries into a layer with single part geometries. 
 
 ```{python}
 #| label: fig-multilinestring-to-linestring
-#| fig-cap: Transformation from a `"MultiLineString"` layer with one feature (left), to a `"LineString"` layer with three features (right) using `.explode`
+#| fig-cap: Transformation a `'MultiLineString'` layer with one feature, into a `'LineString'` layer with three features, using `.explode`
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - MultiLineString layer
+#| - LineString layer, after applying `.explode`
 
-fig, axes = plt.subplots(ncols=2)
-dat.plot(ax=axes[0], column='id')
-dat1.plot(ax=axes[1], column='level_1')
-axes[0].set_title('MultiLineString\n1 feature')
-axes[1].set_title('LineString\n3 features');
+dat.plot(column='id');
+dat1.plot(column='level_1');
 ```
 
-The opposite transformation, i.e., "single-part to multi-part", is acheived using the `.dissolve` method (@sec-geometry-unions). For example, here is how we can get back to the `"MultiLineString"` geometry:
+The opposite transformation, i.e., "single-part to multi-part", is acheived using the `.dissolve` method (which we are already familiar with, see @sec-geometry-unions). 
+For example, here is how we can get back to the `'MultiLineString'` geometry:
 
 ```{python}
 dat1.dissolve(by='id').reset_index()
 ```
 
-Here is another example, dissolving the `nz` north and south parts into `"MultiPolygon"` geometries:
+Here is another example, dissolving the `nz` north and south parts into `'MultiPolygon'` geometries:
 
 ```{python}
 nz_dis1 = nz[['Island', 'Population', 'geometry']] \
@@ -771,9 +810,9 @@ nz_dis1
 ```
 
 Note that `.dissolve` not only combines single-part into multi-part geometries, but also dissolves any internal borders. 
-So, in fact, the result may single-part (in case when all parts touch each other, unlike in `nz`). 
+So, in fact, the result may be single-part (in case when all parts touch each other, unlike in `nz`). 
 If, for some reason, we want to combine geometries into multi-part *without* dissolving, we can fall back to the **pandas** `.agg` method (custom table aggregation), supplemented with a **shapely** function specifying how exactly we want to transform each group of geometries into a new single geometry. 
-In the following example, for instance, we choose to collect all `"Polygon"`, and `"MultiPolygon"` parts, into a single `"MultiPolygon"` geometry with many parts:
+In the following example, for instance, we collect all `'Polygon'`, and `'MultiPolygon'` parts, of `nz`, into a single `'MultiPolygon'` geometry with many separate parts (i.e., without dissolving), per group (`Island`):
 
 ```{python}
 #| warning: false
@@ -789,17 +828,17 @@ nz_dis2 = gpd.GeoDataFrame(nz_dis2).set_geometry('geometry').set_crs(nz.crs)
 nz_dis2
 ```
 
-The difference between the last two results (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type `"MultiPolygon"`. 
+The difference between the last two results (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type `'MultiPolygon'`. 
 However, in the first case internal borders were dissolved, while in the second case they were not. 
 This is illustrated in @fig-combine-geoms:
 
 ```{python}
 #| label: fig-combine-geoms
-#| fig-cap: Combining New Zealand geometries into one, for each island
+#| fig-cap: Combining New Zealand geometries into one, for each island, with and witout dissolving
 #| layout-ncol: 2
 #| fig-subcap: 
-#| - Dissolving (using `.dissolve`)
-#| - Combining without dissolving (using `agg` with a custom function)
+#| - Dissolving (using the **geopandas** `.dissolve` method)
+#| - Combining into multi-part without dissolving (using `.agg` and a custom **shapely**-based function)
 
 nz_dis1.plot(color='none', edgecolor='black');
 nz_dis2.plot(color='none', edgecolor='black');
