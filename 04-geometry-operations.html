@@ -1134,94 +1134,154 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-type-transformations" class="level3" data-number="4.3.8">
 <h3 data-number="4.3.8" class="anchored" data-anchor-id="sec-type-transformations"><span class="header-section-number">4.3.8</span> Type transformations</h3>
-<p>Transformation of geometries, from one type to another, also known as “geometry casting”, is often required to facilitate spatial analysis. The <code>shapely</code> package can be used for geometry casting. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the “destination” geometry (e.g., <code>shapely.LineString</code>, etc.), then reshape the input of the “source” geometry into the right form to be passed to that function.</p>
-<p>Let’s create a <code>"MultiPoint"</code> to illustrate how geometry casting works on <code>shapely</code> geometry objects:</p>
+<p>Transformation of geometries, from one type to another, also known as “geometry casting”, is often required to facilitate spatial analysis. Eithyer the <strong>geopandas</strong> or the <strong>shapely</strong> packages can be used for geometry casting, depending on the type of transformation. The exact expression(s) depend on the specific transformation we are interested in. In general, you need to figure out the required input of the respective construstor function according to the “destination” geometry (e.g., <code>shapely.LineString</code>, etc.), then reshape the input of the “source” geometry into the right form to be passed to that function. Or, when available, you can use a wrapper from <strong>geopandas</strong>.</p>
+<p>Let’s create a <code>'MultiPoint'</code> to illustrate how geometry casting works on <strong>shapely</strong> geometry objects (<a href="#fig-type-transform-multipoint">Figure&nbsp;<span>4.18</span></a>):</p>
 <div class="cell" data-execution_count="51">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>multipoint <span class="op">=</span> shapely.MultiPoint([(<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">3</span>,<span class="dv">3</span>), (<span class="dv">5</span>,<span class="dv">1</span>)])</span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>multipoint</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="51">
-<p><img src="04-geometry-operations_files/figure-html/cell-52-output-1.svg" class="img-fluid"></p>
-</div>
-</div>
-<p>A <code>"LineString"</code> can be created using <code>shapely.LineString</code> from a <code>list</code> of points. Consequently, a <code>"MultiPoint"</code> can be converted to a <code>"LineString"</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.LineString</code>:</p>
-<div class="cell" data-execution_count="52">
-<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.LineString(<span class="bu">list</span>(multipoint.geoms))</span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>linestring</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="52">
-<p><img src="04-geometry-operations_files/figure-html/cell-53-output-1.svg" class="img-fluid"></p>
-</div>
-</div>
-<p>A <code>"Polygon"</code> can also be created using function <code>shapely.Polygon</code>, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, <code>shapely.Polygon</code> is able to complete the last coordinate automatically. Therefore:</p>
-<div class="cell" data-execution_count="53">
-<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> shapely.Polygon([[p.x, p.y] <span class="cf">for</span> p <span class="kw">in</span> multipoint.geoms])</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>polygon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="53">
-<p><img src="04-geometry-operations_files/figure-html/cell-54-output-1.svg" class="img-fluid"></p>
-</div>
-</div>
-<p>The source <code>"MultiPoint"</code> geometry, and the derived <code>"LineString"</code> and <code>"Polygon"</code> geometries are shown in <a href="#fig-casting1">Figure&nbsp;<span>4.18</span></a>. Note that we convert the <code>shapely</code> geometries to <code>GeoSeries</code> for easier multi-panel plotting:</p>
-<div class="cell" data-execution_count="54">
-<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(multipoint).plot(ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
-<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(linestring).plot(ax<span class="op">=</span>axes[<span class="dv">1</span>])</span>
-<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(polygon).plot(ax<span class="op">=</span>axes[<span class="dv">2</span>])</span>
-<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"MultiPoint"</span>)</span>
-<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"LineString"</span>)</span>
-<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">"Polygon"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-casting1" class="quarto-figure quarto-figure-center anchored">
+<div id="fig-type-transform-multipoint" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
-<p><img src="04-geometry-operations_files/figure-html/fig-casting1-output-1.png" width="632" height="149" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.18: Examples of linestring and polygon casted from a multipoint geometry.</figcaption>
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-multipoint-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.18: A <code>'MultiPoint'</code> geometry used to demonstrate <strong>shapely</strong> type transformations</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>Conversion from <code>"MultiPoint"</code> to <code>"LineString"</code> is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from <code>"MultiPoint"</code> or <code>"LineString"</code> to <code>"Polygon"</code> is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.</p>
-<p>Our <code>"LineString"</code> geometry can be converted bact to a <code>"MultiPoint"</code> geometry by passing its coordinates directly to <code>shapely.MultiPoint</code>:</p>
+<p>A <code>'LineString'</code> can be created using <code>shapely.LineString</code> from a <code>list</code> of points. Consequently, a <code>'MultiPoint'</code> can be converted to a <code>'LineString'</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.LineString</code> (<a href="#fig-type-transform-linestring">Figure&nbsp;<span>4.19</span></a>):</p>
+<div class="cell" data-execution_count="52">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.LineString(<span class="bu">list</span>(multipoint.geoms))</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>linestring</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="52">
+<div id="fig-type-transform-linestring" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-linestring-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.19: A <code>'LineString'</code> created from the <code>'MultiPoint'</code> in <a href="#fig-type-transform-multipoint">Figure&nbsp;<span>4.18</span></a></figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Similarly, a <code>'Polygon'</code> can be created using function <code>shapely.Polygon</code>, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, <code>shapely.Polygon</code> is able to complete the last coordinate automatically. Therefore (<a href="#fig-type-transform-polygon">Figure&nbsp;<span>4.20</span></a>):</p>
+<div class="cell" data-execution_count="53">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>polygon <span class="op">=</span> shapely.Polygon([[p.x, p.y] <span class="cf">for</span> p <span class="kw">in</span> multipoint.geoms])</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>polygon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="53">
+<div id="fig-type-transform-polygon" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-polygon-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.20: A <code>'Polygon'</code> created from the <code>'MultiPoint'</code> in <a href="#fig-type-transform-multipoint">Figure&nbsp;<span>4.18</span></a></figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The source <code>'MultiPoint'</code> geometry, and the derived <code>'LineString'</code> and <code>'Polygon'</code> geometries are shown in <a href="#fig-casting1">Figure&nbsp;<span>4.21</span></a>. Note that we convert the <code>shapely</code> geometries to <code>GeoSeries</code> to use the <strong>geopandas</strong> plotting method:</p>
+<div>
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(multipoint).plot()<span class="op">;</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(linestring).plot()<span class="op">;</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(polygon).plot()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-casting1" class="cell quarto-layout-panel" data-execution_count="54">
+<figure class="figure">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.3%;justify-content: center;">
+<div id="fig-casting1-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-casting1-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-casting1" width="422"></p>
+<figcaption class="figure-caption">(a) MultiPoint</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.3%;justify-content: center;">
+<div id="fig-casting1-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-casting1-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-casting1" width="422"></p>
+<figcaption class="figure-caption">(b) LineString</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.3%;justify-content: center;">
+<div id="fig-casting1-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-casting1-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-casting1" width="422"></p>
+<figcaption class="figure-caption">(c) Polygon</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.21: Examples of <code>'LineString</code>’ and <code>'Polygon'</code> casted from a <code>'MultiPoint'</code> geometry</figcaption><p></p>
+</figure>
+</div>
+</div>
+<p>Conversion from <code>'MultiPoint'</code> to <code>'LineString'</code> (<a href="#fig-type-transform-linestring">Figure&nbsp;<span>4.19</span></a>) is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from <code>'MultiPoint'</code> or <code>'LineString'</code> to <code>'Polygon'</code> (fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.</p>
+<p>Our <code>'LineString'</code> geometry can be converted bact to a <code>'MultiPoint'</code> geometry by passing its coordinates directly to <code>shapely.MultiPoint</code> (<a href="#fig-type-transform-multipoint2">Figure&nbsp;<span>4.22</span></a>):</p>
 <div class="cell" data-execution_count="55">
-<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'LineString' -&gt; 'MultiPoint'</span></span>
-<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>shapely.MultiPoint(linestring.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>shapely.MultiPoint(linestring.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="55">
-<p><img src="04-geometry-operations_files/figure-html/cell-56-output-1.svg" class="img-fluid"></p>
+<div id="fig-type-transform-multipoint2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-multipoint2-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.22: A <code>'MultiPoint'</code> created from the <code>'LineString'</code> in <a href="#fig-type-transform-linestring">Figure&nbsp;<span>4.19</span></a></figcaption>
+</figure>
 </div>
 </div>
-<p>The <code>"Polygon"</code> (exterior) coordinates can be passed to <code>shapely.MultiPoint</code> as well:</p>
+</div>
+<p>A <code>'Polygon'</code> (exterior) coordinates can be passed to <code>shapely.MultiPoint</code>, to go back to a <code>'MultiPoint'</code> geometry, as well (<a href="#fig-type-transform-polygon2">Figure&nbsp;<span>4.23</span></a>):</p>
 <div class="cell" data-execution_count="56">
-<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 'Polygon' -&gt; 'MultiPoint'</span></span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>shapely.MultiPoint(polygon.exterior.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>shapely.MultiPoint(polygon.exterior.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="56">
-<p><img src="04-geometry-operations_files/figure-html/cell-57-output-1.svg" class="img-fluid"></p>
+<div id="fig-type-transform-polygon2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-polygon2-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.23: A <code>'MultiPoint'</code> created from the <code>'Polygon'</code> in <a href="#fig-type-transform-polygon">Figure&nbsp;<span>4.20</span></a></figcaption>
+</figure>
 </div>
 </div>
-<p>Using these methods, we can transform between <code>"Point"</code>, <code>"LineString"</code>, and <code>"Polygon"</code> geometries, assuming there is a sufficient number of points (at least two to form a line, and at least three to form a polygon). When dealing with multi-part geometries, we can:</p>
+</div>
+<p>Using these methods, we can transform between <code>'Point'</code>, <code>'LineString'</code>, and <code>'Polygon'</code> geometries, assuming there is a sufficient number of points (at least two to form a line, and at least three to form a polygon). When dealing with multi-part geometries using <strong>shapely</strong>, we can:</p>
 <ul>
-<li>Access single-part geometries (e.g., each <code>"Polygion"</code> in a <code>"MultiPolygon"</code> geometry) using <code>.geoms[i]</code>, where <code>i</code> is the index of the geometry</li>
+<li>Access single-part geometries (e.g., each <code>'Polygion'</code> in a <code>'MultiPolygon'</code> geometry) using <code>.geoms[i]</code>, where <code>i</code> is the index of the geometry</li>
 <li>Combine single-part geometries into a multi-part geometry, by passing a <code>list</code> of the latter to the constructor function</li>
 </ul>
-<p>For example, here is how we combine two <code>"Polygon"</code> geometries into a <code>"MultiPolygon"</code>:</p>
+<p>For example, here is how we combine two <code>'Polygon'</code> geometries into a <code>'MultiPolygon'</code> (while also using a <strong>shapely</strong> affine function <code>shapely.affinity.translate</code>, which is underlying the <strong>geopandas</strong> <code>.translate</code> method used earlier, see <a href="#sec-affine-transformations"><span>Section&nbsp;4.3.4</span></a>) (<a href="#fig-type-transform-multipolygon">Figure&nbsp;<span>4.24</span></a>):</p>
 <div class="cell" data-execution_count="57">
-<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>multipolygon <span class="op">=</span> shapely.MultiPolygon([polygon, polygon])</span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>multipolygon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>multipolygon <span class="op">=</span> shapely.MultiPolygon([</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    polygon, </span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    shapely.affinity.translate(polygon.centroid.<span class="bu">buffer</span>(<span class="fl">1.5</span>), <span class="dv">3</span>, <span class="dv">2</span>)</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>multipolygon</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<p><img src="04-geometry-operations_files/figure-html/cell-58-output-1.svg" class="img-fluid"></p>
+<div id="fig-type-transform-multipolygon" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-multipolygon-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.24: A <code>'MultiPolygon'</code> created from the <code>'Polygon'</code> in <a href="#fig-type-transform-polygon">Figure&nbsp;<span>4.20</span></a> and another polygon</figcaption>
+</figure>
 </div>
 </div>
-<p>and here is how we can get back the <code>"Polygon"</code> parts:</p>
+</div>
+<p>and here is how we can get back the <code>'Polygon'</code> parts:</p>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>multipolygon.geoms[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="58">
-<p><img src="04-geometry-operations_files/figure-html/cell-59-output-1.svg" class="img-fluid"></p>
+<div id="fig-type-transform-multipolygon1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-multipolygon1-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.25: The 1<sup>st</sup> “part” extracted from the <code>'MultiPolygon'</code> in <a href="#fig-type-transform-multipolygon">Figure&nbsp;<span>4.24</span></a></figcaption>
+</figure>
+</div>
 </div>
 </div>
 <div class="cell" data-execution_count="59">
 <div class="sourceCode cell-code" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>multipolygon.geoms[<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="59">
-<p><img src="04-geometry-operations_files/figure-html/cell-60-output-1.svg" class="img-fluid"></p>
+<div id="fig-type-transform-multipolygon2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-multipolygon2-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.26: The 2<sup>nd</sup> “part” extracted from the <code>'MultiPolygon'</code> in <a href="#fig-type-transform-multipolygon">Figure&nbsp;<span>4.24</span></a></figcaption>
+</figure>
+</div>
 </div>
 </div>
 <p>However, dealing with multi-part geometries is easier with <strong>geopandas</strong>, since that way we can keep track of the associated attributes: duplicating them when going from multi-part to single-part (using <code>.explode</code>, see below), or collapsing them through aggregation when going from single-part to multi-part (using <code>.dissolve</code>, see <a href="#sec-geometry-unions"><span>Section&nbsp;4.3.7</span></a>).</p>
-<p>Let’s apply another commonly used type transformation to demonstrate. As input, we will create a <code>"MultiLineString"</code> geometry composed of three lines:</p>
+<p>Let’s apply another commonly used type transformation to demonstrate. As input, we will create a <code>'MultiLineString'</code> geometry composed of three lines (<a href="#fig-type-transform-multilinestring3">Figure&nbsp;<span>4.27</span></a>):</p>
 <div class="cell" data-execution_count="60">
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>l1 <span class="op">=</span> shapely.LineString([(<span class="dv">1</span>, <span class="dv">5</span>), (<span class="dv">4</span>, <span class="dv">3</span>)])</span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>l2 <span class="op">=</span> shapely.LineString([(<span class="dv">4</span>, <span class="dv">4</span>), (<span class="dv">4</span>, <span class="dv">1</span>)])</span>
@@ -1229,7 +1289,12 @@ dtype: geometry</code></pre>
 <span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>ml <span class="op">=</span> shapely.MultiLineString([l1, l2, l3])</span>
 <span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>ml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="60">
-<p><img src="04-geometry-operations_files/figure-html/cell-61-output-1.svg" class="img-fluid"></p>
+<div id="fig-type-transform-multilinestring3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-type-transform-multilinestring3-output-1.svg" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.27: A <code>'MultiLineString'</code> geometry composed of three lines</figcaption>
+</figure>
+</div>
 </div>
 </div>
 <p>Let’s place it into a <code>GeoSeries</code>:</p>
@@ -1241,7 +1306,7 @@ dtype: geometry</code></pre>
 dtype: geometry</code></pre>
 </div>
 </div>
-<p>and finally into a <code>GeoDataFrame</code> with an attribute called <code>"id"</code>:</p>
+<p>and finally into a <code>GeoDataFrame</code> with an attribute called <code>'id'</code>:</p>
 <div class="cell" data-execution_count="62">
 <div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>dat <span class="op">=</span> gpd.GeoDataFrame(geometry<span class="op">=</span>geom, data<span class="op">=</span>pd.DataFrame({<span class="st">'id'</span>: [<span class="dv">1</span>]}))</span>
 <span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>dat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1276,7 +1341,7 @@ dtype: geometry</code></pre>
 <pre><code>[&lt;LINESTRING (1 5, 4 3)&gt;, &lt;LINESTRING (4 4, 4 1)&gt;, &lt;LINESTRING (2 2, 4 2)&gt;]</code></pre>
 </div>
 </div>
-<p>However, spoecifically for the “multi-part to single part” type transformation scenarios, there is also a method called <code>.explode</code>, which can convert an entire multi-part <code>GeoDataFrame</code> to a single-part one. The advantage is that the original attributes (such as <code>id</code>) are retained, so that we can keep track of the original multi-part geometry properties that each part came from. The <code>index_parts=True</code> argument also lets us keep track of the original multipart geometry indices, and part indices, named <code>level_0</code> and <code>level_1</code>, respectively:</p>
+<p>However, specifically for the “multi-part to single part” type transformation scenarios, there is also a method called <code>.explode</code>, which can convert an entire multi-part <code>GeoDataFrame</code> to a single-part one. The advantage is that the original attributes (such as <code>id</code>) are retained, so that we can keep track of the original multi-part geometry properties that each part came from. The <code>index_parts=True</code> argument also lets us keep track of the original multipart geometry indices, and part indices, named <code>level_0</code> and <code>level_1</code>, respectively:</p>
 <div class="cell" data-execution_count="64">
 <div class="sourceCode cell-code" id="cb78"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>dat1 <span class="op">=</span> dat.explode(index_parts<span class="op">=</span><span class="va">True</span>).reset_index()</span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>dat1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1322,24 +1387,36 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>For example, here we see that all <code>"LineString"</code> geometries came from the same multi-part geometry (<code>level_0</code>=<code>0</code>), which had three parts (<code>level_1</code>=<code>0</code>,<code>1</code>,<code>2</code>).</p>
-<p><a href="#fig-multilinestring-to-linestring">Figure&nbsp;<span>4.19</span></a> demonstrates the effect of <code>.explode</code> in converting a layer with multi-part geometries into a layer with single part geometries.</p>
-<div class="cell" data-execution_count="65">
-<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>dat.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], column<span class="op">=</span><span class="st">'id'</span>)</span>
-<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>dat1.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], column<span class="op">=</span><span class="st">'level_1'</span>)</span>
-<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'MultiLineString</span><span class="ch">\n</span><span class="st">1 feature'</span>)</span>
-<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'LineString</span><span class="ch">\n</span><span class="st">3 features'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-multilinestring-to-linestring" class="quarto-figure quarto-figure-center anchored">
+<p>For example, here we see that all <code>'LineString'</code> geometries came from the same multi-part geometry (<code>level_0</code>=<code>0</code>), which had three parts (<code>level_1</code>=<code>0</code>,<code>1</code>,<code>2</code>).</p>
+<p><a href="#fig-multilinestring-to-linestring">Figure&nbsp;<span>4.28</span></a> demonstrates the effect of <code>.explode</code> in converting a layer with multi-part geometries into a layer with single part geometries.</p>
+<div>
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>dat.plot(column<span class="op">=</span><span class="st">'id'</span>)<span class="op">;</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>dat1.plot(column<span class="op">=</span><span class="st">'level_1'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-multilinestring-to-linestring" class="cell quarto-layout-panel" data-execution_count="65">
 <figure class="figure">
-<p><img src="04-geometry-operations_files/figure-html/fig-multilinestring-to-linestring-output-1.png" width="409" height="305" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.19: Transformation from a <code>"MultiLineString"</code> layer with one feature (left), to a <code>"LineString"</code> layer with three features (right) using <code>.explode</code></figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-multilinestring-to-linestring-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-multilinestring-to-linestring-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-multilinestring-to-linestring" width="327"></p>
+<figcaption class="figure-caption">(a) MultiLineString layer</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-multilinestring-to-linestring-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-multilinestring-to-linestring-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-multilinestring-to-linestring" width="327"></p>
+<figcaption class="figure-caption">(b) LineString layer, after applying <code>.explode</code></figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>The opposite transformation, i.e., “single-part to multi-part”, is acheived using the <code>.dissolve</code> method (<a href="#sec-geometry-unions"><span>Section&nbsp;4.3.7</span></a>). For example, here is how we can get back to the <code>"MultiLineString"</code> geometry:</p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.28: Transformation a <code>'MultiLineString'</code> layer with one feature, into a <code>'LineString'</code> layer with three features, using <code>.explode</code></figcaption><p></p>
+</figure>
+</div>
+</div>
+<p>The opposite transformation, i.e., “single-part to multi-part”, is acheived using the <code>.dissolve</code> method (which we are already familiar with, see <a href="#sec-geometry-unions"><span>Section&nbsp;4.3.7</span></a>). For example, here is how we can get back to the <code>'MultiLineString'</code> geometry:</p>
 <div class="cell" data-execution_count="66">
 <div class="sourceCode cell-code" id="cb80"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>dat1.dissolve(by<span class="op">=</span><span class="st">'id'</span>).reset_index()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="66">
@@ -1370,7 +1447,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>Here is another example, dissolving the <code>nz</code> north and south parts into <code>"MultiPolygon"</code> geometries:</p>
+<p>Here is another example, dissolving the <code>nz</code> north and south parts into <code>'MultiPolygon'</code> geometries:</p>
 <div class="cell" data-execution_count="67">
 <div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>nz_dis1 <span class="op">=</span> nz[[<span class="st">'Island'</span>, <span class="st">'Population'</span>, <span class="st">'geometry'</span>]] <span class="op">\</span></span>
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>    .dissolve(by<span class="op">=</span><span class="st">'Island'</span>, aggfunc<span class="op">=</span><span class="st">'sum'</span>) <span class="op">\</span></span>
@@ -1408,7 +1485,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>Note that <code>.dissolve</code> not only combines single-part into multi-part geometries, but also dissolves any internal borders. So, in fact, the result may single-part (in case when all parts touch each other, unlike in <code>nz</code>). If, for some reason, we want to combine geometries into multi-part <em>without</em> dissolving, we can fall back to the <strong>pandas</strong> <code>.agg</code> method (custom table aggregation), supplemented with a <strong>shapely</strong> function specifying how exactly we want to transform each group of geometries into a new single geometry. In the following example, for instance, we choose to collect all <code>"Polygon"</code>, and <code>"MultiPolygon"</code> parts, into a single <code>"MultiPolygon"</code> geometry with many parts:</p>
+<p>Note that <code>.dissolve</code> not only combines single-part into multi-part geometries, but also dissolves any internal borders. So, in fact, the result may be single-part (in case when all parts touch each other, unlike in <code>nz</code>). If, for some reason, we want to combine geometries into multi-part <em>without</em> dissolving, we can fall back to the <strong>pandas</strong> <code>.agg</code> method (custom table aggregation), supplemented with a <strong>shapely</strong> function specifying how exactly we want to transform each group of geometries into a new single geometry. In the following example, for instance, we collect all <code>'Polygon'</code>, and <code>'MultiPolygon'</code> parts, of <code>nz</code>, into a single <code>'MultiPolygon'</code> geometry with many separate parts (i.e., without dissolving), per group (<code>Island</code>):</p>
 <div class="cell" data-execution_count="68">
 <div class="sourceCode cell-code" id="cb82"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>nz_dis2 <span class="op">=</span> nz <span class="op">\</span></span>
 <span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">'Island'</span>) <span class="op">\</span></span>
@@ -1451,7 +1528,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>The difference between the last two results (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type <code>"MultiPolygon"</code>. However, in the first case internal borders were dissolved, while in the second case they were not. This is illustrated in <a href="#fig-combine-geoms">Figure&nbsp;<span>4.20</span></a>:</p>
+<p>The difference between the last two results (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type <code>'MultiPolygon'</code>. However, in the first case internal borders were dissolved, while in the second case they were not. This is illustrated in <a href="#fig-combine-geoms">Figure&nbsp;<span>4.29</span></a>:</p>
 <div>
 <div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>nz_dis1.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span>
 <span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>nz_dis2.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1462,7 +1539,7 @@ dtype: geometry</code></pre>
 <div id="fig-combine-geoms-1" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-combine-geoms-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-combine-geoms" width="306"></p>
-<figcaption class="figure-caption">(a) Dissolving (using <code>.dissolve</code>)</figcaption>
+<figcaption class="figure-caption">(a) Dissolving (using the <strong>geopandas</strong> <code>.dissolve</code> method)</figcaption>
 </figure>
 </div>
 </div>
@@ -1470,12 +1547,12 @@ dtype: geometry</code></pre>
 <div id="fig-combine-geoms-2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-combine-geoms-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-combine-geoms" width="306"></p>
-<figcaption class="figure-caption">(b) Combining without dissolving (using <code>agg</code> with a custom function)</figcaption>
+<figcaption class="figure-caption">(b) Combining into multi-part without dissolving (using <code>.agg</code> and a custom <strong>shapely</strong>-based function)</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p></p><figcaption class="figure-caption">Figure&nbsp;4.20: Combining New Zealand geometries into one, for each island</figcaption><p></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.29: Combining New Zealand geometries into one, for each island, with and witout dissolving</figcaption><p></p>
 </figure>
 </div>
 </div>
@@ -1500,7 +1577,7 @@ dtype: geometry</code></pre>
        [1, 1, 1]])</code></pre>
 </div>
 </div>
-<p>Then, we define the transformation matrix, in such a way that <code>clip</code> intersects with <code>elev.tif</code> (<a href="#fig-raster-intersection">Figure&nbsp;<span>4.21</span></a>):</p>
+<p>Then, we define the transformation matrix, in such a way that <code>clip</code> intersects with <code>elev.tif</code> (<a href="#fig-raster-intersection">Figure&nbsp;<span>4.30</span></a>):</p>
 <div class="cell" data-execution_count="71">
 <div class="sourceCode cell-code" id="cb86"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
 <span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span><span class="fl">0.9</span>, </span>
@@ -1534,7 +1611,7 @@ dtype: geometry</code></pre>
 <p><img src="04-geometry-operations_files/figure-html/cell-74-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
-<p><a href="#fig-raster-intersection">Figure&nbsp;<span>4.21</span></a> shows the alignment of <code>bbox</code> and <code>elev.tif</code>:</p>
+<p><a href="#fig-raster-intersection">Figure&nbsp;<span>4.30</span></a> shows the alignment of <code>bbox</code> and <code>elev.tif</code>:</p>
 <div class="cell" data-execution_count="74">
 <div class="sourceCode cell-code" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_elev, ax<span class="op">=</span>ax)</span>
@@ -1543,7 +1620,7 @@ dtype: geometry</code></pre>
 <div id="fig-raster-intersection" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-intersection-output-1.png" width="433" height="369" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.21: The <code>elev.tif</code> raster, and the extent of another (smaller) raster <code>clip</code> which we use to subset it</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.30: The <code>elev.tif</code> raster, and the extent of another (smaller) raster <code>clip</code> which we use to subset it</figcaption>
 </figure>
 </div>
 </div>
@@ -1566,7 +1643,7 @@ dtype: geometry</code></pre>
         [23, 24]]], dtype=uint8)</code></pre>
 </div>
 </div>
-<p>Therefore, in our case, subset <code>out_image</code> dimensions are <span class="math inline">\(2 \times 2\)</span> (<a href="#fig-raster-intersection2">Figure&nbsp;<span>4.22</span></a>):</p>
+<p>Therefore, in our case, subset <code>out_image</code> dimensions are <span class="math inline">\(2 \times 2\)</span> (<a href="#fig-raster-intersection2">Figure&nbsp;<span>4.31</span></a>):</p>
 <div class="cell" data-execution_count="77">
 <div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(out_image, transform<span class="op">=</span>out_transform, ax<span class="op">=</span>ax)</span>
@@ -1575,7 +1652,7 @@ dtype: geometry</code></pre>
 <div id="fig-raster-intersection2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-intersection2-output-1.png" width="433" height="314" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.22: The resulting subset of the <code>elev.tif</code> raster</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.31: The resulting subset of the <code>elev.tif</code> raster</figcaption>
 </figure>
 </div>
 </div>
@@ -1657,7 +1734,7 @@ dtype: geometry</code></pre>
        0.0, -0.5, 2.0)</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-shift-origin">Figure&nbsp;<span>4.23</span></a> shows the padded raster, with the outline of the original one, demonstrating that the origin was shifted correctly:</p>
+<p><a href="#fig-raster-shift-origin">Figure&nbsp;<span>4.32</span></a> shows the padded raster, with the outline of the original one, demonstrating that the origin was shifted correctly:</p>
 <div class="cell" data-execution_count="85">
 <div class="sourceCode cell-code" id="cb110"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(s, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
@@ -1667,7 +1744,7 @@ dtype: geometry</code></pre>
 <div id="fig-raster-shift-origin" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-shift-origin-output-1.png" width="433" height="344" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.23: The padded <code>elev.tif</code> raster, and the outline of the extent of the original (in red)</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.32: The padded <code>elev.tif</code> raster, and the outline of the extent of the original (in red)</figcaption>
 </figure>
 </div>
 </div>
@@ -1691,7 +1768,7 @@ dtype: geometry</code></pre>
        0.0, -0.5, 1.75)</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-shift-origin2">Figure&nbsp;<span>4.24</span></a> shows the shifted raster and the outline of the original:</p>
+<p><a href="#fig-raster-shift-origin2">Figure&nbsp;<span>4.33</span></a> shows the shifted raster and the outline of the original:</p>
 <div class="cell" data-execution_count="88">
 <div class="sourceCode cell-code" id="cb115"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
@@ -1700,7 +1777,7 @@ dtype: geometry</code></pre>
 <div id="fig-raster-shift-origin2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-shift-origin2-output-1.png" width="430" height="411" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.24: The <code>elev.tif</code> raster shifted by <code>(0.25,0.25)</code> and the extent of the original (in red)</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.33: The <code>elev.tif</code> raster shifted by <code>(0.25,0.25)</code> and the extent of the original (in red)</figcaption>
 </figure>
 </div>
 </div>
@@ -1708,7 +1785,7 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-raster-agg-disagg" class="level3" data-number="4.4.3">
 <h3 data-number="4.4.3" class="anchored" data-anchor-id="sec-raster-agg-disagg"><span class="header-section-number">4.4.3</span> Aggregation and disaggregation</h3>
-<p>Raster datasets vary based on their resolution, from high resolution datasets that enable individual trees to be seen, to low resolution datasets covering the whole Earth. Raster datasets can be transformed to either decrease (aggregate) or increase (disaggregate) their resolution for a number of reasons. Aggregation can reduce computational resource requirements of raster storage and subsequent steps, disaggregation can be used to match other datasets or to add detail. As an example, we here change the spatial resolution of <code>dem.tif</code> by a factor of 5 (Figure <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.25</span></a>).</p>
+<p>Raster datasets vary based on their resolution, from high resolution datasets that enable individual trees to be seen, to low resolution datasets covering the whole Earth. Raster datasets can be transformed to either decrease (aggregate) or increase (disaggregate) their resolution for a number of reasons. Aggregation can reduce computational resource requirements of raster storage and subsequent steps, disaggregation can be used to match other datasets or to add detail. As an example, we here change the spatial resolution of <code>dem.tif</code> by a factor of 5 (Figure <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.34</span></a>).</p>
 <p>Raster aggregation is, in fact, a special case of raster resampling (see <a href="#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>), where the target raster grid is aligned with the original raster, only with coarser pixels. Raster resampling, is the general case where the new grid is not necessarily an aggregation of the original one, but any other case as well (such as a rotated and/or shifted one, etc.).</p>
 <p>To aggregate a raster using <code>rasterio</code>, we go through <a href="https://rasterio.readthedocs.io/en/stable/topics/resampling.html">two steps</a>:</p>
 <ul>
@@ -1773,7 +1850,7 @@ dtype: geometry</code></pre>
        0.0, -156.9326086956198, 8935384.324602526)</code></pre>
 </div>
 </div>
-<p>The original raster and the aggregated one, are shown in <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.25</span></a>:</p>
+<p>The original raster and the aggregated one, are shown in <a href="#fig-raster-aggregate">Figure&nbsp;<span>4.34</span></a>:</p>
 <div class="cell" data-execution_count="94">
 <div class="sourceCode cell-code" id="cb125"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
 <span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
@@ -1784,7 +1861,7 @@ dtype: geometry</code></pre>
 <div id="fig-raster-aggregate" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-aggregate-output-1.png" width="680" height="332" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.25: Original raster (left), and aggregated raster (right).</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.34: Original raster (left), and aggregated raster (right).</figcaption>
 </figure>
 </div>
 </div>
@@ -1851,7 +1928,7 @@ dtype: geometry</code></pre>
        0.0, -6.169999999998726, 8935384.324602526)</code></pre>
 </div>
 </div>
-<p>A zoom-in on the top-left corner of the original raster and the disaggregated one, are shown in <a href="#fig-raster-disaggregate">Figure&nbsp;<span>4.26</span></a>:</p>
+<p>A zoom-in on the top-left corner of the original raster and the disaggregated one, are shown in <a href="#fig-raster-disaggregate">Figure&nbsp;<span>4.35</span></a>:</p>
 <div class="cell" data-execution_count="100">
 <div class="sourceCode cell-code" id="cb134"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
 <span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src.read(<span class="dv">1</span>)[:<span class="dv">5</span>, :<span class="dv">5</span>], transform<span class="op">=</span>src.transform, ax<span class="op">=</span>axes[<span class="dv">0</span>])</span>
@@ -1862,7 +1939,7 @@ dtype: geometry</code></pre>
 <div id="fig-raster-disaggregate" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-disaggregate-output-1.png" width="669" height="346" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.26: Original raster (left), and disaggregated raster (right). The same top-left corner extent of both rasters is shown, to zoom-in and demonstrate the effect of bilinear interpolation.</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.35: Original raster (left), and disaggregated raster (right). The same top-left corner extent of both rasters is shown, to zoom-in and demonstrate the effect of bilinear interpolation.</figcaption>
 </figure>
 </div>
 </div>
@@ -1871,15 +1948,15 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-raster-resampling" class="level3" data-number="4.4.4">
 <h3 data-number="4.4.4" class="anchored" data-anchor-id="sec-raster-resampling"><span class="header-section-number">4.4.4</span> Resampling</h3>
-<p>The above methods of aggregation and disaggregation are only suitable when we want to change the resolution of our raster by the aggregation/disaggregation factor. However, what to do when we have two or more rasters with different resolutions and origins? This is the role of resampling—a process of computing values for new pixel locations. In short, this process takes the values of our original raster and recalculates new values for a target raster with custom resolution and origin (<a href="#fig-raster-resample">Figure&nbsp;<span>4.27</span></a>).</p>
-<p>There are several methods for estimating values for a raster with different resolutions/origins (<a href="#fig-raster-resample">Figure&nbsp;<span>4.27</span></a>). The main resampling methods include:</p>
+<p>The above methods of aggregation and disaggregation are only suitable when we want to change the resolution of our raster by the aggregation/disaggregation factor. However, what to do when we have two or more rasters with different resolutions and origins? This is the role of resampling—a process of computing values for new pixel locations. In short, this process takes the values of our original raster and recalculates new values for a target raster with custom resolution and origin (<a href="#fig-raster-resample">Figure&nbsp;<span>4.36</span></a>).</p>
+<p>There are several methods for estimating values for a raster with different resolutions/origins (<a href="#fig-raster-resample">Figure&nbsp;<span>4.36</span></a>). The main resampling methods include:</p>
 <ul>
 <li>Nearest neighbor: assigns the value of the nearest cell of the original raster to the cell of the target one. This is a fast simple technique that is usually suitable for resampling categorical rasters.</li>
 <li>Bilinear interpolation: assigns a weighted average of the four nearest cells from the original raster to the cell of the target one. This is the fastest method that is appropriate for continuous rasters.</li>
 <li>Cubic interpolation: uses values of the 16 nearest cells of the original raster to determine the output cell value, applying third-order polynomial functions. Used for continuous rasters and results in a smoother surface compared to bilinear interpolation, but is computationally more demanding.</li>
 <li>Cubic spline interpolation: also uses values of the 16 nearest cells of the original raster to determine the output cell value, but applies cubic splines (piecewise third-order polynomial functions). Used for continuous rasters.</li>
 <li>Lanczos windowed sinc resampling: uses values of the 36 nearest cells of the original raster to determine the output cell value. Used for continuous rasters.</li>
-<li>Additionally, we can use straightforward summary methods, taking into account all pixels that coincide with the target pixel, such as average (<a href="#fig-raster-aggregate">Figure&nbsp;<span>4.25</span></a>), minimum, maximum (<a href="#fig-raster-resample">Figure&nbsp;<span>4.27</span></a>), median, mode, and sum.</li>
+<li>Additionally, we can use straightforward summary methods, taking into account all pixels that coincide with the target pixel, such as average (<a href="#fig-raster-aggregate">Figure&nbsp;<span>4.34</span></a>), minimum, maximum (<a href="#fig-raster-resample">Figure&nbsp;<span>4.36</span></a>), median, mode, and sum.</li>
 </ul>
 <p>The above explanation highlights that only nearest neighbor resampling is suitable for categorical rasters, while all remaining methods can be used (with different outcomes) for continuous rasters.</p>
 <p>With <code>rasterio</code>, resampling can be done using function <code>rasterio.warp.reproject</code>. Note, again, that raster reprojection is not fundamentally different from resampling—the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection). In other words, reprojection is <em>resampling</em> into a grid that is in a different CRS. We will demonstrate reprojection using <code>rasterio.warp.reproject</code> later on (<a href="06-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.9</span></a>).</p>
@@ -1948,7 +2025,7 @@ dtype: geometry</code></pre>
 <div class="cell" data-execution_count="106">
 <div class="sourceCode cell-code" id="cb143"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Here is another code section to demontrate another resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. Note that the transform is identical (<a href="#fig-raster-resample">Figure&nbsp;<span>4.27</span></a>), so we do not need to calculate it again:</p>
+<p>Here is another code section to demontrate another resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. Note that the transform is identical (<a href="#fig-raster-resample">Figure&nbsp;<span>4.36</span></a>), so we do not need to calculate it again:</p>
 <div class="cell" data-execution_count="107">
 <div class="sourceCode cell-code" id="cb144"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_maximum.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
 <span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
@@ -1962,7 +2039,7 @@ dtype: geometry</code></pre>
 <span id="cb144-10"><a href="#cb144-10" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb144-11"><a href="#cb144-11" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The original raster <code>dem.tif</code>, and the two resampling results <code>dem_resample_nearest.tif</code> and <code>dem_resample_maximum.tif</code>, are shown in <a href="#fig-raster-resample">Figure&nbsp;<span>4.27</span></a>:</p>
+<p>The original raster <code>dem.tif</code>, and the two resampling results <code>dem_resample_nearest.tif</code> and <code>dem_resample_maximum.tif</code>, are shown in <a href="#fig-raster-resample">Figure&nbsp;<span>4.36</span></a>:</p>
 <div>
 <div class="sourceCode cell-code" id="cb145"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb145-1"><a href="#cb145-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input</span></span>
 <span id="cb145-2"><a href="#cb145-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
@@ -2003,7 +2080,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p></p><figcaption class="figure-caption">Figure&nbsp;4.27: Visual comparison of the original raster and two different resampling methods’</figcaption><p></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.36: Visual comparison of the original raster and two different resampling methods’</figcaption><p></p>
 </figure>
 </div>
 </div>
