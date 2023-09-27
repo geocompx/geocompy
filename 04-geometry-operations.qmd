@@ -547,10 +547,12 @@ Generally, more concise implementations should be favored, meaning the first app
 
 ### Geometry unions {#sec-geometry-unions}
 
-As we saw in @sec-vector-attribute-aggregation, spatial aggregation can silently dissolve the geometries of touching polygons in the same group. This is demonstrated in the code chunk below in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method:
+As we saw in @sec-vector-attribute-aggregation, spatial aggregation can silently dissolve the geometries of touching polygons in the same group. 
+This is demonstrated in the code chunk below, in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method:
 
 ```{python}
-regions = us_states.dissolve(by='REGION', aggfunc='sum').reset_index()
+regions = us_states[['REGION', 'geometry', 'total_pop_15']] \
+    .dissolve(by='REGION', aggfunc='sum').reset_index()
 regions
 ```
 
@@ -558,23 +560,31 @@ The result is shown in @fig-dissolve:
 
 ```{python}
 #| label: fig-dissolve
-#| fig-cap: "Spatial aggregation on contiguous polygons, illustrated by aggregating the population of US states into regions, with population represented by color. Note the operation automatically dissolves boundaries between states."
+#| fig-cap: "Spatial aggregation on contiguous polygons, illustrated by aggregating the population of 49 US states into 4 regions, with population represented by color. Note the operation automatically dissolves boundaries between states."
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - 49 States
+#| - 4 Regions
 
-fig, axes = plt.subplots(ncols=2, figsize=(9, 2.5))
-us_states.plot(ax=axes[0], edgecolor='black', column='total_pop_15', legend=True, cmap='PuRd')
-regions.plot(ax=axes[1], edgecolor='black', column='total_pop_15', legend=True, cmap='PuRd')
-axes[0].set_title('State')
-axes[1].set_title('Region');
+# States
+fig, ax = plt.subplots(figsize=(9, 2.5))
+us_states.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
+
+# Regions
+fig, ax = plt.subplots(figsize=(9, 2.5))
+regions.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
 ```
 
-What is going on in terms of the geometries? Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method per group. This is demonstrated in the code chunk below which creates a united western US using the standalone `unary_union` operation:
+What is going on in terms of the geometries? 
+Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method per group. 
+This is demonstrated in the code chunk below which creates a united western US using the standalone `unary_union` operation:
 
 ```{python}
 us_west = us_states[us_states['REGION'] == 'West']
 us_west_union = us_west.geometry.unary_union
 ```
 
-Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving. The result is shown in @fig-dissolve2.
+Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving (@fig-dissolve2):
 
 ```{python}
 #| label: fig-dissolve2
@@ -599,7 +609,8 @@ texas = us_states[us_states['NAME'] == 'Texas']
 texas_union = pd.concat([us_west, texas]).unary_union
 ```
 
-and then dissove using `.unary_union`. The result is identical in both cases, shown in @fig-dissolve3.
+and then dissove using `.unary_union`. 
+The result is identical in both cases, shown in @fig-dissolve3:
 
 ```{python}
 #| label: fig-dissolve3
