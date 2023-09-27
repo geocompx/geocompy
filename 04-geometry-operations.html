@@ -269,7 +269,7 @@ div.csl-indent {
   <li><a href="#sec-buffers" id="toc-sec-buffers" class="nav-link" data-scroll-target="#sec-buffers"><span class="header-section-number">4.3.3</span> Buffers</a></li>
   <li><a href="#sec-affine-transformations" id="toc-sec-affine-transformations" class="nav-link" data-scroll-target="#sec-affine-transformations"><span class="header-section-number">4.3.4</span> Affine transformations</a></li>
   <li><a href="#sec-clipping" id="toc-sec-clipping" class="nav-link" data-scroll-target="#sec-clipping"><span class="header-section-number">4.3.5</span> Pairwise geometry-generating operations</a></li>
-  <li><a href="#subsetting-and-clipping" id="toc-subsetting-and-clipping" class="nav-link" data-scroll-target="#subsetting-and-clipping"><span class="header-section-number">4.3.6</span> Subsetting and clipping</a></li>
+  <li><a href="#subsetting-vs.-clipping" id="toc-subsetting-vs.-clipping" class="nav-link" data-scroll-target="#subsetting-vs.-clipping"><span class="header-section-number">4.3.6</span> Subsetting vs.&nbsp;clipping</a></li>
   <li><a href="#sec-geometry-unions" id="toc-sec-geometry-unions" class="nav-link" data-scroll-target="#sec-geometry-unions"><span class="header-section-number">4.3.7</span> Geometry unions</a></li>
   <li><a href="#sec-type-transformations" id="toc-sec-type-transformations" class="nav-link" data-scroll-target="#sec-type-transformations"><span class="header-section-number">4.3.8</span> Type transformations</a></li>
   </ul></li>
@@ -857,9 +857,11 @@ dtype: geometry</code></pre>
 </div>
 <p>The <code>.overlay</code> method (see <a href="03-spatial-operations.html#sec-joining-incongruent-layers"><span>Section&nbsp;3.3.6</span></a>) further extends this technique, making it possible to apply “many-to-many” pairwise geometry generations between all pairs of two <code>GeoDataFrame</code>s. The output is a new <code>GeoDataFrame</code> with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry. See the <a href="https://geopandas.org/en/stable/docs/user_guide/set_operations.html">Set operations with overlay</a> article in the <strong>geopandas</strong> documentation for examples of <code>.overlay</code>.</p>
 </section>
-<section id="subsetting-and-clipping" class="level3" data-number="4.3.6">
-<h3 data-number="4.3.6" class="anchored" data-anchor-id="subsetting-and-clipping"><span class="header-section-number">4.3.6</span> Subsetting and clipping</h3>
-<p>Clipping objects can change their geometry but it can also subset objects, returning only features that intersect (or partly intersect) with a clipping/subsetting object. To illustrate this point, we will subset points that cover the bounding box of the circles x and y in <a href="#fig-overlapping-circles">Figure&nbsp;<span>4.6</span></a>. Some points will be inside just one circle, some will be inside both and some will be inside neither. The following code sections generates a simple random distribution of points within the extent of circles x and y, resulting in output illustrated in <a href="#fig-random-points">Figure&nbsp;<span>4.13</span></a>. We do this in two steps. First, we figure out the bounds where random points are to be generated:</p>
+<section id="subsetting-vs.-clipping" class="level3" data-number="4.3.6">
+<h3 data-number="4.3.6" class="anchored" data-anchor-id="subsetting-vs.-clipping"><span class="header-section-number">4.3.6</span> Subsetting vs.&nbsp;clipping</h3>
+<p>In this section, we illustrate the difference between the two types of operators introduced in the last two chapters: boolean, such as <code>.intersects</code> (<a href="03-spatial-operations.html#sec-spatial-subsetting-vector"><span>Section&nbsp;3.3.1</span></a>), and geometry-generating, such as <code>.intersection</code> (<a href="#sec-clipping"><span>Section&nbsp;4.3.5</span></a>). We do this using the specific scenario of subsetting points by polygons, where (unlike in other cases) both methods can be used for the same purpose and giving the same result.</p>
+<!-- Clipping objects can change their geometry but it can also subset objects, returning only features that intersect (or partly intersect) with a clipping/subsetting object.  -->
+<p>To illustrate the point, we will subset points that cover the bounding box of the circles <code>x</code> and <code>y</code> in <a href="#fig-overlapping-circles">Figure&nbsp;<span>4.6</span></a>. Some points will be inside just one circle, some will be inside both and some will be inside neither. The following code sections generates the sample data for this section, a simple random distribution of points within the extent of circles <code>x</code> and <code>y</code>, resulting in output illustrated in <a href="#fig-random-points">Figure&nbsp;<span>4.13</span></a>. We create the sample points in two steps. First, we figure out the bounds where random points are to be generated:</p>
 <div class="cell" data-execution_count="34">
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>bounds <span class="op">=</span> x.union(y).bounds</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>bounds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -867,10 +869,10 @@ dtype: geometry</code></pre>
 <pre><code>(-1.0, -1.0, 2.0, 1.0)</code></pre>
 </div>
 </div>
-<p>Second, we use <code>np.random.uniform</code> to calculate <code>n</code> random x and y coordinates within the given bounds:</p>
+<p>Second, we use <code>np.random.uniform</code> to calculate <code>n</code> random x- and y-coordinates within the given bounds:</p>
 <div class="cell" data-execution_count="35">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">1</span>)</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">10</span>  <span class="co">## Number of points to generate</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">10</span></span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>coords_x <span class="op">=</span> np.random.uniform(bounds[<span class="dv">0</span>], bounds[<span class="dv">2</span>], n)</span>
 <span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>coords_y <span class="op">=</span> np.random.uniform(bounds[<span class="dv">1</span>], bounds[<span class="dv">3</span>], n)</span>
 <span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>coords <span class="op">=</span> <span class="bu">list</span>(<span class="bu">zip</span>(coords_x, coords_y))</span>
@@ -920,7 +922,7 @@ dtype: geometry</code></pre>
 Length: 10, dtype: geometry</code></pre>
 </div>
 </div>
-<p>The result is shown in <a href="#fig-random-points">Figure&nbsp;<span>4.13</span></a>:</p>
+<p>The result <code>pnt</code>, which <code>x</code> and <code>y</code> circles in the background, is shown in <a href="#fig-random-points">Figure&nbsp;<span>4.13</span></a>:</p>
 <div class="cell" data-execution_count="38">
 <div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> pnt.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
 <span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries([x]).plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)<span class="op">;</span></span>
@@ -934,7 +936,7 @@ Length: 10, dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>Now, we get back to our question: how to subset the points to only return the point that intersects with both x and y? The code chunks below demonstrate three ways to achieve the same result. We can calculate a boolean <code>Series</code>, evaluating whether each point of <code>pnt</code> intersects with the intersection of x and y:</p>
+<p>Now, we get back to our question: how to subset the points to only return the point that intersects with both <code>x</code> and <code>y</code>? The code chunks below demonstrate two ways to achieve the same result. We can calculate a boolean <code>Series</code>, evaluating whether each point of <code>pnt</code> intersects with the intersection of <code>x</code> and <code>y</code> (see <a href="03-spatial-operations.html#sec-spatial-subsetting-vector"><span>Section&nbsp;3.3.1</span></a>):</p>
 <div class="cell" data-execution_count="39">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> pnt.intersects(x.intersection(y))</span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>sel</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -960,7 +962,7 @@ Length: 10, dtype: bool</code></pre>
 dtype: geometry</code></pre>
 </div>
 </div>
-<p>We can also find the intersection between the input points represented by <code>pnt</code>, using the intersection of <code>x</code> and <code>y</code> as the subsetting/clipping object. Since the second argument is an individual <code>shapely</code> geometry (<code>x.intersection(y)</code>), we get “pairwise” intersections of each <code>pnt</code> with it:</p>
+<p>We can also find the intersection between the input points represented by <code>pnt</code>, using the intersection of <code>x</code> and <code>y</code> as the subsetting/clipping object. Since the second argument is an individual <code>shapely</code> geometry (<code>x.intersection(y)</code>), we get “pairwise” intersections of each <code>pnt</code> with it (see <a href="#sec-clipping"><span>Section&nbsp;4.3.5</span></a>):</p>
 <div class="cell" data-execution_count="41">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>pnt2 <span class="op">=</span> pnt.intersection(x.intersection(y))</span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>pnt2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -975,7 +977,7 @@ dtype: geometry</code></pre>
 Length: 10, dtype: geometry</code></pre>
 </div>
 </div>
-<p>The result is shown in <a href="#fig-intersection-points">Figure&nbsp;<span>4.14</span></a>:</p>
+<p>The subset <code>pnt2</code> is shown in <a href="#fig-intersection-points">Figure&nbsp;<span>4.14</span></a>:</p>
 <div class="cell" data-execution_count="42">
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> pnt.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries([x]).plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)<span class="op">;</span></span>
@@ -990,9 +992,9 @@ Length: 10, dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>Empty geometries can be filtered out to retain the required subset, and to get <code>pnt2</code> which is identical to <code>pnt1</code>:</p>
+<p>The only difference between the two approaches is that <code>.intersection</code> returns all “intersections”, even if they are empty. When these are filtered out, <code>pnt2</code> becomes identical to <code>pnt1</code>:</p>
 <div class="cell" data-execution_count="43">
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>pnt2 <span class="op">=</span> pnt2[<span class="op">~</span>pnt2.is_empty]  <span class="co">## Subset non-empty geometries</span></span>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>pnt2 <span class="op">=</span> pnt2[<span class="op">~</span>pnt2.is_empty]</span>
 <span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>pnt2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="43">
 <pre><code>0    POINT (0.25107 -0.16161)
@@ -1001,8 +1003,8 @@ Length: 10, dtype: geometry</code></pre>
 dtype: geometry</code></pre>
 </div>
 </div>
-<p>This second approach will return features that partly intersect with <code>x.intersection(y)</code> but with modified geometries for spatially extensive features that cross the border of the subsetting object. The results are identical, but the implementation differs substantially.</p>
-<p>Although the example above is rather contrived and provided for educational rather than applied purposes, and we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in R, it raises an important question: which implementation to use? Generally, more concise implementations should be favored, meaning the first approach above. We will return to the question of choosing between different implementations of the same technique or algorithm in Chapter 11.</p>
+<!-- This second approach will return features that partly intersect with `x.intersection(y)` but with modified geometries for spatially extensive features that cross the border of the subsetting object. The results are identical, but the implementation differs substantially. -->
+<p>Although the example above is rather contrived and provided for educational rather than applied purposes, and we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in Python, it raises an important question: which implementation to use? Generally, more concise implementations should be favored, meaning the first approach above.</p>
 </section>
 <section id="sec-geometry-unions" class="level3" data-number="4.3.7">
 <h3 data-number="4.3.7" class="anchored" data-anchor-id="sec-geometry-unions"><span class="header-section-number">4.3.7</span> Geometry unions</h3>
