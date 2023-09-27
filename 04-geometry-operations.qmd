@@ -147,16 +147,24 @@ us_states_simp2.plot(color='lightgrey', edgecolor='black');
 
 ### Centroids
 
-Centroid operations identify the center of geographic objects. Like statistical measures of central tendency (including mean and median definitions of 'average'), there are many ways to define the geographic center of an object. All of them create single point representations of more complex vector objects.
+Centroid operations identify the center of geographic objects. 
+Like statistical measures of central tendency (including mean and median definitions of 'average'), there are many ways to define the geographic center of an object. 
+All of them create single point representations of more complex vector objects.
 
-The most commonly used centroid operation is the geographic centroid. This type of centroid operation (often referred to as 'the centroid') represents the center of mass in a spatial object (think of balancing a plate on your finger). Geographic centroids have many uses, for example to create a simple point representation of complex geometries, or to estimate distances between polygons. Centroids of the geometries in a `GeoSeries` or a `GeoDataFrame` are accessible through the `.centroid` property, as demonstrated in the code below, which generates the geographic centroids of regions in New Zealand and tributaries to the River Seine, illustrated with black points in @fig-centroid-pnt-on-surface.
+The most commonly used centroid operation is the geographic centroid. 
+This type of centroid operation (often referred to as 'the centroid') represents the center of mass in a spatial object (think of balancing a plate on your finger). 
+Geographic centroids have many uses, for example to create a simple point representation of complex geometries, to estimate distances between polygons, or to specify the location where polygon text labels are placed. 
+Centroids of the geometries in a `GeoSeries` or a `GeoDataFrame` are accessible through the `.centroid` property, as demonstrated in the code below, which generates the geographic centroids of regions in New Zealand and tributaries to the River Seine, illustrated with black points in @fig-centroid-pnt-on-surface:
 
 ```{python}
 nz_centroid = nz.centroid
 seine_centroid = seine.centroid
 ```
 
-Sometimes the geographic centroid falls outside the boundaries of their parent objects (think of a doughnut). In such cases point on surface operations can be used to guarantee the point will be in the parent object (e.g., for labeling irregular multipolygon objects such as island states), as illustrated by the red points in @fig-centroid-pnt-on-surface. Notice that these red points always lie on their parent objects. They were created with the `representative_point` method, as follows:
+Sometimes the geographic centroid falls outside the boundaries of their parent objects (think of a doughnut). 
+In such cases 'point on surface' operations can be used to guarantee the point will be in the parent object (e.g., for labeling irregular multipolygon objects such as island states), as illustrated by the red points in @fig-centroid-pnt-on-surface. 
+Notice that these red points always lie on their parent objects. 
+They were created with the `.representative_point` method, as follows:
 
 ```{python}
 nz_pos = nz.representative_point()
@@ -167,17 +175,21 @@ The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surf
 
 ```{python}
 #| label: fig-centroid-pnt-on-surface
-#| fig-cap: Centroids (black) and points on surface red of New Zealand and Seine datasets.
+#| fig-cap: Centroids (black) and points on surface (red) of New Zealand and Seine datasets.
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - New Zealand
+#| - Seine
 
-fig, axes = plt.subplots(ncols=2)
-nz.plot(ax=axes[0], color='white', edgecolor='lightgrey')
-nz_centroid.plot(ax=axes[0], color='None', edgecolor='black')
-nz_pos.plot(ax=axes[0], color='None', edgecolor='red')
-seine.plot(ax=axes[1], color='grey')
-seine_pos.plot(ax=axes[1], color='None', edgecolor='red')
-seine_centroid.plot(ax=axes[1], color='None', edgecolor='black');
-fig.suptitle("Represenative points in red and centroids in black", y=0.85)
-fig.tight_layout()
+# New Zealand
+base = nz.plot(color='white', edgecolor='lightgrey')
+nz_centroid.plot(ax=base, color='None', edgecolor='black')
+nz_pos.plot(ax=base, color='None', edgecolor='red');
+
+# Seine
+base = seine.plot(color='grey')
+seine_pos.plot(ax=base, color='None', edgecolor='red')
+seine_centroid.plot(ax=base, color='None', edgecolor='black');
 ```
 
 ### Buffers {#sec-buffers}
