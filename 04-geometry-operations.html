@@ -661,7 +661,7 @@ dtype: geometry</code></pre>
 <section id="sec-affine-transformations" class="level3" data-number="4.3.4">
 <h3 data-number="4.3.4" class="anchored" data-anchor-id="sec-affine-transformations"><span class="header-section-number">4.3.4</span> Affine transformations</h3>
 <p>Affine transformation is any transformation that preserves lines and parallelism. However, angles or length are not necessarily preserved. Affine transformations include, among others, shifting (translation), scaling and rotation. Additionally, it is possible to use any combination of these. Affine transformations are an essential part of geocomputation. For example, shifting is needed for labels placement, scaling is used in non-contiguous area cartograms, and many affine transformations are applied when reprojecting or improving the geometry that was created based on a distorted or wrongly projected map.</p>
-<p>The <code>geopandas</code> package implements affine transformation, for objects of classes <code>GeoSeries</code> and <code>GeoDataFrame</code>. In both cases, the method is applied on the <code>GeoSeries</code> part, returning a new <code>GeoSeries</code> of transformed geometries.</p>
+<p>The <strong>geopandas</strong> package implements affine transformation, for objects of classes <code>GeoSeries</code> and <code>GeoDataFrame</code>. In both cases, the method is applied on the <code>GeoSeries</code> part, returning a new <code>GeoSeries</code> of transformed geometries.</p>
 <p>Affine transformations of <code>GeoSeries</code> can be done using the <code>.affine_transform</code> method, which is a wrapper around the <code>shapely.affinity.affine_transform</code> function. According to the <a href="https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform">documentation</a>, a 2D affine transformation requires a six-parameter list <code>[a,b,d,e,xoff,yoff]</code> which represents the following equations for transforming the coordinates (<a href="#eq-affine1">Equation&nbsp;<span>4.1</span></a> and <a href="#eq-affine2">Equation&nbsp;<span>4.2</span></a>):</p>
 <p><span id="eq-affine1"><span class="math display">\[
 x' = a x + b y + x_\mathrm{off}
@@ -671,17 +671,17 @@ y' = d x + e y + y_\mathrm{off}
 \tag{4.2}\]</span></span></p>
 <p>There are also simplified <code>GeoSeries</code> <a href="https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations">methods</a> for specific scenarios:</p>
 <ul>
-<li><code>GeoSeries.translate(xoff=0.0, yoff=0.0, zoff=0.0)</code></li>
-<li><code>GeoSeries.scale(xfact=1.0, yfact=1.0, zfact=1.0, origin='center')</code></li>
-<li><code>GeoSeries.rotate(angle, origin='center', use_radians=False)</code></li>
-<li><code>GeoSeries.skew(angle, origin='center', use_radians=False)</code></li>
+<li><code>.translate(xoff=0.0, yoff=0.0, zoff=0.0)</code></li>
+<li><code>.scale(xfact=1.0, yfact=1.0, zfact=1.0, origin='center')</code></li>
+<li><code>.rotate(angle, origin='center', use_radians=False)</code></li>
+<li><code>.skew(angle, origin='center', use_radians=False)</code></li>
 </ul>
-<p>For example, <em>shifting</em> only requires the <span class="math inline">\(x_{off}\)</span> and <span class="math inline">\(y_{off}\)</span>, using <code>.translate</code>. The code below shifts the y-coordinates by 100,000 meters to the north, but leaves the x-coordinates untouched:</p>
+<p>For example, <em>shifting</em> only requires the <span class="math inline">\(x_{off}\)</span> and <span class="math inline">\(y_{off}\)</span>, using <code>.translate</code>. The code below shifts the y-coordinates of <code>nz</code> by 100 <span class="math inline">\(km\)</span> to the north, but leaves the x-coordinates untouched:</p>
 <div class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>nz_shift <span class="op">=</span> nz.translate(<span class="dv">0</span>, <span class="dv">100000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Scaling enlarges or shrinks objects by a factor. It can be applied either globally or locally. Global scaling increases or decreases all coordinates values in relation to the origin coordinates, while keeping all geometries topological relations intact.</p>
-<p><code>Geopandas</code> implements local scaling using the <code>.scale</code> method. Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids. In the example below, each geometry is shrunk by a factor of two around the centroids (middle panel in <a href="#fig-affine-transformations">Figure&nbsp;<span>4.5</span></a>). To achieve that, we pass the <code>0.5</code> and <code>0.5</code> scaling factors (for x and y, respectively), and the <code>'centroid'</code> option for the point of origin. (Other than <code>'centroid'</code>, it is possible to use <code>'center'</code> for the bounding box center, or specific point coordinates.)</p>
+<p><strong>geopandas</strong> implements local scaling using the <code>.scale</code> method. Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids. In the example below, each geometry is shrunk by a factor of two around the centroids (<a href="#fig-affine-transformations">Figure&nbsp;<span>4.5</span></a> (b)). To achieve that, we pass the <code>0.5</code> and <code>0.5</code> scaling factors (for x and y, respectively), and the <code>'centroid'</code> option for the point of origin. (Other than <code>'centroid'</code>, it is possible to use <code>'center'</code>, for the bounding box center, or specific point coordinates.)</p>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>nz_scale <span class="op">=</span> nz.scale(<span class="fl">0.5</span>, <span class="fl">0.5</span>, origin<span class="op">=</span><span class="st">'centroid'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -689,25 +689,49 @@ y' = d x + e y + y_\mathrm{off}
 <div class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>nz_rotate <span class="op">=</span> nz.rotate(<span class="op">-</span><span class="dv">30</span>, origin<span class="op">=</span><span class="st">'centroid'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><a href="#fig-affine-transformations">Figure&nbsp;<span>4.5</span></a> shows the original layer <code>nz</code>, and the shifting, scaling and rotation results.</p>
-<div class="cell" data-execution_count="24">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">8</span>,<span class="dv">4</span>))</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>nz_shift.plot(ax<span class="op">=</span>axes[<span class="dv">0</span>], color<span class="op">=</span><span class="st">'red'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>nz_scale.plot(ax<span class="op">=</span>axes[<span class="dv">1</span>], color<span class="op">=</span><span class="st">'red'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>], color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>nz_rotate.plot(ax<span class="op">=</span>axes[<span class="dv">2</span>], color<span class="op">=</span><span class="st">'red'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'Shift'</span>)</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Scale'</span>)</span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">'Rotate'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<div id="fig-affine-transformations" class="quarto-figure quarto-figure-center anchored">
+<p><a href="#fig-affine-transformations">Figure&nbsp;<span>4.5</span></a> shows the original layer <code>nz</code>, and the shifting, scaling and rotation results:</p>
+<div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Shift</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>nz_shift.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'red'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)<span class="op">;</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Scale</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>nz_scale.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'red'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)<span class="op">;</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Rotate</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>nz_rotate.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'red'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-affine-transformations" class="cell quarto-layout-panel" data-execution_count="24">
 <figure class="figure">
-<p><img src="04-geometry-operations_files/figure-html/fig-affine-transformations-output-1.png" width="645" height="349" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.5: Illustrations of affine transformations: shift, scale and rotate.</figcaption>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 32.1%;justify-content: center;">
+<div id="fig-affine-transformations-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-affine-transformations-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-affine-transformations" width="289"></p>
+<figcaption class="figure-caption">(a) Shift</figcaption>
 </figure>
 </div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 34.0%;justify-content: center;">
+<div id="fig-affine-transformations-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-affine-transformations-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-affine-transformations" width="306"></p>
+<figcaption class="figure-caption">(b) Scale</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 34.0%;justify-content: center;">
+<div id="fig-affine-transformations-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="04-geometry-operations_files/figure-html/fig-affine-transformations-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-affine-transformations" width="306"></p>
+<figcaption class="figure-caption">(c) Rotate</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure&nbsp;4.5: Illustrations of affine transformations: shift, scale and rotate</figcaption><p></p>
+</figure>
 </div>
 </div>
 </section>
