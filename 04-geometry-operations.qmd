@@ -944,11 +944,12 @@ gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
 ### Extent and origin {#sec-extent-and-origin}
 
 When merging or performing map algebra on rasters, their resolution, projection, origin and/or extent have to match. 
-Otherwise, how should we add the values of one raster with a resolution of 0.2 decimal degrees to a second raster with a resolution of 1 decimal degree? 
+Otherwise, how should we add the values of one raster with a resolution of `0.2` decimal degrees to a second raster with a resolution of `1` decimal degree? 
 The same problem arises when we would like to merge satellite imagery from different sensors with different projections and resolutions. 
 We can deal with such mismatches by aligning the rasters.
 Typically, raster alignment is done through resampling---that way, it is guaranteed that the rasters match exactly (@sec-raster-resampling).
 However, sometimes it can be useful to modify raster placement and extent "manually", by adding or removing rows and columns, or by modifying the origin, that is, shifting the raster. 
+Sometimes, there are reasons other than alignment with a second raster for manually modifying raster extent and placement. 
 For example, it may be useful to add extra rows and columns to a raster prior to focal operations, so that it is easier to operate on the edges.
 
 Let's demostrate the first operation, raster padding. 
@@ -972,9 +973,11 @@ s
 ```
 
 However, for `s` to be used in spatial operations, we also have to update its transformation matrix. 
-Whenever we add extra columns on the left, or extra rows on top, the raster *origin* changes. To reflect that fact, we take to "original" origin and add the required multiple of pixel widths or heights (i.e., raster resolution). 
+Whenever we add extra columns on the left, or extra rows on top, the raster *origin* changes. 
+To reflect this fact, we have to take to "original" origin and add the required multiple of pixel widths or heights (i.e., raster resolution steps). 
 
-Recall from @sec-raster-from-scratch, here is the transformation matrix of `elev.tif`:
+The transformation matrix of a raster is accessible from the raster file metadata (@sec-raster-from-scratch) or, as a shortcut, through the `.transform` property of the raster file connection. 
+For example, here is the transformation matrix of `elev.tif`:
 
 ```{python}
 src_elev.transform 
@@ -994,7 +997,7 @@ dx, dy = src_elev.transform[0], src_elev.transform[4]
 dx, dy
 ```
 
-Now we can actually update the origin:
+Now we can calculate the padded raster origin (`xmin_new,ymax_new`):
 
 ```{python}
 xmin_new = xmin - dx * cols
@@ -1002,18 +1005,24 @@ ymax_new = ymax - dy * rows
 xmin_new, ymax_new
 ```
 
-Let's create the updated transformation matrix (@sec-raster-from-scratch). Keep in mind that the meaning of the last two arguments is `xsize`, `ysize`, so we need to pass the absolute value of `dy` (since it is negative).
+Using the updated origin, we can update the transformation matrix (@sec-raster-from-scratch). 
+Keep in mind that the meaning of the last two arguments is `xsize`, `ysize`, so we need to pass the absolute value of `dy` (since it is negative).
 
 ```{python}
-new_transform = rasterio.transform.from_origin(xmin_new, ymax_new, dx, abs(dy))
+new_transform = rasterio.transform.from_origin(
+    west=xmin_new, 
+    north=ymax_new, 
+    xsize=dx, 
+    ysize=abs(dy)
+)
 new_transform
 ```
 
-@fig-raster-shift-origin shows the padded raster, with the outline of the original one, demonstrating that the origin was shifted correctly:
+@fig-raster-shift-origin shows the padded raster, with the outline of the original `elev.tif` (in red), demonstrating that the origin was shifted correctly and the `new_transform` works fine:
 
 ```{python}
 #| label: fig-raster-shift-origin
-#| fig-cap: The padded `elev.tif` raster, and the outline of the extent of the original (in red)
+#| fig-cap: The padded `elev.tif` raster, and the extent of the original `elev.tif` raster (in red)
 
 fig, ax = plt.subplots()
 rasterio.plot.show(s, transform=new_transform, cmap='Greys', ax=ax)
@@ -1021,7 +1030,11 @@ elev_bbox = gpd.GeoSeries(shapely.box(*src_elev.bounds))
 elev_bbox.plot(color='none', edgecolor='red', ax=ax);
 ```
 
-We can shift a raster origin not just when padding, but in any other use case just by changing its transformation matrix. The effect is that the raster id going to be shifted. This is rarely required in real-life scenarios, but it is useful for understanding the concept of *raster origin*. For example, let's shift the origin of `elev.tif` by `(-0.25,0.25)`:
+We can shift a raster origin not just when padding, but in any other use case, just by changing its transformation matrix. 
+The effect is that the raster is going to be shifted (which is analogous to `.translate` for shifting a vector layer, see @sec-affine-transformations).
+Manually shifting a raster to arbitrary distance is rarely needed in real-life scenarios, but it is useful to know how to do it at least for better understanding the concept of *raster origin*. 
+As an example, let's shift the origin of `elev.tif` by `(-0.25,0.25)`.
+First, we calculate the new origin:
 
 ```{python}
 xmin_new = xmin - 0.25  # shift xmin to the left
@@ -1031,18 +1044,23 @@ xmin_new, ymax_new
 
 To shift the origin in other directions change the two operators (`-`, `+`) accordingly.
 
-Again, let's create the updated transformation matrix:
+Then, same as when padding (see above), we create an updated transformation matrix:
 
 ```{python}
-new_transform = rasterio.transform.from_origin(xmin_new, ymax_new, dx, abs(dy))
+new_transform = rasterio.transform.from_origin(
+    west=xmin_new, 
+    north=ymax_new, 
+    xsize=dx, 
+    ysize=abs(dy)
+)
 new_transform
 ```
 
-@fig-raster-shift-origin2 shows the shifted raster and the outline of the original:
+@fig-raster-shift-origin2 shows the shifted raster and the outline of the original `elev.tif` raster (in red):
 
 ```{python}
 #| label: fig-raster-shift-origin2
-#| fig-cap: The `elev.tif` raster shifted by `(0.25,0.25)` and the extent of the original (in red)
+#| fig-cap: The padded `elev.tif` raster (@fig-raster-shift-origin) further shifted by `(0.25,0.25)`, and the extent of the original `elev.tif` raster (in red)
 
 fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=new_transform, cmap='Greys', ax=ax)
