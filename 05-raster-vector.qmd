@@ -467,34 +467,39 @@ zion.to_crs(src_nlcd.crs).plot(ax=ax, color='none', edgecolor='black');
 
 ### Rasterizing points {#sec-rasterizing-points}
 
-Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in @sec-spatial-class, the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.
+Rasterization is the conversion of vector objects into their representation in raster objects. 
+Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. 
+As we saw in @sec-spatial-class, the raster data model has some characteristics that make it conducive to certain methods. 
+Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.
 
-The `rasterio` package contains the `rasterio.features.rasterize` function for doing this work. To make it happen, we need to have the "template" grid definition, i.e., the "template" raster defining the extent, resolution and CRS of the output, in the form of `out_shape` (the dimensions) and `transform` (the transform). In case we have an existing template raster, we simply need to query its `out_shape` and `transform`. In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate the `out_shape` and `transform` (see next example). 
+The `rasterio` package contains the [`rasterio.features.rasterize`](https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.rasterize) function for doing this work. 
+To make it happen, we need to have the "template" grid definition, i.e., the "template" raster defining the extent, resolution and CRS of the output, in the `out_shape` (the output dimensions) and `transform` (the transformation matrix) arguments of `rasterio.features.rasterize`. 
+In case we have an existing template raster, we simply need to query its `.shape` and `.transform`. 
+In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example). 
 
-Furthermore, the `rasterio.features.rasterize` function requires the input shapes in the form for a generator of `(geom, value)` tuples, where:
+Furthermore, the `rasterio.features.rasterize` function requires the input vector shapes in the form for a generator of `(geom,value)` tuples, where:
 
-* `geom` is the given geometry (`shapely`)
+* `geom` is the given geometry (**shapely** geometry object)
 * `value` is the value to be "burned" into pixels coinciding with the geometry (`int` or `float`)
 
 Again, this will be made clear in the next example.
 
-The geographic resolution of the "template" raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.
+The geographic resolution of the "template" raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. 
+There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. 
+Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.
 
-To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London is illustrated in @fig-rasterize-points) and spatial resolution of 1000 meters. First, we obtain the vector layer:
+To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London, illustrated in @fig-rasterize-points (a)) and a spatial resolution of 1000 $m$. 
+First, we take the vector layer and tansform it to a projected CRS:
 
 ```{python}
 cycle_hire_osm_projected = cycle_hire_osm.to_crs(27700)
-cycle_hire_osm_projected
 ```
 
-Next, we need to calculate the `out_shape` and `transform` of out template raster. To calculate the transform, we combine the top-left corner of the `cycle_hire_osm_projected` bounding box with the required resolution (e.g., 1000 $m$):
+Next, we need to calculate the `out_shape` and `transform` of our template raster. 
+To calculate the transform, we combine the top-left corner of the `cycle_hire_osm_projected` bounding box with the required resolution (e.g., 1000 $m$):
 
 ```{python}
 bounds = cycle_hire_osm_projected.total_bounds
-bounds
-```
-
-```{python}
 res = 1000
 transform = rasterio.transform.from_origin(
     west=bounds[0], 
@@ -505,7 +510,7 @@ transform = rasterio.transform.from_origin(
 transform
 ```
 
-To calculate the `out_shape`, we divide the x-axis and y-axis extent by the resolution:
+To calculate the `out_shape`, we divide the x-axis and y-axis extent by the resolution, and take the ceiling of the results:
 
 ```{python}
 rows = math.ceil((bounds[3] - bounds[1]) / res)
@@ -514,95 +519,124 @@ shape = (rows, cols)
 shape
 ```
 
-Now, we can rasterize. Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel "activation" method, and the function applied when there is more than one match.
+Now, we can rasterize. 
+Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel "activation" method, and the function applied when there is more than one match.
 
-To illustrate this flexibility we will try three different approaches to rasterization. First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of `1` to all pixels where at least one point falls in. To transform the point `GeoDataFrame` into a generator of `shapely` geometries and the (fixed) values, we use the following expression:
+To illustrate this flexibility we will try three different approaches to rasterization (@fig-rasterize-points (b)-(d)). 
+First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). 
+In this case, we transfer the value of `1` to all pixels where at least one point falls in. 
+To transform the point `GeoDataFrame` into a generator of `shapely` geometries and the (fixed) values, we use the following expression:
 
 ```{python}
-((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
+g = ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
+g
 ```
 
-Therefore, the rasterizing expression is:
+Then, the rasterizing expression is:
 
 ```{python}
 ch_raster1 = rasterio.features.rasterize(
-    ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list()),
-    out_shape=shape,
+    shapes=g, 
+    out_shape=shape, 
     transform=transform
 )
 ```
 
-The result is a `numpy` array with the burned values of `1`, and `0` in unaffected "pixels":
+The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in "unaffected" pixels:
 
 ```{python}
 ch_raster1
 ```
 
-To count the number of stations, we can use the fixed value of `1` combined with the `merge_alg=rasterio.enums.MergeAlg.add`, which means that multiple values burned into the same pixel are *summed*, rather than replaced keeping last (the default):
+To count the number of bike hire stations, we can use the fixed value of `1` combined with the `merge_alg=rasterio.enums.MergeAlg.add`, which means that multiple values burned into the same pixel are *summed*, rather than replaced keeping last (the default):
 
 ```{python}
+g = ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
 ch_raster2 = rasterio.features.rasterize(
-    ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list()),
+    shapes=g,
     out_shape=shape,
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
 )
 ```
 
-Here is the resulting array of counts:
+Here is the resulting array of point counts `ch_raster2`:
 
 ```{python}
 ch_raster2
 ```
 
-The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell. The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what's the capacity in each grid cell? To calculate that, we must sum the field (`"capacity"`) rather than the fixed values of `1`. This requires using an expanded generator of geometries and values, where we (1) extract both geometries and attribute values, and (2) filter out "No Data" values, as follows:
+The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell. 
+The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what's the capacity in each grid cell? 
+To calculate that, we must sum the field (`'capacity'`) rather than the fixed values of `1`. 
+This requires using an expanded generator of geometries and values, where we (1) extract both geometries and attribute values, and (2) filter out "No Data" values, as follows:
 
 ```{python}
-ch_raster3 = rasterio.features.rasterize(
-    ((g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']] \
+g = ((g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']] \
         .dropna(subset='capacity')
         .to_numpy() \
-        .tolist()),
+        .tolist())
+ch_raster3 = rasterio.features.rasterize(
+    shapes=g,
     out_shape=shape,
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
 )
 ```
 
-Here is the code to illustrate the input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it `ch_raster1`, `ch_raster2`, and `ch_raster3` (@fig-rasterize-points):
+Here is the resulting array of capacity sums `ch_raster3`:
+
+```{python}
+ch_raster3
+```
+
+The input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it `ch_raster1`, `ch_raster2`, and `ch_raster3` are shown in @fig-rasterize-points:
 
 ```{python}
 #| label: fig-rasterize-points
-#| fig-cap: Examples of point rasterization
+#| fig-cap: Three variants of point rasterization
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Input points
+#| - Presence/Absence
+#| - Point counts
+#| - Summed attribute values
 
-fig, axes = plt.subplots(2, 2, figsize=(8.5, 6.5))
-cycle_hire_osm_projected.plot(ax=axes[0][0], column='capacity')
-rasterio.plot.show(ch_raster1, transform=transform, ax=axes[0][1])
-rasterio.plot.show(ch_raster2, transform=transform, ax=axes[1][0])
-rasterio.plot.show(ch_raster3, transform=transform, ax=axes[1][1])
-axes[0][0].set_title('Points')
-axes[0][1].set_title('Presence/Absence')
-axes[1][0].set_title('Count')
-axes[1][1].set_title('Aggregated capacity');
+# Input points
+fig, ax = plt.subplots()
+cycle_hire_osm_projected.plot(column='capacity', ax=ax);
+
+# Presence/Absence
+fig, ax = plt.subplots()
+rasterio.plot.show(ch_raster1, transform=transform, ax=ax);
+
+# Point counts
+fig, ax = plt.subplots()
+rasterio.plot.show(ch_raster2, transform=transform, ax=ax);
+
+# Summed attribute values
+fig, ax = plt.subplots()
+rasterio.plot.show(ch_raster3, transform=transform, ax=ax);
 ```
 
 ### Rasterizing lines and polygons
 
-Another dataset based on California's polygons and borders (created below) illustrates rasterization of lines. There are three preliminary steps. First, we subset the California polygon:
+Another dataset based on California's polygons and borders (created below) illustrates rasterization of lines. 
+There are three preliminary steps. First, we subset the California polygon:
 
 ```{python}
-california = us_states[us_states['NAME'] == "California"]
+california = us_states[us_states['NAME'] == 'California']
 california
 ```
 
-Second, we "cast" the polygon into a `"MultiLineString"` geometry, using the `.boundary` property that `GeoSeries` have: 
+Second, we "cast" the polygon into a `'MultiLineString'` geometry, using the [`.boundary`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.boundary.html) property that `GeoSeries` have: 
 
 ```{python}
 california_borders = california.geometry.boundary
 california_borders
 ```
 
-Third, we create a template raster with a resolution of a 0.5 degree:
+Third, we create a template raster with a resolution of a `0.5` degree, using the same approach as in @sec-rasterizing-points:
 
 ```{python}
 bounds = california_borders.total_bounds
@@ -619,7 +653,11 @@ shape = (rows, cols)
 shape
 ```
 
-Finally, we rasterize `california_borders` based on the calculated template `shape` and `transform`. When considering line or polygon rasterization, one useful additional argument is `all_touched`. By default it is `False`, but when changed to `True`---all cells that are touched by a line or polygon border get a value. Line rasterization with `all_touched=True` is demonstrated in the code below (@fig-rasterize-lines-polygons, left). We are also using `fill=np.nan` to set "background" values as "No Data":
+Finally, we rasterize `california_borders` based on the calculated template's `shape` and `transform`. 
+When considering line or polygon rasterization, one useful additional argument is `all_touched`. 
+By default it is `False`, but when changed to `True`---all cells that are touched by a line or polygon border get a value. 
+Line rasterization with `all_touched=True` is demonstrated in the code below (@fig-rasterize-lines-polygons, left). 
+We are also using `fill=np.nan` to set "background" values as "No Data":
 
 ```{python}
 california_raster1 = rasterio.features.rasterize(
@@ -631,7 +669,7 @@ california_raster1 = rasterio.features.rasterize(
 )
 ```
 
-Compare it to a polygon rasterization, with `all_touched=False` by default, which selects only raster cells whose centroids are inside the selector polygon, as illustrated in @fig-rasterize-lines-polygons (right):
+Compare it to a polygon rasterization, with `all_touched=False` (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in @fig-rasterize-lines-polygons (right):
 
 ```{python}
 california_raster2 = rasterio.features.rasterize(
@@ -642,13 +680,10 @@ california_raster2 = rasterio.features.rasterize(
 )
 ```
 
-The results are shown in @fig-rasterize-lines-polygons. To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points, which also requires the "Raster to points" code section, as explained in @sec-spatial-vectorization:
+To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points. 
+This also requires the following code section to calculate the points, which we explain in @sec-spatial-vectorization:
 
 ```{python}
-#| label: fig-rasterize-lines-polygons
-#| fig-cap: Examples of line and polygon rasterization 
-
-# Raster to points
 ids = california_raster1.copy()
 ids = np.arange(0, california_raster1.size) \
     .reshape(california_raster1.shape) \
@@ -656,31 +691,44 @@ ids = np.arange(0, california_raster1.size) \
 shapes = rasterio.features.shapes(ids, transform=transform)
 pol = list(shapes)
 pnt = [shapely.geometry.shape(i[0]).centroid for i in pol]
-pnt = gpd.GeoSeries(pnt, crs=california.crs)
+pnt = gpd.GeoSeries(pnt)
+```
 
-# Plot
-fig, axes = plt.subplots(1, 2, figsize=(8.5, 6.5))
-rasterio.plot.show(california_raster1, transform=transform, ax=axes[0], cmap='Set3')
-gpd.GeoSeries(california_borders, crs=california.crs).plot(ax=axes[0], edgecolor='darkgrey', linewidth=1)
-pnt.plot(ax=axes[0], color='black', markersize=1)
-rasterio.plot.show(california_raster2, transform=transform, ax=axes[1], cmap='Set3')
-california.plot(ax=axes[1], color='none', edgecolor='darkgrey', linewidth=1)
-pnt.plot(ax=axes[1], color='black', markersize=1)
-axes[0].set_title('Line rasterization')
-axes[1].set_title('Polygon rasterization');
+The input vector layer, the rasterization results, and the points `pnt`, are shown in @fig-rasterize-lines-polygons:
+
+```{python}
+#| label: fig-rasterize-lines-polygons
+#| fig-cap: Examples of line and polygon rasterization 
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Line rasterization w/ `all_touched=True`
+#| - Polygon rasterization w/ `all_touched=False`
+
+# Line rasterization
+fig, ax = plt.subplots()
+rasterio.plot.show(california_raster1, transform=transform, ax=ax, cmap='Set3')
+gpd.GeoSeries(california_borders).plot(ax=ax, edgecolor='darkgrey', linewidth=1)
+pnt.plot(ax=ax, color='black', markersize=1);
+
+# Polygon rasterization
+fig, ax = plt.subplots()
+rasterio.plot.show(california_raster2, transform=transform, ax=ax, cmap='Set3')
+california.plot(ax=ax, color='none', edgecolor='darkgrey', linewidth=1)
+pnt.plot(ax=ax, color='black', markersize=1);
 ```
 
 ## Spatial vectorization {#sec-spatial-vectorization}
 
-Spatial vectorization is the counterpart of rasterization (@sec-rasterization), but in the opposite direction. It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons.
+Spatial vectorization is the counterpart of rasterization (@sec-rasterization), but in the opposite direction. 
+It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons.
 
-There are three standard methods to convert a raster to a vector layer:
+There are three standard methods to convert a raster to a vector layer, which we cover next:
 
-* Raster to polygons
-* Raster to points
-* Raster to contours
+* Raster to polygons (@sec-raster-to-polygons)
+* Raster to points (@sec-raster-to-points)
+* Raster to contours (@sec-raster-to-contours)
 
-### Raster to polygons
+### Raster to polygons {#sec-raster-to-polygons}
 
 The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon. The second method, raster to points, has the additional step of calculating polygon centroids. The third method, raster to contours, is somewhat unrelated. Let us demonstrate the three in the given order.
 
@@ -770,20 +818,28 @@ result['value'] = rasterstats.point_query(
 )
 ```
 
-The result is shown in @fig-raster-to-points.
+The result is shown in @fig-raster-to-points:
 
 ```{python}
 #| label: fig-raster-to-points
-#| fig-cap: Raster and point representation of the `elev.tif`.
+#| fig-cap: Raster and point representation of `elev.tif`
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Input raster
+#| - Points
 
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-result.plot(column='value', legend=True, ax=axes[0])
-rasterio.plot.show(src_elev, transform=src_elev.transform, ax=axes[0])
-result.plot(column='value', legend=True, ax=axes[1])
-rasterio.plot.show(src_elev, cmap='Greys', ax=axes[1]);
+# Input raster
+fig, ax = plt.subplots()
+result.plot(column='value', legend=True, ax=ax)
+rasterio.plot.show(src_elev, ax=ax);
+
+# Points
+fig, ax = plt.subplots()
+result.plot(column='value', legend=True, ax=ax)
+rasterio.plot.show(src_elev, cmap='Greys', ax=ax);
 ```
 
-### Raster to contours
+### Raster to contours {#sec-raster-to-contours}
 
 Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (isotherms) for example. We will use a real-world digital elevation model (DEM) because the artificial raster elev produces parallel lines (task for the reader: verify this and explain why this happens). Plotting contour lines is straightforward, using the `contour=True` option of `rasterio.plot.show` (@fig-raster-contours1):
 
@@ -791,9 +847,15 @@ Another common type of spatial vectorization is the creation of contour lines re
 #| label: fig-raster-contours1
 #| fig-cap: Displaying raster contours
 
-fig, ax = plt.subplots(1)
+fig, ax = plt.subplots()
 rasterio.plot.show(src_dem, ax=ax)
-rasterio.plot.show(src_dem, ax=ax, contour=True, levels=np.arange(0,1200,50), colors='black');
+rasterio.plot.show(
+    src_dem, 
+    ax=ax, 
+    contour=True, 
+    levels=np.arange(0,1200,50), 
+    colors='black'
+);
 ```
 
 Unfortunately, `rasterio` does not provide any way of extracting the contour lines in the form of a vector layer, for uses other than plotting. There are two possible workarounds:
