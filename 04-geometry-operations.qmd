@@ -1235,7 +1235,7 @@ Code to export the disaggregated raster would be identical to the one used above
 
 ### Resampling {#sec-raster-resampling}
 
-The above methods of aggregation and disaggregation are only suitable when we want to change the resolution of our raster by the aggregation/disaggregation factor. 
+Raster aggregation and disaggregation (@sec-raster-agg-disagg) are only suitable when we want to change just the resolution of our raster by a fixed factor. 
 However, what to do when we have two or more rasters with different resolutions and origins? 
 This is the role of resampling---a process of computing values for new pixel locations. 
 In short, this process takes the values of our original raster and recalculates new values for a target raster with custom resolution and origin (@fig-raster-resample).
@@ -1251,24 +1251,29 @@ There are several methods for estimating values for a raster with different reso
 
 The above explanation highlights that only nearest neighbor resampling is suitable for categorical rasters, while all remaining methods can be used (with different outcomes) for continuous rasters. 
 
-With `rasterio`, resampling can be done using function `rasterio.warp.reproject`. 
-Note, again, that raster reprojection is not fundamentally different from resampling---the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection). 
-In other words, reprojection is *resampling* into a grid that is in a different CRS. We will demonstrate reprojection using `rasterio.warp.reproject` later on (@sec-reprojecting-raster-geometries). 
+With `rasterio`, resampling can be done using function [`rasterio.warp.reproject`](https://rasterio.readthedocs.io/en/stable/api/rasterio.warp.html#rasterio.warp.reproject). 
+To clarify this naming convention, note that raster *reprojection* is not fundamentally different from *resampling*---the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection). 
+In other words, reprojection is *resampling* into a grid that is in a different CRS. 
+Accordingly, both resampling and reprojection are done using the same function `rasterio.warp.reproject`. 
+We will demonstrate reprojection using `rasterio.warp.reproject` later on (@sec-reprojecting-raster-geometries). 
 
 The information required for `rasterio.warp.reproject`, whether we are resampling or reprojecting, is:
 
 * The source and target *CRS*. These may be identical, when resampling, or different, when reprojecting.
 * The source and target *transform*
 
-Also, `rasterio.warp.reproject` works with file connections, so it requires a connection to an output file in write (`'w'`) mode. This makes the function efficient for large rasters.
+Importantly, `rasterio.warp.reproject` can work with file connections, such as a connection to an output file in write (`'w'`) mode. 
+This makes the function efficient for large rasters.
 
-The target and destination CRS are straightforward to specify, depending on our choice. The source transform is also available, e.g., from the source file connection. 
+The target and destination CRS are straightforward to specify, depending on our choice. The source transform is also available, e.g., through the `.transform` property of the source file connection. 
 The only complicated part is to figure out the *destination transform*. 
-When resampling, the transform is typically derived from a *template* raster, such as an existing raster file that we would like our origin raster to match, or a numeric specification of our target grid (see below). 
+When resampling, the transform is typically derived either from a *template* raster, such as an existing raster file that we would like our origin raster to match, or from a numeric specification of our target grid (see below). 
 Otherwise, when the exact grid is not of importance, we can simply aggregate or disaggregate our raster as shown above (@sec-raster-agg-disagg).
-(Note that when reprojecting, the target transform is not straightforward to figure out, therefore we use the `rasterio.warp.calculate_default_transform` function to calculate it, as will be shown in @sec-reprojecting-raster-geometries.)
+(Note that when *reprojecting*, the target transform is not as straightforward to figure out, therefore we further use the `rasterio.warp.calculate_default_transform` function to calculate it, as will be shown in @sec-reprojecting-raster-geometries.)
 
-Let's demonstrate resampling into a destination grid which is specified through numeric contraints, such as the extent and resolution:
+Let's demonstrate resampling into a destination grid which is specified through numeric contraints, such as the extent and resolution.
+These could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match.
+Note that the resolution of the destination grid is ~10 times more coarse (300 $m$) than the original resolution of `dem.tif` (~30 $m$) (@fig-raster-resample):
 
 ```{python}
 xmin = 794650
@@ -1278,16 +1283,21 @@ ymax = 8935350
 res = 300
 ```
 
-The transform is a function of the origin and resolution, and can be created using the `rasterio.transform.from_origin` function as follows:
+The corresponding transform based on these constraints can be created using the `rasterio.transform.from_origin` function, as follows:
 
 ```{python}
-dst_transform = rasterio.transform.from_origin(west=xmin, north=ymax, xsize=res, ysize=res)
+dst_transform = rasterio.transform.from_origin(
+    west=xmin, 
+    north=ymax, 
+    xsize=res, 
+    ysize=res
+)
 dst_transform
 ```
 
-Again, note that in case we needed to resample into a grid specified by an existing "template" raster, we could skip this step and simply use read the transform from that file, as in `rasterio.open('template.tif').transform`.
+Again, note that in case we needed to resample into a grid specified by an existing "template" raster, we could skip this step and simply read the transform from the template file, as in `rasterio.open('template.tif').transform`.
 
-Now we move on to creating the destination file connection. 
+We move on to creating the destination file connection. 
 For that, we also have to know the raster dimensions. 
 These can be derived from the extent and the resolution, as follows:
 
@@ -1297,7 +1307,7 @@ height = int((ymax - ymin) / res)
 width, height
 ```
 
-Now we create the destination file connection. 
+Now we can create the destination file connection. 
 We are using the same metadata as the source file, except for the dimensions and the transform, which are going to be different and reflecting the resampling process:
 
 ```{python}
@@ -1310,7 +1320,9 @@ dst_kwargs.update({
 dst = rasterio.open('output/dem_resample_nearest.tif', 'w', **dst_kwargs)
 ```
 
-Here is how we reproject, using function `rasterio.warp.reproject`. The resampling method being used here is nearest neighbor resampling:
+Finally, we reproject using function `rasterio.warp.reproject`. 
+Note that the source and destination are specified using [`rasterio.band`](https://rasterio.readthedocs.io/en/latest/api/rasterio.html#rasterio.band) applied on either the file connection, reflecting the fact that we operate on a specific layer of the rasters.
+The resampling method being used here is nearest neighbor resampling (`rasterio.enums.Resampling.nearest`):
 
 ```{python}
 rasterio.warp.reproject(
@@ -1324,13 +1336,15 @@ rasterio.warp.reproject(
 )
 ```
 
-In the end, we close the file:
+In the end, we close the file. 
+There have now created a new file `output/dem_resample_nearest.tif` with the resampling result (@fig-raster-resample):
 
 ```{python}
 dst.close()
 ```
 
-Here is another code section to demontrate another resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. Note that the transform is identical (@fig-raster-resample), so we do not need to calculate it again:
+Here is another code section just to demontrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. 
+Note that the transform is identical (@fig-raster-resample), all arguments other than the resampling method are identical:
 
 ```{python}
 #| eval: false
@@ -1358,7 +1372,6 @@ The original raster `dem.tif`, and the two resampling results `dem_resample_near
 #| - Maximum
 #| layout-ncol: 3
 
-
 # Input
 fig, ax = plt.subplots(figsize=(4,4))
 rasterio.plot.show(src, ax=ax);
@@ -1374,3 +1387,4 @@ rasterio.plot.show(rasterio.open('output/dem_resample_maximum.tif'), ax=ax);
 
 ## Exercises
 
+## References
