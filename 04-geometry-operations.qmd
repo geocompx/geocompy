@@ -848,12 +848,14 @@ nz_dis2.plot(color='none', edgecolor='black');
 
 ### Geometric intersections
 
-In @sec-spatial-subsetting-raster we have shown how to extract values from a raster overlaid by points or by a matching boolean mask. In case the area of interest is defined by any general raster B (possibly non-matching), to retrieve a spatial output, that is, a (smaller) subset of raster A, we can:
+In @sec-spatial-subsetting-raster we have shown how to extract values from a raster overlaid by points, or by a matching boolean mask. 
+In the different case when the area of interest is defined by any general (possibly non-matching) raster B, to retrieve a spatial output, that is, a (smaller) subset of raster A, we can:
 
 * Extract the bounding box polygon of B (hereby, `clip`)
 * Mask and crop A (hereby, `elev.tif`) using B (@sec-raster-cropping)
 
-For example, suppose that we want to get a subset of the `elev.tif` raster using another, smaller, raster. For demonstration, let's create (see @sec-raster-from-scratch) that smaller raster, hereby named `clip`. We first create a $3 \times 3$ array of raster values:
+For example, suppose that we want to get a subset of the `elev.tif` raster using another, smaller, raster. For demonstration, let's create (see @sec-raster-from-scratch) that smaller raster, hereby named `clip`. 
+We first create a $3 \times 3$ array of raster values:
 
 ```{python}
 clip = np.array([1] * 9).reshape(3, 3)
@@ -872,7 +874,7 @@ new_transform = rasterio.transform.from_origin(
 new_transform
 ```
 
-Now, for subsetting, we will derive a `shapely` geometry representing the `clip` raster extent, using `rasterio.transform.array_bounds`:
+Now, for subsetting, we will derive a `shapely` geometry representing the `clip` raster extent, using [`rasterio.transform.array_bounds`](https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.array_bounds):
 
 ```{python}
 bbox = rasterio.transform.array_bounds(
@@ -883,10 +885,18 @@ bbox = rasterio.transform.array_bounds(
 bbox
 ```
 
-The four numeric values can be transformed into a rectangular `shapely` geometry using `shapely.box`:
+The four numeric values can be transformed into a rectangular `shapely` geometry using `shapely.box` :
 
 ```{python}
 bbox = shapely.box(*bbox)
+```
+
+The `bbox` geometry is shown in @fig-raster-clip-bbox:
+
+```{python}
+#| label: fig-raster-clip-bbox
+#| fig-cap: '`shapely` geometry derived from a clipping raster bounding box coordinates, a preliminary step for geometric intersection between two rasters'
+
 bbox
 ```
 
@@ -901,7 +911,8 @@ rasterio.plot.show(src_elev, ax=ax)
 gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
 ```
 
-From here on, subsetting can be done using masking and cropping, just like with any other vector layer, regardless whether it is rectangular or not. We elaborate on masking and cropping in @sec-raster-cropping (check that section for details about `rasterio.mask.mask`), but for completeness let's go through that last step:
+From here on, subsetting can be done using masking and cropping, just like with any vector layer other than `bbox`, regardless whether it is rectangular or not. 
+We elaborate on masking and cropping in @sec-raster-cropping (check that section for details about `rasterio.mask.mask`), but, for completeness, here is the code for the last step of masking and cropping:
 
 ```{python}
 out_image, out_transform = rasterio.mask.mask(
@@ -919,7 +930,7 @@ The resulting subset array `out_image` contains all pixels intersecting with `cl
 out_image
 ```
 
-Therefore, in our case, subset `out_image` dimensions are $2 \times 2$ (@fig-raster-intersection2):
+Therefore, in our case, subset `out_image` dimensions are $2 \times 2$ (@fig-raster-intersection2; also see @fig-raster-intersection):
 
 ```{python}
 #| label: fig-raster-intersection2
