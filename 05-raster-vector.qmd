@@ -239,12 +239,13 @@ The reverse of raster extraction---assigning raster cell values based on vector 
 
 In the following examples, we use a third-party package called `rasterstats`, which is specifically aimed at extracting raster values: 
 
-* to *points*, via the `rasterstats.point_query` function, or 
-* to *polygons*, via the `rasterstats.zonal_stats` function.
+* to *points* (@sec-extraction-to-points) or to *lines* (@sec-extraction-to-lines), via the `rasterstats.point_query` function, or 
+* to *polygons* (@sec-extraction-to-polygons), via the `rasterstats.zonal_stats` function.
 
 ### Extraction to points {#sec-extraction-to-points}
 
-The basic example is of extracting the value of a raster cell at specific points. For this purpose, we will use `zion_points`, which contain a sample of 30 locations within the Zion National Park, which in figure @fig-zion-points: 
+The simplest type of raster extraction is extracting the values of raster cells at specific points. 
+To demonstrate extraction to points, we will use `zion_points`, which contains a sample of 30 locations within the Zion National Park (@fig-zion-points): 
 
 ```{python}
 #| label: fig-zion-points
@@ -255,7 +256,7 @@ rasterio.plot.show(src_srtm, ax=ax)
 zion_points.plot(ax=ax, color='black');
 ```
 
-The following expression extracts elevation values from `srtm`:
+The following expression extracts elevation values from `srtm.tif` according to `zion_points`, using `rasterstats.point_query`:
 
 ```{python}
 result = rasterstats.point_query(
@@ -267,76 +268,85 @@ result = rasterstats.point_query(
 )
 ```
 
-The resulting object is a `list` of raster values, corresponding to `zion_points`:
+The resulting object is a `list` of raster values, corresponding to `zion_points`. 
+For example, here are the elevations of the first five points:
 
 ```{python}
 result[:5]
 ```
 
-To get a `DataFrame` with points geometries (and attributes, if any) and the related `srtm` values for each point, we can assign the extraction result into a new column:
+To get a `GeoDataFrame` with the original points geometries (and other attributes, if any), as well as the extracted raster values, we can assign the extraction result into a new column:
 
 ```{python}
 zion_points['elev'] = result
 zion_points
 ```
 
-### Extraction to lines
+### Extraction to lines {#sec-extraction-to-lines}
 
 Raster extraction is also applicable with line selectors. 
 The typical line extraction algorithm is to extract one value for each raster cell touched by a line. 
 However, this particular approach is not recommended to obtain values along the transects, as it is hard to get the correct distance between each pair of extracted raster values.
 
-For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points. 
-To demonstrate this, the code below creates `zion_transect`, a straight line going from northwest to southeast of the Zion National Park (see @sec-vector-data for a recap on the vector data model):
+For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points using the "extraction to points" technique (@sec-extraction-to-points). 
+To demonstrate this, the code below creates (see @sec-vector-data for recap) `zion_transect`, a straight line going from northwest to southeast of the Zion National Park (@fig-zion-transect-shapely):
 
 ```{python}
+#| label: fig-zion-transect-shapely
+#| fig-cap: Transect through the Zion National Park
+
 coords = [[-113.2, 37.45], [-112.9, 37.2]]
 zion_transect = shapely.LineString(coords)
 zion_transect
 ```
 
-Here is a printout demonstrating that this is a `"LineString"` geometry representing a straight line between two points:
+Here is a printout demonstrating that this is a `'LineString'` geometry representing a straight line between two points:
 
 ```{python}
 print(zion_transect)
 ```
 
-The line is illustrated in the context of the raster in @fig-zion-transect.
+The line is also illustrated in the context of the raster in @fig-zion-transect.
 
 The utility of extracting heights from a linear selector is illustrated by imagining that you are planning a hike. 
 The method demonstrated below provides an 'elevation profile' of the route (the line does not need to be straight), useful for estimating how long it will take due to long climbs.
 
-First, we need to create a layer `zion_transect_pnt` consisting of points along our line (`zion_transect`), at specified intervals (`distance_delta`). To do that, we need to transform the line into a projected CRS (so that we work with true distances, in $m$), such as UTM. This requires going through a `GeoSeries`, as `shapely` geometries have no CRS definition nor concept of reprojection (see @sec-vector-layer-from-scratch):
+First, we need to create a layer `zion_transect_pnt` consisting of points along our line (`zion_transect`), at specified intervals (e.g., `250`). 
+To do that, we need to transform the line into a projected CRS (so that we work with true distances, in $m$), such as UTM. 
+This requires going through a `GeoSeries`, as **shapely** geometries have no CRS definition nor concept of reprojection (see @sec-vector-layer-from-scratch):
 
 ```{python}
-zion_transect_utm = gpd.GeoSeries(zion_transect, crs=4326)
-zion_transect_utm = zion_transect_utm.to_crs(32612)
+zion_transect_utm = gpd.GeoSeries(zion_transect, crs=4326).to_crs(32612)
 zion_transect_utm = zion_transect_utm.iloc[0]
 ```
 
-The printout of the new geometry shows this is still a straight line between two points, only with coordinates in a different CRS:
+The printout of the new geometry shows this is still a straight line between two points, only with coordinates in a projected CRS:
 
 ```{python}
 print(zion_transect_utm)
 ```
 
-Then, we calculate the distances, along the line, where points are going to be generated, using `np.arange`. This is a numeric sequence starting at `0`, going up to line `.length`, in steps of 250 ($m$):
+Next, we need to calculate the distances, along the line, where points are going to be generated, using [`np.arange`](https://numpy.org/doc/stable/reference/generated/numpy.arange.html). 
+This is a numeric sequence starting at `0`, going up to line `.length`, in steps of `250` ($m$):
 
 ```{python}
 distances = np.arange(0, zion_transect_utm.length, 250)
 distances[:7]  ## First 7 distance cutoff points
 ```
 
-The distances cutoffs are used to sample ("interpolate") points along the line. The `shapely` method `line.interpolate(d)` is used to generate the points. The points are then reproject back to the CRS of the raster:
+The distances cutoffs are used to sample ("interpolate") points along the line. 
+The **shapely** [`.interpolate`](https://shapely.readthedocs.io/en/stable/manual.html#object.interpolate) method is used to generate the points. 
+The points are then reprojected back to the geographic CRS of the raster (EPSG:`4326`):
 
 ```{python}
 zion_transect_pnt = [zion_transect_utm.interpolate(distance) for distance in distances]
 zion_transect_pnt = gpd.GeoSeries(zion_transect_pnt, crs=32612)
-zion_transect_pnt = zion_transect_pnt.to_crs(4326)
+zion_transect_pnt = zion_transect_pnt.to_crs(src_srtm.crs)
 zion_transect_pnt
 ```
 
-Second, we extract elevation values for each point in our transects and combine this information with `zion_transect_pnt` (after "promoting" it to a `GeoDataFrame`, to accomodate extra attributes), using the point extraction method shown earlier (@sec-extraction-to-points). We also attach the respective distance cutoff points `distances`:
+Finally, we extract the elevation values for each point in our transect and combine the information with `zion_transect_pnt` (after "promoting" it to a `GeoDataFrame`, to accomodate extra attributes), using the point extraction method shown earlier (@sec-extraction-to-points). 
+We also attach the respective distance cutoff points `distances`:
 
 ```{python}
 result = rasterstats.point_query(
@@ -352,55 +362,69 @@ zion_transect_pnt['elev'] = result
 zion_transect_pnt
 ```
 
-The information in `zion_transect_pnt`, namely the `"dist"` and `"elev"` attributes, can now be used to create elevation profiles, as illustrated in @fig-zion-transect:
+The information in `zion_transect_pnt`, namely the `'dist'` and `'elev'` attributes, can now be used to draw an elevation profile, as illustrated in @fig-zion-transect (b):
 
 ```{python}
 #| label: fig-zion-transect
-#| fig-cap: Location of a line used for raster extraction (left) and the elevation along this line (right). 
+#| fig-cap: Extracting a raster values profile to line 
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Raster and a line transect
+#| - Extracted elevation profile
 
-fig, axes = plt.subplots(ncols=2, figsize=(9,4))
-rasterio.plot.show(src_srtm, ax=axes[0])
-gpd.GeoSeries(zion_transect).plot(ax=axes[0], color='black')
-zion.plot(ax=axes[0], color='none', edgecolor='darkgrey')
-zion_transect_pnt.set_index('dist')['elev'].plot(ax=axes[1])
-axes[1].set_xlabel('Distance (m)')
-axes[1].set_ylabel('Elevation (m)')
-axes[0].set_title('Line extraction')
-axes[1].set_title('Elevation along the line');
+# Raster and a line transect
+fig, ax = plt.subplots()
+rasterio.plot.show(src_srtm, ax=ax)
+gpd.GeoSeries(zion_transect).plot(ax=ax, color='black')
+zion.plot(ax=ax, color='none', edgecolor='darkgrey');
+
+# Elevation profile
+fig, ax = plt.subplots()
+zion_transect_pnt.set_index('dist')['elev'].plot(ax=ax)
+ax.set_xlabel('Distance (m)')
+ax.set_ylabel('Elevation (m)');
 ```
 
 ### Extraction to polygons
 
 The final type of geographic vector object for raster extraction is polygons. 
 Like lines, polygons tend to return many raster values per polygon. 
-Typically, we generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. 
-The generation of raster summary statistics, by polygons, is demonstrated in the code below, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon), again using `rasterstats`:
+For continuous rasters (@fig-raster-extract-to-polygon (a)), we typically want to generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. 
+The generation of raster summary statistics, by polygons, is demonstrated in the code below, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon), using `rasterstats.zonal_stats`:
 
 ```{python}
-rasterstats.zonal_stats(
+result = rasterstats.zonal_stats(
     zion, 
     src_srtm.read(1), 
     nodata = src_srtm.nodata, 
     affine = src_srtm.transform, 
     stats = ['mean', 'min', 'max']
 )
+result
 ```
 
-The results provide useful summaries, for example that the maximum height in the park is around 2,661 meters above see level (other summary statistics, such as standard deviation, can also be calculated in this way). 
-Because there is only one polygon in the example a data frame with a single row is returned; however, the method works when multiple selector polygons are used.
+Transformation of the `list` to a `DataFrame` (e.g., to attach the derived attributes to the original polygon layer), is straightforward:
+
+```{python}
+pd.DataFrame(result)
+```
+
+Because there is only one polygon in the example, a `DataFrame` with a single row is returned. 
+However, if `zion` was composed of more than one polygon, we would accordingly get more rows in the `DataFrame`.
+The result provides useful summaries, for example that the maximum height in the park is around `2661` $m$ above see level. 
 
 Note the `stats` argument, where we determine what type of statistics are calculated per polygon. 
 Possible values other than `'mean'`, `'min'`, `'max'` are:
 
-* `'count'`—The number of valid (i.e., excluding "No Data") pixels
-* `'nodata'`—The number of pixels with 'No Data"
-* `'majority'`—The most frequently occurring value
-* `'median'`—The median value
+* `'count'`---The number of valid (i.e., excluding "No Data") pixels
+* `'nodata'`---The number of pixels with 'No Data"
+* `'majority'`---The most frequently occurring value
+* `'median'`---The median value
 
-See the [documentation](https://pythonhosted.org/rasterstats/manual.html#statistics) for the complete list. 
-Additionally, the `zonal_stats` function accepts user-defined functions for calculating any custom statistics.
+See the [documentation](https://pythonhosted.org/rasterstats/manual.html#statistics) of `rasterstats.zonal_stats` for the complete list. 
+Additionally, the `rasterstats.zonal_stats` function accepts user-defined functions for calculating any custom statistics.
 
-To count occurrences of categorical raster values within polygons, we can use masking (see Section...) combined with `np.unique`, as follows:
+To count occurrences of categorical raster values within polygons (@fig-raster-extract-to-polygon (b)), we can use masking (@sec-raster-cropping) combined with `np.unique`, as follows:
 
 ```{python}
 out_image, out_transform = rasterio.mask.mask(
@@ -418,19 +442,25 @@ According to the result, for example, pixel value `2` ("Developed" class) appear
 counts
 ```
 
-Raster to polygon extraction is illustrated in @fig-raster-extract-to-polygon.
+The input data for raster to polygon extraction examples in this section are illustrated in @fig-raster-extract-to-polygon:
 
 ```{python}
 #| label: fig-raster-extract-to-polygon
-#| fig-cap: Area used for continuous (left) and categorical (right) raster extraction.
+#| fig-cap: Sample data used for continuous and categorical raster extraction to a polygon
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Continuous raster
+#| - Categorical raster
 
-fig, axes = plt.subplots(ncols=2, figsize=(6,4))
-rasterio.plot.show(src_srtm, ax=axes[0])
-zion.plot(ax=axes[0], color='none', edgecolor='black')
-rasterio.plot.show(src_nlcd, ax=axes[1], cmap='Set3')
-zion.to_crs(src_nlcd.crs).plot(ax=axes[1], color='none', edgecolor='black')
-axes[0].set_title('Continuous data extraction')
-axes[1].set_title('Categorical data extraction');
+# Continuous raster
+fig, ax = plt.subplots()
+rasterio.plot.show(src_srtm, ax=ax)
+zion.plot(ax=ax, color='none', edgecolor='black');
+
+# Categorical raster
+fig, ax = plt.subplots()
+rasterio.plot.show(src_nlcd, ax=ax, cmap='Set3')
+zion.to_crs(src_nlcd.crs).plot(ax=ax, color='none', edgecolor='black');
 ```
 
 ## Rasterization {#sec-rasterization}
