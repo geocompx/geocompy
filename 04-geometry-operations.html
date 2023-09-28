@@ -1668,7 +1668,7 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-extent-and-origin" class="level3" data-number="4.4.2">
 <h3 data-number="4.4.2" class="anchored" data-anchor-id="sec-extent-and-origin"><span class="header-section-number">4.4.2</span> Extent and origin</h3>
-<p>When merging or performing map algebra on rasters, their resolution, projection, origin and/or extent have to match. Otherwise, how should we add the values of one raster with a resolution of 0.2 decimal degrees to a second raster with a resolution of 1 decimal degree? The same problem arises when we would like to merge satellite imagery from different sensors with different projections and resolutions. We can deal with such mismatches by aligning the rasters. Typically, raster alignment is done through resampling—that way, it is guaranteed that the rasters match exactly (<a href="#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>). However, sometimes it can be useful to modify raster placement and extent “manually”, by adding or removing rows and columns, or by modifying the origin, that is, shifting the raster. For example, it may be useful to add extra rows and columns to a raster prior to focal operations, so that it is easier to operate on the edges.</p>
+<p>When merging or performing map algebra on rasters, their resolution, projection, origin and/or extent have to match. Otherwise, how should we add the values of one raster with a resolution of <code>0.2</code> decimal degrees to a second raster with a resolution of <code>1</code> decimal degree? The same problem arises when we would like to merge satellite imagery from different sensors with different projections and resolutions. We can deal with such mismatches by aligning the rasters. Typically, raster alignment is done through resampling—that way, it is guaranteed that the rasters match exactly (<a href="#sec-raster-resampling"><span>Section&nbsp;4.4.4</span></a>). However, sometimes it can be useful to modify raster placement and extent “manually”, by adding or removing rows and columns, or by modifying the origin, that is, shifting the raster. Sometimes, there are reasons other than alignment with a second raster for manually modifying raster extent and placement. For example, it may be useful to add extra rows and columns to a raster prior to focal operations, so that it is easier to operate on the edges.</p>
 <p>Let’s demostrate the first operation, raster padding. First, we will read the array with the <code>elev.tif</code> values:</p>
 <div class="cell" data-execution_count="79">
 <div class="sourceCode cell-code" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
@@ -1699,8 +1699,8 @@ dtype: geometry</code></pre>
        [18, 18, 18, 18, 18, 18, 18, 18, 18, 18]], dtype=uint8)</code></pre>
 </div>
 </div>
-<p>However, for <code>s</code> to be used in spatial operations, we also have to update its transformation matrix. Whenever we add extra columns on the left, or extra rows on top, the raster <em>origin</em> changes. To reflect that fact, we take to “original” origin and add the required multiple of pixel widths or heights (i.e., raster resolution).</p>
-<p>Recall from <a href="01-spatial-data.html#sec-raster-from-scratch"><span>Section&nbsp;1.3.3</span></a>, here is the transformation matrix of <code>elev.tif</code>:</p>
+<p>However, for <code>s</code> to be used in spatial operations, we also have to update its transformation matrix. Whenever we add extra columns on the left, or extra rows on top, the raster <em>origin</em> changes. To reflect this fact, we have to take to “original” origin and add the required multiple of pixel widths or heights (i.e., raster resolution steps).</p>
+<p>The transformation matrix of a raster is accessible from the raster file metadata (<a href="01-spatial-data.html#sec-raster-from-scratch"><span>Section&nbsp;1.3.3</span></a>) or, as a shortcut, through the <code>.transform</code> property of the raster file connection. For example, here is the transformation matrix of <code>elev.tif</code>:</p>
 <div class="cell" data-execution_count="81">
 <div class="sourceCode cell-code" id="cb101"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>src_elev.transform </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="81">
@@ -1724,7 +1724,7 @@ dtype: geometry</code></pre>
 <pre><code>(0.5, -0.5)</code></pre>
 </div>
 </div>
-<p>Now we can actually update the origin:</p>
+<p>Now we can calculate the padded raster origin (<code>xmin_new,ymax_new</code>):</p>
 <div class="cell" data-execution_count="84">
 <div class="sourceCode cell-code" id="cb107"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>xmin_new <span class="op">=</span> xmin <span class="op">-</span> dx <span class="op">*</span> cols</span>
 <span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>ymax_new <span class="op">=</span> ymax <span class="op">-</span> dy <span class="op">*</span> rows</span>
@@ -1733,16 +1733,21 @@ dtype: geometry</code></pre>
 <pre><code>(-2.5, 2.0)</code></pre>
 </div>
 </div>
-<p>Let’s create the updated transformation matrix (<a href="01-spatial-data.html#sec-raster-from-scratch"><span>Section&nbsp;1.3.3</span></a>). Keep in mind that the meaning of the last two arguments is <code>xsize</code>, <code>ysize</code>, so we need to pass the absolute value of <code>dy</code> (since it is negative).</p>
+<p>Using the updated origin, we can update the transformation matrix (<a href="01-spatial-data.html#sec-raster-from-scratch"><span>Section&nbsp;1.3.3</span></a>). Keep in mind that the meaning of the last two arguments is <code>xsize</code>, <code>ysize</code>, so we need to pass the absolute value of <code>dy</code> (since it is negative).</p>
 <div class="cell" data-execution_count="85">
-<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(xmin_new, ymax_new, dx, <span class="bu">abs</span>(dy))</span>
-<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin_new, </span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax_new, </span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>dx, </span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="bu">abs</span>(dy)</span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="85">
 <pre><code>Affine(0.5, 0.0, -2.5,
        0.0, -0.5, 2.0)</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-shift-origin">Figure&nbsp;<span>4.33</span></a> shows the padded raster, with the outline of the original one, demonstrating that the origin was shifted correctly:</p>
+<p><a href="#fig-raster-shift-origin">Figure&nbsp;<span>4.33</span></a> shows the padded raster, with the outline of the original <code>elev.tif</code> (in red), demonstrating that the origin was shifted correctly and the <code>new_transform</code> works fine:</p>
 <div class="cell" data-execution_count="86">
 <div class="sourceCode cell-code" id="cb111"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(s, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
@@ -1752,12 +1757,12 @@ dtype: geometry</code></pre>
 <div id="fig-raster-shift-origin" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-shift-origin-output-1.png" width="433" height="344" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.33: The padded <code>elev.tif</code> raster, and the outline of the extent of the original (in red)</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.33: The padded <code>elev.tif</code> raster, and the extent of the original <code>elev.tif</code> raster (in red)</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>We can shift a raster origin not just when padding, but in any other use case just by changing its transformation matrix. The effect is that the raster id going to be shifted. This is rarely required in real-life scenarios, but it is useful for understanding the concept of <em>raster origin</em>. For example, let’s shift the origin of <code>elev.tif</code> by <code>(-0.25,0.25)</code>:</p>
+<p>We can shift a raster origin not just when padding, but in any other use case, just by changing its transformation matrix. The effect is that the raster is going to be shifted (which is analogous to <code>.translate</code> for shifting a vector layer, see <a href="#sec-affine-transformations"><span>Section&nbsp;4.3.4</span></a>). Manually shifting a raster to arbitrary distance is rarely needed in real-life scenarios, but it is useful to know how to do it at least for better understanding the concept of <em>raster origin</em>. As an example, let’s shift the origin of <code>elev.tif</code> by <code>(-0.25,0.25)</code>. First, we calculate the new origin:</p>
 <div class="cell" data-execution_count="87">
 <div class="sourceCode cell-code" id="cb112"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>xmin_new <span class="op">=</span> xmin <span class="op">-</span> <span class="fl">0.25</span>  <span class="co"># shift xmin to the left</span></span>
 <span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>ymax_new <span class="op">=</span> ymax <span class="op">+</span> <span class="fl">0.25</span>  <span class="co"># shift ymax upwards</span></span>
@@ -1767,16 +1772,21 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <p>To shift the origin in other directions change the two operators (<code>-</code>, <code>+</code>) accordingly.</p>
-<p>Again, let’s create the updated transformation matrix:</p>
+<p>Then, same as when padding (see above), we create an updated transformation matrix:</p>
 <div class="cell" data-execution_count="88">
-<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(xmin_new, ymax_new, dx, <span class="bu">abs</span>(dy))</span>
-<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin_new, </span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax_new, </span>
+<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>dx, </span>
+<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="bu">abs</span>(dy)</span>
+<span id="cb114-6"><a href="#cb114-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb114-7"><a href="#cb114-7" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="88">
 <pre><code>Affine(0.5, 0.0, -1.75,
        0.0, -0.5, 1.75)</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-shift-origin2">Figure&nbsp;<span>4.34</span></a> shows the shifted raster and the outline of the original:</p>
+<p><a href="#fig-raster-shift-origin2">Figure&nbsp;<span>4.34</span></a> shows the shifted raster and the outline of the original <code>elev.tif</code> raster (in red):</p>
 <div class="cell" data-execution_count="89">
 <div class="sourceCode cell-code" id="cb116"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
@@ -1785,7 +1795,7 @@ dtype: geometry</code></pre>
 <div id="fig-raster-shift-origin2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-shift-origin2-output-1.png" width="430" height="411" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;4.34: The <code>elev.tif</code> raster shifted by <code>(0.25,0.25)</code> and the extent of the original (in red)</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4.34: The padded <code>elev.tif</code> raster (<a href="#fig-raster-shift-origin">Figure&nbsp;<span>4.33</span></a>) further shifted by <code>(0.25,0.25)</code>, and the extent of the original <code>elev.tif</code> raster (in red)</figcaption>
 </figure>
 </div>
 </div>
