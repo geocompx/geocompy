@@ -31,6 +31,7 @@ import rasterio.features
 import math
 import os
 import osgeo
+import osgeo.gdal
 ```
 
 and load the sample data:
@@ -960,9 +961,9 @@ contours2.plot(ax=ax, edgecolor='black');
 
 Calculating a raster of distances to the nearest geometry is an example of a "global" raster operation (@sec-global-operations-and-distances). 
 To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand. 
-This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation, raster conversion to points, and rasterizing points.
+This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation (@sec-raster-agg-disagg), raster conversion to points (@sec-raster-to-points), and rasterizing points (@sec-rasterizing-points).
 
-For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary (which is a `"MultiLineString"` geometry):
+For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary (as a `'MultiLineString'` geometry):
 
 ```{python}
 coastline = gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
@@ -1024,7 +1025,7 @@ The result `pnt` is a `list` of `shapely` geometries, representing raster cell c
 print(pnt[0])
 ```
 
-Next we calculate the correspinding `list` of distances, using the `.distance` method from `shapely`:
+Now we can calculate the correspinding `list` of distances, using the `.distance` method from `shapely`:
 
 ```{python}
 distances = [(i, i.distance(coastline)) for i in pnt]
@@ -1044,7 +1045,7 @@ image = rasterio.features.rasterize(
 image
 ```
 
-The resulting raster of distances is shown in @fig-raster-distances2:
+The final result, a raster of distances to the nearest coastline, is shown in @fig-raster-distances2:
 
 ```{python}
 #| label: fig-raster-distances2
