@@ -251,13 +251,13 @@ It should also be mentioned that, in some cases the CRS specification is left un
 
 ## Geometry operations on projected and unprojected data {#sec-geometry-operations-on-projected-and-unprojected-data}
 
-The **geopandas** package, through its dependency `shapely`, assumes planar geometry and works with distance/area values assumed to be in CRS units. 
-In fact, the CRS definition is typically ignored, and the respective functions (such as in plotting and distance calculations) are applied on the "bare" `shapely` geometries. 
+The **geopandas** package, through its dependency **shapely**, assumes planar geometry and works with distance/area values assumed to be in CRS units. 
+In fact, the CRS definition is typically ignored, and the respective functions (such as in plotting and distance calculations) are applied on the "bare" **shapely** geometries. 
 Accordingly, it is crucial to make sure that: 
 
 * Geometric calculations are only applied in projected CRS
 * If there is more than one layer involved---all layers have to be in the same (projected) CRS
-* The input distance and area values are passed in CRS units (and the returned values---interpreted in CRS units)
+* Distance and area values, are passed, and returned, in CRS units
 
 For example, to calculate a buffer of 100 $km$ around London, we need to:
 
@@ -280,7 +280,7 @@ lnd_layer_proj_buff = lnd_layer_proj.buffer(100000)
 lnd_layer_proj_buff
 ```
 
-The resulting buffer is shown in the left panel of @fig-reprojection-geo-proj.
+The resulting buffer is shown in the left panel of @fig-reprojection-geo-proj (a).
 
 Calculating a 100-$km$ buffer `lnd_layer`, which is in a geographical CRS, is impossible. 
 Since the `lnd_layer` is in decimal degrees, the closest thing to a 100-$km$ buffer would be to use a distance of 1 degree, which is roughly equivalent to 100 $km$ (1 degree is about 111 $km$ at the equator): 
@@ -295,30 +295,35 @@ The association between degrees and true distance varies over the surface of the
 
 ```{python}
 #| label: fig-reprojection-geo-proj
-#| fig-cap: Buffers around London, around a projected point and distance of 100 $km$ (left), and around a point in lon/lat using distance of 1 degree (right) which is incorrect.
+#| fig-cap: Buffers around London
+#| layout-ncol: 2
+#| fig-subcap:
+#| - Around a projected point and distance of 100 $km$
+#| - Around a point in lon/lat using distance of 1 degree (incorrectly approximating 100 $km$)
 
 uk = world[world['name_long'] == 'United Kingdom']
 uk_proj = uk.to_crs(27700)
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
-uk_proj.plot(color='none', edgecolor='darkgrey', ax=axes[0])
-lnd_layer_proj.plot(color='red', ax=axes[0])
-lnd_layer_proj_buff.plot(color='none', ax=axes[0])
-uk.plot(color='none', edgecolor='darkgrey', ax=axes[1])
-lnd_layer.plot(color='red', ax=axes[1])
-lnd_layer_buff.plot(color='none', ax=axes[1])
-axes[0].set_title('100 km buffer\ncorrect')
-axes[1].set_title('1 degree buffer\nincorrectly approximating 100 km');
+
+# Around projected point
+base = uk_proj.plot(color='none', edgecolor='darkgrey')
+lnd_layer_proj.plot(color='red', ax=base)
+lnd_layer_proj_buff.plot(color='none', ax=base);
+
+# Around point in lon/lat
+base = uk.plot(color='none', edgecolor='darkgrey')
+lnd_layer.plot(color='red', ax=base)
+lnd_layer_buff.plot(color='none', ax=base);
 ```
 
 ::: {.callout-note}
 The distance between two lines of longitude, called meridians, is around 111 $km$ at the equator (execute `import geopy.distance;geopy.distance.geodesic((0,0),(0,1))` to find the precise distance). 
 This shrinks to zero at the poles. 
 At the latitude of London, for example, meridians are less than 70 $km$ apart (challenge: execute code that verifies this). 
-Lines of latitude, by contrast, are equidistant from each other irrespective of latitude: they are always around 111 $km$ apart, including at the equator and near the poles (see Figure...). 
+Lines of latitude, by contrast, are equidistant from each other irrespective of latitude: they are always around 111 $km$ apart, including at the equator and near the poles. 
 :::
 
 ::: {.callout-note}
-The [`spherely`](https://github.com/benbovy/spherely) package, which is in early stages of development, is aimed at providing a spherical-geometry counterpart to `shapely`, so that true distances (in $m$) and areas (in $m^2$) can be calculated on geometries in geographic CRS.
+The [**spherely**](https://github.com/benbovy/spherely) package, which is in early stages of development, is aimed at providing a spherical-geometry counterpart to **shapely**, so that true distances (in $m$) and areas (in $m^2$) can be calculated on geometries in geographic CRS.
 :::
 
 ## When to reproject? {#sec-when-to-reproject}
