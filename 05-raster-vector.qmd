@@ -30,6 +30,7 @@ import rasterio.plot
 import rasterio.features
 import math
 import os
+import osgeo
 ```
 
 and load the sample data:
@@ -728,17 +729,22 @@ There are three standard methods to convert a raster to a vector layer, which we
 * Raster to points (@sec-raster-to-points)
 * Raster to contours (@sec-raster-to-contours)
 
-The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon. The second method, raster to points, has the additional step of calculating polygon centroids. The third method, raster to contours, is somewhat unrelated. Let us demonstrate the three in the given order.
+The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon. 
+The second method, raster to points, has the additional step of calculating polygon centroids. 
+The third method, raster to contours, is somewhat unrelated. 
+Let us demonstrate the three in the given order.
 
 ### Raster to polygons {#sec-raster-to-polygons}
 
-The `rasterio.features.shapes` function can be used to access to the raster pixel as polygon geometries, as well as raster values. The returned object is a generator, which yields `geometry,value` pairs. The additional `transform` argument is used to yield true spatial coordinates of the polygons, which is usually what we want. 
+The [`rasterio.features.shapes`](https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.shapes) function can be used to access to the raster pixel as polygon geometries, as well as raster values. 
+The returned object is a generator, which yields `geometry,value` pairs. 
+The additional `transform` argument is used to yield true spatial coordinates of the polygons, which is usually what we want. 
 
 For example, the following expression returns a generator named `shapes`, referring to the pixel polygons:
 
 ```{python}
 shapes = rasterio.features.shapes(
-    src_grain.read(), 
+    rasterio.band(src_grain, 1), 
     transform=src_grain.transform
 )
 shapes
@@ -763,21 +769,24 @@ pol[0]
 
 Note that each raster cell is converted into a polygon consisting of five coordinates, all of which are stored in memory (explaining why rasters are often fast compared with vectors!).
 
-To transform the `list` into a `GeoDataFrame`, we need few more steps of data reshaping:
+To transform this `list` into a `GeoDataFrame`, we need few more steps of data reshaping:
 
 ```{python}
-# Create 'GeoSeries' with the polygons
+# 'GeoSeries' with the polygons
 geom = [shapely.geometry.shape(i[0]) for i in pol]
 geom = gpd.GeoSeries(geom, crs=src_grain.crs)
-# Create 'Series' with the values
+# 'Series' with the values
 values = [i[1] for i in pol]
 values = pd.Series(values)
-# Combine the 'Series' and 'GeoSeries' into a 'DataFrame'
+# Combine into a 'GeoDataFrame'
 result = gpd.GeoDataFrame({'value': values, 'geometry': geom})
 result
 ```
 
-The resulting polygon layer is shown in @fig-raster-to-polygons. As shown using the `edgecolor='black'` option, neighboring pixels sharing the same raster value are dissolved into larger polygons. The `rasterio.features.shapes` function does not offer a way to avoid this type of dissolving. One way to work around that is to convert an array with consecutive IDs, instead of the real values, to polygons, then extract the real values from the raster (similarly to the "raster to points" example, see below).
+The resulting polygon layer is shown in @fig-raster-to-polygons. 
+As shown using the `edgecolor='black'` option, neighboring pixels sharing the same raster value are dissolved into larger polygons. 
+The `rasterio.features.shapes` function does not offer a way to avoid this type of dissolving. 
+One way to work around that is to convert an array with consecutive IDs, instead of the real values, to polygons, then extract the real values from the raster (see the example in @sec-raster-to-points). 
 
 ```{python}
 #| label: fig-raster-to-polygons
@@ -788,27 +797,32 @@ result.plot(column='value', edgecolor='black', legend=True);
 
 ### Raster to points {#sec-raster-to-points}
 
-To transform raster to points, we can use `rasterio.features.shapes`, as in conversion to polygons, only with the addition of the `.centroid` method to go from polygons to their centroids. However, to avoid dissolving nearby pixels, we will actually convert a raster with consecutive IDs, then extract the "true" values by point (it is not strictly necessary in this example, since the values of `elev.tif` are all unique):
+To transform raster to points, we can use `rasterio.features.shapes`, same as in conversion to polygons (@sec-raster-to-points), only with the addition of the `.centroid` method to go from polygons to their centroids. 
+However, to avoid dissolving nearby pixels, we will actually convert a raster with consecutive IDs, then extract the "true" values by point (it is not strictly necessary in this example, since the values of `elev.tif` are all unique).
+
+First, we create an `ndarray` with consecutive IDs, matching the shape of `elev.tif` raster values:
 
 ```{python}
-# Prepare IDs array
 r = src_elev.read(1)
 ids = r.copy()
 ids = np.arange(0, r.size).reshape(r.shape).astype(np.int32)
 ids
 ```
 
+Next, we use the `rasterio.features.shapes` function to create a point layer with the raster cell IDs:
+
 ```{python}
-# IDs raster to points
 shapes = rasterio.features.shapes(ids, transform=src_elev.transform)
 pol = list(shapes)
 geom = [shapely.geometry.shape(i[0]).centroid for i in pol]
 geom = gpd.GeoSeries(geom, crs=src_elev.crs)
 result = gpd.GeoDataFrame(geometry=geom)
+result
 ```
 
+Finally, we extract (@sec-extraction-to-points) the `elev.tif` raster values to points, technically finalizing the raster-to-points conversion:
+
 ```{python}
-# Extract values to points
 result['value'] = rasterstats.point_query(
     result, 
     r, 
@@ -818,7 +832,7 @@ result['value'] = rasterstats.point_query(
 )
 ```
 
-The result is shown in @fig-raster-to-points:
+The input raster and the resulting point layer are shown in @fig-raster-to-points:
 
 ```{python}
 #| label: fig-raster-to-points
@@ -841,7 +855,9 @@ rasterio.plot.show(src_elev, cmap='Greys', ax=ax);
 
 ### Raster to contours {#sec-raster-to-contours}
 
-Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (isotherms) for example. We will use a real-world digital elevation model (DEM) because the artificial raster elev produces parallel lines (task for the reader: verify this and explain why this happens). Plotting contour lines is straightforward, using the `contour=True` option of `rasterio.plot.show` (@fig-raster-contours1):
+Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (isotherms) for example. 
+We will use a real-world digital elevation model (DEM) because the artificial raster `elev.tif` produces parallel lines (task for the reader: verify this and explain why this happens). 
+Plotting contour lines is straightforward, using the `contour=True` option of `rasterio.plot.show` (@fig-raster-contours1):
 
 ```{python}
 #| label: fig-raster-contours1
@@ -858,45 +874,86 @@ rasterio.plot.show(
 );
 ```
 
-Unfortunately, `rasterio` does not provide any way of extracting the contour lines in the form of a vector layer, for uses other than plotting. There are two possible workarounds:
+Unfortunately, `rasterio` does not provide any way of extracting the contour lines in the form of a vector layer, for uses other than plotting. 
+
+There are two possible workarounds:
 
 1. Using `gdal_contour` on the [command line](https://gdal.org/programs/gdal_contour.html) (see below), or through its Python interface [`osgeo`](https://gis.stackexchange.com/questions/360431/how-can-i-create-contours-from-geotiff-and-python-gdal-rasterio-etc-into-sh)
 1. Writing a custom function to export contour coordinates generated by, e.g., [`matplotlib`](https://www.tutorialspoint.com/how-to-get-coordinates-from-the-contour-in-matplotlib) or [`skimage`](https://gis.stackexchange.com/questions/268331/how-can-i-extract-contours-from-a-raster-with-python)
 
-We hereby demonstrate the first and easiest approach, using `gdal_contour`. Although we deviate from exclusively using the Python language, the benefit of `gdal_contour` is the proven algorithm, customized to spatial data, and with many relevant options. `gdal_contour` (along with other GDAL programs) should already be installed on your system since this is a dependency of `rasterio`. For example, generating 50 $m$ contours of the `dem.tif` file can be done as follows: 
+We hereby demonstrate the first approach, using `gdal_contour`. 
+Although we deviate from the Python-focused approach towards more direct interaction with GDAL, the benefit of `gdal_contour` is the proven algorithm, customized to spatial data, and with many relevant options. 
+Both the `gdal_contour` program (along with other GDAL programs) and its `osgeo` Python wrapper, should already be installed on your system since GDAL is a dependency of `rasterio`. 
+Using the command line pathway, generating 50 $m$ contours of the `dem.tif` file can be done as follows: 
 
 ```{python}
 #| eval: false
-os.system('gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0')
+os.system('gdal_contour -a elev data/dem.tif output/dem_contour1.gpkg -i 50.0')
 ```
 
-Note that we ran the `gdal_contour` command through `os.system`, in order to remain in the Python environment. You can also run the standalone command in the command line interface you are using, such as the Anaconda Prompt:
+Note that here we ran the `gdal_contour` command through `os.system`, in order to remain in the Python environment. 
+You can also run the standalone command in the command line interface you are using, such as the Anaconda Prompt:
 
 ```sh
-gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0
+gdal_contour -a elev data/dem.tif output/dem_contour1.gpkg -i 50.0
 ```
 
 Like all GDAL programs, `gdal_contour` works with files. Here: 
 
 * The input is the `data/dem.tif` file
-* The result is exported to the `output/dem_contour.gpkg` file
+* The result is exported to the `output/dem_contour1.gpkg` file
 
-To illustrate the result, let's read the result back into the Python environment. Note that the layer contains an arrtibute named `elev` (as specified using `-a elev`) with the contour elevation values:
+To illustrate the result, let's read the resulting `dem_contour2.gpkg` layer back into the Python environment. 
+Note that the layer contains an arrtibute named `'elev'` (as specified using `-a elev`) with the contour elevation values:
 
 ```{python}
-contours = gpd.read_file('output/dem_contour.gpkg')
-contours
+contours1 = gpd.read_file('output/dem_contour1.gpkg')
+contours1
 ```
 
-Here is a plot of the contour layer in `dem_contour.gpkg` (@fig-raster-contours2):
+Alternatively, we can use the `osgeo` interface to GDAL to do the same, using the [`osgeo.gdal.ContourGenerate`](https://gdal.org/api/python/osgeo.gdal.html#osgeo.gdal.ContourGenerate) wrapper of `gdal_contour`. 
+Theis makes the code much longer (then just one command, as above), but avoids explicitly running a separate program (`gdal_contour`) outside of the Python environment (since we focus on `rasterio`, explaining the code is beyond the scope of this book):
+
+```{python}
+input_r = osgeo.gdal.Open('data/dem.tif', osgeo.gdalconst.GA_ReadOnly)
+input_r1 = input_r.GetRasterBand(1)
+sr = osgeo.osr.SpatialReference(input_r.GetProjection())
+ogr_ds = osgeo.ogr.GetDriverByName('GPKG').CreateDataSource('output/dem_contour2.gpkg')
+contour_shp = ogr_ds.CreateLayer('contours', sr)
+field_defn = osgeo.ogr.FieldDefn('ID', osgeo.ogr.OFTInteger)
+contour_shp.CreateField(field_defn)
+field_defn = osgeo.ogr.FieldDefn('elev', osgeo.ogr.OFTReal)
+contour_shp.CreateField(field_defn)
+osgeo.gdal.ContourGenerate(input_r1, 50, 0, [], 0, 0, contour_shp, 0, 1)
+ogr_ds = None
+```
+
+Here is the identical result of the second approach, named `dem_contour2.gpkg`:
+
+```{python}
+contours2 = gpd.read_file('output/dem_contour2.gpkg')
+contours2
+```
+
+Here is a plot of the identical contour layers `dem_contour1.gpkg` and `dem_contour2.gpkg` created using the two methods (@fig-raster-contours2):
 
 ```{python}
 #| label: fig-raster-contours2
-#| fig-cap: Raster contours calculated with the `gdal_contour` program
+#| fig-cap: Contours of the `dem.tif` raster
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - Using the command line `gdal_contour` program
+#| - Using the `osgeo.gdal.ContourGenerate` wrapper
 
+# Using 'gdal_contour'
 fig, ax = plt.subplots()
 rasterio.plot.show(src_dem, ax=ax)
-contours.plot(ax=ax, edgecolor='black');
+contours1.plot(ax=ax, edgecolor='black');
+
+# Using 'osgeo.gdal.ContourGenerate'
+fig, ax = plt.subplots()
+rasterio.plot.show(src_dem, ax=ax)
+contours2.plot(ax=ax, edgecolor='black');
 ```
 
 ## Distance to nearest geometry {#sec-distance-to-nearest-geometry}
