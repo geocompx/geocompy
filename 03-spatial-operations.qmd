@@ -1039,27 +1039,31 @@ grain_mode
 
 By contrast, high-pass filters accentuate features. The line detection Laplace and Sobel filters might serve as an example here. 
 
-Terrain processing, the calculation of topographic characteristics such as slope, aspect and flow directions, relies on focal functions. 
-These are specialized functions that are beyond the scope of **scipy.ndimage**, found in more narrow-scope packages.
-For example, the `TerrainAttribute` function from package **richdem** can be used to calculate common terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute), specified through the `attrib` argument, namely:
+Terrain processing functions, to calculate topographic characteristics such as slope, aspect and flow directions, are provided by multiple packages including the general purpose **xarray** package and more specialized packages such as **richdem** and **pysheds**.
+Useful terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute) include
 
-* `slope_riserun` [@horn_1981]
-* `slope_percentage` [@horn_1981]
-* `slope_degrees` [@horn_1981]
-* `slope_radians` [@horn_1981]
-* `aspect` [@horn_1981]
-* `curvature` [@zevenbergen_1987]
-* `planform_curvature` [@zevenbergen_1987]
-* `profile_curvature` [@zevenbergen_1987]
+* Slope, measured in units of percent, degreees, or radians [@horn_1981]
+* Aspect, meaning each cell's downward slope direction `aspect` [@horn_1981]
+* Slope curvature, including 'planform' and 'profile' curvature [@zevenbergen_1987]
 
-Full description of the **richdem** package is beyond the scope of this book. 
-However, you can get an idea of how it works in the following code section. 
-You can see that **richdem** has its own data structure for rasters (also **numpy**-based, like **rasterio**), and consequently its own import and export functions. 
-In the example, we import the `srtm_32612.tif` file (which we are going to create in @sec-reprojecting-raster-geometries), calculates slope (in decimal degrees), and exports the result to a new file `srtm_32612_slope.tif`:
+Each of these terrain metrics can be computed with the **richdem** package.
+In the example below, we calculate slope with the `xarray` package.
+We will import the `srtm_32612.tif` file (which we are going to create in @sec-reprojecting-raster-geometries), calculates slope (in decimal degrees), and exports the result to a new file `srtm_32612_slope.tif`:
+
+```{python}
+import xarray as xr
+import rioxarray as rxr
+from xrspatial import slope
+srtm = rxr.open_rasterio('output/srtm_32612.tif')
+srtm_slope = slope(srtm)
+```
 
 ```{python}
 #| eval: false
-srtm = rd.LoadGDAL('output/srtm_32612.tif')
+#| echo: false
+# richdem verison, superseeded by xarray version
+srtm = 
+rd.LoadGDAL('output/srtm_32612.tif')
 srtm_slope = rd.TerrainAttribute(srtm, 'slope_degrees')
 rd.SaveGDAL('output/srtm_32612_slope.tif', srtm_slope)
 ```
