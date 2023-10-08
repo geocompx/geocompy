@@ -109,20 +109,21 @@ ne.plot();
 
 ## Geographic data packages {#sec-geographic-data-packages}
 
-Many Python packages have been developed for accessing geographic data, some of which are presented in @tbl-data-packages. 
+Many Python packages have been developed for accessing geographic data, two of which are presented in @tbl-data-packages and demonstrated below. 
 These provide interfaces to one or more spatial libraries or geoportals and aim to make data access even quicker from the command line.
 
 | Package | Description |
 |---|-----------|
 | `cartopy`  | Download layers from [Natural Earth Data](https://www.naturalearthdata.com/downloads/) |  
-| `osmnx`  | Access to OpenStreetMap data and conversion to spatial networks |  
-| `...`  | ... |  
-| `...`  | ... |  
+| `osmnx`  | Access to [OpenStreetMap](https://www.openstreetmap.org/) data and conversion to spatial networks |  
 : Selected Python packages for geographic data retrieval  {#tbl-data-packages}
 
 Each data package has its own syntax for accessing data. 
-This diversity is demonstrated in the subsequent code chunks, which show how to get data using three packages from @tbl-data-packages. 
-Country borders are often useful and these can be accessed with the `cartopy.io.shapereader.natural_earth` function from the `cartopy` package, as follows. 
+This diversity is demonstrated in the subsequent code chunks, which show how to get data using the packages from @tbl-data-packages. 
+
+Administrative borders are often useful in spatial analysis. 
+These can be accessed with the `cartopy.io.shapereader.natural_earth` function from the **cartopy** package. 
+For example, the following code loads the `'admin_2_counties'` dataset of US counties:
 
 ```{python}
 filename = cartopy.io.shapereader.natural_earth(
@@ -138,21 +139,23 @@ The layer of counties is plotted in @fig-ne-counties:
 
 ```{python}
 #| label: fig-ne-counties
-#| fig-cap: US counties, downloaded from the Natural Earth Data website using package `cartopy`
+#| fig-cap: US counties, downloaded from the Natural Earth Data website using package **cartopy**
 
 counties.plot();
 ```
 
 Other layers can be accessed the same way: 
 
-* you need to locate the `resolution`, `category`, and `name` of the requested dataset, then 
+* you need to locate the `resolution`, `category`, and `name` of the requested dataset in [Natural Earth Data](https://www.naturalearthdata.com/downloads/), then 
 * run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and
-* read the file into the Python environment, e.g., using `gpd.read_file`
+* read the file into the Python environment, e.g., using `gpd.read_file`.
 
-This is an alternative approach to "directly" downloading files (@sec-retrieving-open-data). 
+This is an alternative approach to "directly" downloading files as shown earlier (@sec-retrieving-open-data). 
 
-The second example uses the `osmnx` package to find parks from the OpenStreetMap (OSM) database. 
-As illustrated in the code-chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` functin. The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can be used to query a custom area of interest). The second argument specifies the OSM tag(s), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs:
+The second example uses the **osmnx** package to find parks from the OpenStreetMap (OSM) database. 
+As illustrated in the code-chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` function. 
+The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can also be used to query a custom area of interest). 
+The second argument specifies the OSM tag(s), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs:
 
 ```{python}
 parks = ox.features.features_from_place(
@@ -162,7 +165,8 @@ parks = ox.features.features_from_place(
 parks
 ```
 
-The result is a `GeoDataFrame` with numerous properties. The following expression plots the geometries with the `name` property in the tooltips (@fig-ox-features):
+The result is a `GeoDataFrame` with the parks in Leeds.
+The following expression plots the geometries with the `name` property in the tooltips (@fig-ox-features):
 
 ```{python}
 #| label: fig-ox-features
@@ -171,11 +175,18 @@ The result is a `GeoDataFrame` with numerous properties. The following expressio
 parks[['name', 'geometry']].explore()
 ```
 
-It should be noted that the `osmnx` package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas. To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from [Geofabrik](https://download.geofabrik.de/), and then load them from the file into the Python environment.
+It should be noted that the `osmnx` package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas. 
+To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from [Geofabrik](https://download.geofabrik.de/), and then load them from the file into the Python environment.
 
-OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the [Overpass turbo](https://overpass-turbo.eu/) web service for rapid development and testing of OSM queries to [osm2pgsql](https://osm2pgsql.org/) for importing the data into a PostGIS database. Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers. Using OSM encourages 'citizen science' and contributions back to the digital commons (you can start editing data representing a part of the world you know well at [www.openstreetmap.org](https://www.openstreetmap.org/)). 
+OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the [Overpass turbo](https://overpass-turbo.eu/) web service for rapid development and testing of OSM queries to [osm2pgsql](https://osm2pgsql.org/) for importing the data into a PostGIS database. 
+Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers. 
+Using OSM encourages 'citizen science' and contributions back to the digital commons (you can start editing data representing a part of the world you know well at [www.openstreetmap.org](https://www.openstreetmap.org/)). 
 
-Sometimes, packages come with built-in datasets. These can be accessed just like any other object (e.g., function) that is imported as part of the package, or in other ways as specified in the package documentation. For example, package `geopandas` comes with few built-in datasets (see `gpd.datasets.available` for a list of names). Using the `gpd.datasets.get_path` function and the dataset name, we can obtain the path to the location of the dataset file on our computer. For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we've alredy met before):
+Sometimes, packages come with built-in datasets. 
+These can be accessed just like any other object (e.g., function) that is imported as part of the package, or in other ways as specified in the package documentation. 
+For example, package **geopandas** comes with few built-in datasets (see `gpd.datasets.available` for a list of names). 
+Using the `gpd.datasets.get_path` function and the dataset name, we can obtain the path to the location of the dataset file on our computer. 
+For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we've alredy met before):
 
 ```{python}
 filename = gpd.datasets.get_path('naturalearth_lowres')
@@ -188,7 +199,12 @@ Then, we can import the dataset, just like from any other file:
 gpd.read_file(filename)
 ```
 
-Another way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into its coordinates. This is usually done by sending a query to an online service and getting the location as a result. Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements. [Nominatim](https://nominatim.openstreetmap.org/ui/about.html) is a popular free service, based on OpenStreetMap data. It can be accessed in Python uisng the `osmnx.geocoder.geocode` function. The function returns a `tuple` of the form `(lat,lon)`. The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London:
+Another way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into its coordinates. 
+This is usually done by sending a query to an online service and getting the location as a result. 
+Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements. 
+[Nominatim](https://nominatim.openstreetmap.org/ui/about.html) is a popular free service, based on OpenStreetMap data. 
+It can be accessed in Python uisng the `osmnx.geocoder.geocode` function. The function returns a `tuple` of the form `(lat,lon)`. 
+The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London:
 
 ```{python}
 ox.geocoder.geocode('54 Frith St, London W1D 4SJ, UK')
@@ -196,7 +212,9 @@ ox.geocoder.geocode('54 Frith St, London W1D 4SJ, UK')
 
 If the query returns no results, an `InsufficientResponseError` is raised, a scenario that the user can deal with using [`try`/`except`](https://docs.python.org/3/tutorial/errors.html#handling-exceptions). 
 
-The alternative function `osmnx.geocoder.geocode_to_gdf` can be used to automatically geocode multiple addresses (accepting a `list` of `string`s) and transforming them into a `GeoDataFrame`. This function also returns Polygon geometries. For example:
+The alternative function `osmnx.geocoder.geocode_to_gdf` can be used to automatically geocode multiple addresses (accepting a `list` of `string`s) and transforming them into a `GeoDataFrame`. 
+This function also returns `'Polygon'` geometries. 
+For example:
 
 ```{python}
 result = ox.geocoder.geocode_to_gdf(['54 Frith St, London W1D 4SJ, UK'])
@@ -212,9 +230,9 @@ The result is visualized below using `.explore` (@fig-ox-geocode):
 result[['display_name', 'geometry']].explore(color='red')
 ```
 
-## Geographic web services
+<!-- ## Geographic web services
 
-To complete...
+To complete... -->
 
 ## File formats {#sec-file-formats}
 
