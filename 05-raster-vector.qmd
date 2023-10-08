@@ -889,72 +889,31 @@ Using the command line pathway, generating 50 $m$ contours of the `dem.tif` file
 
 ```{python}
 #| eval: false
-os.system('gdal_contour -a elev data/dem.tif output/dem_contour1.gpkg -i 50.0')
+os.system('gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0')
 ```
 
-Note that here we ran the `gdal_contour` command through `os.system`, in order to remain in the Python environment. 
-You can also run the standalone command in the command line interface you are using, such as the Anaconda Prompt:
-
-```sh
-gdal_contour -a elev data/dem.tif output/dem_contour1.gpkg -i 50.0
-```
-
-Like all GDAL programs, `gdal_contour` works with files. Here: 
+Like all GDAL programs (also see `gdaldem` example in @sec-focal-operations), `gdal_contour` works with files. Here: 
 
 * The input is the `data/dem.tif` file
-* The result is exported to the `output/dem_contour1.gpkg` file
+* The result is exported to the `output/dem_contour.gpkg` file
 
-To illustrate the result, let's read the resulting `dem_contour2.gpkg` layer back into the Python environment. 
+To illustrate the result, let's read the resulting `dem_contour.gpkg` layer back into the Python environment. 
 Note that the layer contains an arrtibute named `'elev'` (as specified using `-a elev`) with the contour elevation values:
 
 ```{python}
-contours1 = gpd.read_file('output/dem_contour1.gpkg')
+contours1 = gpd.read_file('output/dem_contour.gpkg')
 contours1
 ```
 
-Alternatively, we can use the `osgeo` interface to GDAL to do the same, using the [`osgeo.gdal.ContourGenerate`](https://gdal.org/api/python/osgeo.gdal.html#osgeo.gdal.ContourGenerate) wrapper of `gdal_contour`. 
-Theis makes the code much longer (then just one command, as above), but avoids explicitly running a separate program (`gdal_contour`) outside of the Python environment (since we focus on `rasterio`, explaining the code is beyond the scope of this book):
-
-```{python}
-# input_r = osgeo.gdal.Open('data/dem.tif', osgeo.gdalconst.GA_ReadOnly)
-# input_r1 = input_r.GetRasterBand(1)
-# sr = osgeo.osr.SpatialReference(input_r.GetProjection())
-# ogr_ds = osgeo.ogr.GetDriverByName('GPKG').CreateDataSource('output/dem_contour2.gpkg')
-# contour_shp = ogr_ds.CreateLayer('contours', sr)
-# field_defn = osgeo.ogr.FieldDefn('ID', osgeo.ogr.OFTInteger)
-# contour_shp.CreateField(field_defn)
-# field_defn = osgeo.ogr.FieldDefn('elev', osgeo.ogr.OFTReal)
-# contour_shp.CreateField(field_defn)
-# osgeo.gdal.ContourGenerate(input_r1, 50, 0, [], 0, 0, contour_shp, 0, 1)
-# ogr_ds = None
-```
-
-Here is the identical result of the second approach, named `dem_contour2.gpkg`:
-
-```{python}
-# contours2 = gpd.read_file('output/dem_contour2.gpkg')
-# contours2
-```
-
-Here is a plot of the identical contour layers `dem_contour1.gpkg` and `dem_contour2.gpkg` created using the two methods (@fig-raster-contours2):
+Here is a plot of the contour layer `dem_contour.gpkg` (@fig-raster-contours2):
 
 ```{python}
 #| label: fig-raster-contours2
-#| fig-cap: Contours of the `dem.tif` raster
-#| layout-ncol: 2
-#| fig-subcap: 
-#| - Using the command line `gdal_contour` program
-#| - Using the `osgeo.gdal.ContourGenerate` wrapper
+#| fig-cap: Contours of the `dem.tif` raster, calculated using the `gdal_contour` program
 
-# Using 'gdal_contour'
 fig, ax = plt.subplots()
 rasterio.plot.show(src_dem, ax=ax)
 contours1.plot(ax=ax, edgecolor='black');
-
-# Using 'osgeo.gdal.ContourGenerate'
-# fig, ax = plt.subplots()
-# rasterio.plot.show(src_dem, ax=ax)
-# contours2.plot(ax=ax, edgecolor='black');
 ```
 
 ## Distance to nearest geometry {#sec-distance-to-nearest-geometry}
