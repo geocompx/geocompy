@@ -916,24 +916,24 @@ Alternatively, we can use the `osgeo` interface to GDAL to do the same, using th
 Theis makes the code much longer (then just one command, as above), but avoids explicitly running a separate program (`gdal_contour`) outside of the Python environment (since we focus on `rasterio`, explaining the code is beyond the scope of this book):
 
 ```{python}
-input_r = osgeo.gdal.Open('data/dem.tif', osgeo.gdalconst.GA_ReadOnly)
-input_r1 = input_r.GetRasterBand(1)
-sr = osgeo.osr.SpatialReference(input_r.GetProjection())
-ogr_ds = osgeo.ogr.GetDriverByName('GPKG').CreateDataSource('output/dem_contour2.gpkg')
-contour_shp = ogr_ds.CreateLayer('contours', sr)
-field_defn = osgeo.ogr.FieldDefn('ID', osgeo.ogr.OFTInteger)
-contour_shp.CreateField(field_defn)
-field_defn = osgeo.ogr.FieldDefn('elev', osgeo.ogr.OFTReal)
-contour_shp.CreateField(field_defn)
-osgeo.gdal.ContourGenerate(input_r1, 50, 0, [], 0, 0, contour_shp, 0, 1)
-ogr_ds = None
+# input_r = osgeo.gdal.Open('data/dem.tif', osgeo.gdalconst.GA_ReadOnly)
+# input_r1 = input_r.GetRasterBand(1)
+# sr = osgeo.osr.SpatialReference(input_r.GetProjection())
+# ogr_ds = osgeo.ogr.GetDriverByName('GPKG').CreateDataSource('output/dem_contour2.gpkg')
+# contour_shp = ogr_ds.CreateLayer('contours', sr)
+# field_defn = osgeo.ogr.FieldDefn('ID', osgeo.ogr.OFTInteger)
+# contour_shp.CreateField(field_defn)
+# field_defn = osgeo.ogr.FieldDefn('elev', osgeo.ogr.OFTReal)
+# contour_shp.CreateField(field_defn)
+# osgeo.gdal.ContourGenerate(input_r1, 50, 0, [], 0, 0, contour_shp, 0, 1)
+# ogr_ds = None
 ```
 
 Here is the identical result of the second approach, named `dem_contour2.gpkg`:
 
 ```{python}
-contours2 = gpd.read_file('output/dem_contour2.gpkg')
-contours2
+# contours2 = gpd.read_file('output/dem_contour2.gpkg')
+# contours2
 ```
 
 Here is a plot of the identical contour layers `dem_contour1.gpkg` and `dem_contour2.gpkg` created using the two methods (@fig-raster-contours2):
