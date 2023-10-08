@@ -475,47 +475,71 @@ list(values)
 ```
 
 The example above efficiently extracts and downloads a single value instead of the entire GeoTIFF file, saving valuable resources.
-The `/vsicurl/` prefix **also works for vector file formats**, enabling you to import datasets from online storage with `geopandas` just by adding it before the vector file URL.
 
-Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets. You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
+Alternatively, instead of querying the raster values at particular coordinates, we can read a subset of the raster. 
+With **rasterio**, this is done using the so-called [windowed reading](https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html) capabilities. 
+Note that, with windowed reading, we import just a subset of the raster extent into an `ndarray` covering any partial extent. 
+Windowed reading is therefore memory- (and, in this case, bandwidth-) efficient since it avoids reading the entire raster into memory. 
+Windowed reading can also be considered an alternative pathway to do the same as *cropping* (@sec-raster-cropping).
 
-(To add example of reading rectangular extent...)
+To read a raster *window*, let's first define the bounding box coordinates. 
+For example, here we use a $10 \times 10$ degrees extent coinciding with the Reykjavik point used above:
+
+```{python}
+xmin=-30
+xmax=-20
+ymin=60
+ymax=70
+```
+
+Next, we create a window object, using the [`rasterio.windows.from_bounds`](https://rasterio.readthedocs.io/en/stable/api/rasterio.windows.html#rasterio.windows.from_bounds) function:
 
 ```{python}
 w = rasterio.windows.from_bounds(
-    left=-30, 
-    bottom=60,
-    right=-20,
-    top=70, 
+    left=xmin, 
+    bottom=ymin,
+    right=xmax,
+    top=ymax, 
     transform=src.transform
 )
 w
 ```
 
+Now we can read the partial array, accordint to the specified window `w`, passing it to the `.read` method:
 
 ```{python}
 r = src.read(1, window=w)
 r
 ```
 
+Note that the transformation matrix of the window is not the same as that of the original raster (unless it incidentally starts from the top-left corner)! 
+Therefore, we need to re-create the transformation matrix, with the modified origin (`xmin`,`ymax`) yet with the same resolution, as follows:
+
 ```{python}
 w_transform = rasterio.transform.from_origin(
-    west=-30, 
-    north=70, 
+    west=xmin, 
+    north=ymax, 
     xsize=src.transform[0],
     ysize=abs(src.transform[4])
 )
 w_transform
-
 ```
 
-```{python}
+The array `r` along with the transformation `w_transform` comprise the partial window, which we can keep working with just like with any other raster, as shown in previous chapters.
+@fig-raster-window shows the result, along with the Reykjavik point:
 
+```{python}
+#| label: fig-raster-window
+#| fig-cap: Raster window read from a remote Cloud Optimized GeoTIFF (COG) file source
 
 fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=w_transform, ax=ax)
-gpd.GeoSeries(shapely.Point(coords)).plot(ax=ax, color='black');
+gpd.GeoSeries(shapely.Point(coords)).plot(ax=ax, color='red');
 ```
+
+The `/vsicurl/` prefix *also works for vector file formats*, enabling you to import datasets from online storage with `geopandas` just by adding it before the vector file URL.
+Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets. 
+You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
 
 ## Data output (O) {#sec-data-output}
 
