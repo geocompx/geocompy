@@ -1039,45 +1039,53 @@ grain_mode
 
 By contrast, high-pass filters accentuate features. The line detection Laplace and Sobel filters might serve as an example here. 
 
-Terrain processing functions, to calculate topographic characteristics such as slope, aspect and flow directions, are provided by multiple packages including the general purpose **xarray** package and more specialized packages such as **richdem** and **pysheds**.
-Useful terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute) include
+Terrain processing functions, to calculate topographic characteristics such as slope, aspect and flow directions, are provided by multiple Python packages, including the general purpose **xarray** package, and more specialized packages such as **richdem** and **pysheds**.
+Useful terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute) include:
 
 * Slope, measured in units of percent, degreees, or radians [@horn_1981]
-* Aspect, meaning each cell's downward slope direction `aspect` [@horn_1981]
+* Aspect, meaning each cell's downward slope direction [@horn_1981]
 * Slope curvature, including 'planform' and 'profile' curvature [@zevenbergen_1987]
 
-Each of these terrain metrics can be computed with the **richdem** package.
-In the example below, we calculate slope with the `xarray` package.
-We will import the `srtm_32612.tif` file (which we are going to create in @sec-reprojecting-raster-geometries), calculates slope (in decimal degrees), and exports the result to a new file `srtm_32612_slope.tif`:
+For example, each of these, and other, terrain metrics can be computed with the **richdem** package.
 
-```{python}
-import xarray as xr
-import rioxarray as rxr
-from xrspatial import slope
-srtm = rxr.open_rasterio('output/srtm_32612.tif')
-srtm_slope = slope(srtm)
-```
+Another extremely fast, memory-efficient, and concise, alternative, is to the use the GDAL program called [`gdaldem`](https://gdal.org/programs/gdaldem.html). 
+`gdaldem` can be used to calculate slope, aspect, and other terrain metrics through a single command, accepting an input file path and exporting the result to a new file. 
+This is our first example in the book where we demonstrate a situation where it may be worthwhile to leave the Python environment, and utilize a GDAL program directly, rather than through their wrappers (such as **rasterio** and other Python packages), whether to access a computational algorithm not easily accessible in a Python package, or for GDAL's memory-efficiency and speed benefits. (Another example, of the `gdal_contour` program, will be shown in @sec-raster-to-contours.)
 
-```{python}
-#| eval: false
-#| echo: false
-# richdem verison, superseeded by xarray version
-srtm = 
-rd.LoadGDAL('output/srtm_32612.tif')
-srtm_slope = rd.TerrainAttribute(srtm, 'slope_degrees')
-rd.SaveGDAL('output/srtm_32612_slope.tif', srtm_slope)
-```
-
-@fig-raster-slope shows the result, using our more familiar plotting methods from `rasterio`. The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them:
+GDAL, along with all of its programs should be available in your Python environment, since GDAL is a dependency of **rasterio**. 
+The following example, which should be run from the command line, takes the `srtm_32612.tif` raster (which we are going to create in @sec-reprojecting-raster-geometries, therefore it is in the `'output'` directory), calculates slope (in decimal degrees, between `0` and `90`), and exports the result to a new file `srtm_32612_slope.tif`. 
+Note that the arguments of `gdaldem` are the metric name (`slope`), then the input file path, and finally the output file path:
 
 ```{python}
 #| eval: false
+os.system('gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif')
+```
+
+Here we ran the `gdaldem` command through `os.system`, in order to remain in the Python environment, even though we are calling an external program. 
+You can also run the standalone command in the command line interface you are using, such as the Anaconda Prompt:
+
+```{sh}
+gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif
+```
+
+Replacing the metric name, we can calculate other terrain properties. 
+For example, here is how we can calculate an aspect raster `srtm_32612_aspect.tif`, also in degrees (between `0` and `360`):
+
+```{python}
+#| eval: false
+os.system('gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif')
+```
+
+@fig-raster-slope shows the result, using our more familiar plotting methods from **rasterio**. The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them:
+
+```{python}
 #| label: fig-raster-slope
 #| fig-cap: Slope calculation
-#| layout-ncol: 2
+#| layout-ncol: 3
 #| fig-subcap: 
-#| - Input---DEM
-#| - Output---Slope, in degrees
+#| - Input DEM
+#| - Slope (degrees)
+#| - Aspect (degrees)
 
 # Input (DEM)
 src_srtm = rasterio.open('output/srtm_32612.tif')
@@ -1088,7 +1096,7 @@ i = ax.imshow(srtm, cmap='Spectral')
 rasterio.plot.show(src_srtm, cmap='Spectral', ax=ax)
 fig.colorbar(i, ax=ax);
 
-# Output (slope)
+# Slope
 src_srtm_slope = rasterio.open('output/srtm_32612_slope.tif')
 srtm_slope = src_srtm_slope.read(1)
 srtm_slope[srtm_slope == src_srtm_slope.nodata] = np.nan
@@ -1096,18 +1104,16 @@ fig, ax = plt.subplots()
 i = ax.imshow(srtm_slope, cmap='Spectral')
 rasterio.plot.show(src_srtm_slope, cmap='Spectral', ax=ax)
 fig.colorbar(i, ax=ax);
+
+# # Aspect
+src_srtm_aspect = rasterio.open('output/srtm_32612_aspect.tif')
+srtm_aspect = src_srtm_aspect.read(1)
+srtm_aspect[srtm_aspect == src_srtm_aspect.nodata] = np.nan
+fig, ax = plt.subplots()
+i = ax.imshow(srtm_aspect, cmap='Spectral')
+rasterio.plot.show(src_srtm_aspect, cmap='Spectral', ax=ax)
+fig.colorbar(i, ax=ax);
 ```
-
-
-::: {#fig-raster-slope layout-ncol=2}
-
-![Input DEM](./images/fig-raster-slope-output-1.png)
-
-![Output slope](./images/fig-raster-slope-output-2.png)
-
-Slope calculation.
-
-:::
 
 ### Zonal operations {#sec-zonal-operations}
 
