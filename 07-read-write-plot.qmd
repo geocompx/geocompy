@@ -243,6 +243,7 @@ The large variety of file formats may seem bewildering, but there has been much 
 GDAL (which should be pronounced "goo-dal", with the double "o" making a reference to object-orientation), the Geospatial Data Abstraction Library, has resolved many issues associated with incompatibility between geographic file formats since its release in 2000. 
 GDAL provides a unified and high-performance interface for reading and writing of many raster and vector data formats. 
 Many open and proprietary GIS programs, including GRASS, ArcGIS and QGIS, use GDAL behind their GUIs for doing the legwork of ingesting and spitting out geographic data in appropriate formats.
+Most Pyhton packages for working with spatial data, including **geopandas** and **rasterio** used in this book, also rely on GDAL for importing and exporting spatial data files. 
 
 GDAL provides access to more than 200 vector and raster data formats. 
 @tbl-file-formats presents some basic information about selected and often used spatial file formats.
@@ -250,7 +251,7 @@ GDAL provides access to more than 200 vector and raster data formats.
 Name  | Extension  | Info  | Type  | Model |
 |-----|----|----------|-----|-----|
 ESRI Shapefile  | `.shp` (the main file)  | Popular format consisting of at least three files. No support for: files > 2GB;mixed types; names > 10 chars; cols > 255.  | Vector  | Partially open |
-GeoJSON  | `.geojson`  | Extends the JSON exchange format by including a subset of the simple feature representation; mostly used for storing coordinates in longitude and latitude; it is extended by the TopoJSON format  | Vector  | Open |
+GeoJSON  | `.geojson`  | Extends the JSON exchange format by including a subset of the simple feature representation; mostly used for storing coordinates in longitude and latitude; it is extended by the TopoJSON format. | Vector  | Open |
 KML  | `.kml`  | XML-based format for spatial visualization, developed for use with Google Earth. Zipped KML file forms the KMZ format.  | Vector  | Open |
 GPX  | `.gpx`  | XML schema created for exchange of GPS data.  | Vector  | Open |
 FlatGeobuf  | `.fgb`  | Single file format allowing for quick reading and writing of vector data. Has streaming capabilities.  | Vector  | Open |
@@ -282,15 +283,16 @@ It allows spatial information, such as the CRS definition and the transformation
 Similar to ESRI Shapefile, this format was firstly developed in the 1990s, but as an open format. 
 Additionally, GeoTIFF is still being expanded and improved. 
 One of the most significant recent addition to the GeoTIFF format is its variant called COG (Cloud Optimized GeoTIFF). 
-Raster objects saved as COGs can be hosted on HTTP servers, so other people can read only parts of the file without downloading the whole file (see Sections 8.6.2 and 8.7.2...).
+Raster objects saved as COGs can be hosted on HTTP servers, so other people can read only parts of the file without downloading the whole file (@sec-input-raster).
 
 There is also a plethora of other spatial data formats that we do not explain in detail or mention in @tbl-file-formats due to the book limits. 
 If you need to use other formats, we encourage you to read the GDAL documentation about [vector](https://gdal.org/drivers/vector/index.html) and [raster](https://gdal.org/drivers/raster/index.html) drivers. 
 Additionally, some spatial data formats can store other data models (types) than vector or raster. 
-It includes LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays.
+It includes LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays. 
 
 Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets. 
-This can be convenient to share spatial datasets with people who, or software that, struggle with spatial data formats.
+This can be convenient to share spatial (point) datasets with people who, or software that, struggle with spatial data formats. 
+If necessary, the table can be converted to a point layer (see examples in @sec-vector-layer-from-scratch and @sec-spatial-joining).
 
 ## Data input (I) {#sec-data-input}
 
@@ -434,7 +436,7 @@ Finally, we can choose the first layer `Placemarks` and read it, using `gpd.read
 placemarks = gpd.read_file(u, layer='Placemarks')
 ```
 
-### Raster data
+### Raster data {#sec-input-raster}
 
 Similar to vector data, raster data comes in many file formats with some of them supporting multilayer files. 
 `rasterio.open` is used to create a file connection to a raster file, which can be subsequently used to read the metadata and/or the values, as shown previously (@sec-using-rasterio). 
@@ -467,7 +469,8 @@ Another option is to extract raster values at particular points, directly from t
 For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying `.sample`:
 
 ```{python}
-values = src.sample([(-21.94, 64.15)])
+coords = (-21.94, 64.15)
+values = src.sample([coords])
 list(values)
 ```
 
@@ -477,6 +480,42 @@ The `/vsicurl/` prefix **also works for vector file formats**, enabling you to i
 Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets. You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
 
 (To add example of reading rectangular extent...)
+
+```{python}
+w = rasterio.windows.from_bounds(
+    left=-30, 
+    bottom=60,
+    right=-20,
+    top=70, 
+    transform=src.transform
+)
+w
+```
+
+
+```{python}
+r = src.read(1, window=w)
+r
+```
+
+```{python}
+w_transform = rasterio.transform.from_origin(
+    west=-30, 
+    north=70, 
+    xsize=src.transform[0],
+    ysize=abs(src.transform[4])
+)
+w_transform
+
+```
+
+```{python}
+
+
+fig, ax = plt.subplots()
+rasterio.plot.show(r, transform=w_transform, ax=ax)
+gpd.GeoSeries(shapely.Point(coords)).plot(ax=ax, color='black');
+```
 
 ## Data output (O) {#sec-data-output}
 
