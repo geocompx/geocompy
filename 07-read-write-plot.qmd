@@ -606,7 +606,7 @@ world.to_file('output/world_many_features.gpkg', mode='a')
 
 Here, `world_many_features.gpkg` will contain a polygonal layer named `world` with two "copies" of each country (that is 177×2=354 features, whereas the `world` layer has 177 features):
 
-```{pyhton}
+```{python}
 gpd.read_file('output/world_many_features.gpkg').shape
 ```
 
@@ -633,26 +633,23 @@ gpd.read_file('output/world_many_layers.gpkg', layer='world2').head(1)
 
 ### Raster data {#sec-data-output-raster}
 
-To write a raster file using **rasterio**, we need to pass a raster file path to `rasterio.open`, in writing (`'w'`) mode. This implies creating a new empty file (or overwriting an existing one). As opposed to read (`'r'`, the default) mode, the `rasterio.open` function needs quite a lot of information, in addition to the file path and mode:
-
-* An array with the raster values
-* Metadata describing the raster format and spatial properties
-
-The metadata needs to specify the following properties:
+To write a raster file using **rasterio**, we need to pass a raster file path to `rasterio.open`, in writing (`'w'`) mode. 
+This implies creating a new empty file (or overwriting an existing one). 
+As opposed to reading mode (`'r'`, the default) mode, when in writing mode the `rasterio.open` function needs quite a lot of information, in addition to the file path and mode:
 
 * `driver`---The file format (The recommendation is `'GTiff'` for GeoTIFF)
 * `height`---Number of rows
 * `width`---Number of columns
 * `count`---Number of bands
 * `nodata`---The value which represents "No Data", if any
-* `dtype`---The raster data type, one of **numpy** types (e.g., `np.int64`)
-* `crs`---The CRS, using an EPSG code (e.g., `4326`)
+* `dtype`---The raster data type, one of **numpy** types (e.g., `np.int64`) (see @tbl-numpy-data-types)
+* `crs`---The CRS, e.g., using an EPSG code (such as `4326`)
 * `transform`---The transform matrix
 * `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [doesn't work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters.
 
 Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection. If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is the array with band values and `n` is the band index (starting from `1`, see below). When done, we close the file connection using the `.close` method. Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting, directly accept a file connection in `'w'` mode, thus handling the writing (of a resampled or reprojected raster) for us.
 
-Most of the properties are either straightforward to choose, based on our aims, (e.g., `driver`, `crs`, `compress`, `nodata`), or directly derived from the array with the raster values itself (e.g., `height`, `width`, `count`, `dtype`). The most complicated property is the `transform`, which specifies the raster origin and resolution. The `transform` is typically either obtained from an existing raster (serving as a "template"), or created from scratch based on manually specified origin and resolution values (e.g., using `rasterio.transform.from_origin`), or calculate automatically (e.g., using `rasterio.warp.calculate_default_transform`).
+Most of the properties are either straightforward to choose, based on our aims, (e.g., `driver`, `crs`, `compress`, `nodata`), or directly derived from the array with the raster values itself (e.g., `height`, `width`, `count`, `dtype`). The most complicated property is the `transform`, which specifies the raster origin and resolution. The `transform` is typically either obtained from an existing raster (serving as a "template"), or created from scratch based on manually specified origin and resolution values (e.g., using `rasterio.transform.from_origin`), or calculated automatically (e.g., using `rasterio.warp.calculate_default_transform`), as shown in previous chapters.
 
 Earlier in the book, we have already demonstrated the four most common scenarios of writing rasters:
 
