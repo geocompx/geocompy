@@ -477,43 +477,31 @@ src = rasterio.open('data/srtm.tif')
 src
 ```
 
-All of the previous examples read spatial information from files stored on your hard drive. 
+All of the previous examples, like the one above, read spatial information from files stored on your hard drive. 
 However, GDAL also allows reading data directly from online resources, such as HTTP/HTTPS/FTP web resources. 
 The only thing we need to do is to add a `/vsicurl/` prefix before the path to the file. 
-Let's try it by connecting to the global monthly snow probability at 500 $m$ resolution for the period 2000-2012 (T. Hengl 2021 add reference...). 
+Let's try it by connecting to the global monthly snow probability at 500 $m$ resolution for the period 2000-2012 [@hengl_t_2021_5774954]. 
 Snow probability for December is stored as a Cloud Optimized GeoTIFF (COG) file (see @sec-file-formats). 
-To read an online file, we just need to provide its URL together with the `/vsicurl/` prefix:
+To read an online file, we need to provide its URL together with the `/vsicurl/` prefix:
 
 ```{python}
-url = "/vsicurl/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif"
-src = rasterio.open(url)
+src = rasterio.open('/vsicurl/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif')
 src
 ```
 
 In the example above `rasterio.open` creates a connection to the file without obtaining any values, as we did for the local `srtm.tif` file.
 The values can read, into an `ndarray`, using the `.read` method of the file connection (@sec-using-rasterio). 
-This allows us also to just read a small portion of the data without downloading the entire file. 
+Using parameters of `.read` allows us to just read a small portion of the data, without downloading the entire file. 
 This is very useful when working with large datasets hosted online from resource-constrained computing environments such as laptops.
 
-Another option is to extract raster values at particular points, directly from the file connection, using the `.sample` method (see @sec-spatial-subsetting-raster). 
-For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying `.sample`:
-
-```{python}
-coords = (-21.94, 64.15)
-values = src.sample([coords])
-list(values)
-```
-
-The example above efficiently extracts and downloads a single value instead of the entire GeoTIFF file, saving valuable resources.
-
-Alternatively, instead of querying the raster values at particular coordinates, we can read a subset of the raster. 
+For example, we can read a specified rectangular extent of the raster.
 With **rasterio**, this is done using the so-called [windowed reading](https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html) capabilities. 
 Note that, with windowed reading, we import just a subset of the raster extent into an `ndarray` covering any partial extent. 
-Windowed reading is therefore memory- (and, in this case, bandwidth-) efficient since it avoids reading the entire raster into memory. 
-Windowed reading can also be considered an alternative pathway to do the same as *cropping* (@sec-raster-cropping).
+Windowed reading is therefore memory- (and, in this case, bandwidth-) efficient, since it avoids reading the entire raster into memory. 
+Windowed reading can also be considered an alternative pathway to *cropping* (@sec-raster-cropping).
 
 To read a raster *window*, let's first define the bounding box coordinates. 
-For example, here we use a $10 \times 10$ degrees extent coinciding with the Reykjavik point used above:
+For example, here we use a $10 \times 10$ degrees extent coinciding with Reykjavik:
 
 ```{python}
 xmin=-30
@@ -522,7 +510,8 @@ ymin=60
 ymax=70
 ```
 
-Next, we create a window object, using the [`rasterio.windows.from_bounds`](https://rasterio.readthedocs.io/en/stable/api/rasterio.windows.html#rasterio.windows.from_bounds) function:
+Using the extent coordinates along with the raster transformation matrix, we create a window object, using the [`rasterio.windows.from_bounds`](https://rasterio.readthedocs.io/en/stable/api/rasterio.windows.html#rasterio.windows.from_bounds) function. 
+The `rasterio.windows.from_bounds` function basically "translates" the extent from coordinates, to row/column ranges:
 
 ```{python}
 w = rasterio.windows.from_bounds(
@@ -543,7 +532,7 @@ r
 ```
 
 Note that the transformation matrix of the window is not the same as that of the original raster (unless it incidentally starts from the top-left corner)! 
-Therefore, we need to re-create the transformation matrix, with the modified origin (`xmin`,`ymax`) yet with the same resolution, as follows:
+Therefore, we must re-create the transformation matrix, with the modified origin (`xmin`,`ymax`), yet the same resolution, as follows:
 
 ```{python}
 w_transform = rasterio.transform.from_origin(
@@ -555,8 +544,8 @@ w_transform = rasterio.transform.from_origin(
 w_transform
 ```
 
-The array `r` along with the transformation `w_transform` comprise the partial window, which we can keep working with just like with any other raster, as shown in previous chapters.
-@fig-raster-window shows the result, along with the Reykjavik point:
+The array `r` along with the updated transformation matrix `w_transform` comprise the partial window, which we can keep working with just like with any other raster, as shown in previous chapters.
+@fig-raster-window shows the result, along with the location of Reykjavik (see below):
 
 ```{python}
 #| label: fig-raster-window
@@ -564,10 +553,21 @@ The array `r` along with the transformation `w_transform` comprise the partial w
 
 fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=w_transform, ax=ax)
-gpd.GeoSeries(shapely.Point(coords)).plot(ax=ax, color='red');
+gpd.GeoSeries(shapely.Point(-21.94, 64.15)).plot(ax=ax, color='red');
 ```
 
-The `/vsicurl/` prefix *also works for vector file formats*, enabling you to import datasets from online storage with `geopandas` just by adding it before the vector file URL.
+Another option is to extract raster values at particular points, directly from the file connection, using the `.sample` method (see @sec-spatial-subsetting-raster). 
+For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying `.sample`:
+
+```{python}
+coords = (-21.94, 64.15)
+values = src.sample([coords])
+list(values)
+```
+
+The example above efficiently extracts and downloads a single value instead of the entire GeoTIFF file, saving valuable resources.
+
+The `/vsicurl/` prefix also works for *vector* file formats, enabling you to import datasets from online storage with **geopandas** just by adding it before the vector file URL.
 Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets. 
 You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
 
