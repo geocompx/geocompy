@@ -545,7 +545,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="sec-raster-extraction" class="level2" data-number="5.4">
 <h2 data-number="5.4" class="anchored" data-anchor-id="sec-raster-extraction"><span class="header-section-number">5.4</span> Raster extraction</h2>
 <p>Raster extraction is the process of identifying and returning the values associated with a ‘target’ raster at specific locations, based on a (typically vector) geographic ‘selector’ object. The reverse of raster extraction—assigning raster cell values based on vector objects—is rasterization, described in <a href="#sec-rasterization"><span>Section&nbsp;5.5</span></a>.</p>
-<p>In the following examples, we use a third-party package called <code>rasterstats</code>, which is specifically aimed at extracting raster values:</p>
+<p>In the following examples, we use a third-party package called <strong>rasterstats</strong>, which is specifically aimed at extracting raster values:</p>
 <ul>
 <li>to <em>points</em> (<a href="#sec-extraction-to-points"><span>Section&nbsp;5.4.1</span></a>) or to <em>lines</em> (<a href="#sec-extraction-to-lines"><span>Section&nbsp;5.4.2</span></a>), via the <code>rasterstats.point_query</code> function, or</li>
 <li>to <em>polygons</em> (<span class="quarto-unresolved-ref">?sec-extraction-to-polygons</span>), via the <code>rasterstats.zonal_stats</code> function.</li>
@@ -938,7 +938,7 @@ Length: 154, dtype: geometry</code></pre>
 <section id="sec-rasterizing-points" class="level3" data-number="5.5.1">
 <h3 data-number="5.5.1" class="anchored" data-anchor-id="sec-rasterizing-points"><span class="header-section-number">5.5.1</span> Rasterizing points</h3>
 <p>Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in <a href="01-spatial-data.html"><span>Chapter&nbsp;1</span></a>, the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.</p>
-<p>The <code>rasterio</code> package contains the <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.rasterize"><code>rasterio.features.rasterize</code></a> function for doing this work. To make it happen, we need to have the “template” grid definition, i.e., the “template” raster defining the extent, resolution and CRS of the output, in the <code>out_shape</code> (the output dimensions) and <code>transform</code> (the transformation matrix) arguments of <code>rasterio.features.rasterize</code>. In case we have an existing template raster, we simply need to query its <code>.shape</code> and <code>.transform</code>. In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).</p>
+<p>The <strong>rasterio</strong> package contains the <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.rasterize"><code>rasterio.features.rasterize</code></a> function for doing this work. To make it happen, we need to have the “template” grid definition, i.e., the “template” raster defining the extent, resolution and CRS of the output, in the <code>out_shape</code> (the output dimensions) and <code>transform</code> (the transformation matrix) arguments of <code>rasterio.features.rasterize</code>. In case we have an existing template raster, we simply need to query its <code>.shape</code> and <code>.transform</code>. In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).</p>
 <p>Furthermore, the <code>rasterio.features.rasterize</code> function requires the input vector shapes in the form for a generator of <code>(geom,value)</code> tuples, where:</p>
 <ul>
 <li><code>geom</code> is the given geometry (<strong>shapely</strong> geometry object)</li>
@@ -982,7 +982,7 @@ Length: 154, dtype: geometry</code></pre>
 <div class="sourceCode cell-code" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>g <span class="op">=</span> ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry.to_list())</span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>g</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="38">
-<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7f1b570efed0&gt;</code></pre>
+<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7f7dbee565a0&gt;</code></pre>
 </div>
 </div>
 <p>Then, the rasterizing expression is:</p>
@@ -1297,7 +1297,7 @@ dtype: geometry</code></pre>
 <span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>shapes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="53">
-<pre><code>&lt;generator object shapes at 0x7f1b570e7340&gt;</code></pre>
+<pre><code>&lt;generator object shapes at 0x7f7dbee4f340&gt;</code></pre>
 </div>
 </div>
 <p>We can generate all shapes at once, into a <code>list</code> named <code>pol</code>, as follows:</p>
@@ -1550,10 +1550,10 @@ dtype: geometry</code></pre>
 <p>Unfortunately, <code>rasterio</code> does not provide any way of extracting the contour lines in the form of a vector layer, for uses other than plotting.</p>
 <p>There are two possible workarounds:</p>
 <ol type="1">
-<li>Using <code>gdal_contour</code> on the <a href="https://gdal.org/programs/gdal_contour.html">command line</a> (see below), or through its Python interface <a href="https://gis.stackexchange.com/questions/360431/how-can-i-create-contours-from-geotiff-and-python-gdal-rasterio-etc-into-sh"><code>osgeo</code></a></li>
-<li>Writing a custom function to export contour coordinates generated by, e.g., <a href="https://www.tutorialspoint.com/how-to-get-coordinates-from-the-contour-in-matplotlib"><code>matplotlib</code></a> or <a href="https://gis.stackexchange.com/questions/268331/how-can-i-extract-contours-from-a-raster-with-python"><code>skimage</code></a></li>
+<li>Using <code>gdal_contour</code> on the <a href="https://gdal.org/programs/gdal_contour.html">command line</a> (see below), or through its Python interface <a href="https://gis.stackexchange.com/questions/360431/how-can-i-create-contours-from-geotiff-and-python-gdal-rasterio-etc-into-sh"><strong>osgeo</strong></a></li>
+<li>Writing a custom function to export contour coordinates generated by, e.g., <a href="https://www.tutorialspoint.com/how-to-get-coordinates-from-the-contour-in-matplotlib"><strong>matplotlib</strong></a> or <a href="https://gis.stackexchange.com/questions/268331/how-can-i-extract-contours-from-a-raster-with-python"><strong>skimage</strong></a></li>
 </ol>
-<p>We hereby demonstrate the first approach, using <code>gdal_contour</code>. Although we deviate from the Python-focused approach towards more direct interaction with GDAL, the benefit of <code>gdal_contour</code> is the proven algorithm, customized to spatial data, and with many relevant options. Both the <code>gdal_contour</code> program (along with other GDAL programs) and its <code>osgeo</code> Python wrapper, should already be installed on your system since GDAL is a dependency of <code>rasterio</code>. Using the command line pathway, generating 50 <span class="math inline">\(m\)</span> contours of the <code>dem.tif</code> file can be done as follows:</p>
+<p>We hereby demonstrate the first approach, using <code>gdal_contour</code>. Although we deviate from the Python-focused approach towards more direct interaction with GDAL, the benefit of <code>gdal_contour</code> is the proven algorithm, customized to spatial data, and with many relevant options. Both the <code>gdal_contour</code> program (along with other GDAL programs) and its <strong>osgeo</strong> Python wrapper, should already be installed on your system since GDAL is a dependency of <code>rasterio</code>. Using the command line pathway, generating 50 <span class="math inline">\(m\)</span> contours of the <code>dem.tif</code> file can be done as follows:</p>
 <div class="cell" data-execution_count="63">
 <div class="sourceCode cell-code" id="cb88"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1718,7 +1718,7 @@ dtype: geometry</code></pre>
 <pre><code>POINT (1572956.546197626 6189460.927303582)</code></pre>
 </div>
 </div>
-<p>Now we can calculate the correspinding <code>list</code> of distances, using the <code>.distance</code> method from <code>shapely</code>:</p>
+<p>Now we can calculate the correspinding <code>list</code> of distances, using the <code>.distance</code> method from <strong>shapely</strong>:</p>
 <div class="cell" data-execution_count="71">
 <div class="sourceCode cell-code" id="cb99"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>distances <span class="op">=</span> [(i, i.distance(coastline)) <span class="cf">for</span> i <span class="kw">in</span> pnt]</span>
 <span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>distances[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
