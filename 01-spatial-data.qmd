@@ -15,61 +15,70 @@ As we will see in the example code presented later in this chapter, **shapely** 
 
 The **geopandas** ecosystem provides a comprehensive approach for working with vector layers in Python, with many packages building on it.
 This is not the case for raster data, however: there are several partially overlapping packages for working with raster data, each with its own advantages and disadvantages.
-In this book we focus on the most prominent one:
+In this book, we focus on the most prominent one:
 
--   **rasterio** is a spatial-oriented package, focused on "simple" raster formats (such as GeoTIFF), representing a raster using a combination of a **numpy** array, and a metadata object (`dict`) specifying the spatial referencing of the array
+-   **rasterio** is a spatial-oriented package, focused on "simple" raster formats (such as GeoTIFF), representing a raster using a combination of a **numpy** array, and a metadata object (`dict`) specifying the spatial reference of the array
 
 Another raster-related package worth mentioning is **xarray**.
-It is a general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster format (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`.
+It is a general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster formats (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`.
 
 This chapter will briefly explain the fundamental geographic data models: vector and raster.
 Before demonstrating their implementation in Python, we will introduce the theory behind each data model and the disciplines in which they predominate.
 
-The vector data model represents the world using points, lines, and polygons.
+The vector data model (@sec-vector-data) represents the world using points, lines, and polygons.
 These have discrete, well-defined borders, meaning that vector datasets usually have a high level of precision (but not necessarily accuracy).
-<!-- , as we will see in Section ...). (TODO add section cross reference) --> The raster data model divides the surface up into cells of constant size.
+The raster data model (@sec-raster-data), on the other hand, divides the surface up into cells of constant size.
 Raster datasets are the basis of background images used in web-mapping and have been a vital source of geographic data since the origins of aerial photography and satellite-based remote sensing devices.
-Rasters aggregate spatially specific features to a given resolution, meaning that they are consistent over space and scalable (many worldwide raster datasets are available).
+Rasters aggregate spatially specific features to a given resolution, meaning that they are consistent over space and scalable, with many worldwide raster datasets available.
 
 Which to use?
 The answer likely depends on your domain of application, and the datasets you have access to:
 
--   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g. transport infrastructure) tend to have discrete borders
+-   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?-->
 -   Raster datasets and methods dominate many environmental sciences because of the reliance on remote sensing data
 
 There is much overlap in some fields and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data.
-Furthermore, it is possible to convert between the two forms <!-- TODO: (see Section ...).  --> Whether your work involves more use of vector or raster datasets, it is worth understanding the underlying data models before using them, as discussed in subsequent chapters.
-This book focuses on approaches that build on **geopandas** and **rasterio** packages to work with vector data and raster datasets, respectively.
+Furthermore, it is possible to convert between the two forms (see @sec-raster-vector).
+Whether your work involves more use of vector or raster datasets, it is worth understanding the underlying data models before using them, as discussed in subsequent chapters.
 
 ## Vector data {#sec-vector-data}
 
 The geographic vector data model is based on points located within a coordinate reference system (CRS).
 Points can represent self-standing features (e.g., the location of a bus stop), or they can be linked together to form more complex geometries such as lines and polygons.
-Most point geometries contain only two dimensions (3-dimensional CRSs contain an additional $z$ value, typically representing height above sea level).
+Most point geometries contain only two dimensions (3-dimensional CRSs may contain an additional $z$ value, typically representing height above sea level).
 
 In this system, London, for example, can be represented by the coordinates `(-0.1,51.5)`.
 This means that its location is -0.1 degrees east and 51.5 degrees north of the origin.
-The origin, in this case, is at 0 degrees longitude (the Prime Meridian) and 0 degree latitude (the Equator) in a geographic ('lon/lat') CRS.
-<!-- TODO: (Figure ..., left panel). --> The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000, 180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS.
-<!-- This can be verified visually: slightly more than 5 'boxes' --- square areas bounded by the gray grid lines 100 $km$ in width --- separate the point representing London from the origin. --> <!-- TODO: (Figure 2.1, right panel). --> The location of National Grid's origin, in the sea beyond South West Peninsular, ensures that most locations in the UK have positive Easting and Northing values.
+The origin, in this case, is at 0 degrees longitude (a prime meridian located at Greenwich) and 0 degrees latitude (the Equator) in a geographic ('lon/lat') CRS (@fig-vector-london, left panel).
+The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000, 180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS (@fig-vector-london, right panel).
+The location of National Grid's origin, in the sea beyond South West Peninsular, ensures that most locations in the UK have positive Easting and Northing values.
 
-```{=html}
-<!-- There is more to CRSs, as described in Sections ... and ... but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing the distance from an origin, usually in $x$ then $y$ dimensions.
+::: {#fig-vector-london}
 
-...
-FIGURE ...: Illustration of vector (point) data in which location of London (the red X) is represented with reference to an origin (the blue circle). 
+::: {.columns}
+:::: {.column width="50%"}
+![](images/vector_lonlat.png)
+::::
+:::: {.column width="50%"}
+![](images/vector_projected.png)
+::::
+:::
+
+Illustration of vector (point) data in which location of London (the red X) is represented with reference to an origin (the blue circle). 
 The left plot represents a geographic CRS with an origin at 0° longitude and latitude. 
-The right plot represents a projected CRS with an origin located in the sea west of the South West Peninsula. -->
-```
-**geopandas** provides classes for geographic vector data and a consistent command-line interface for reproducible geographic data analysis in Python.
-**geopandas** provides an interface to three mature libraries for geocomputation which, in combination, represent a strong foundation on which many geographic applications (including QGIS and R's spatial ecosystem) builds:
+The right plot represents a projected CRS with an origin located in the sea west of the South West Peninsula.
+:::
 
--   GDAL, for reading, writing, and manipulating a wide range of geographic data formats, covered in Chapter 8
--   PROJ, a powerful library for coordinate system transformations, which underlies the content covered in Chapter 7
--   GEOS, a planar geometry engine for operations such as calculating buffers and centroids on data with a projected CRS, covered in Chapter 5
+There is more to CRSs, as described in @sec-coordinate-reference-systems and @sec-reproj-geo-data but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing the distance from an origin, usually in $x$ then $y$ dimensions.
+
+**geopandas** provides classes for geographic vector data and a consistent command-line interface for reproducible geographic data analysis in Python.
+It also provides an interface to three mature libraries for geocomputation which, in combination, represent a strong foundation on which many geographic applications (including QGIS and R's spatial ecosystem):
+
+-   GDAL, for reading, writing, and manipulating a wide range of geographic data formats, covered in @sec-read-write
+-   PROJ, a powerful library for coordinate system transformations, which underlies the content covered in @sec-reproj-geo-data
+-   GEOS, a planar geometry engine for operations such as calculating buffers and centroids on data with a projected CRS, covered in @sec-geometric-operations
 
 Tight integration with these geographic libraries makes reproducible geocomputation possible: an advantage of using a higher level language such as Python to access these libraries is that you do not need to know the intricacies of the low level components, enabling focus on the methods rather than the implementation.
-This section introduces **geopandas** classes in preparation for subsequent chapters (Chapters 5 and 8 cover the GEOS and GDAL interface, respectively).
 
 ### Vector data classes
 
@@ -90,7 +99,7 @@ The third class is defined in the **shapely** package, which deals with individu
 
 The most commonly used geographic vector data structure is the vector layer.
 There are several approaches for working with vector layers in Python, ranging from low-level packages (e.g., **osgeo**, **fiona**) to the relatively high-level **geopandas** package that is the focus of this section.
-Before writing and running code for creating and working with geographic vector objects, we therefore import **geopandas** (by convention as `gpd` for more concise code) and **shapely**:
+Before writing and running code for creating and working with geographic vector objects, we need to import **geopandas** (by convention as `gpd` for more concise code) and **shapely**.
 
 ```{python}
 import matplotlib.pyplot as plt
@@ -99,14 +108,14 @@ import geopandas as gpd
 import shapely
 ```
 
-We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**:
+We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**.
 
 ```{python}
 pd.set_option('display.max_rows', 4)
 ```
 
-Projects often start by importing an existing vector layer saved as an ESRI Shapefile (`.shp`), a GeoPackage (`.gpkg`) file, or other geographic file format.
-The function `read_file()` in the following line of code imports a GeoPackage file named `world.gpkg` located in the `data` directory of Python's working directory into a `GeoDataFrame` named `gdf`:
+Projects often start by importing an existing vector layer saved as a GeoPackage (`.gpkg`) file, an ESRI Shapefile (`.shp`), or other geographic file format.
+The function `read_file()` imports a GeoPackage file named `world.gpkg` located in the `data` directory of Python's working directory into a `GeoDataFrame` named `gdf`.
 
 ```{python}
 #| echo: false
@@ -152,7 +161,8 @@ else:
 gdf = gpd.read_file('data/world.gpkg')
 ```
 
-As result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code:
+The result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code.
+<!--jn: type(gdf) is not printed as an output-->
 
 ```{python}
 #| label: typegdf
@@ -161,45 +171,42 @@ gdf.shape
 ```
 
 The `GeoDataFrame` class is an extension of the `DataFrame` class from the popular **pandas** package.
-This means we can treat a vector layer as a table, and process it using the ordinary, i.e., non-spatial, established function methods.
+This means we can treat non-spatial attributes from a vector layer as a table, and process them using the ordinary, i.e., non-spatial, established function methods.
 For example, standard data frame subsetting methods can be used.
-The code below creates a subset of the `gdf` dataset containing only the country name and the geometry:
+The code below creates a subset of the `gdf` dataset containing only the country name and the geometry.
 
 ```{python}
 gdf = gdf[['name_long', 'geometry']]
 gdf
 ```
 
-The following expression creates a subset based on a condition, such as equality of the value in the `'name_long'` column to the string `'Egypt'`:
+The following expression creates a subdataset based on a condition, such as equality of the value in the `'name_long'` column to the string `'Egypt'`.
 
 ```{python}
 gdf[gdf['name_long'] == 'Egypt']
 ```
 
-Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method (@fig-gdf-plot):
+Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method (@fig-gdf-plot).
 
 ```{python}
 #| label: fig-gdf-plot
 #| fig-cap: Basic plot of a `GeoDataFrame`
-
 gdf.plot();
 ```
 
-or using `.explore` to get an interactive plot (@fig-gdf-explore):
+Alternatively, we can get a more interactive plot by using `.explore` (@fig-gdf-explore).
 
 ```{python}
 #| label: fig-gdf-explore
 #| fig-cap: Basic interactive map with `.explore`
-
 gdf.explore()
 ```
 
-And consequently, a subset can be plotted using:
+A subset of the data can be also plotted in a similar fashion.
 
 ```{python}
 #| label: fig-gdf-explore2
 #| fig-cap: Interactive map of a `GeoDataFrame` subset
-
 gdf[gdf['name_long'] == 'Egypt'].explore()
 ```
 
@@ -214,17 +221,17 @@ gdf[gdf['name_long'] == 'Egypt'].explore()
 
 ### Geometry columns {#sec-geometry-columns}
 
-A vital column in a `GeoDataFrame` is the geometry column, of class `GeoSeries`.
-The geometry column contains the geometric part of the vector layer.
-The geometry column can be accessed by name, which typically (e.g., when reading from a file) is `'geometry'`, as in `gdf['geometry']`.
-However, the recommendation is to use the fixed `.geometry` property, which refers to the geometry column regardless whether its name is `'geometry'` or any other name.
-In the case of the `gdf` object, the geometry column contains `'MultiPolygon'`s associated with each country:
+The geometry column of class `GeoSeries` is an essential column in a `GeoDataFrame`.
+It contains the geometric part of the vector layer, and is the basis for all spatial operations.
+This column can be accessed by name, which typically (e.g., when reading from a file) is `'geometry'`, as in `gdf['geometry']`.
+However, the recommendation is to use the fixed `.geometry` property, which refers to the geometry column regardless whether its name is `'geometry'` or not.
+In the case of the `gdf` object, the geometry column contains `'MultiPolygon'`s associated with each country.
 
 ```{python}
 gdf.geometry
 ```
 
-The geometry column also contains the spatial reference information, if any (also accessible with the shortcut `gdf.crs`):
+The geometry column also contains the spatial reference information, if any (also accessible with the shortcut `gdf.crs`).
 
 ```{python}
 gdf.geometry.crs
@@ -232,7 +239,7 @@ gdf.geometry.crs
 
 Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
 Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
-For example, the two following commands return exactly the same result, a `GeoSeries` with country centroids:
+For example, the two following commands return exactly the same result, a `GeoSeries` with country centroids.
 
 ```{python}
 gdf.centroid
@@ -243,7 +250,7 @@ gdf.geometry.centroid
 ```
 
 Note that `.centroid`, and other similar operators in **geopandas** such as `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data.
-In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we don't need the original ones, as in `gdf.geometry=gdf.centroid`):
+In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we do not need the original ones, as in `gdf.geometry=gdf.centroid`).
 
 ```{python}
 gdf2 = gdf.copy()
@@ -253,23 +260,25 @@ gdf2
 
 Another useful property of the geometry column is the geometry type, as shown in the following code.
 Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same for every row.
-Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value (the same can be done with the shortcut `gdf.geom_type`):
+Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value (the same can be done with the shortcut `gdf.geom_type`).
 
 ```{python}
 gdf.geometry.type
 ```
 
-To summarize the occurrence of different geometry types in a geometry column, we can use the **pandas** method called `value_counts`:
+To summarize the occurrence of different geometry types in a geometry column, we can use the **pandas** method called `value_counts`.
 
 ```{python}
 gdf.geometry.type.value_counts()
 ```
 
-In this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
 It is possible to have multiple geometry types in a single `GeoSeries`.
-A `GeoDataFrame` can also have multiple `GeoSeries`:
+However, in this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
+
+A `GeoDataFrame` can also have multiple `GeoSeries`.
 
 ```{python}
+#| output: false 
 gdf['centroids'] = gdf.centroid
 gdf['polygons'] = gdf.geometry
 gdf
@@ -277,12 +286,11 @@ gdf
 
 Only one geometry column at a time is "active", in the sense that it is being accessed in operations involving the geometries (such as `.centroid`, `.crs`, etc.).
 To switch the active geometry column from one `GeoSeries` column to another, we use `set_geometry`.
-For example (@fig-switch-to-centroids, @fig-switch-to-polygons):
+@fig-switch-to-centroids and @fig-switch-to-polygons shows interactive maps of the `gdf` layer with the `'centroids'` and `'polygons'` geometry columns activated, respectively.
 
 ```{python}
 #| label: fig-switch-to-centroids
 #| fig-cap: Switching to the `'centroids'` geometry column in the `world` layer, and plotting it
-
 gdf = gdf.set_geometry('centroids')
 gdf.explore()
 ```
@@ -290,7 +298,6 @@ gdf.explore()
 ```{python}
 #| label: fig-switch-to-polygons
 #| fig-cap: Switching to the `'polygons'` geometry column in the `world` layer, and plotting it
-
 gdf = gdf.set_geometry('polygons')
 gdf.explore()
 ```
@@ -301,20 +308,19 @@ Geometries are the basic building blocks of vector layers.
 Although the Simple Features standard defines about 20 types of geometries, we will focus on the seven most commonly used types: `POINT`, `LINESTRING`, `POLYGON`, `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` and `GEOMETRYCOLLECTION`.
 A useful list of possible geometry types can be found in R's **sf** package [documentation](https://r-spatial.github.io/sf/articles/sf1.html#simple-feature-geometry-types).
 
-Well-known binary (WKB) and well-known text (WKT) are the standard encodings for simple feature geometries.
-<!-- TODO: add reference or at least link to OGC document on this? --> WKB representations are usually hexadecimal strings easily readable for computers.
-This is why GIS and spatial databases use WKB to transfer and store geometry objects.
+Simple feature geometries can be represented by well-known binary (WKB) and well-known text (WKT) encodings.
+<!-- TODO: add reference or at least link to OGC document on this? --> WKB representations are usually hexadecimal strings easily readable for computers, and this is why GIS software and spatial databases use WKB to transfer and store geometry objects.
 WKT, on the other hand, is a human-readable text markup description of simple features.
 Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
 
 The foundation of each geometry type is the point.
-A point is simply a coordinate in 2D, 3D, or 4D space such as (@fig-point, @fig-point2):
+A point is simply a coordinate in 2D, 3D, or 4D space such as shown in @fig-point and @fig-point2.
 
 ``` text
 POINT (5 2)
 ```
 
-A linestring is a sequence of points with a straight line connecting the points, for example (@fig-linestring):
+A linestring is a sequence of points with a straight line connecting the points (@fig-linestring).
 
 ``` text
 LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2)
@@ -328,7 +334,7 @@ POLYGON ((1 5, 2 2, 4 1, 4 4, 1 5))
 ```
 
 So far we have created geometries with only one geometric entity per feature.
-However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type, as illustrated below (@fig-multipoint, @fig-multilinestring, @fig-multipolygon):
+However, the Simple Features standard allows multiple geometries to exist within a single feature, using "multi" versions of each geometry type, as illustrated in @fig-multipoint, @fig-multilinestring, and @fig-multipolygon.
 
 ``` text
 MULTIPOINT (5 2, 1 3, 3 4, 3 2)
@@ -336,16 +342,17 @@ MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))
 MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5), (0 2, 1 2, 1 3, 0 3, 0 2)))
 ```
 
-Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings (@fig-geometrycollection):
+Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings (@fig-geometrycollection).
 
 ``` text
-GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2), LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
+GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2),
+                    LINESTRING (1 5, 4 4, 4 1, 2 2, 3 2))
 ```
 
 ### Geometries {#sec-geometries}
 
 Each element in the geometry column is a geometry object, of class `shapely`.
-For example, here is one specific geometry selected by implicit index (that of Canada) (i.e., the 4^th^ element in `gdf`'s geometry column'):
+For example, here is one specific geometry selected by implicit index (Canada, i.e., the 4^th^ element in `gdf`'s geometry column').
 
 ```{python}
 gdf.geometry.iloc[3]
@@ -358,84 +365,72 @@ gdf[gdf['name_long'] == 'Egypt'].geometry.iloc[0]
 ```
 
 The **shapely** package is compatible with the Simple Features standard (@sec-simple-features).
-Accordingly, seven types of geometries are supported.
+Accordingly, seven types of geometry types are supported.
 The following section demonstrates creating a `shapely` geometry of each type from scratch.
-In the first example (a `'Point'`) we demonstrate two types of inputs for geometry creation:
-
--   a list of coordinates
--   a `string` in the WKT format
-
+In the first example (a `'Point'`) we show two types of inputs to create a geometry: a list of coordinates or a `string` in the WKT format.
 In the examples for the remaining geometries we use the former approach.
 
-Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function, as follows (@fig-point):
+Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function (@fig-point).
 
 ```{python}
 #| label: fig-point
 #| fig-cap: A `Point` geometry (created from a `list`)
-
 point = shapely.Point([5, 2])
 point
 ```
 
 Alternatively, we can use the `shapely.from_wkt` to transform a WKT string to a `shapely` geometry object.
-Here is an example of creating the same `'Point'` geometry from WKT (@fig-point2):
+Here is an example of creating the same `'Point'` geometry from WKT (@fig-point2).
 
 ```{python}
 #| label: fig-point2
 #| fig-cap: A `Point` geometry (created from a WKT string)
-
 point = shapely.from_wkt('POINT (5 2)')
 point
 ```
 
-Here is an example of a `'LineString'` geometry from a list of coordinate tuples (@fig-linestring):
+A `'LineString'` geometry can be created based on a list of coordinate tuples (@fig-linestring).
 
 ```{python}
 #| label: fig-linestring
 #| fig-cap: A `LineString` geometry
-
 linestring = shapely.LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
 linestring
 ```
 
-Here is an example of a `'Polygon'` geometry.
-Note that there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a `list` of `list`s of coordinates that define the holes (if any) in the polygon (@fig-polygon):
+Creation of a `'Polygon'` geometry is similar, but our first and last coordinate must be the same, to ensure that the polygon is closed.
+Note that in the following example, there is one list of coordinates that defines the exterior outer hull of the polygon, followed by a `list` of `list`s of coordinates that define the holes (if any) in the polygon (@fig-polygon).
 
 ```{python}
 #| label: fig-polygon
 #| fig-cap: A `Polygon` geometry
-
 polygon = shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)], [[(2,4), (3,4), (3,3), (2,3), (2,4)]])
 polygon
 ```
 
-Here is an example of a `'MultiPoint'` geometry from a list of coordinate tuples (@fig-multipoint):
+A `'MultiPoint'` geometry is also created from a list of coordinate tuples (@fig-multipoint), where each element represent a single point.
 
 ```{python}
 #| label: fig-multipoint
 #| fig-cap: A `MultiPoint` geometry
-
 multipoint = shapely.MultiPoint([(5,2), (1,3), (3,4), (3,2)])
 multipoint
 ```
 
-Here is an example of a `'MultiLineString'` geometry.
-Note that there is one list of coordinates for each line in the `MultiLineString` (@fig-multilinestring):
+A `'MultiLineString'` geometry, on the other hand, has one list of coordinates for each line in the `MultiLineString` (@fig-multilinestring).
 
 ```{python}
 #| label: fig-multilinestring
 #| fig-cap: A `MultiLineString` geometry
-
 multilinestring = shapely.MultiLineString([[(1,5), (4,4), (4,1), (2,2), (3,2)], [(1,2), (2,4)]])
 multilinestring
 ```
 
-Here is an example of a `'MultiPolygon'` geometry (@fig-multipolygon):
+A `'MultiPolygon'` geometry (@fig-multipolygon) is created from a `list` of `Polygon` geometries.
 
 ```{python}
 #| label: fig-multipolygon
 #| fig-cap: A `MultiPolygon` geometry
-
 multipolygon = shapely.MultiPolygon([
     shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]), 
     shapely.Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])
@@ -443,24 +438,21 @@ multipolygon = shapely.MultiPolygon([
 multipolygon
 ```
 
-And, finally, here is an example of a `'GeometryCollection'` geometry.
-Note that the input is a `list` with one or more of the other six geometry types (@fig-geometrycollection):
+And, finally, a `'GeometryCollection'` geometry is a `list` with one or more of the other six geometry types (@fig-geometrycollection):
 
 ```{python}
 #| label: fig-geometrycollection
 #| fig-cap: A `GeometryCollection` geometry
-
 geometrycollection = shapely.GeometryCollection([multipoint, multilinestring])
 geometrycollection
 ```
 
-`shapely` geometries act as atomic units of vector data, as spatial operations on a geometry return a single new geometry.
+`shapely` geometries act as atomic units of vector data, as spatial operations on a geometry return a single new geometry.<!--jn: I do not understand the previous sentence...-->
 For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.2`) and itself (@fig-mpol-buffer-difference):
 
 ```{python}
 #| label: fig-mpol-buffer-difference
 #| fig-cap: The difference between a buffered `MultiPolygon` and itself
-
 multipolygon.buffer(0.2).difference(multipolygon)
 ```
 
@@ -471,13 +463,7 @@ To print the WKT string instead, we can use the `print` function:
 print(linestring)
 ```
 
-We can determine the geometry type using the `.geom_type` property, which returns a `string`:
-
-```{python}
-linestring.geom_type
-```
-
-Finally, it is important to note that raw coordinates of `shapely` geometries are accessible through a combination of the `.coords`, `.geoms`, `.exterior`, and `.interiors`, properties (depending on the geometry type).
+Finally, it is important to note that raw coordinates of `shapely` geometries are accessible through a combination of the `.coords`, `.geoms`, `.exterior`, and `.interiors` properties (depending on the geometry type).
 These access methods are helpful when we need to develop our own spatial operators for specific tasks.
 For example, the following expression returns the `list` of all coordinates of the `polygon` geometry exterior:
 
@@ -487,12 +473,9 @@ list(polygon.exterior.coords)
 
 ### Vector layer from scratch {#sec-vector-layer-from-scratch}
 
-In the previous sections we started with a vector layer (`GeoDataFrame`), from an existing Shapefile, and "decomposed" it to extract the geometry column (`GeoSeries`, @sec-geometry-columns) and separate geometries (`shapely`, see @sec-geometries).
+In the previous sections, we started with a vector layer (`GeoDataFrame`), from an existing GeoPackage file, and "decomposed" it to extract the geometry column (`GeoSeries`, @sec-geometry-columns) and separate geometries (`shapely`, see @sec-geometries).
 In this section, we will demonstrate the opposite process, constructing a `GeoDataFrame` from `shapely` geometries, combined into a `GeoSeries`.
-This will:
-
--   help you better understand the structure of a `GeoDataFrame`, and
--   may come in handy when you need to programmatically construct simple vector layers, such as a line between two given points, etc.
+This will help you better understand the structure of a `GeoDataFrame`, and may come in handy when you need to programmatically construct simple vector layers, such as a line between two given points.
 
 Vector layers consist of two main parts: geometries and non-geographic attributes.
 @fig-gdf-flow shows how a `GeoDataFrame` object is created---geometries come from a `GeoSeries` object (which consists of `shapely` geometries), while attributes are taken from `Series` objects.
@@ -504,23 +487,21 @@ Each of the "internal" components can be accessed, or "extracted", which is some
 
 ![Structure of a `GeoDataFrame`](images/gdf-structure.svg){#fig-gdf-structure}
 
-Non-geographic attributes represent the name of the feature, or other attributes such as measured values, groups, and other things.
-To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2017.
+Non-geographic attributes may represent the name of the feature, and other attributes such as measured values, groups, etc.
+To illustrate attributes, we will represent a temperature of 25°C in London on June 21st, 2023.
 This example contains a geometry (the coordinates), and three attributes with three different classes (place name, temperature and date).
 Objects of class `GeoDataFrame` represent such data by combining the attributes (`Series`) with the simple feature geometry column (`GeoSeries`).
-First, we create a point geometry, which we know how to do from @sec-geometries (@fig-point-lnd):
+First, we create a point geometry, which we know how to do from @sec-geometries (@fig-point-lnd).
 
 ```{python}
 #| label: fig-point-lnd
 #| fig-cap: A `shapely` point representing London
-
 lnd_point = shapely.Point(0.1, 51.5)
 lnd_point
 ```
 
-Next, we create a `GeoSeries` (of length 1), containing the point.
-Note that a `GeoSeries` stores a CRS definition, in this case WGS84 (defined using its EPSG code `4326`).
-Also note that the `shapely` geometries go into a `list`, to illustrate that there can be more than one (unlike in this example):
+Next, we create a `GeoSeries` (of length 1), containing the point and a CRS definition, in this case WGS84 (defined using its EPSG code `4326`).
+Also note that the `shapely` geometries go into a `list`, to illustrate that there can be more than one geometry unlike in this example.
 
 ```{python}
 lnd_geom = gpd.GeoSeries([lnd_point], crs=4326)
@@ -531,21 +512,21 @@ Next, we combine the `GeoSeries` with other attributes into a `dict`.
 The geometry column is a `GeoSeries`, named `geometry`.
 The other attributes (if any) may be defined using `list` or `Series` objects.
 Here, for simplicity, we use the `list` option for defining the three attributes `name`, `temperature`, and `date`.
-Again, note that the `list` can be of length \>1, in case we are creating a layer with more than one feature:
+Again, note that the `list` can be of length \>1, in case we are creating a layer with more than one feature.
 
 ```{python}
-d = {
+lnd_data = {
   'name': ['London'],
   'temperature': [25],
-  'date': ['2017-06-21'],
+  'date': ['2023-06-21'],
   'geometry': lnd_geom
 }
 ```
 
-Finally, the `dict` can be coverted to a `GeoDataFrame`:
+Finally, the `dict` can be coverted to a `GeoDataFrame` object, as shown in the following code.
 
 ```{python}
-lnd_layer = gpd.GeoDataFrame(d)
+lnd_layer = gpd.GeoDataFrame(lnd_data)
 lnd_layer
 ```
 
@@ -555,33 +536,33 @@ Second, the geometry was converted into a simple feature geometry column (`GeoSe
 Third, attributes were combined with `GeoSeries`.
 This results in an `GeoDataFrame` object, named `lnd_layer`.
 
-Just to illustrate how does creating a layer with more than one feature looks like, here is an example where we create a layer with two points, London and Paris:
+To illustrate how does creating a layer with more than one feature looks like, here is an example where we create a layer with two points, London and Paris.
 
 ```{python}
 lnd_point = shapely.Point(0.1, 51.5)
 paris_point = shapely.Point(2.3, 48.9)
 towns_geom = gpd.GeoSeries([lnd_point, paris_point], crs=4326)
-d = {
+towns_data = {
   'name': ['London', 'Paris'],
   'temperature': [25, 27],
-  'date': ['2017-06-21', '2017-06-21'],
+  'date': ['2013-06-21', '2013-06-21'],
   'geometry': towns_geom
 }
-towns_layer = gpd.GeoDataFrame(d)
+towns_layer = gpd.GeoDataFrame(towns_data)
 towns_layer
 ```
 
-The following expression creates an interactive map with the result (@fig-layer-from-scratch-explore).
-To make the points easier to see, we are setting a different fill color and larger size (we elaborate on `.explore` options in @sec-interactive-maps):
+Now, we are able to create an interactive map of the `towns_layer` object(@fig-layer-from-scratch-explore).
+To make the points easier to see, we are customizing a fill color and size (we elaborate on `.explore` options in @sec-interactive-maps).
 
 ```{python}
 #| label: fig-layer-from-scratch-explore
 #| fig-cap: '`towns_layer`, created from scratch, visualized using `.explore`'
-
 towns_layer.explore(color='red', marker_kwds={'radius': 10})
 ```
 
-Alternatively, we can first create a `pandas.DataFrame` and turn it into a `GeoDataFrame`, like this:
+Spatial object can be also created from a `pandas.DataFrame` object that contains columns with coordinates.
+For that, we need to first create a `GeoSeries` object from the coordinates, and then combine it with `DataFrame` to a `GeoDataFrame` object.
 
 ```{python}
 towns_table = pd.DataFrame({
@@ -595,22 +576,13 @@ towns_geom = gpd.points_from_xy(towns_table['x'], towns_table['y'])
 towns_layer = gpd.GeoDataFrame(towns_table, geometry=towns_geom, crs=4326)
 ```
 
-which gives the same result `towns_layer`:
-
-```{python}
-towns_layer
-```
-
+The output gives the same result as previous `towns_layer`.
 This approach is particularly useful when we need to read data from a CSV file, e.g., using `pandas.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame` (see another example in @sec-spatial-joining).
 
 ### Derived numeric properties {#sec-area-length}
 
-Vector layers are characterized by two essential derived numeric properties:
-
--   Length (`.length`)---Applicable to lines
--   Area (`.area`)---Applicable to polygons
-
-Area and length can be calculated for any data structures discussed above, either a `shapely` geometry, in which case the returned value is a number:
+Vector layers are characterized by two essential derived numeric properties: Length (`.length`)---applicable to lines and Area (`.area`)---applicable to polygons.
+Area and length can be calculated for any data structures discussed above, either a `shapely` geometry, in which case the returned value is a number or for `GeoSeries` or `DataFrame`, in which case the returned value is a numeric `Series`.
 
 ```{python}
 linestring.length
@@ -619,8 +591,6 @@ linestring.length
 ```{python}
 multipolygon.area
 ```
-
-or for `GeoSeries` or `DataFrame`, in which case the returned value is a numeric `Series`:
 
 ```{python}
 gdf.area
@@ -631,13 +601,13 @@ This means that length and area measurements for geometries in WGS84 (`crs=4326`
 
 To obtain true length and area measurements, the geometries first need to be transformed to a projected CRS (see @sec-reprojecting-vector-geometries) applicable to the area of interest.
 For example, the area of Slovenia can be calculated in the UTM zone 33N CRS (`crs=32633`).
-The result is in the CRS units, namely $m^2$:
+The result is in $m^2$, the units of the CRS of this dataset. 
 
 ```{python}
 gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
 ```
 
-## Raster data
+## Raster data {#sec-raster-data}
 
 ### Introduction
 
