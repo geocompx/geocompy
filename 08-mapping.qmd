@@ -53,46 +53,49 @@ tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
 ## Introduction
 
 <!-- - Geopandas explore has been used in previous chapters. -->
+
 <!-- - When to focus on visualisation? At the end of geographic data processing workflows. -->
 
 <!-- Input datasets: https://github.com/geocompx/spDatapy -->
 
-A satisfying and important aspect of geographic research is communicating the results. 
-Map making---the art of cartography---is an ancient skill that involves communication, intuition, and an element of creativity. 
-In addition to being fun and creative, cartography also has important practical applications. A carefully crafted map can be the best way of communicating the results of your work, but poorly designed maps can leave a bad impression. 
-Common design issues include poor placement, size and readability of text and careless selection of colors, as outlined in the style guide of the Journal of Maps. 
+A satisfying and important aspect of geographic research is communicating the results.
+Map making---the art of cartography---is an ancient skill that involves communication, intuition, and an element of creativity.
+In addition to being fun and creative, cartography also has important practical applications.
+A carefully crafted map can be the best way of communicating the results of your work, but poorly designed maps can leave a bad impression.
+Common design issues include poor placement, size and readability of text and careless selection of colors, as outlined in the style guide of the Journal of Maps.
 Furthermore, poor map making can hinder the communication of results [@brewer_designing_2015]:
 
-> Amateur-looking maps can undermine your audience's ability to understand important information and weaken the presentation of a professional data investigation. 
+> Amateur-looking maps can undermine your audience's ability to understand important information and weaken the presentation of a professional data investigation.
 
-Maps have been used for several thousand years for a wide variety of purposes. 
+Maps have been used for several thousand years for a wide variety of purposes.
 Historic examples include maps of buildings and land ownership in the Old Babylonian dynasty more than 3000 years ago and Ptolemy's world map in his masterpiece Geography nearly 2000 years ago [@talbert_ancient_2014].
 
-Map making has historically been an activity undertaken only by, or on behalf of, the elite. 
-This has changed with the emergence of open source mapping software such as mapping packages in Python, R, and other languages, and the "print composer" in QGIS, which enable anyone to make high-quality maps, enabling "citizen science". 
-Maps are also often the best way to present the findings of geocomputational research in a way that is accessible. 
+Map making has historically been an activity undertaken only by, or on behalf of, the elite.
+This has changed with the emergence of open source mapping software such as mapping packages in Python, R, and other languages, and the "print composer" in QGIS, which enable anyone to make high-quality maps, enabling "citizen science".
+Maps are also often the best way to present the findings of geocomputational research in a way that is accessible.
 Map making is therefore a critical part of geocomputation and its emphasis not only on describing, but also changing the world.
 
-Basic static display of vector layers in Python is done with the `.plot` method or the `rasterio.plot.show` function, for vector layers and rasters, as we saw in Sections @sec-vector-layers and @sec-using-rasterio, respectively. 
-Other, more advaned uses of these methods, were also encountered in subsequent chapters, when demonstrating the various outputs we got. 
-In this chapter, we provide a comprehensive summary of the most useful workflows of these two methods for creating static maps (@sec-static-maps). 
-Then, we move on to elaborate on the `.explore` method for creating interactive maps, which was also briefly introduced earlier (@sec-vector-layers).  
+Basic static display of vector layers in Python is done with the `.plot` method or the `rasterio.plot.show` function, for vector layers and rasters, as we saw in Sections @sec-vector-layers and @sec-using-rasterio, respectively.
+Other, more advaned uses of these methods, were also encountered in subsequent chapters, when demonstrating the various outputs we got.
+In this chapter, we provide a comprehensive summary of the most useful workflows of these two methods for creating static maps (@sec-static-maps).
+Then, we move on to elaborate on the `.explore` method for creating interactive maps, which was also briefly introduced earlier (@sec-vector-layers).
 
 ## Static maps {#sec-static-maps}
 
-Static maps are the most common type of visual output from geocomputation. 
-When stored in a file, standard formats include `.png` and `.pdf` for raster and vector outputs, respectively. 
-Static maps can be easily shared and viewed (whether digitally or in print), however they can only convey as much information as a static image can. 
+Static maps are the most common type of visual output from geocomputation.
+When stored in a file, standard formats include `.png` and `.pdf` for raster and vector outputs, respectively.
+Static maps can be easily shared and viewed (whether digitally or in print), however they can only convey as much information as a static image can.
 Interactive maps (@sec-interactive-maps) provide much more flexibilty in terms of user experience and amount of information, however they often require more work to design and effectively share.
 
 <!-- Decision of whether to use static or interactive. -->
+
 <!-- Flow diagram? -->
 
-Let's move on to the basics of static mapping with Python. 
+Let's move on to the basics of static mapping with Python.
 
 ### Minimal example
 
-A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method (@sec-vector-layers). 
+A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method (@sec-vector-layers).
 A minimal example of a vector layer map is obtained using `.plot` with nothing but the defaults (@fig-vector-minimal):
 
 ```{python}
@@ -102,7 +105,8 @@ A minimal example of a vector layer map is obtained using `.plot` with nothing b
 nz.plot();
 ```
 
-A `rasterio` raster file connection, or a numpy `ndarray`, can be displayed using `rasterio.plot.show` (@sec-using-rasterio). Here is a minimal example of a static raster map (@fig-raster-minimal):
+A `rasterio` raster file connection, or a numpy `ndarray`, can be displayed using `rasterio.plot.show` (@sec-using-rasterio).
+Here is a minimal example of a static raster map (@fig-raster-minimal):
 
 ```{python}
 #| label: fig-raster-minimal
@@ -113,7 +117,7 @@ rasterio.plot.show(nz_elev);
 
 ### Styling {#sec-static-styling}
 
-The most useful visual properties of the geometries, that can be specified in `.plot`, include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot): 
+The most useful visual properties of the geometries, that can be specified in `.plot`, include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot):
 
 ```{python}
 #| label: fig-basic-plot
@@ -129,8 +133,8 @@ nz.plot(color='none', edgecolor='blue');
 nz.plot(color='grey', edgecolor='blue');
 ```
 
-And here is an example of using `markersize` to get larger points (@fig-basic-plot-markersize). 
-This example also demonstrates how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case: 
+And here is an example of using `markersize` to get larger points (@fig-basic-plot-markersize).
+This example also demonstrates how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case:
 
 ```{python}
 #| label: fig-basic-plot-markersize
@@ -144,9 +148,9 @@ nz_height.plot(markersize=100, ax=ax);
 
 We can set symbology in a `.plot` using the following parameters:
 
-* `column`---A column name
-* `legend`---Whether to show a legend
-* `cmap`---Color map
+-   `column`---A column name
+-   `legend`---Whether to show a legend
+-   `cmap`---Color map
 
 For example, here we plot the `nz` polygons colored according to the `'Median_income'` attribute (@fig-plot-symbology):
 
@@ -157,11 +161,11 @@ For example, here we plot the `nz` polygons colored according to the `'Median_in
 nz.plot(column='Median_income', legend=True);
 ```
 
-The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`. 
-The `cmap` ("color map") argument can be used to specify any of countless other color scales. 
-A first safe choice is often the [ColorBrewer](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) collection of color scales, specifically designed for mapping. 
-Any color scale can be reversed, using the `_r` suffic. 
-Finally, other color scales are available, see the **matplotlib** [colormaps article](https://matplotlib.org/stable/tutorials/colors/colormaps.html) for details. 
+The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`.
+The `cmap` ("color map") argument can be used to specify any of countless other color scales.
+A first safe choice is often the [ColorBrewer](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) collection of color scales, specifically designed for mapping.
+Any color scale can be reversed, using the `_r` suffic.
+Finally, other color scales are available, see the **matplotlib** [colormaps article](https://matplotlib.org/stable/tutorials/colors/colormaps.html) for details.
 The following code sections demonstrates three color scale specifications other than the default (@fig-plot-symbology-colors):
 
 ```{python}
@@ -178,8 +182,8 @@ nz.plot(column='Median_income', legend=True, cmap='Reds_r');
 nz.plot(column='Median_income', legend=True, cmap='spring');
 ```
 
-Categorical symbology is also supported, such as when `column` points to an `str` attribute. 
-For example, the following expression sets symbology according to the `'Island'` column. 
+Categorical symbology is also supported, such as when `column` points to an `str` attribute.
+For example, the following expression sets symbology according to the `'Island'` column.
 For categorical variables, it makes sense to use a qualitative color scale, such as `'Set1'` from ColorBrewer (@fig-plot-symbology-categorical):
 
 ```{python}
@@ -198,8 +202,8 @@ In case the legend interferes with the contents (such as in @fig-plot-symbology-
 nz.plot(column='Island', legend=True, cmap='Set1', legend_kwds={'loc': 4});
 ```
 
-The `rasterio.plot.show` function, based on **matplotlib** as well, supports the same kinds of `cmap` arguments. 
-For example (@fig-plot-symbology-colors-r): 
+The `rasterio.plot.show` function, based on **matplotlib** as well, supports the same kinds of `cmap` arguments.
+For example (@fig-plot-symbology-colors-r):
 
 ```{python}
 #| label: fig-plot-symbology-colors-r
@@ -215,7 +219,7 @@ rasterio.plot.show(nz_elev, cmap='BrBG_r');
 rasterio.plot.show(nz_elev, cmap='nipy_spectral');
 ```
 
-Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`. 
+Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`.
 The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot-show-with-colorbar), reverting to **matplotlib** methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale):
 
 ```{python}
@@ -232,8 +236,8 @@ fig.colorbar(i, ax=ax);
 
 To display more than one layer in the same static map, we need to:
 
-* store the first plot in a variable (e.g., `base`), and
-* pass it as the `ax` argument of any subsequent plot(s) (e.g., `ax=base`).
+-   store the first plot in a variable (e.g., `base`), and
+-   pass it as the `ax` argument of any subsequent plot(s) (e.g., `ax=base`).
 
 For example, here is how we can plot `nz` and `nz_height` together (@fig-two-layers):
 
@@ -245,14 +249,14 @@ base = nz.plot(color='none')
 nz_height.plot(ax=base, color='red');
 ```
 
-We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop). 
-The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together. 
+We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).
+The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together.
 
 For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
 
-* Panel (a) shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)
-* Panel (b) shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's [territorial waters](https://en.wikipedia.org/wiki/Territorial_waters) (see @sec-global-operations-and-distances)
-* Panel (c) shows the raster with two vector layers: the territorial waters (in red) and elevation measurement points (in yellow)
+-   Panel (a) shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)
+-   Panel (b) shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's [territorial waters](https://en.wikipedia.org/wiki/Territorial_waters) (see @sec-global-operations-and-distances)
+-   Panel (c) shows the raster with two vector layers: the territorial waters (in red) and elevation measurement points (in yellow)
 
 ```{python}
 #| label: fig-plot-raster-and-vector
@@ -290,21 +294,25 @@ nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
 
 ### Basemaps
 
-Basemaps, or background layers, are often useful to provide context to the displayed layers (which are in the "foreground"). Basemaps are ubiquitous in interactive maps (see @sec-interactive-maps). However, they are often useful in static maps too. 
+Basemaps, or background layers, are often useful to provide context to the displayed layers (which are in the "foreground").
+Basemaps are ubiquitous in interactive maps (see @sec-interactive-maps).
+However, they are often useful in static maps too.
 
-Basemaps can be added to **geopandas** static plots using the [**contextily**](https://contextily.readthedocs.io/en/latest/index.html) package. A preliminary step is to convert our layers to `EPSG:3857` (["Web Mercator"](https://en.wikipedia.org/wiki/Web_Mercator_projection)), to be in agreement with the basemaps, which are typically provided in this CRS. For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it to `3857`:
+Basemaps can be added to **geopandas** static plots using the [**contextily**](https://contextily.readthedocs.io/en/latest/index.html) package.
+A preliminary step is to convert our layers to `EPSG:3857` (["Web Mercator"](https://en.wikipedia.org/wiki/Web_Mercator_projection)), to be in agreement with the basemaps, which are typically provided in this CRS.
+For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it to `3857`:
 
 ```{python}
 nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)
 ```
 
 To add a basemap, we use the `contextily.add_basemap` function, similarly to the way we added multiple layers (@sec-plot-static-layers).
- The default basemap is "Stamen Terrain". 
- You can specify a different basemap using the `source` parameter. 
- The possible values are given in the `cx.providers`. 
- Also check out the [gallery](https://xyzservices.readthedocs.io/en/stable/gallery.html). 
- Finally, custom basemaps (such as from your own raster tile server) can be specified using a [URL](https://contextily.readthedocs.io/en/latest/providers_deepdive.html#Manually-specifying-a-provider). 
- For example (@fig-basemap):
+The default basemap is "Stamen Terrain".
+You can specify a different basemap using the `source` parameter.
+The possible values are given in the `cx.providers`.
+Also check out the [gallery](https://xyzservices.readthedocs.io/en/stable/gallery.html).
+Finally, custom basemaps (such as from your own raster tile server) can be specified using a [URL](https://contextily.readthedocs.io/en/latest/providers_deepdive.html#Manually-specifying-a-provider).
+For example (@fig-basemap):
 
 ```{python}
 #| label: fig-basemap
@@ -344,7 +352,7 @@ vars = ['Land_area', 'Population', 'Median_income', 'Sex_ratio']
 nz[vars]
 ```
 
-We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables. 
+We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables.
 To do that, we initialize the plot with the right number of panels, such as `ncols=len(vars)` if we wish to have one row and four columns, and then go over the variables in a `for` loop, each time plotting `vars[i]` into the `ax[i]` panel (@fig-faceted-map):
 
 ```{python}
@@ -357,13 +365,13 @@ for i in range(len(vars)):
     ax[i].set_title(vars[i])
 ```
 
-In case we prefer a specific layout, rather than one row or one column, we can: 
+In case we prefer a specific layout, rather than one row or one column, we can:
 
-* initialize the required number or rows and columns, as in `plt.subplots(nrows,ncols)`,
-* "flatten" `ax`, so that the facets are still accessible using a single index `ax[i]` (rather than the default `ax[i][j]`), and
-* plot into `ax[i]`
+-   initialize the required number or rows and columns, as in `plt.subplots(nrows,ncols)`,
+-   "flatten" `ax`, so that the facets are still accessible using a single index `ax[i]` (rather than the default `ax[i][j]`), and
+-   plot into `ax[i]`
 
-For example, here is how we can reproduce the last plot, this time in a $2 \times 2$ layout, instead of a $1 \times 4$ layout (@fig-faceted-map2). 
+For example, here is how we can reproduce the last plot, this time in a $2 \times 2$ layout, instead of a $1 \times 4$ layout (@fig-faceted-map2).
 One more modification we are doing here is hiding the axis ticks and labels, to make the map less "crowded", using `ax[i].xaxis.set_visible(False)` (and same for `.yaxis`):
 
 ```{python}
@@ -379,8 +387,8 @@ for i in range(len(vars)):
     ax[i].yaxis.set_visible(False)
 ```
 
-It is also possible to "manually" specify the properties of each panel, and which row/column it goes in (e.g., @fig-spatial-aggregation-different-functions). 
-This can be useful when the various panels have different components, or even completely different types of plots (e.g., @fig-zion-transect), making automation with a `for` loop less applicable. 
+It is also possible to "manually" specify the properties of each panel, and which row/column it goes in (e.g., @fig-spatial-aggregation-different-functions).
+This can be useful when the various panels have different components, or even completely different types of plots (e.g., @fig-zion-transect), making automation with a `for` loop less applicable.
 For example, here is a plot similar to @fig-faceted-map2, but specifying each panel using a separate expression instead of using a `for` loop (@fig-faceted-map3):
 
 ```{python}
@@ -402,7 +410,7 @@ See the first code section in @sec-exporting-static-maps for another example of 
 
 ### Exporting static maps {#sec-exporting-static-maps}
 
-Static maps can be exported to a file using the [`matplotlib.pyplot.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function. 
+Static maps can be exported to a file using the [`matplotlib.pyplot.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function.
 For example, the following code section recreates @fig-read-shp-query (see previous Chapter), but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`:
 
 ```{python}
@@ -419,7 +427,7 @@ tanzania_neigh.apply(lambda x: axes[1].annotate(text=x['name_long'], xy=x.geomet
 plt.savefig('output/plot_geopandas.jpg')
 ```
 
-Figures with rasters can be exported exactly the same way. 
+Figures with rasters can be exported exactly the same way.
 For example, the following code section (@sec-plot-static-layers) creates an image of a raster and a vector layer, which is then exported to a file named `plot_rasterio.jpg`:
 
 ```{python}
@@ -431,7 +439,7 @@ nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
 plt.savefig('output/plot_rasterio.jpg')
 ```
 
-Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters. 
+Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters.
 For example, the following code section exports the same raster plot to a file named `plot_rasterio2.svg`, which has different dimensions (width = 5 $in$, height = 7 $in$), a different format (SVG), and different resolution (300 $DPI$:)
 
 ```{python}
@@ -449,7 +457,8 @@ plt.savefig('output/plot_rasterio2.svg', dpi=300)
 
 ### Minimal example
 
-An interactive map of a `GeoSeries` or `GeoDataFrame` can be created with `.explore` (@sec-vector-layers). Here is a minimal example:
+An interactive map of a `GeoSeries` or `GeoDataFrame` can be created with `.explore` (@sec-vector-layers).
+Here is a minimal example:
 
 ```{python}
 #| label: fig-explore
@@ -460,18 +469,18 @@ nz.explore()
 
 ### Styling
 
-The `.explore` method has a `color` parameter which affects both the fill and outline color. 
+The `.explore` method has a `color` parameter which affects both the fill and outline color.
 Other styling properties are specified using a `dict` through `style_kwds` (for general properties) and the `marker_kwds` (point-layer specific properties), as follows.
 
 The `style_kwds` keys are mostly used to control the color and opacity of the outline and the fill:
 
-* `stroke`---Whether to draw the outline
-* `color`---Outline color
-* `weight`---Outline width (in pixels)
-* `opacity`---Outline opacity (from `0` to `1`)
-* `fill`---Whether to draw fill
-* `fillColor`---Fill color
-* `fillOpacity`---Fill opacity (from `0` to `1`)
+-   `stroke`---Whether to draw the outline
+-   `color`---Outline color
+-   `weight`---Outline width (in pixels)
+-   `opacity`---Outline opacity (from `0` to `1`)
+-   `fill`---Whether to draw fill
+-   `fillColor`---Fill color
+-   `fillOpacity`---Fill opacity (from `0` to `1`)
 
 For example, here is how we can set green fill color and 30% opaque black outline of `nz` polygons in `.explore` (@fig-explore-styling-polygons):
 
@@ -484,14 +493,14 @@ nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})
 
 The `dict` passed to `marker_kwds` controls the way that points are displayed:
 
-* `radius`---Curcle radius (in $m$ for `circle`, see below) or in pixels (for `circle_marker`)
-* `fill`---Whether to draw fill (for `circle` or `circle_marker`)
+-   `radius`---Curcle radius (in $m$ for `circle`, see below) or in pixels (for `circle_marker`)
+-   `fill`---Whether to draw fill (for `circle` or `circle_marker`)
 
 Additionally, for points, we can set the `marker_type`, to one of:
 
-* `'marker'`---A PNG image of a marker
-* `'circle'`---A vector circle with radius specified in $m$
-* `'circle_marker'`---A vector circle with radius specified in pixels (the default)
+-   `'marker'`---A PNG image of a marker
+-   `'circle'`---A vector circle with radius specified in $m$
+-   `'circle_marker'`---A vector circle with radius specified in pixels (the default)
 
 For example, the following expression draws `'circe_marker`' points with 20 pixel radius, green fill, and black outline (@fig-explore-styling-points):
 
@@ -506,7 +515,8 @@ nz_height.explore(
 )
 ```
 
-The following expression demonstrates the `'marker'` option (@fig-explore-styling-points2). Note that the above-mentioned styling properties (other then `opacity`) are not applicable when using `marker_type='marker'`, because the markers are fixed PNG images:
+The following expression demonstrates the `'marker'` option (@fig-explore-styling-points2).
+Note that the above-mentioned styling properties (other then `opacity`) are not applicable when using `marker_type='marker'`, because the markers are fixed PNG images:
 
 ```{python}
 #| label: fig-explore-styling-points2
@@ -527,7 +537,10 @@ m = nz.explore()
 nz_height.explore(m=m, color='red')
 ```
 
-One of the advantages of interactive maps is the ability to turn layers "on" and "off". This capability is implemented in [`folium.LayerControl`](https://python-visualization.github.io/folium/latest/user_guide/ui_elements/layer_control.html#LayerControl) from package **folium**, which the **geopandas** `.explore` method is a wrapper of. For example, this is how we can add a layer control for the `nz` and `nz_height` layers (@fig-explore-layers-controls). Note the `name` properties, used to specify layer names in the control, and the `collapsed` property, used to specify whether the control is fully visible at all times (`False`), or on mouse hover (`True`, the default):
+One of the advantages of interactive maps is the ability to turn layers "on" and "off".
+This capability is implemented in [`folium.LayerControl`](https://python-visualization.github.io/folium/latest/user_guide/ui_elements/layer_control.html#LayerControl) from package **folium**, which the **geopandas** `.explore` method is a wrapper of.
+For example, this is how we can add a layer control for the `nz` and `nz_height` layers (@fig-explore-layers-controls).
+Note the `name` properties, used to specify layer names in the control, and the `collapsed` property, used to specify whether the control is fully visible at all times (`False`), or on mouse hover (`True`, the default):
 
 ```{python}
 #| label: fig-explore-layers-controls
@@ -541,7 +554,8 @@ m
 
 ### Symbology {#sec-explore-symbology}
 
-Symbology can be specified in `.explore` using similar arguments as in `.plot` (@sec-plot-symbology). For example, here is an interactive version of @fig-plot-symbology-colors (a). 
+Symbology can be specified in `.explore` using similar arguments as in `.plot` (@sec-plot-symbology).
+For example, here is an interactive version of @fig-plot-symbology-colors (a).
 
 ```{python}
 #| label: fig-explore-symbology
@@ -550,7 +564,9 @@ Symbology can be specified in `.explore` using similar arguments as in `.plot` (
 nz.explore(column='Median_income', legend=True, cmap='Reds')
 ```
 
-Fixed styling (@sec-explore-symbology) can be combined with symbology settings. For example, polygon outline colors in @fig-explore-symbology are styled according to `'Median_income'`, however, this layer has overlapping outlines and the color is arbitrarily set according to the order of features (top-most features), which may be misleading and confusing. To specify fixed outline colors (e.g., black), we can use the `color` and `weight` properties of `style_kwds` (@fig-explore-symbology2):
+Fixed styling (@sec-explore-symbology) can be combined with symbology settings.
+For example, polygon outline colors in @fig-explore-symbology are styled according to `'Median_income'`, however, this layer has overlapping outlines and the color is arbitrarily set according to the order of features (top-most features), which may be misleading and confusing.
+To specify fixed outline colors (e.g., black), we can use the `color` and `weight` properties of `style_kwds` (@fig-explore-symbology2):
 
 ```{python}
 #| label: fig-explore-symbology2
@@ -561,16 +577,17 @@ nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color'
 
 ### Basemaps
 
-The basemap in `.explore` can be specified using the `tiles` argument. Several popular built-in basemaps can be specified using a string:
+The basemap in `.explore` can be specified using the `tiles` argument.
+Several popular built-in basemaps can be specified using a string:
 
-* `'OpenStreetMap'`
-* `'Stamen Terrain'`
-* `'Stamen Toner'`
-* `'Stamen Watercolor'`
-* `'CartoDB positron'`
-* `'CartoDB dark_matter'`
+-   `'OpenStreetMap'`
+-   `'Stamen Terrain'`
+-   `'Stamen Toner'`
+-   `'Stamen Watercolor'`
+-   `'CartoDB positron'`
+-   `'CartoDB dark_matter'`
 
-Other basemaps are available through the **xyzservices** package, which needs to be installed (see `xyzservices.providers` for a list), or using a custom tile server URL. 
+Other basemaps are available through the **xyzservices** package, which needs to be installed (see `xyzservices.providers` for a list), or using a custom tile server URL.
 
 For example, the following expression displays the `'CartoDB positron'` tiles in an `.explore` map (@fig-explore-basemaps):
 
@@ -583,7 +600,9 @@ nz.explore(tiles='CartoDB positron')
 
 ### Exporting interactive maps
 
-An interactive map can be exported to an HTML file using the `.save` method of the `map` object. The HTML file can then be shared with other people, or published on a server and shared through a URL. A good free option for publishing a web map is [GitHub Pages](https://pages.github.com/). 
+An interactive map can be exported to an HTML file using the `.save` method of the `map` object.
+The HTML file can then be shared with other people, or published on a server and shared through a URL.
+A good free option for publishing a web map is [GitHub Pages](https://pages.github.com/).
 
 For example, here is how we can export the map shown in @fig-explore-layers-controls, to a file named `map.html`:
 
@@ -596,9 +615,9 @@ m.save('output/map.html')
 ```
 
 <!-- ### Linking geographic and non-geographic visualizations -->
+
 <!-- ## Mapping applications Streamlit? -->
 
 ## Exercises
 
 ## References
-
