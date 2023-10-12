@@ -43,7 +43,7 @@ src_elev = rasterio.open('data/elev.tif')
 ## Introduction
 
 So far the book has explained the structure of geographic datasets (@sec-spatial-class), and how to manipulate them based on their non-geographic attributes (@sec-attr) and spatial relations (@sec-spatial-operations). 
-This chapter focusses on manipulating the geographic elements of geographic objects, for example by simplifying and converting vector geometries, and by cropping raster datasets.
+This chapter focuses on manipulating the geographic elements of geographic objects, for example by simplifying and converting vector geometries, and by cropping raster datasets.
 After reading it you should understand and have control over the geometry column in vector layers and the extent and geographic location of pixels represented in rasters in relation to other geographic objects.
 
 @sec-geo-vec covers transforming vector geometries with 'unary' and 'binary' operations. 
@@ -392,17 +392,17 @@ x.union(y)
 x.symmetric_difference(y)
 ```
 
-Keep in mind that `x` and `y` are interchangeable in all predictes except for `.difference`, where:
+Keep in mind that `x` and `y` are interchangeable in all predicates except for `.difference`, where:
 
 * `x.difference(y)` means `x` minus `y`, whereas
 * `y.difference(x)` means `y` minus `x`.
 
-The latter examples demontrate pairwise operations between individual `shapely` geometries. 
+The latter examples demonstrate pairwise operations between individual `shapely` geometries. 
 The **geopandas** package, as is often the case, contains wrappers of these **shapely** functions to be applied to multiple, or pairwise, use cases. 
 For example, applying either of the pairwise methods on a `GeoSeries` or `GeoDataFrame`, combined with a `shapely` geometry, returns the pairwise (many-to-one) results (which is analogous to other operators, like `.intersects` or `.distance`, see @sec-spatial-subsetting-vector and @sec-distance-relations, respectively). 
 
 Let's demonstrate the "many-to-one" scenario by calculating the difference between each geometry in a `GeoSeries` and a "fixed" `shapely` geometry. 
-To creare the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` or `2` units "upwards" on the y-axis:
+To create the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` or `2` units "upwards" on the y-axis:
 
 ```{python}
 geom1 = gpd.GeoSeries([x])
@@ -622,7 +622,7 @@ texas_union
 ### Type transformations {#sec-type-transformations}
 
 Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis. 
-Eithyer the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation. 
+Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation. 
 The exact expression(s) depend on the specific transformation we are interested in. 
 In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
 Or, when available, you can use a wrapper from **geopandas**.
@@ -647,7 +647,7 @@ linestring = shapely.LineString(list(multipoint.geoms))
 linestring
 ```
 
-Similarly, a `'Polygon'` can be created using function `shapely.Polygon`, which acceps a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.Polygon` is able to complete the last coordinate automatically. Therefore (@fig-type-transform-polygon):
+Similarly, a `'Polygon'` can be created using function `shapely.Polygon`, which accepts a sequence of point coordinates. In principle, the last coordinate must be equal to the first, in order to form a closed shape. However, `shapely.Polygon` is able to complete the last coordinate automatically. Therefore (@fig-type-transform-polygon):
 
 ```{python}
 #| label: fig-type-transform-polygon
@@ -677,7 +677,7 @@ Conversion from `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring
 This allows spatial operations such as the length of the path traveled. 
 Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
-Our `'LineString'` geometry can be converted bact to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2):
+Our `'LineString'` geometry can be converted back to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2):
 
 ```{python}
 #| label: fig-type-transform-multipoint2
@@ -793,7 +793,7 @@ dat.plot(column='id');
 dat1.plot(column='level_1');
 ```
 
-The opposite transformation, i.e., "single-part to multi-part", is acheived using the `.dissolve` method (which we are already familiar with, see @sec-geometry-unions). 
+The opposite transformation, i.e., "single-part to multi-part", is achieved using the `.dissolve` method (which we are already familiar with, see @sec-geometry-unions). 
 For example, here is how we can get back to the `'MultiLineString'` geometry:
 
 ```{python}
@@ -1183,7 +1183,7 @@ Either of the supported resampling methods (see above) can be used.
 However, since we are not actually summarizing information but transferring the value of a large pixel into multiple small pixels, it makes sense to use either:
 
 * Nearest neighbor resampling (`rasterio.enums.Resampling.nearest`), when want to keep the original values as-is, since modifying them would be incorrect (such as in categorical rasters)
-* Smooting techniques, such as Bilinear resampling (`rasterio.enums.Resampling.bilinear`), when we would like the smaller pixels to reflect gradual change between the original values, e.g., when the disaggregated raster is used for visulalization purposes
+* Smoothing techniques, such as Bilinear resampling (`rasterio.enums.Resampling.bilinear`), when we would like the smaller pixels to reflect gradual change between the original values, e.g., when the disaggregated raster is used for visualization purposes
 
 To disaggregate a raster, we go through exactly the same workflow as for aggregation, only using a different scaling factor, such as `factor=5` instead of `factor=0.2`, i.e., *increasing* the number of raster pixels instead of decreasing. 
 In the example below, we disaggregate using bilinear interpolation, to get a smoothed high-resolution raster:
@@ -1271,7 +1271,7 @@ When resampling, the transform is typically derived either from a *template* ras
 Otherwise, when the exact grid is not of importance, we can simply aggregate or disaggregate our raster as shown above (@sec-raster-agg-disagg).
 (Note that when *reprojecting*, the target transform is not as straightforward to figure out, therefore we further use the `rasterio.warp.calculate_default_transform` function to calculate it, as will be shown in @sec-reprojecting-raster-geometries.)
 
-Let's demonstrate resampling into a destination grid which is specified through numeric contraints, such as the extent and resolution.
+Let's demonstrate resampling into a destination grid which is specified through numeric constraints, such as the extent and resolution.
 These could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match.
 Note that the resolution of the destination grid is ~10 times more coarse (300 $m$) than the original resolution of `dem.tif` (~30 $m$) (@fig-raster-resample):
 
@@ -1343,7 +1343,7 @@ There have now created a new file `output/dem_resample_nearest.tif` with the res
 dst.close()
 ```
 
-Here is another code section just to demontrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. 
+Here is another code section just to demonstrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. 
 Note that the transform is identical (@fig-raster-resample), all arguments other than the resampling method are identical:
 
 ```{python}

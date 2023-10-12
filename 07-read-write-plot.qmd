@@ -448,7 +448,7 @@ Here, we access a KML file from the web.
 First, if necessary, we may need to "activate" the `KML` driver, which isn't always available by default:
 
 ```{python}
-fiona.supported_drivers['KML'] = 'r'
+fiona.supported_drivers['LIBKML'] = 'r'
 ```
 
 The sample KML file `KML_Samples.kml` contains more than one layer. 
@@ -524,7 +524,7 @@ w = rasterio.windows.from_bounds(
 w
 ```
 
-Now we can read the partial array, accordint to the specified window `w`, passing it to the `.read` method:
+Now we can read the partial array, according to the specified window `w`, passing it to the `.read` method:
 
 ```{python}
 r = src.read(1, window=w)
@@ -645,7 +645,7 @@ As opposed to reading mode (`'r'`, the default) mode, when in writing mode the `
 * `dtype`---The raster data type, one of **numpy** types (e.g., `np.int64`) (see @tbl-numpy-data-types)
 * `crs`---The CRS, e.g., using an EPSG code (such as `4326`)
 * `transform`---The transform matrix
-* `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [doesn't work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters.
+* `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [does not work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters.
 
 Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection. 
 If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is the array with band values and `n` is the band index (starting from `1`, see below). 
@@ -662,7 +662,7 @@ To remind:
 * Creating from scratch (@sec-raster-from-scratch)---We created and wrote two rasters from scratch by associating the `elev` and `grain` arrays with an arbitrary spatial extent. The custom arbitrary transformation matrix was created using `rasterio.transform.from_origin`.
 * Aggregating (@sec-raster-agg-disagg)---We wrote an aggregated a raster, by resampling from an exising raster file, then updating the transformation matrix using `.transform.scale`.
 * Resampling (@sec-raster-resampling)---We resampled a raster into a custom grid, manually creating the transformation matrix using `rasterio.transform.from_origin`, then resampling and writing the output using `rasterio.warp.reproject`.
-* Masking and cropping (@sec-raster-cropping)---We wrote masked and/or cropped arrays from a raster, possibly updating the trabnsformation matrix and dimensions (when cropping).
+* Masking and cropping (@sec-raster-cropping)---We wrote masked and/or cropped arrays from a raster, possibly updating the transformation matrix and dimensions (when cropping).
 * Reprojecting (@sec-reprojecting-raster-geometries)---We reprojected a raster into another CRS, by automatically calculating an optimal `transform` using `rasterio.warp.calculate_default_transform`, then resampling and writing the output using `rasterio.warp.reproject`.
 
 To summarize, the raster-writing scenarios differ in two aspects:
@@ -891,7 +891,7 @@ r = src.read()
 r
 ```
 
-The Python user must thefore be mindful of "No Data" `int` rasters, for example to avoid interpreting the value `-9999` literally. 
+The Python user must therefore be mindful of "No Data" `int` rasters, for example to avoid interpreting the value `-9999` literally. 
 For instance, if we "forget" about the `nodata` flag, the literal calculation of the `.mean` would incorrectly include the value `-9999`:
 
 ```{python}
