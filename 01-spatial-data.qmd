@@ -615,15 +615,15 @@ multipolygon.area
 ```
 
 ```{python}
-gdf.area
+gpd.GeoSeries([point, linestring, polygon, multipolygon]).area
 ```
 
 Like all numeric calculations in **geopandas**, the results assume a planar CRS and are returned in its native units.
-This means that length and area measurements for geometries in WGS84 (`crs=4326`) are returned in decimal degrees and essentially meaningless, thus the warning in the above command.
+This means that length and area measurements for geometries in WGS84 (`crs=4326`) are returned in decimal degrees and essentially meaningless (to see the warning, try running `gdf.area`).
 
-To obtain true length and area measurements, the geometries first need to be transformed to a projected CRS (see @sec-reprojecting-vector-geometries) applicable to the area of interest.
+To obtain meaningful length and area measurements for data in a geographic CRS, the geometries first need to be transformed to a projected CRS (see @sec-reprojecting-vector-geometries) applicable to the area of interest.
 For example, the area of Slovenia can be calculated in the UTM zone 33N CRS (`crs=32633`).
-The result is in $m^2$, the units of the CRS of this dataset. 
+The result is in $m^2$, the units of the CRS of this dataset.
 
 ```{python}
 gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
