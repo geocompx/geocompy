@@ -882,9 +882,10 @@ Spherical models assume that the Earth is a perfect sphere of a given radius---t
 Ellipsoidal models are defined by two parameters: the equatorial radius and the polar radius.
 These are suitable because the Earth is compressed: the equatorial radius is around 11.5 $km$ longer than the polar radius.
 <!-- TODO: add reference, (Maling 1992...). -->
+The Earth is not an ellipsoid either, but it is a better approximation than a sphere.
 
 Ellipsoids are part of a broader component of CRSs: the datum.
-This contains information on what ellipsoid to use and the precise relationship between the Cartesian coordinates and location on the Earth's surface.
+It contains information on what ellipsoid to use and the precise relationship between the Cartesian coordinates and location on the Earth's surface.
 There are two types of datum---geocentric (such as WGS84) and local (such as NAD83).
 You can see examples of these two types of datums in @fig-geocentric-vs-local.
 Black lines represent a geocentric datum, whose center is located in the Earth's center of gravity and is not optimized for a specific location.
@@ -916,14 +917,16 @@ Cylindrical projections are used most often when mapping the entire world.
 A planar projection projects data onto a flat surface touching the globe at a point or along a line of tangency.
 It is typically used in mapping polar regions.
 
+### CRS in Python {#sec-crs-python}
+
 Like most open-source geospatial software, the **geopandas** and **rasterio** packages use the PROJ software for CRS definition and calculations.
 The **pyproj** package is a low-level interface to PROJ.
-Using its functions, we can examine the list of supported projections:
+Using its functions, such as `get_codes` and `from_epsg`, we can examine the list of projections supported by PROJ.
 
 ```{python}
 import pyproj
 epsg_codes = pyproj.get_codes('EPSG', 'CRS')  ## Supported EPSG codes
-epsg_codes[:5]  ## Print first five
+epsg_codes[:5]  ## Print first five supported EPSG codes
 ```
 
 ```{python}
@@ -938,14 +941,16 @@ But, for now, it is sufficient to know:
 -   Knowing which CRS your data is in, and whether it is in geographic (lon/lat) or projected (typically meters), is important and has consequences for how Python handles spatial and geometry operations
 -   CRSs of **geopandas** (vector layer or geometry column) and **rasterio** (raster) objects can be queried with the `.crs` property
 
-Here is a demonstration of the last bullet point, where we import a vector layer and figure out its CRS (in this case, a projected CRS, namely UTM Zone 12):
+Here is a demonstration of the last bullet point, where we import a vector layer and figure out its CRS (in this case, a projected CRS, namely UTM Zone 12) using the `.crs` property.
 
 ```{python}
 zion = gpd.read_file('data/zion.gpkg')
 zion.crs
 ```
 
-And here is an illustration of the layer in the original projected CRS and in a geographic CRS (@fig-zion-crs):
+We can also illustrate the difference between a geographic and a projected CRS by plotting the `zion` data in both CRSs (@fig-zion-crs).
+<!-- jn: have we explained the grid() method first? if not, we should do it here. -->
+<!-- jn: the plot does not align well (1e6 number above the right panel)... -->
 
 ```{python}
 #| label: fig-zion-crs
@@ -954,7 +959,6 @@ And here is an illustration of the layer in the original projected CRS and in a 
 #| - Geographic (WGS84)
 #| - Projected (NAD83 / UTM zone 12N)
 #| layout-ncol: 2
-
 # WGS84
 zion.to_crs(4326).plot(edgecolor='black', color='lightgrey').grid()
 # NAD83 / UTM zone 12N
@@ -989,4 +993,4 @@ For example, if the area output was in $m^2$ and we need the result in $km^2$, t
 
 ## Exercises
 
-...
+<!-- ... -->
