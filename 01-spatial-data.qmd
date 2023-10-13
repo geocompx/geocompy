@@ -613,15 +613,13 @@ gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
 
 ## Raster data {#sec-raster-data}
 
-### Introduction
+As mentioned above, working with rasters in Python is less organized around one comprehensive package as compared to the case for vector layers and **geopandas**.
+Instead, several packages provide alternative subsets of methods for working with raster data.
 
-As mentioned above, working with rasters in Python is less organized around one comprehensive package (compared to the case for vector layers and **geopandas**).
-Instead, several packages provide alternative subsets of method for working with raster data.
-
-The two most notable approaches for working with rasters in Python are provided by the **rasterio** and the **rioxarray** packages.
-As we will see shortly, they differ in their scope and underlying data models.
+The two most notable approaches for working with rasters in Python are provided by **rasterio** and **rioxarray** packages.
+As we will see shortly, they differ in scope and underlying data models.
 Specifically, **rasterio** represents rasters as **numpy** arrays associated with a separate object holding the spatial metadata.
-The **rioxarray** package, a warpper of **rasterio**, however, represents rasters with **xarray** "extended" arrays, which are an extension of **numpy** array designed to hold axis labels and attributes, in the same object, together with the array of raster values.
+The **rioxarray** package, a warpper of **rasterio**, however, represents rasters with **xarray** "extended" arrays, which are an extension of **numpy** array designed to hold axis labels and attributes in the same object, together with the array of raster values.
 Similar approaches are provided by less well-known **xarray-spatial** and **geowombat** packages.
 Comparatively, **rasterio** is more well-established, but it is more low-level (which has both advantabes and distadvantages).
 
@@ -634,9 +632,10 @@ In the following two sections, we introduce **rasterio**, which is the raster-re
 ### Using **rasterio** {#sec-using-rasterio}
 
 To work with the **rasterio** package, we first need to import it.
-We also import **numpy**, since the underlying raster data are stored in **numpy** arrays.
-To effectively work with those, we expose all **numpy** functions.
-Finally, we import the `rasterio.plot` sub-module for its `rasterio.plot.show` function for quick visualization of rasters.
+Additionally, as the raster data is stored within numpy arrays, we import the **numpy** package and make all its functions accessible for effective data manipulation. 
+<!--jn: `rasterio.plot` or **rasterio.plot**?-->
+Finally, we import the `rasterio.plot` sub-module for its `rasterio.plot.show` function that allows for quick visualization of rasters.
+<!--jn: you should also mention subprocess -->
 
 ```{python}
 import numpy as np
@@ -653,11 +652,12 @@ When working with **rasterio**, importing a raster is actually a two-step proces
 
 This separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file.
 The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size.
+<!-- jn: what do you mean with "selective"? did you mean "optional"? -->
 Accordingly, the second step (`.read`) is selective.
 For example, we may want to read just one raster band rather than reading all bands.
 
 In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection.
-For this example, we use a single-band raster representing elevation in Zion National Park:
+For this example, we use a single-band raster representing elevation in Zion National Park.
 
 ```{python}
 src = rasterio.open('data/srtm.tif')
@@ -669,26 +669,26 @@ To get a first impression of the raster values, we can plot the raster using the
 ```{python}
 #| label: fig-rasterio-plot
 #| fig-cap: Basic plot of a raster, the data are coming from a `rasterio` file connection
-
 rasterio.plot.show(src);
 ```
 
 The `DatasetReader` contains the raster metadata, that is, all of the information other than the raster values.
-Let us examine it:
+Let us examine it with the `meta` property.
 
 ```{python}
 src.meta
 ```
 
-Importantly, we can see:
+<!-- jn: maybe it would be good to list and explain the obtained values (e.g., what does the uint16 mean? what does the width? etc.) -->
+Importantly, it allows us to see:
 
 -   The raster data type (`dtype`)
 -   Raster dimensions (`width`, `height`, and `count`, i.e., number of layers)
--   Raster Coordinate Reference System (`crs`)
+-   Raster coordinate reference system (`crs`)
 -   The raster affine transformation matrix (`transform`)
 
 The last item (i.e., `transform`) deserves more attention.
-To position a raster in geographical space, in addition to the CRS we must specify the raster *origin* ($x_{min}$, $y_{max}$) and resolution ($delta_{x}$, $delta_{y}$).
+To position a raster in geographical space, in addition to the CRS, we must specify the raster *origin* ($x_{min}$, $y_{max}$) and resolution ($delta_{x}$, $delta_{y}$).
 In the transform matrix notation, these data items are stored as follows:
 
 ```{text}
@@ -701,9 +701,9 @@ Note that, by convention, raster y-axis origin is set to the maximum value ($y_{
 Finally, the `.read` method of the `DatasetReader` is used to read the actual raster values.
 Importantly, we can read:
 
+-   All layers (as in `.read()`)
 -   A particular layer, passing a numeric index (as in `.read(1)`)
 -   A subset of layers, passing a `list` of indices (as in `.read([1,2])`)
--   All layers (as in `.read()`)
 
 Note that the layer indices start from `1`, contrary to the Python convention of the first index being `0`.
 
@@ -712,13 +712,13 @@ The resulting object is a **numpy** array, with either two or three dimensions:
 -   *Three* dimensions, when reading more than one layer (e.g., `.read()` or `.read([1,2])`). In such case, the dimensions pattern is `(layers, rows, columns)`
 -   *Two* dimensions, when reading one specific layer (e.g., `.read(1)`)
 
-Let's read the first (and only) layer from the `srtm.tif` raster, using the file connection object `src`, for example:
+Let's read the first (and only) layer from the `srtm.tif` raster, using the file connection object `src` using the `.read(1)` method.
 
 ```{python}
 src.read(1)
 ```
 
-The result is a two-dimensional **numpy** array.
+The result is a two-dimensional **numpy** array in which each value represents the elevation of the corresponding pixel.
 
 The relation between a `rasterio` file connection and the derived properties is summarized in @fig-rasterio-structure.
 The file connection (created with `rasterio.open`) gives access to the two components of raster data: the metadata (via the `.meta` property) and the values (via the `.read` method).
@@ -727,20 +727,21 @@ The file connection (created with `rasterio.open`) gives access to the two compo
 
 ### Raster from scratch {#sec-raster-from-scratch}
 
-In this section, we are going to demonstrate creation of rasters from scratch.
-We are going to create two small rasters, `elev` and `grain`, which we are going to use in examples later on in the book.
-Unlike creating a vector layer (see @sec-vector-layer-from-scratch), creating a raster from scratch is rarely needed in practice because aligning a raster with the right spatial extent is difficult to do programmatically ("georeferencing" tools in GIS software are a better fit for the job).
-Nevertheless, the examples will be useful to become more familiar with the **rasterio** data structures.
+In this section, we are going to demonstrate the creation of rasters from scratch.
+We will construct two small rasters, `elev` and `grain`, which we will use in examples later in the book.
+Unlike creating a vector layer (see @sec-vector-layer-from-scratch), creating a raster from scratch is rarely needed in practice because aligning a raster with the proper spatial extent is challenging to do programmatically ("georeferencing" tools in GIS software are a better fit for the job).
+Nevertheless, the examples will be helpful to become more familiar with the **rasterio** data structures.
 
 Conceptually, a raster is an array combined with georeferencing information, whereas the latter comprises:
 
 -   A transformation matrix, linking pixel indices with coordinates in a particular coordinate system
 -   A CRS definition, specifying the association of that coordinate system with the surface of the earth (optional)
 
-Therefore, to create a raster, we first need to have an array with the values, then supplement it with the georeferencing information.
+Therefore, to create a raster, we first need to have an array with the values, and then supplement it with the georeferencing information.
 Let's create the arrays `elev` and `grain`.
 The `elev` array is a $6 \times 6$ array with sequential values from `1` to `36`.
-It can be created as follows:
+It can be created as follows using the **numpy** `arange` and `reshape` functions.
+<!-- jn: why 1, 37, and not 1, 36? -->
 
 ```{python}
 elev = np.arange(1, 37, dtype=np.uint8).reshape(6, 6)
@@ -748,7 +749,7 @@ elev
 ```
 
 The `grain` array represents a categorical raster with values `0`, `1`, `2`, corresponding to categories "clay", "silt", "sand", respectively.
-We will create if from a specific arrangement of pixel values, as follows:
+We will create it from a specific arrangement of pixel values using the **numpy** `array` and `reshape` functions.
 
 ```{python}
 v = [
@@ -763,16 +764,17 @@ grain = np.array(v, dtype=np.uint8).reshape(6, 6)
 grain
 ```
 
-Note that in both cases we are using the `uint8` (unsigned integer in 8 bits, i.e., `0-255`) data type, which is minimally sufficient to represent all possible values of the given rasters.
+Note that in both cases, we are using the `uint8` (unsigned integer in 8 bits, i.e., `0-255`) data type, which is sufficient to represent all possible values of the given rasters.
+<!-- jn: do we explain possible data types somewhere in the book? if so, we should add a cross-reference here. -->
 This is the recommended approach for a minimal memory footprint.
 
-What is missing is the raster transform (see @sec-using-rasterio).
+What is missing now is the georeferencing information (see @sec-using-rasterio).
 In this case, since the rasters are arbitrary, we also set up an arbitrary transformation matrix, where:
 
--   the origin ($x_{min}$, $y_{max}$) is at `-1.5,1.5`, and
--   and resolution ($delta_{x}$, $delta_{y}$) is `0.5,-0.5`.
+-   The origin ($x_{min}$, $y_{max}$) is at `-1.5,1.5`
+-   The raster resolution ($delta_{x}$, $delta_{y}$) is `0.5,-0.5`
 
-In terms of code, we do that as follows, using [`rasterio.transform.from_origin`](rasterio.transform.from_origin):
+We can add this information using [`rasterio.transform.from_origin`](rasterio.transform.from_origin), and specifying `west`, `north`, `xsize`, and `ysize` parameters.
 
 ```{python}
 new_transform = rasterio.transform.from_origin(
@@ -784,39 +786,40 @@ new_transform = rasterio.transform.from_origin(
 new_transform
 ```
 
-Note that, confusingly, $delta_{y}$ (i.e., `ysize`) is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is eventuially negative (`-0.5`)!
+Note that, confusingly, $delta_{y}$ (i.e., `ysize`) is defined in `rasterio.transform.from_origin` using a positive value (`0.5`), even though it is, in fact, negative (`-0.5`).
 
-The raster can now be plotted in its coordinate system, passing the array `elev` along with the transformation matrix `new_transform` to `rasterio.plot.show` (@fig-rasterio-plot-elev):
+The raster can now be plotted in its coordinate system, passing the array `elev` along with the transformation matrix `new_transform` to `rasterio.plot.show` (@fig-rasterio-plot-elev).
 
 ```{python}
 #| label: fig-rasterio-plot-elev
 #| fig-cap: Plot of the `elev` raster, a minimal example of a continuous raster, created from scratch
-
 rasterio.plot.show(elev, transform=new_transform);
 ```
 
-The `grain` raster can be plotted the same way, as we are going to use the same transformation matrix for it as well (@fig-rasterio-plot-grain):
+The `grain` raster can be plotted the same way, as we are going to use the same transformation matrix for it as well (@fig-rasterio-plot-grain).
 
 ```{python}
 #| label: fig-rasterio-plot-grain
 #| fig-cap: Plot of the `grain` raster, a minimal example of a categorical raster, created from scratch
-
 rasterio.plot.show(grain, transform=new_transform);
 ```
 
-At this point, we have two rasters, each composed of an array and its transformation matrix.
-We can work with the raster using `rasterio`:
+At this point, we have two rasters, each composed of an array and related transformation matrix.
+We can work with the raster using `rasterio` by:
 
--   Passing the transformation matrix wherever true raster pixel coordinates are important (such as in function `show` above)
+-   Passing the transformation matrix wherever actual raster pixel coordinates are important (such as in function `show` above)
 -   Keeping in mind that any other layer we use in the analysis is in the same CRS of those coordinates
 
 Finally, to export the raster for permanent storage, along with the CRS definition, we need to go through the following steps:
 
--   Create a raster file connection (where we set the transform and the CRS, among other settings)
--   Write the array with raster values into the connection
--   Close the connection
+1.  Create a raster file connection (where we set the transform and the CRS, among other settings)
+2.  Write the array with raster values into the connection
+3.  Close the connection
 
-In the case of `elev`, we do it as follows:
+We will elaborate on the details of raster output in @sec-data-output-raster.
+For now, we will just demonstrate the process of exporting the `elev` and `grain` rasters into the `output` directory.
+In the case of `elev`, we do it as follows with the `open`, `write`, and `close` methods of the `rasterio` package.
+<!-- jn: please explain 'w', count, crs (add a cross-reference to the section where we explain CRSs) -->
 
 ```{python}
 #| eval: false
@@ -836,7 +839,7 @@ new_dataset.close()
 
 Note that the CRS we (arbitrarily) set for the `elev` raster is WGS84, defined using `crs=4326` according to the EPSG code.
 
-Here is how we export the `grain` raster as well, using almost the exact same code just with `elev` replaced with `grain`:
+Exporting the `grain` raster is done in the same way, with the only difference being the array we write into the connection.
 
 ```{python}
 #| eval: false
@@ -854,14 +857,11 @@ new_dataset.write(grain, 1)
 new_dataset.close()
 ```
 
-Don't worry if the raster export code is unclear.
-We will elaborate on the details of raster output in @sec-data-output-raster.
-
 As a result, the files `elev.tif` and `grain.tif` are written into the `output` directory.
 These are identical to the `elev.tif` and `grain.tif` files in the `data` directory which we use later on in the examples (for example, @sec-raster-subsetting).
 
 Note that the transform matrices and dimensions of `elev` and `grain` are identical.
-This means that the rasters are overlapping, and can be combined into one two-band raster, combined in raster algebra operations (@sec-map-algebra), etc.
+This means that the rasters are overlapping, and can be combined into one two-band raster, processed in raster algebra operations (@sec-map-algebra), etc.
 
 ## Coordinate Reference Systems {#sec-coordinate-reference-systems}
 
