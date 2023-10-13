@@ -490,6 +490,7 @@ Snow probability for December is stored as a Cloud Optimized GeoTIFF (COG) file 
 To read an online file, we need to provide its URL together with the `/vsicurl_streaming/` prefix:
 
 ```{python}
+#| eval: false
 src = rasterio.open('/vsicurl_streaming/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif')
 src
 ```
@@ -509,6 +510,7 @@ To read a raster *window*, let's first define the bounding box coordinates.
 For example, here we use a $10 \times 10$ degrees extent coinciding with Reykjavik: 
 
 ```{python}
+#| eval: false
 xmin=-30
 xmax=-20
 ymin=60
@@ -519,6 +521,7 @@ Using the extent coordinates along with the raster transformation matrix, we cre
 The `rasterio.windows.from_bounds` function basically "translates" the extent from coordinates, to row/column ranges:
 
 ```{python}
+#| eval: false
 w = rasterio.windows.from_bounds(
     left=xmin, 
     bottom=ymin,
@@ -532,6 +535,7 @@ w
 Now we can read the partial array, according to the specified window `w`, passing it to the `.read` method:
 
 ```{python}
+#| eval: false
 r = src.read(1, window=w)
 r
 ```
@@ -540,6 +544,7 @@ Note that the transformation matrix of the window is not the same as that of the
 Therefore, we must re-create the transformation matrix, with the modified origin (`xmin`,`ymax`), yet the same resolution, as follows:
 
 ```{python}
+#| eval: false
 w_transform = rasterio.transform.from_origin(
     west=xmin, 
     north=ymax, 
@@ -555,6 +560,7 @@ The array `r` along with the updated transformation matrix `w_transform` compris
 ```{python}
 #| label: fig-raster-window
 #| fig-cap: Raster window read from a remote Cloud Optimized GeoTIFF (COG) file source
+#| eval: false
 
 fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=w_transform, ax=ax)
@@ -565,6 +571,7 @@ Another option is to extract raster values at particular points, directly from t
 For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying `.sample`:
 
 ```{python}
+#| eval: false
 coords = (-21.94, 64.15)
 values = src.sample([coords])
 list(values)
