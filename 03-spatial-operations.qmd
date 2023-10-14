@@ -203,6 +203,7 @@ That may sound rather abstract and, indeed, the definition and classification of
 Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships.
 @fig-spatial-relations shows a variety of geometry pairs and their associated relations.
 The third and fourth pairs in @fig-spatial-relations (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if `x.relation(y)` is true, `y.relation(x)` will also be true, relations in which the order of the geometries are important such as contains and within are not.
+<!-- jn: maybe put the DE-9IM explanation in a block. Also -- is there any python tool to use it? If so, maybe we should mention it... -->
 Notice that each geometry pair has a ["DE-9IM"](https://en.wikipedia.org/wiki/DE-9IM) string such as FF2F11212.
 DE-9IM strings describe the dimensionality (0=points, 1=lines, 2=polygons) of the pairwise intersections of the interior, boundary, and exterior, of two geometries (i.e., nine values of 0/1/2 encoded into a string).
 This is an advanced topic beyond the scope of this book, which can be useful to understand the difference between relation types, or define custom types of relations.
@@ -211,8 +212,8 @@ See the [DE-9IM strings](https://r.geocompx.org/spatial-operations#de-9im-string
 ![Topological relations between vector geometries, inspired by Figures 1 and 2 in Egenhofer and Herring (1990). The relations for which the `x.relation(y)` is true are printed for each geometry pair, with `x` represented in pink and `y` represented in blue. <!--toDo: move the used images from geocompr to the geocompy repo (this will make it more stable)--> The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](https://r.geocompx.org/04-spatial-operations_files/figure-html/relations-1.png){#fig-spatial-relations}
 
 In **shapely**, methods testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships).
-**geopandas** provides wrappers (with the same method name) which can be applied on multiple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting-vector).
-To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in @fig-spatial-relations and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries):
+**geopandas** provides their wrappers (with the same method name) which can be applied on multiple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting-vector).
+To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in @fig-spatial-relations and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries).
 
 ```{python}
 points = gpd.GeoSeries([
@@ -228,13 +229,13 @@ poly = gpd.GeoSeries([
 ])
 ```
 
-The sample dataset which we created is composed of three is `GeoSeries`: named `points`, `line`, and `poly`, which are visualized in @fig-spatial-relations-geoms:
+The sample dataset which we created is composed of three is `GeoSeries`: named `points`, `line`, and `poly`, which are visualized in @fig-spatial-relations-geoms.
+<!--jn: the ploting for loop should be either explained here or (preferably) there should be a reference to some information about this approach that can be found in the vis chapter-->
 
 ```{python}
 #| label: fig-spatial-relations-geoms
 #| fig-cap: Points, line and polygon objects arranged to illustrate topological relations
-
-base = poly.plot(color='grey', edgecolor='red')
+base = poly.plot(color='lightgrey', edgecolor='red')
 line.plot(ax=base, color='black', linewidth=7)
 points.plot(ax=base, color='none', edgecolor='black')
 for x, y, label in zip(points.x, points.y, [1,2,3]):
@@ -242,56 +243,56 @@ for x, y, label in zip(points.x, points.y, [1,2,3]):
 ```
 
 A simple query is: which of the points in `points` intersect in some way with polygon `poly`?
-The question can be answered by inspection (points 1 and 3 are touching and within the polygon, respectively).
-This question can be answered with the `.intersects` method, which reports whether or not each geometry in a `GeoSeries` (`points`) intersects with a single `shapely` geometry (`poly.iloc[0]`).
+The question can be answered by visual inspection (points 1 and 3 are touching and are within the polygon, respectively).
+Alternatively, we can get the solution with the `.intersects` method, which reports whether or not each geometry in a `GeoSeries` (`points`) intersects with a single `shapely` geometry (`poly.iloc[0]`).
 
 ```{python}
 points.intersects(poly.iloc[0])
 ```
 
 The result shown above is a boolean `Series`.
-Its contents should match your intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second are outside the polygon's border.
+Its contents should match our intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second.
 Each value in this `Series` represents a feature in the first input (`points`).
 
-The last example, and all other earlier examples in this chapter, demonstrate the "many-to-one" mode of `.intersects` and analogous methods, where the relation is evaluated between each of several geometries in a `GeoSeries`/`GeoDataFrame`, and an individual `shapely` geometry.
+All earlier examples in this chapter demonstrate the "many-to-one" mode of `.intersects` and analogous methods, where the relation is evaluated between each of several geometries in a `GeoSeries`/`GeoDataFrame`, and an individual `shapely` geometry.
 A second mode of those methods (not demonstrated here) is when both inputs are `GeoSeries`/`GeoDataFrame` objects.
 In such case, a "pairwise" evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`).
 For example, the expression `nz.intersects(nz)` returns a `Series` of 16 `True` values, indicating (unsurprisingly) that each geometry in `nz` intersects with itself.
 
 A third mode is when we are interested in a "many-to-many" evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two `GeoSeries`/`GeoDataFrame` objects.
 At the time of writing, there is no built-in method to do this in **geopandas**.
-However, the `.apply` method can be used to repeat a "many-to-one" evaluation over all geometries in the second layer,resulting in a matrix of *pairwise* results.
-We'll create another `GeoSeries` with two polygons, named `poly2`, to demonstrate:
+However, the `.apply` method can be used to repeat a "many-to-one" evaluation over all geometries in the second layer, resulting in a matrix of *pairwise* results.
+We will create another `GeoSeries` with two polygons, named `poly2`, to demonstrate this.
 
 ```{python}
 poly2 = gpd.GeoSeries([
   shapely.Polygon([(0,0), (0,1), (1,1), (1,0.5), (0,0)]),
   shapely.Polygon([(0,0), (1,0.5), (1,0), (0,0)])
 ])
-points.apply(lambda x: poly2.intersects(x))
 ```
 
-The inputs for this example, `points` and `poly2`, are illustrated in @fig-spatial-relations-geoms2:
+Our two input objects, `points` and `poly2`, are illustrated in @fig-spatial-relations-geoms2.
 
 ```{python}
 #| label: fig-spatial-relations-geoms2
 #| fig-cap: Inputs for demonstrating the evaluation of all pairwise intersection relations between three points (`points`) and two polygons (`poly2`)
-
-base = poly2.plot(color='none', edgecolor='red')
+base = poly2.plot(color='lightgrey', edgecolor='red')
 points.plot(ax=base, color='none', edgecolor='black')
 for x, y, label in zip(points.x, points.y, [1,2,3]):
     base.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords="offset points")
 ```
 
-And here is how we can use `.apply` to get the intersection relations matrix.
+Now we can use `.apply` to get the intersection relations matrix.
+<!-- jn: the apply method should be explain here (even as a block...) -->
 The result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry.
-We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each:
+We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each.
 
 ```{python}
 points.apply(lambda x: poly2.intersects(x))
 ```
 
-A more natural way to work with this result is perhaps as an array:
+A more natural way to work with this result is perhaps as an array.
+<!-- jn: why is this more natural? why is it better than a dataframe? which one should we use? if array is better -- keep it in the main text. if array is not better -- remove it from the main text and put it in a block. -->
 
 ```{python}
 points.apply(lambda x: poly2.intersects(x)).to_numpy()
@@ -299,7 +300,7 @@ points.apply(lambda x: poly2.intersects(x)).to_numpy()
 
 The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in @fig-spatial-relations.
 More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it?
-These can be answered as follows:
+The first question can be answered with `.within`, and the second with `.touches`.
 
 ```{python}
 points.within(poly.iloc[0])
@@ -310,7 +311,7 @@ points.touches(poly.iloc[0])
 ```
 
 Note that although the first point touches the boundary polygon, it is not within it; the third point is within the polygon but does not touch any part of its border.
-The opposite of `.intersects` is `.disjoint`, which returns only objects that do not spatially relate in any way to the selecting object:
+The opposite of `.intersects` is `.disjoint`, which returns only objects that do not spatially relate in any way to the selecting object.
 
 ```{python}
 points.disjoint(poly.iloc[0])
@@ -319,15 +320,16 @@ points.disjoint(poly.iloc[0])
 Another useful type of relation is "within distance", where we detect features that intersect with the target buffered by particular distance.
 Buffer distance determines how close target objects need to be before they are selected.
 This can be done by literally buffering (@sec-geometries) the target geometry, and evaluating intersection (`.intersects`).
-Another way is to calculate the distances and compare them to the distance threshold:
+Another way is to calculate the distances using the `.distance` method, and then evaluate whether they are within a threshold distance.
 
 ```{python}
 points.distance(poly.iloc[0]) < 0.2
 ```
 
+<!-- jn: maybe it would be repeath the message about importance of the units/CRS here -->
 Note that although the second point is more than `0.2` units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to `0.2`.
 This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure @fig-spatial-relations.
-We can verify the actual distance between the second point and the polygon is `0.13`, as follows:
+We can verify the actual distance between the second point and the polygon is `0.13`, as follows.
 
 ```{python}
 points.iloc[1].distance(poly.iloc[0])
