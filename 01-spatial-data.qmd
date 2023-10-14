@@ -1,6 +1,5 @@
 ---
 jupyter: python3
-warning: false
 ---
 
 # Geographic data in Python {#sec-spatial-class}
@@ -237,22 +236,22 @@ gdf.geometry.crs
 
 Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
 Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
-For example, the two following commands return exactly the same result, a `GeoSeries` with country centroids.
+For example, the two following commands return exactly the same result, a `GeoSeries` with country bounding box polygons (using the [`.envelope`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.envelope.html) method).
 
 ```{python}
-gdf.centroid
+gdf.envelope
 ```
 
 ```{python}
-gdf.geometry.centroid
+gdf.geometry.envelope
 ```
 
-Note that `.centroid`, and other similar operators in **geopandas** such as `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data.
-In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we do not need the original ones, as in `gdf.geometry=gdf.centroid`).
+Note that `.envelope`, and other similar operators in **geopandas** such as `.centroid` (@sec-centroids), `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data.
+In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we do not need the original ones, as in `gdf.geometry=gdf.envelope`).
 
 ```{python}
 gdf2 = gdf.copy()
-gdf2.geometry = gdf.centroid
+gdf2.geometry = gdf.envelope
 gdf2
 ```
 
@@ -277,26 +276,26 @@ A `GeoDataFrame` can also have multiple `GeoSeries`.
 
 ```{python}
 #| output: false 
-gdf['centroids'] = gdf.centroid
-gdf['polygons'] = gdf.geometry
+gdf['bbox'] = gdf.envelope
+gdf['polygon'] = gdf.geometry
 gdf
 ```
 
 Only one geometry column at a time is "active", in the sense that it is being accessed in operations involving the geometries (such as `.centroid`, `.crs`, etc.).
 To switch the active geometry column from one `GeoSeries` column to another, we use `set_geometry`.
-@fig-switch-to-centroids and @fig-switch-to-polygons shows interactive maps of the `gdf` layer with the `'centroids'` and `'polygons'` geometry columns activated, respectively.
+@fig-switch-to-centroids and @fig-switch-to-polygons shows interactive maps of the `gdf` layer with the `'bbox'` and `'polygon'` geometry columns activated, respectively.
 
 ```{python}
 #| label: fig-switch-to-centroids
-#| fig-cap: Switching to the `'centroids'` geometry column in the `world` layer, and plotting it
-gdf = gdf.set_geometry('centroids')
+#| fig-cap: Switching to the `'bbox'` geometry column in the `world` layer, and plotting it
+gdf = gdf.set_geometry('bbox')
 gdf.explore()
 ```
 
 ```{python}
 #| label: fig-switch-to-polygons
 #| fig-cap: Switching to the `'polygons'` geometry column in the `world` layer, and plotting it
-gdf = gdf.set_geometry('polygons')
+gdf = gdf.set_geometry('polygon')
 gdf.explore()
 ```
 
