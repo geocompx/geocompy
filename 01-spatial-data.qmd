@@ -1,5 +1,6 @@
 ---
 jupyter: python3
+warning: false
 ---
 
 # Geographic data in Python {#sec-spatial-class}
@@ -18,7 +19,7 @@ Rasters aggregate spatially specific features to a given resolution, meaning tha
 Which to use?
 The answer likely depends on your domain of application, and the datasets you have access to:
 
--   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?-->
+-   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?--> <!-- md: I think that's true but now sure how we can back up this idea, will be happy to hear what everyone thinks -->
 -   Raster datasets and methods dominate many environmental sciences because of the reliance on remote sensing data
 
 Python has strong support for both data models.
@@ -157,8 +158,6 @@ gdf = gpd.read_file('data/world.gpkg')
 ```
 
 The result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code:
-<!--jn: type(gdf) is not printed as an output-->
-<!-- md: fixed -->
 
 ```{python}
 #| label: typegdf
@@ -238,22 +237,22 @@ gdf.geometry.crs
 
 Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
 Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
-For example, the two following commands return exactly the same result, a `GeoSeries` with country bounding box polygons (using the [`.envelope`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.envelope.html) method).
+For example, the two following commands return exactly the same result, a `GeoSeries` with country centroids.
 
 ```{python}
-gdf.envelope
+gdf.centroid
 ```
 
 ```{python}
-gdf.geometry.envelope
+gdf.geometry.centroid
 ```
 
-Note that `.envelope`, and other similar operators in **geopandas** such as `.centroid` (@sec-centroids), `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data.
-In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we do not need the original ones, as in `gdf.geometry=gdf.envelope`).
+Note that `.centroid`, and other similar operators in **geopandas** such as `.buffer` (@sec-buffers) or `.convex_hull`, return only the geometry (i.e., a `GeoSeries`), not a `GeoDataFrame` with the original attribute data.
+In case we want the latter, we can create a copy of the `GeoDataFrame` and then "overwrite" its geometry (or, we can overwrite the geometries directly in case we do not need the original ones, as in `gdf.geometry=gdf.centroid`).
 
 ```{python}
 gdf2 = gdf.copy()
-gdf2.geometry = gdf.envelope
+gdf2.geometry = gdf.centroid
 gdf2
 ```
 
@@ -278,26 +277,26 @@ A `GeoDataFrame` can also have multiple `GeoSeries`.
 
 ```{python}
 #| output: false 
-gdf['bbox'] = gdf.envelope
-gdf['polygon'] = gdf.geometry
+gdf['centroids'] = gdf.centroid
+gdf['polygons'] = gdf.geometry
 gdf
 ```
 
 Only one geometry column at a time is "active", in the sense that it is being accessed in operations involving the geometries (such as `.centroid`, `.crs`, etc.).
 To switch the active geometry column from one `GeoSeries` column to another, we use `set_geometry`.
-@fig-switch-to-centroids and @fig-switch-to-polygons shows interactive maps of the `gdf` layer with the `'bbox'` and `'polygon'` geometry columns activated, respectively.
+@fig-switch-to-centroids and @fig-switch-to-polygons shows interactive maps of the `gdf` layer with the `'centroids'` and `'polygons'` geometry columns activated, respectively.
 
 ```{python}
 #| label: fig-switch-to-centroids
-#| fig-cap: Switching to the `'bbox'` geometry column in the `world` layer, and plotting it
-gdf = gdf.set_geometry('bbox')
+#| fig-cap: Switching to the `'centroids'` geometry column in the `world` layer, and plotting it
+gdf = gdf.set_geometry('centroids')
 gdf.explore()
 ```
 
 ```{python}
 #| label: fig-switch-to-polygons
 #| fig-cap: Switching to the `'polygons'` geometry column in the `world` layer, and plotting it
-gdf = gdf.set_geometry('polygon')
+gdf = gdf.set_geometry('polygons')
 gdf.explore()
 ```
 
@@ -464,7 +463,7 @@ geometrycollection = shapely.GeometryCollection([multipoint, multilinestring])
 geometrycollection
 ```
 
-`shapely` geometries act as atomic units of vector data, meaning that there is no concept of geometry *sets*: each operation accepts individual geometry object(s) as input, and retunrs an individual geometry as output. (The `GeoSeries` and `GeoDataFrame` objects, defined in **geopandas**, are used to deal with sets of `shapely` geometries, collectively) <!--jn: I do not understand the previous sentence...--> <!-- md: rephrased -->
+`shapely` geometries act as atomic units of vector data, meaning that there is no concept of geometry *sets*: each operation accepts individual geometry object(s) as input, and retunrs an individual geometry as output. (The `GeoSeries` and `GeoDataFrame` objects, defined in **geopandas**, are used to deal with sets of `shapely` geometries, collectively)
 For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.2`) and itself (@fig-mpol-buffer-difference):
 
 ```{python}
@@ -645,16 +644,17 @@ In the following two sections, we introduce **rasterio**, which is the raster-re
 ### Using **rasterio** {#sec-using-rasterio}
 
 To work with the **rasterio** package, we first need to import it.
-Additionally, as the raster data is stored within numpy arrays, we import the **numpy** package and make all its functions accessible for effective data manipulation. 
-<!--jn: `rasterio.plot` or **rasterio.plot**?-->
-Finally, we import the `rasterio.plot` sub-module for its `rasterio.plot.show` function that allows for quick visualization of rasters.
+Additionally, as the raster data is stored within **numpy** arrays, we import the **numpy** package and make all its functions accessible for effective data manipulation. 
+<!-- jn: `rasterio.plot` or **rasterio.plot**?--> 
+<!--md: right! now fixed -->
+Finally, we import the **rasterio.plot** sub-module for its `rasterio.plot.show` function that allows for quick visualization of rasters.
 <!--jn: you should also mention subprocess -->
+<!--md: we didn't actually need it, now removed -->
 
 ```{python}
 import numpy as np
 import rasterio
 import rasterio.plot
-import subprocess
 ```
 
 Rasters are typically imported from existing files.
@@ -666,7 +666,8 @@ When working with **rasterio**, importing a raster is actually a two-step proces
 This separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file.
 The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size.
 <!-- jn: what do you mean with "selective"? did you mean "optional"? -->
-Accordingly, the second step (`.read`) is selective.
+<!-- md: meaning that we can choose what to read; now rephrased to make it more clear -->
+Accordingly, the second step (`.read`) is selective, meaning that the user can fine tune the subset of values (bands, rows/columns, resolution, etc.) that are actually being read.
 For example, we may want to read just one raster band rather than reading all bands.
 
 In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection.
@@ -693,16 +694,22 @@ src.meta
 ```
 
 <!-- jn: maybe it would be good to list and explain the obtained values (e.g., what does the uint16 mean? what does the width? etc.) -->
-Importantly, it allows us to see:
+<!-- md: agree, now clarified or added references to other places in the book --> 
+Namely, it allows us to see the following properties, which we will elaborate on below, and in later chapters:
 
--   The raster data type (`dtype`)
--   Raster dimensions (`width`, `height`, and `count`, i.e., number of layers)
--   Raster coordinate reference system (`crs`)
--   The raster affine transformation matrix (`transform`)
+-   `driver`---The raster file format (see @sec-data-output-raster)
+-   `dtype`---Data type (see @tbl-numpy-data-types)
+-   `nodata`---The value being used as "No Data" flag (see @sec-data-output-raster)
+-   Dimensions:
+    - `width`---Number of columns
+    - `height`---Number of rows
+    - `count`---Number of bands
+-   `crs`---Coordinate reference system (see @sec-querying-and-setting-coordinate-systems)
+-   `transform`---The raster affine transformation matrix
 
 The last item (i.e., `transform`) deserves more attention.
 To position a raster in geographical space, in addition to the CRS, we must specify the raster *origin* ($x_{min}$, $y_{max}$) and resolution ($delta_{x}$, $delta_{y}$).
-In the transform matrix notation, these data items are stored as follows:
+In the transformation matrix notation, these data items are stored as follows:
 
 ```{text}
 Affine(delta_x, 0.0, x_min,
@@ -753,8 +760,9 @@ Conceptually, a raster is an array combined with georeferencing information, whe
 Therefore, to create a raster, we first need to have an array with the values, and then supplement it with the georeferencing information.
 Let's create the arrays `elev` and `grain`.
 The `elev` array is a $6 \times 6$ array with sequential values from `1` to `36`.
-It can be created as follows using the **numpy** `arange` and `reshape` functions.
+It can be created as follows using the `np.arange` function and `.reshape` method.
 <!-- jn: why 1, 37, and not 1, 36? -->
+<!-- md: because the 'to' argument is exclusive (like in basic Python's `range`) -->
 
 ```{python}
 elev = np.arange(1, 37, dtype=np.uint8).reshape(6, 6)
@@ -777,8 +785,9 @@ grain = np.array(v, dtype=np.uint8).reshape(6, 6)
 grain
 ```
 
-Note that in both cases, we are using the `uint8` (unsigned integer in 8 bits, i.e., `0-255`) data type, which is sufficient to represent all possible values of the given rasters.
+Note that in both cases, we are using the `uint8` (unsigned integer in 8 bits, i.e., `0-255`) data type, which is sufficient to represent all possible values of the given rasters (see @tbl-numpy-data-types).
 <!-- jn: do we explain possible data types somewhere in the book? if so, we should add a cross-reference here. -->
+<!-- md: yes, good idea! now added -->
 This is the recommended approach for a minimal memory footprint.
 
 What is missing now is the georeferencing information (see @sec-using-rasterio).
@@ -829,10 +838,11 @@ Finally, to export the raster for permanent storage, along with the CRS definiti
 2.  Write the array with raster values into the connection
 3.  Close the connection
 
-We will elaborate on the details of raster output in @sec-data-output-raster.
-For now, we will just demonstrate the process of exporting the `elev` and `grain` rasters into the `output` directory.
+Don't worry if the code below is unclear; the concepts related to writing raster data to file will be explained in @sec-data-output-raster. 
+For now, for completeness, and also to use these rasters in subsequent chapters without having to re-create them from scratch, we just provide the code for exporting the `elev` and `grain` rasters into the `output` directory.
 In the case of `elev`, we do it as follows with the `open`, `write`, and `close` methods of the `rasterio` package.
 <!-- jn: please explain 'w', count, crs (add a cross-reference to the section where we explain CRSs) -->
+<!-- md: these are explained in the cited section, now added clarification -->
 
 ```{python}
 #| eval: false
@@ -961,9 +971,11 @@ zion = gpd.read_file('data/zion.gpkg')
 zion.crs
 ```
 
-We can also illustrate the difference between a geographic and a projected CRS by plotting the `zion` data in both CRSs (@fig-zion-crs).
+We can also illustrate the difference between a geographic and a projected CRS by plotting the `zion` data in both CRSs (@fig-zion-crs). Note that we are using the [`.grid`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.grid.html) method of **matplotlib** to draw grid lines on top of the plot.
 <!-- jn: have we explained the grid() method first? if not, we should do it here. -->
+<!-- md: now added reference -->
 <!-- jn: the plot does not align well (1e6 number above the right panel)... -->
+<!-- md: not sure I understand, the 1e6 is a factor automatically added to keep the axis labels as small numbers -->
 
 ```{python}
 #| label: fig-zion-crs
