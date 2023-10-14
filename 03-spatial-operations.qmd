@@ -337,13 +337,14 @@ points.iloc[1].distance(poly.iloc[0])
 
 ### Spatial joining {#sec-spatial-joining}
 
-Joining two non-spatial datasets relies on a shared 'key' variable, as described in @sec-vector-attribute-joining.
+Joining two non-spatial datasets uses a shared 'key' variable, as described in @sec-vector-attribute-joining.
 Spatial data joining applies the same concept, but instead relies on spatial relations, described in the previous section.
-As with attribute data, joining adds new columns to the target object (the argument x in joining functions), from a source object (y).
+As with attribute data, joining adds new columns to the target object (the argument `x` in joining functions), from a source object (`y`).
 
-The process is illustrated by the following example: imagine you have ten points randomly distributed across the Earth's surface and you ask, for the points that are on land, which countries are they in?
+The following example illustrates the process: imagine you have ten points randomly distributed across the Earth's surface and you ask, for the points that are on land, which countries are they in?
 Implementing this idea in a reproducible example will build your geographic data handling skills and show how spatial joins work.
-The starting point is to create points that are randomly scattered over the Earth's surface (@fig-spatial-join (a)):
+The starting point is to create points that are randomly scattered over the Earth's surface (@fig-spatial-join (a)).
+<!-- jn: (you may ignore this comment): the points are not randomly scattered as the data is in GCRS... -->
 
 ```{python}
 np.random.seed(11)       ## set seed for reproducibility
@@ -356,23 +357,22 @@ random_points
 ```
 
 The scenario illustrated in @fig-spatial-join shows that the `random_points` object (top left) lacks attribute data, while the world (top right) has attributes, including country names shown for a sample of countries in the legend.
-Spatial joins are implemented with `x.sjoin(y)`, as illustrated in the code chunk below.
-The output is the `random_joined` object which is illustrated in @fig-spatial-join (c).
-Before creating the joined dataset, we use spatial subsetting to create `world_random`, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of @fig-spatial-join (b)):
+Before creating the joined dataset, we use spatial subsetting to create `world_random`, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of @fig-spatial-join (b)).
 
 ```{python}
 world_random = world[world.intersects(random_points.unary_union)]
 world_random
 ```
 
-Now we can do the spatial join:
+Spatial joins are implemented with `x.sjoin(y)`, as illustrated in the code chunk below.
+The output is the `random_joined` object which is illustrated in @fig-spatial-join (c).
 
 ```{python}
 random_joined = random_points.sjoin(world, how='left')
 random_joined
 ```
 
-The input points and countries, the illustration of intersecting countries, and the join result, are shown in @fig-spatial-join:
+@fig-spatial-join shows the input points and countries, the illustration of intersecting countries, and the join result.
 
 ```{python}
 #| label: fig-spatial-join
@@ -382,15 +382,12 @@ The input points and countries, the illustration of intersecting countries, and 
 #| - from source world object,
 #| - resulting in points associated with country names
 #| layout-ncol: 2
-
 # Random points
 base = world.plot(color='white', edgecolor='lightgrey')
 random_points.plot(ax=base, color='None', edgecolor='red');
-
 # World countries intersecting with the points
 base = world.plot(color='white', edgecolor='lightgrey')
 world_random.plot(ax=base, column='name_long');
-
 # Points with joined country names
 base = world.plot(color='white', edgecolor='lightgrey')
 random_joined.geometry.plot(ax=base, color='grey')
@@ -400,19 +397,19 @@ random_joined.plot(ax=base, column='name_long', legend=True);
 ### Non-overlapping joins
 
 Sometimes two geographic datasets do not touch but still have a strong geographic relationship.
-The datasets `cycle_hire` and `cycle_hire_osm`, provide a good example.
-Plotting them shows that they are often closely related but they do not touch, as shown in @fig-cycle-hire:
+The datasets `cycle_hire` and `cycle_hire_osm` provide a good example.
+Plotting them reeveals that they are often closely related but they do not seem to touch, as shown in @fig-cycle-hire.
 
 ```{python}
 #| label: fig-cycle-hire
 #| fig-cap: The spatial distribution of cycle hire points in London based on official data (blue) and OpenStreetMap data (red). 
-
 base = cycle_hire.plot(edgecolor='blue', color='none')
 cycle_hire_osm.plot(ax=base, edgecolor='red', color='none');
 ```
 
 We can check if any of the points are the same by creating a pairwise boolean matrix of `.intersects` relations, then evaluating whether any of the values in it is `True`.
-Note that the `.to_numpy` method is applied to go from a `DataFrame` to an `ndarray`, for which `.any` gives a global rather than a row-wise summary, which is what we want in this case:
+Note that the `.to_numpy` method is applied to go from a `DataFrame` to an `ndarray`, for which `.any` gives a global rather than a row-wise summary.
+This is what we want in this case, because we are interested in whether any of the points intersect, not whether any of the points in each row intersect.
 
 ```{python}
 m = cycle_hire.geometry.apply(
@@ -421,32 +418,32 @@ m = cycle_hire.geometry.apply(
 m.to_numpy().any()
 ```
 
-Imagine that we need to join the capacity variable in `cycle_hire_osm` (`'capacity'`) onto the official 'target' data contained in `cycle_hire`, which looks as follows:
+Imagine that we need to join the capacity variable in `cycle_hire_osm` (`'capacity'`) onto the official 'target' data contained in `cycle_hire`, which looks as follows.
 
 ```{python}
 cycle_hire
 ```
 
 This is when a non-overlapping join is needed.
-Spatial join (`gpd.sjoin`) along with buffered geometries can be used to do that.
-This is demonstrated below, using a threshold distance of 20 $m$.
+Spatial join (`gpd.sjoin`) along with buffered geometries can be used to do that, as demonstrated below using a threshold distance of 20 $m$.
+<!-- jn: reference to buffer section is needed -->
 Note that we transform the data to a projected CRS (`27700`) to use real buffer distances, in meters.
+<!-- jn: reference to CRS chapter is needed -->
 
 ```{python}
 crs = 27700
 cycle_hire_buffers = cycle_hire.copy().to_crs(crs)
 cycle_hire_buffers.geometry = cycle_hire_buffers.buffer(20)
-z = gpd.sjoin(
-  cycle_hire_buffers, 
-  cycle_hire_osm.to_crs(crs)
-)
+z = gpd.sjoin(cycle_hire_buffers, cycle_hire_osm.to_crs(crs))
 z
 ```
 
 Note that the number of rows in the joined result is greater than the target.
 This is because some cycle hire stations in `cycle_hire_buffers` have multiple matches in `cycle_hire_osm`.
-To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods learned in @sec-vector-attribute-aggregation, resulting in an object with the same number of rows as the target.
-We also go back from buffers to points using `.centroid`:
+To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods shown in @sec-vector-attribute-aggregation, resulting in an object with the same number of rows as the target.
+We also go back from buffers to points using `.centroid` method.
+<!-- jn: explain or reference to explanation of .reset_index() -->
+<!-- jn: maybe use more descriptive object name than `z`? -->
 
 ```{python}
 z = z[['id', 'capacity', 'geometry']] \
@@ -456,7 +453,7 @@ z.geometry = z.centroid
 z
 ```
 
-The capacity of nearby stations can be verified by comparing a plot of the capacity of the source `cycle_hire_osm` data, with the join results in the new object `z` (@fig-cycle-hire-z):
+The capacity of nearby stations can be verified by comparing a plot of the capacity of the source `cycle_hire_osm` data, with the join results in the new object `z` (@fig-cycle-hire-z).
 
 ```{python}
 #| label: fig-cycle-hire-z
@@ -465,7 +462,6 @@ The capacity of nearby stations can be verified by comparing a plot of the capac
 #| - Input (`cycle_hire_osm`)
 #| - Join result (`z`)
 #| layout-ncol: 2
-
 # Input
 fig, ax = plt.subplots(1, 1, figsize=(6, 3))
 cycle_hire_osm.plot(column='capacity', legend=True, ax=ax);
@@ -481,7 +477,7 @@ Statistical aggregating functions, such as mean, average, or sum, summarize mult
 @sec-vector-attribute-aggregation demonstrated how the `.groupby` method, combined with summary functions such as `.sum`, condense data based on attribute variables.
 This section shows how grouping by spatial objects can be achieved using spatial joins combined with non-spatial aggregation.
 
-Returning to the example of New Zealand, imagine you want to find out the average height of high points in each region.
+Returning to the example of New Zealand, imagine you want to find out the average height of `nz_height` points in each region.
 It is the geometry of the source (`nz`) that defines how values in the target object (`nz_height`) are grouped.
 This can be done in three steps:
 
@@ -491,7 +487,7 @@ This can be done in three steps:
 
 First, we 'attach' the region classification of each point, using spatial join (@sec-spatial-joining).
 Note that we are using the minimal set of columns required: the geometries (for the spatial join to work), the point elevation (to later calculate an average), and the region name (to use as key when joining the results back to `nz`).
-The result tells us which `nz` region each elevation point falls in:
+The result tells us which `nz` region each elevation point falls in.
 
 ```{python}
 nz_height2 = gpd.sjoin(
@@ -503,14 +499,14 @@ nz_height2
 ```
 
 Second, we calculate the average elevation, using ordinary (non-spatial) aggregation (@sec-vector-attribute-aggregation).
-This result tells us the average elevation of all `nz_height` points located within each `nz` region:
+This result tells us the average elevation of all `nz_height` points located within each `nz` region.
 
 ```{python}
 nz_height2 = nz_height2.groupby('Name')[['elevation']].mean()
 nz_height2
 ```
 
-The third and final step is joining the averages back to the `nz` layer:
+The third and final step is joining the averages back to the `nz` layer.
 
 ```{python}
 nz2 = pd.merge(nz[['Name', 'geometry']], nz_height2, on='Name', how='left')
@@ -520,13 +516,11 @@ nz2
 We now have create the `nz_height4` layer, which gives the average `nz_height` elevation value per polygon.
 The result is shown in @fig-nz-avg-nz-height.
 Note that the `missing_kwds` part determines the style of geometries where the symbology attribute (`elevation`) is missing, because there were no `nz_height` points overlapping with them.
-The default is to omit them, which is usually not what we want.
-With `{'color':'none','edgecolor':'black'}`, those polygons are shown with black outline and no fill.
+The default is to omit them, which is usually not what we want, but with `{'color':'none','edgecolor':'black'}`, those polygons are shown with black outline and no fill.
 
 ```{python}
 #| label: fig-nz-avg-nz-height
 #| fig-cap: Average height of the top 101 high points across the regions of New Zealand
-
 nz2.plot(
   column='elevation', 
   legend=True,
@@ -537,6 +531,8 @@ nz2.plot(
 
 ### Joining incongruent layers {#sec-joining-incongruent-layers}
 
+<!-- jn: maybe we should move spatial aggregation to the end of 3.3, and move this and the next section up? -->
+
 Spatial congruence is an important concept related to spatial aggregation.
 An aggregating object (which we will refer to as `y`) is congruent with the target object (`x`) if the two objects have shared borders.
 Often this is the case for administrative boundary data, whereby larger units---such as Middle Layer Super Output Areas (MSOAs) in the UK, or districts in many other European countries---are composed of many smaller units.
@@ -545,7 +541,9 @@ Incongruent aggregating objects, by contrast, do not share common borders with t
 This is problematic for spatial aggregation (and other spatial operations) illustrated in @fig-nz-and-grid: aggregating the centroid of each sub-zone will not return accurate results.
 Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods [@tobler_smooth_1979].
 
-To demonstrate, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer:
+To demonstrate joining incongruent layers, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer.
+<!-- jn: maybe we could show and explain grid creation in the previous chapter? -->
+<!-- jn: it would be good to add some explanation to this code chunk (either as text or code comments) -->
 
 ```{python}
 xmin, ymin, xmax, ymax = nz.total_bounds
@@ -566,12 +564,11 @@ grid['id'] = grid.index
 grid
 ```
 
-The `grid` layer which we have just created is shown in @fig-nz-and-grid:
+@fig-nz-and-grid shows the newly created `grid` layer, along with the `nz` layer.
 
 ```{python}
 #| label: fig-nz-and-grid
 #| fig-cap: The `nz` layer and a regular `grid` of rectangles
-
 base = grid.plot(color='none', edgecolor='grey')
 nz.plot(ax=base, column='Population', edgecolor='black', legend=True, cmap='viridis_r');
 ```
@@ -581,7 +578,7 @@ To do that, we basically need to calculate--for each `grid` cell---the weighted 
 The weights in the weighted sum calculation are the ratios between the area of the coinciding "part" out of the entire `nz` polygon.
 That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
 
-We start with calculating the entire area of each `nz` polygon, as follows, using the `.area` method (@sec-area-length):
+We start by calculating the entire area of each `nz` polygon, as follows, using the `.area` method (@sec-area-length).
 
 ```{python}
 nz['area'] = nz.area
@@ -589,7 +586,7 @@ nz
 ```
 
 Next, we use the [`.overlay`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.overlay.html) method to calculate the pairwise intersections between `nz` and `grid`.
-As a result, we now have a layer where each `nz` polygon was "split" according to the `grid` polygons, hereby named `nz_grid`:
+As a result, we now have a layer where each `nz` polygon is "split" according to the `grid` polygons, hereby named `nz_grid`.
 
 ```{python}
 nz_grid = nz.overlay(grid)
@@ -606,20 +603,19 @@ nz_grid
 nz_grid.plot(color='none', edgecolor='black');
 ```
 
-Next, we calculate the areas of the intersections, into a new attribute we name `'area_sub'`.
-If an `nz` polygon was completely within a single `grid` polygon, then `area_sub` is going to be equal to `area`; otherwise, it is going to be smaller:
+We also need to calculate the areas of the intersections, here into a new attribute `'area_sub'`.
+If an `nz` polygon was completely within a single `grid` polygon, then `area_sub` is going to be equal to `area`; otherwise, it is going to be smaller.
 
 ```{python}
 nz_grid['area_sub'] = nz_grid.area
 nz_grid
 ```
 
-The resulting layer `nz_grid`, which the `area_sub` attribute, is shown in @fig-nz-and-grid2:
+The resulting layer `nz_grid`, which the `area_sub` attribute, is shown in @fig-nz-and-grid2.
 
 ```{python}
 #| label: fig-nz-and-grid2
 #| fig-cap: The areas of pairwise intersections in the `nz_grid` layer
-
 base = grid.plot(color='none', edgecolor='grey')
 nz_grid.plot(ax=base, column='area_sub', edgecolor='black', legend=True, cmap='viridis_r');
 ```
@@ -635,32 +631,25 @@ nz_grid['population'] = nz_grid['Population'] * nz_grid['area_prop']
 nz_grid
 ```
 
-What is left to be done is to sum (see @sec-vector-attribute-aggregation) the population in all parts forming the same grid cell:
+What is left to be done is to sum (see @sec-vector-attribute-aggregation) the population in all parts forming the same grid cell and join (see @sec-vector-attribute-joining) them back to the `grid` layer.
+Note that many of the grid cells have "No Data" for population, because they have no intersection with `nz` at all (@fig-nz-and-grid).
 
 ```{python}
 nz_grid = nz_grid.groupby('id')['population'].sum().reset_index()
-nz_grid
-```
-
-and join (see @sec-vector-attribute-joining) them back to the `grid` layer.
-Note that many of the grid cells have "No Data" for population, because they have no intersection with `nz` at all (@fig-nz-and-grid):
-
-```{python}
 grid = pd.merge(grid, nz_grid[['id', 'population']], on='id', how='left')
 grid
 ```
 
-The final result `grid`, with the incongruently-joined `population` attribute from `nz`, is shown in @fig-nz-and-grid3:
+@fig-nz-and-grid3 shows the final result `grid` with the incongruently-joined `population` attribute from `nz`.
 
 ```{python}
 #| label: fig-nz-and-grid3
 #| fig-cap: 'The `nz` layer and a regular grid of rectangles: final result'
-
 base = grid.plot(column='population', edgecolor='black', legend=True, cmap='viridis_r');
 nz.plot(ax=base, color='none', edgecolor='grey', legend=True);
 ```
 
-We can demonstrate that, expectedly, the summed population in `nz` and `grid` is identical, even though the geometry is different (since we created `grid` to completely cover `nz`):
+We can demonstrate that, expectedly, the summed population in `nz` and `grid` is identical, even though the geometry is different (since we created `grid` to completely cover `nz`), by comparing the `.sum` of the `population` attribute in both layers.
 
 ```{python}
 nz['Population'].sum()
@@ -672,16 +661,20 @@ grid['population'].sum()
 
 The procedure in this section is known as an area-weighted interpolation of a spatially extensive (e.g., population) variable.
 An area-weighted interpolation of a spatially intensive variable (e.g., population density) is almost identical, except that we would have to calculate the weighted `.mean` rather than `.sum`, to preserve the average rather than the sum.
+<!-- jn: I think there should be a block extending this thought, and explaining the difference between extensive and intensive variables. -->
 
 ### Distance relations {#sec-distance-relations}
+
+<!-- jn: I think this section should be earlier in this chapter: after or before non-overlappling joins -->
 
 While topological relations are binary---a feature either intersects with another or does not---distance relations are continuous.
 The distance between two objects is calculated with the [`.distance`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.distance.html) method.
 The method is applied on a `GeoSeries` (or a `GeoDataFrame`), with the argument being an individual `shapely` geometry.
 The result is a `Series` of pairwise distances.
-(The `.distance` method syntax is thus analogous to the topological evaluations methods, such as `.intersects` (@sec-topological-relations), only that the results are numeric rather than boolean `Series`.
+(The `.distance` method syntax is thus analogous to the topological evaluations methods, such as `.intersects` (@sec-topological-relations), only that the results are numeric rather than boolean `Series`).
+<!-- jn: the above sentence should be a block -->
 
-To illustrate the `.distance` method, let's take the three highest point in New Zealand:
+To illustrate the `.distance` method, let's take the three highest point in New Zealand with `.sort_values` and `.iloc`.
 
 ```{python}
 nz_highest = nz_height \
@@ -690,20 +683,20 @@ nz_highest = nz_height \
 nz_highest
 ```
 
-and the geographic centroid of the Canterbury region (`canterbury`, created in @sec-spatial-subsetting-vector):
+Additionally, we need the geographic centroid of the Canterbury region (`canterbury`, created in @sec-spatial-subsetting-vector).
 
 ```{python}
 canterbury_centroid = canterbury.centroid.iloc[0]
 ```
 
-Now we apply `.distance` to calculate the distances from each of the three elevation points to Canterbury:
+Now we are able to apply `.distance` to calculate the distances from each of the three elevation points to the centroid of the Canterbury region.
 
 ```{python}
 nz_highest.distance(canterbury_centroid)
 ```
 
 To obtain a distance matrix, i.e., a pairwise set of distances between all combinations of features in objects `x` and `y`, we need to use the `.apply` method (analogous to the way we created the `.intersects` boolean matrix in @sec-topological-relations).
-To illustrate, let's now take two regions in `nz`, Otago and Canterbury, represented by the object `co`:
+To illustrate this, let's now take two regions in `nz`, Otago and Canterbury, represented by the object `co`.
 
 ```{python}
 sel = nz['Name'].str.contains('Canter|Otag')
@@ -712,7 +705,7 @@ co
 ```
 
 The distance matrix (technically speaking, a `DataFrame`) `d` between each of the first three elevation points, and the two regions, is then obtained as follows.
-In plain language, we take the geometry from each each row in `nz_height.iloc[:3,:]`, and apply the `.distance` method on `co` with that row as the argument:
+In plain language, we take the geometry from each each row in `nz_height.iloc[:3,:]`, and apply the `.distance` method on `co` with its rows as the argument.
 
 ```{python}
 d = nz_height.iloc[:3, :].apply(lambda x: co.distance(x.geometry), axis=1)
@@ -720,14 +713,13 @@ d
 ```
 
 Note that the distance between the second and third features in `nz_height` and the second feature in `co` is zero.
-This demonstrates the fact that distances between points and polygons refer to the distance to any part of the polygon: the second and third points in `nz_height` are in Otago, which can be verified by plotting them (@fig-nz-height-and-otago):
+This demonstrates the fact that distances between points and polygons refer to the distance to any part of the polygon: the second and third points in `nz_height` are in Otago, which can be verified by plotting them (two almost completly overlappling points in @fig-nz-height-and-otago).
 
 ```{python}
 #| label: fig-nz-height-and-otago
-#| fig-cap: The second and third `nz_height` points, and the Otago ploygon from `nz`
-
-base = co.iloc[[1]].plot(color='none')
-nz_height.iloc[1:3, :].plot(ax=base, color='none', edgecolor='black');
+#| fig-cap: The first three `nz_height` points, and the Otago and Canterbury regions from `nz`
+base = co.plot(color='lightgrey', edgecolor='black')
+nz_height.iloc[:3, :].plot(ax=base, color='none', edgecolor='black');
 ```
 
 ## Spatial operations on raster data {#sec-spatial-ras}
