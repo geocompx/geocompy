@@ -703,14 +703,14 @@ Length: 101, dtype: bool</code></pre>
 <section id="sec-topological-relations" class="level3" data-number="3.3.2">
 <h3 data-number="3.3.2" class="anchored" data-anchor-id="sec-topological-relations"><span class="header-section-number">3.3.2</span> Topological relations</h3>
 <p>Topological relations describe the spatial relationships between objects. “Binary topological relationships”, to give them their full name, are logical statements (in that the answer can only be <code>True</code> or <code>False</code>) about the spatial relationships between two objects defined by ordered sets of points (typically forming points, lines and polygons) in two or more dimensions <span class="citation" data-cites="egenhofer_mathematical_1990">(<a href="#ref-egenhofer_mathematical_1990" role="doc-biblioref">Egenhofer and Herring 1990</a>)</span>. That may sound rather abstract and, indeed, the definition and classification of topological relations is based on mathematical foundations first published in book form in 1966 <span class="citation" data-cites="spanier_algebraic_1995">(<a href="#ref-spanier_algebraic_1995" role="doc-biblioref">Spanier 1995</a>)</span>, with the field of algebraic topology continuing into the 21st century <span class="citation" data-cites="dieck_algebraic_2008">(<a href="#ref-dieck_algebraic_2008" role="doc-biblioref">Dieck 2008</a>)</span>.</p>
-<p>Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships. <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a> shows a variety of geometry pairs and their associated relations. The third and fourth pairs in <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a> (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if <code>x.relation(y)</code> is true, <code>y.relation(x)</code> will also be true, relations in which the order of the geometries are important such as contains and within are not. Notice that each geometry pair has a <a href="https://en.wikipedia.org/wiki/DE-9IM">“DE-9IM”</a> string such as FF2F11212. DE-9IM strings describe the dimensionality (0=points, 1=lines, 2=polygons) of the pairwise intersections of the interior, boundary, and exterior, of two geometries (i.e., nine values of 0/1/2 encoded into a string). This is an advanced topic beyond the scope of this book, which can be useful to understand the difference between relation types, or define custom types of relations. See the <a href="https://r.geocompx.org/spatial-operations#de-9im-strings">DE-9IM strings</a> section in Geocomputation with R <span class="citation" data-cites="lovelace_geocomputation_2019">(<a href="#ref-lovelace_geocomputation_2019" role="doc-biblioref">Lovelace, Nowosad, and Muenchow 2019</a>)</span>.</p>
+<p>Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships. <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a> shows a variety of geometry pairs and their associated relations. The third and fourth pairs in <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a> (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if <code>x.relation(y)</code> is true, <code>y.relation(x)</code> will also be true, relations in which the order of the geometries are important such as contains and within are not. <!-- jn: maybe put the DE-9IM explanation in a block. Also -- is there any python tool to use it? If so, maybe we should mention it... --> Notice that each geometry pair has a <a href="https://en.wikipedia.org/wiki/DE-9IM">“DE-9IM”</a> string such as FF2F11212. DE-9IM strings describe the dimensionality (0=points, 1=lines, 2=polygons) of the pairwise intersections of the interior, boundary, and exterior, of two geometries (i.e., nine values of 0/1/2 encoded into a string). This is an advanced topic beyond the scope of this book, which can be useful to understand the difference between relation types, or define custom types of relations. See the <a href="https://r.geocompx.org/spatial-operations#de-9im-strings">DE-9IM strings</a> section in Geocomputation with R <span class="citation" data-cites="lovelace_geocomputation_2019">(<a href="#ref-lovelace_geocomputation_2019" role="doc-biblioref">Lovelace, Nowosad, and Muenchow 2019</a>)</span>.</p>
 <div id="fig-spatial-relations" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="https://r.geocompx.org/04-spatial-operations_files/figure-html/relations-1.png" class="img-fluid figure-img"></p>
 <figcaption class="figure-caption">Figure&nbsp;3.4: Topological relations between vector geometries, inspired by Figures 1 and 2 in Egenhofer and Herring (1990). The relations for which the <code>x.relation(y)</code> is true are printed for each geometry pair, with <code>x</code> represented in pink and <code>y</code> represented in blue. <!--toDo: move the used images from geocompr to the geocompy repo (this will make it more stable)--> The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.</figcaption>
 </figure>
 </div>
-<p>In <strong>shapely</strong>, methods testing for different types of topological relations are known as <a href="https://shapely.readthedocs.io/en/stable/manual.html#relationships">“relationships”</a>. <strong>geopandas</strong> provides wrappers (with the same method name) which can be applied on multiple geometries at once (such as <code>.intersects</code> and <code>.disjoint</code> applied on all points in <code>nz_height</code>, see <a href="#sec-spatial-subsetting-vector"><span>Section&nbsp;3.3.1</span></a>). To see how topological relations work in practice, let’s create a simple reproducible example, building on the relations illustrated in <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a> and consolidating knowledge of how vector geometries are represented from a previous chapter (<a href="01-spatial-data.html#sec-geometry-columns"><span>Section&nbsp;1.2.3</span></a> and <a href="01-spatial-data.html#sec-geometries"><span>Section&nbsp;1.2.5</span></a>):</p>
+<p>In <strong>shapely</strong>, methods testing for different types of topological relations are known as <a href="https://shapely.readthedocs.io/en/stable/manual.html#relationships">“relationships”</a>. <strong>geopandas</strong> provides their wrappers (with the same method name) which can be applied on multiple geometries at once (such as <code>.intersects</code> and <code>.disjoint</code> applied on all points in <code>nz_height</code>, see <a href="#sec-spatial-subsetting-vector"><span>Section&nbsp;3.3.1</span></a>). To see how topological relations work in practice, let’s create a simple reproducible example, building on the relations illustrated in <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a> and consolidating knowledge of how vector geometries are represented from a previous chapter (<a href="01-spatial-data.html#sec-geometry-columns"><span>Section&nbsp;1.2.3</span></a> and <a href="01-spatial-data.html#sec-geometries"><span>Section&nbsp;1.2.5</span></a>).</p>
 <div class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>points <span class="op">=</span> gpd.GeoSeries([</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  shapely.Point(<span class="fl">0.2</span>,<span class="fl">0.1</span>), </span>
@@ -724,9 +724,9 @@ Length: 101, dtype: bool</code></pre>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  shapely.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">0</span>,<span class="dv">0</span>)])</span>
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The sample dataset which we created is composed of three is <code>GeoSeries</code>: named <code>points</code>, <code>line</code>, and <code>poly</code>, which are visualized in <a href="#fig-spatial-relations-geoms">Figure&nbsp;<span>3.5</span></a>:</p>
+<p>The sample dataset which we created is composed of three is <code>GeoSeries</code>: named <code>points</code>, <code>line</code>, and <code>poly</code>, which are visualized in <a href="#fig-spatial-relations-geoms">Figure&nbsp;<span>3.5</span></a>. <!--jn: the ploting for loop should be either explained here or (preferably) there should be a reference to some information about this approach that can be found in the vis chapter--></p>
 <div class="cell" data-execution_count="16">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> poly.plot(color<span class="op">=</span><span class="st">'grey'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> poly.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>line.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'black'</span>, linewidth<span class="op">=</span><span class="dv">7</span>)</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>points.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x, y, label <span class="kw">in</span> <span class="bu">zip</span>(points.x, points.y, [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]):</span>
@@ -740,7 +740,7 @@ Length: 101, dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>A simple query is: which of the points in <code>points</code> intersect in some way with polygon <code>poly</code>? The question can be answered by inspection (points 1 and 3 are touching and within the polygon, respectively). This question can be answered with the <code>.intersects</code> method, which reports whether or not each geometry in a <code>GeoSeries</code> (<code>points</code>) intersects with a single <code>shapely</code> geometry (<code>poly.iloc[0]</code>).</p>
+<p>A simple query is: which of the points in <code>points</code> intersect in some way with polygon <code>poly</code>? The question can be answered by visual inspection (points 1 and 3 are touching and are within the polygon, respectively). Alternatively, we can get the solution with the <code>.intersects</code> method, which reports whether or not each geometry in a <code>GeoSeries</code> (<code>points</code>) intersects with a single <code>shapely</code> geometry (<code>poly.iloc[0]</code>).</p>
 <div class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>points.intersects(poly.iloc[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="16">
@@ -750,52 +750,18 @@ Length: 101, dtype: bool</code></pre>
 dtype: bool</code></pre>
 </div>
 </div>
-<p>The result shown above is a boolean <code>Series</code>. Its contents should match your intuition: positive (<code>True</code>) results are returned for the first and third point, and a negative result (<code>False</code>) for the second are outside the polygon’s border. Each value in this <code>Series</code> represents a feature in the first input (<code>points</code>).</p>
-<p>The last example, and all other earlier examples in this chapter, demonstrate the “many-to-one” mode of <code>.intersects</code> and analogous methods, where the relation is evaluated between each of several geometries in a <code>GeoSeries</code>/<code>GeoDataFrame</code>, and an individual <code>shapely</code> geometry. A second mode of those methods (not demonstrated here) is when both inputs are <code>GeoSeries</code>/<code>GeoDataFrame</code> objects. In such case, a “pairwise” evaluation takes place between geometries aligned by index (<code>align=True</code>, the default) or by position (<code>align=False</code>). For example, the expression <code>nz.intersects(nz)</code> returns a <code>Series</code> of 16 <code>True</code> values, indicating (unsurprisingly) that each geometry in <code>nz</code> intersects with itself.</p>
-<p>A third mode is when we are interested in a “many-to-many” evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two <code>GeoSeries</code>/<code>GeoDataFrame</code> objects. At the time of writing, there is no built-in method to do this in <strong>geopandas</strong>. However, the <code>.apply</code> method can be used to repeat a “many-to-one” evaluation over all geometries in the second layer,resulting in a matrix of <em>pairwise</em> results. We’ll create another <code>GeoSeries</code> with two polygons, named <code>poly2</code>, to demonstrate:</p>
+<p>The result shown above is a boolean <code>Series</code>. Its contents should match our intuition: positive (<code>True</code>) results are returned for the first and third point, and a negative result (<code>False</code>) for the second. Each value in this <code>Series</code> represents a feature in the first input (<code>points</code>).</p>
+<p>All earlier examples in this chapter demonstrate the “many-to-one” mode of <code>.intersects</code> and analogous methods, where the relation is evaluated between each of several geometries in a <code>GeoSeries</code>/<code>GeoDataFrame</code>, and an individual <code>shapely</code> geometry. A second mode of those methods (not demonstrated here) is when both inputs are <code>GeoSeries</code>/<code>GeoDataFrame</code> objects. In such case, a “pairwise” evaluation takes place between geometries aligned by index (<code>align=True</code>, the default) or by position (<code>align=False</code>). For example, the expression <code>nz.intersects(nz)</code> returns a <code>Series</code> of 16 <code>True</code> values, indicating (unsurprisingly) that each geometry in <code>nz</code> intersects with itself.</p>
+<p>A third mode is when we are interested in a “many-to-many” evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two <code>GeoSeries</code>/<code>GeoDataFrame</code> objects. At the time of writing, there is no built-in method to do this in <strong>geopandas</strong>. However, the <code>.apply</code> method can be used to repeat a “many-to-one” evaluation over all geometries in the second layer, resulting in a matrix of <em>pairwise</em> results. We will create another <code>GeoSeries</code> with two polygons, named <code>poly2</code>, to demonstrate this.</p>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>poly2 <span class="op">=</span> gpd.GeoSeries([</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  shapely.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">0</span>,<span class="dv">0</span>)]),</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  shapely.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">1</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">0</span>)])</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>points.<span class="bu">apply</span>(<span class="kw">lambda</span> x: poly2.intersects(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="17">
-<div>
-
-
-<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">0</th>
-<th data-quarto-table-cell-role="th">1</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>True</td>
-<td>True</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>False</td>
-<td>True</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>True</td>
-<td>False</td>
-</tr>
-</tbody>
-</table>
-
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-</div>
-<p>The inputs for this example, <code>points</code> and <code>poly2</code>, are illustrated in <a href="#fig-spatial-relations-geoms2">Figure&nbsp;<span>3.6</span></a>:</p>
+<p>Our two input objects, <code>points</code> and <code>poly2</code>, are illustrated in <a href="#fig-spatial-relations-geoms2">Figure&nbsp;<span>3.6</span></a>.</p>
 <div class="cell" data-execution_count="19">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> poly2.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> poly2.plot(color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>points.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x, y, label <span class="kw">in</span> <span class="bu">zip</span>(points.x, points.y, [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]):</span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    base.annotate(label, xy<span class="op">=</span>(x, y), xytext<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">3</span>), weight<span class="op">=</span><span class="st">'bold'</span>, textcoords<span class="op">=</span><span class="st">"offset points"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -808,7 +774,7 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>And here is how we can use <code>.apply</code> to get the intersection relations matrix. The result is a <code>DataFrame</code>, where each row represents a <code>points</code> geometry and each column represents a <code>poly</code> geometry. We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each:</p>
+<p>Now we can use <code>.apply</code> to get the intersection relations matrix. <!-- jn: the apply method should be explain here (even as a block...) --> The result is a <code>DataFrame</code>, where each row represents a <code>points</code> geometry and each column represents a <code>poly</code> geometry. We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each.</p>
 <div class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>points.<span class="bu">apply</span>(<span class="kw">lambda</span> x: poly2.intersects(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="19">
@@ -845,7 +811,7 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>A more natural way to work with this result is perhaps as an array:</p>
+<p>A more natural way to work with this result is perhaps as an array. <!-- jn: why is this more natural? why is it better than a dataframe? which one should we use? if array is better -- keep it in the main text. if array is not better -- remove it from the main text and put it in a block. --></p>
 <div class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>points.<span class="bu">apply</span>(<span class="kw">lambda</span> x: poly2.intersects(x)).to_numpy()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="20">
@@ -854,7 +820,7 @@ dtype: bool</code></pre>
        [ True, False]])</code></pre>
 </div>
 </div>
-<p>The <code>.intersects</code> method returns <code>True</code> even in cases where the features just touch: intersects is a ‘catch-all’ topological operation which identifies many types of spatial relation, as illustrated in <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a>. More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it? These can be answered as follows:</p>
+<p>The <code>.intersects</code> method returns <code>True</code> even in cases where the features just touch: intersects is a ‘catch-all’ topological operation which identifies many types of spatial relation, as illustrated in <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a>. More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it? The first question can be answered with <code>.within</code>, and the second with <code>.touches</code>.</p>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>points.within(poly.iloc[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="21">
@@ -873,7 +839,7 @@ dtype: bool</code></pre>
 dtype: bool</code></pre>
 </div>
 </div>
-<p>Note that although the first point touches the boundary polygon, it is not within it; the third point is within the polygon but does not touch any part of its border. The opposite of <code>.intersects</code> is <code>.disjoint</code>, which returns only objects that do not spatially relate in any way to the selecting object:</p>
+<p>Note that although the first point touches the boundary polygon, it is not within it; the third point is within the polygon but does not touch any part of its border. The opposite of <code>.intersects</code> is <code>.disjoint</code>, which returns only objects that do not spatially relate in any way to the selecting object.</p>
 <div class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>points.disjoint(poly.iloc[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="23">
@@ -883,7 +849,7 @@ dtype: bool</code></pre>
 dtype: bool</code></pre>
 </div>
 </div>
-<p>Another useful type of relation is “within distance”, where we detect features that intersect with the target buffered by particular distance. Buffer distance determines how close target objects need to be before they are selected. This can be done by literally buffering (<a href="01-spatial-data.html#sec-geometries"><span>Section&nbsp;1.2.5</span></a>) the target geometry, and evaluating intersection (<code>.intersects</code>). Another way is to calculate the distances and compare them to the distance threshold:</p>
+<p>Another useful type of relation is “within distance”, where we detect features that intersect with the target buffered by particular distance. Buffer distance determines how close target objects need to be before they are selected. This can be done by literally buffering (<a href="01-spatial-data.html#sec-geometries"><span>Section&nbsp;1.2.5</span></a>) the target geometry, and evaluating intersection (<code>.intersects</code>). Another way is to calculate the distances using the <code>.distance</code> method, and then evaluate whether they are within a threshold distance.</p>
 <div class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>points.distance(poly.iloc[<span class="dv">0</span>]) <span class="op">&lt;</span> <span class="fl">0.2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="24">
@@ -893,7 +859,8 @@ dtype: bool</code></pre>
 dtype: bool</code></pre>
 </div>
 </div>
-<p>Note that although the second point is more than <code>0.2</code> units of distance from the nearest vertex of <code>poly</code>, it is still selected when the distance is set to <code>0.2</code>. This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a>. We can verify the actual distance between the second point and the polygon is <code>0.13</code>, as follows:</p>
+<!-- jn: maybe it would be repeath the message about importance of the units/CRS here -->
+<p>Note that although the second point is more than <code>0.2</code> units of distance from the nearest vertex of <code>poly</code>, it is still selected when the distance is set to <code>0.2</code>. This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a>. We can verify the actual distance between the second point and the polygon is <code>0.13</code>, as follows.</p>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>points.iloc[<span class="dv">1</span>].distance(poly.iloc[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="25">
@@ -2314,7 +2281,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="60">
 <div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="59">
-<pre><code>&lt;generator object sample_gen at 0x7f39e91814e0&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f6d0a0394e0&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once, we can apply <code>list</code>. Since there was just one point, the result is just one extracted value, in this case <code>16</code>:</p>
@@ -2736,7 +2703,7 @@ NDVI=\frac{NIR-Red} {NIR+Red}
 <span id="cb107-8"><a href="#cb107-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb107-9"><a href="#cb107-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_257/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_254/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="82">
