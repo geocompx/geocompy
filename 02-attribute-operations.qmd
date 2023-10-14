@@ -310,25 +310,20 @@ world_agg4
 
 Combining data from different sources is a common task in data preparation.
 Joins do this by combining tables based on a shared "key" variable.
-**pandas** has a function named `pd.merge` for joining `(Geo)DataFrames` based on common column(s).
-The `pd.merge` function follows conventions used in the database language SQL [@grolemund_r_2016].
-The `pd.merge` function works the same on `DataFrame` and `GeoDataFrame` objects.
-The result of `pd.merge` can be either a `DataFrame` or a `GeoDataFrame` object, depending on the inputs.
+**pandas** has a function named `pd.merge` for joining `(Geo)DataFrames` based on common column(s) that follows conventions used in the database language SQL [@grolemund_r_2016].
+The `pd.merge` result can be either a `DataFrame` or a `GeoDataFrame` object, depending on the inputs.
 
 A common type of attribute join on spatial data is to join `DataFrames` to `GeoDataFrames`.
 To achieve this, we use `pd.merge` with a `GeoDataFrame` as the first argument and add columns to it from a `DataFrame` specified as the second argument.
 In the following example, we combine data on coffee production with the `world` dataset.
-The coffee data is in a `DataFrame` called `coffee_data` imported from a CSV file of major coffee-producing nations:
+The coffee data is in a `DataFrame` called `coffee_data` imported from a CSV file of major coffee-producing nations.
 
 ```{python}
 coffee_data = pd.read_csv('data/coffee_data.csv')
 coffee_data
 ```
 
-Its columns are:
-
--   `name_long`---country name
--   `coffee_production_2016` and `coffee_production_2017`---estimated values for coffee production in units of 60-kg bags per year, for 2016 and 2017, respectively
+Its columns are `name_long`---country name, and `coffee_production_2016` and `coffee_production_2017`---estimated values for coffee production in units of 60-kg bags per year, for 2016 and 2017, respectively.
 
 A left join, which preserves the first dataset, merges `world` with `coffee_data`, based on the common `'name_long'` column:
 
@@ -338,12 +333,12 @@ world_coffee
 ```
 
 The result is a `GeoDataFrame` object identical to the original `world` object, but with two new variables (`coffee_production_2016` and `coffee_production_2017`) on coffee production.
-This can be plotted as a map, as illustrated (for `coffee_production_2017`) in @fig-join-coffee-production:
+This can be plotted as a map, as illustrated (for `coffee_production_2017`) in @fig-join-coffee-production.
+<!-- jn: this plotting code style is slightly different from the previous examples in this chapter... why? (I think it would be good to have a consistent style throughout the chapter) -->
 
 ```{python}
 #| label: fig-join-coffee-production
 #| fig-cap: 'World coffee production, thousand 60-kg bags by country, in 2017 (source: International Coffee Organization).'
-
 base = world_coffee.plot(color='white', edgecolor='lightgrey')
 coffee_map = world_coffee.plot(ax=base, column='coffee_production_2017')
 coffee_map.set_title('Coffee production');
@@ -352,7 +347,7 @@ coffee_map.set_title('Coffee production');
 To work, attribute-based joins need a "key variable" in both datasets (`on` parameter of `pd.merge`).
 In the above example, both `world_coffee` and `world` DataFrames contained a column called `name_long`.
 (By default `pd.merge` uses all columns with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example.)
-
+<!-- jn: maybe replace the above sentence with a block? -->
 In case where column names are not the same, you can use `left_on` and `right_on` to specify the respective columns.
 
 Note that the result `world_coffee` has the same number of rows as the original dataset `world`.
@@ -361,13 +356,17 @@ Rows in the original dataset with no match are assigned `np.nan` values for the 
 This is a characteristic of a left join (specified with `how='left'`) and is what we typically want to do.
 
 What if we only want to keep countries that have a match in the key variable?
-In that case an inner join can be used:
+In that case an inner join can be used, which keeps only rows with a match in both datasets.
+We can use it with the `how='inner'` argument.
 
 ```{python}
 pd.merge(world, coffee_data, on='name_long', how='inner')
 ```
 
-An alternative way to join two `(Geo)DataFrame`s is the aptly called `join` function:
+An alternative way to join two `(Geo)DataFrame`s is the aptly called `join` function.
+<!-- jn: 1. I think it would be good to explain the difference between `pd.merge` and `join` -->
+<!-- jn: 2. I think it would be good to explain why we need to set the index of `coffee_data` to `name_long`  -->
+<!-- jn: 3. if the difference is minor -- consider using a block for it -->
 
 ```{python}
 world.join(coffee_data.set_index('name_long'), on='name_long', how='inner')
