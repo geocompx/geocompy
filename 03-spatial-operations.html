@@ -312,7 +312,7 @@ div.csl-indent {
 
 <section id="prerequisites" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="prerequisites"><span class="header-section-number">3.1</span> Prerequisites</h2>
-<p>Let’s import the required packages:</p>
+<p>This chapter requires importing the following packages:</p>
 <div class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shapely</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> geopandas <span class="im">as</span> gpd</span>
@@ -328,7 +328,7 @@ div.csl-indent {
 <div class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> richdem <span class="im">as</span> rd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>and load the sample data for this chapter:</p>
+<p>It also relies on the following data files:</p>
 <div class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>nz <span class="op">=</span> gpd.read_file(<span class="st">'data/nz.gpkg'</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>nz_height <span class="op">=</span> gpd.read_file(<span class="st">'data/nz_height.gpkg'</span>)</span>
@@ -342,13 +342,16 @@ div.csl-indent {
 </section>
 <section id="introduction" class="level2" data-number="3.2">
 <h2 data-number="3.2" class="anchored" data-anchor-id="introduction"><span class="header-section-number">3.2</span> Introduction</h2>
+<!-- jn: general vector + raster intro is missing -->
 </section>
 <section id="sec-spatial-vec" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="sec-spatial-vec"><span class="header-section-number">3.3</span> Spatial operations on vector data</h2>
+<!-- jn: vector data intro is missing -->
 <section id="sec-spatial-subsetting-vector" class="level3" data-number="3.3.1">
 <h3 data-number="3.3.1" class="anchored" data-anchor-id="sec-spatial-subsetting-vector"><span class="header-section-number">3.3.1</span> Spatial subsetting</h3>
+<!-- jn: have we considered switching the order of spatial subsetting with topological relations? -->
 <p>Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object. Analogous to attribute subsetting (covered in <a href="02-attribute-operations.html#sec-vector-attribute-subsetting"><span>Section&nbsp;2.3.1</span></a>), subsets of <code>GeoDataFrame</code>s can be created with square bracket (<code>[</code>) operator using the syntax <code>x[y]</code>, where <code>x</code> is an <code>GeoDataFrame</code> from which a subset of rows/features will be returned, and <code>y</code> is a boolean <code>Series</code>. The difference is, that, in spatial subsetting <code>y</code> is created based on another geometry and using one of the binary geometry relation methods, such as <code>.intersects</code> (see <a href="#sec-topological-relations"><span>Section&nbsp;3.3.2</span></a>), rather based on comparison based on ordinary columns.</p>
-<p>To demonstrate spatial subsetting, we will use the <code>nz</code> and <code>nz_height</code> layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (<a href="#fig-spatial-subset">Figure&nbsp;<span>3.1</span></a> (a)), in a projected coordinate system. The following expression creates an object representing Canterbury (<code>canterbury</code>):</p>
+<p>To demonstrate spatial subsetting, we will use the <code>nz</code> and <code>nz_height</code> layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (<a href="#fig-spatial-subset">Figure&nbsp;<span>3.1</span></a> (a)), in a projected coordinate system. The following expression creates a new object, <code>canterbury</code>, representing only one region — Canterbury.</p>
 <div class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>canterbury <span class="op">=</span> nz[nz[<span class="st">'Name'</span>] <span class="op">==</span> <span class="st">'Canterbury'</span>]</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>canterbury</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -387,7 +390,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>Then, we use the <code>.intersects</code> method evaluate, for each of the <code>nz_height</code> points, whether they intersect with Canterbury. The result <code>canterbury_height</code> is a boolean <code>Series</code> with the “answers”:</p>
+<p>Then, we use the <code>.intersects</code> method evaluate, for each of the <code>nz_height</code> points, whether they intersect with Canterbury. The result <code>canterbury_height</code> is a boolean <code>Series</code> with the “answers”.</p>
 <div class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.intersects(canterbury.geometry.iloc[<span class="dv">0</span>])</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>sel</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -400,7 +403,7 @@ div.csl-indent {
 Length: 101, dtype: bool</code></pre>
 </div>
 </div>
-<p>Finally, we can subset <code>nz_height</code> using the latter series, resulting in the subset <code>canterbury_height</code> with only those points that intersect with Canterbury:</p>
+<p>Finally, we can subset <code>nz_height</code> using the obtained <code>Series</code>, resulting in the subset <code>canterbury_height</code> with only those points that intersect with Canterbury.</p>
 <div class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>canterbury_height <span class="op">=</span> nz_height[sel]</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>canterbury_height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -455,16 +458,15 @@ Length: 101, dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>The result is shown in <a href="#fig-spatial-subset">Figure&nbsp;<span>3.1</span></a> (b):</p>
+<p><a href="#fig-spatial-subset">Figure&nbsp;<span>3.1</span></a> compares the original <code>nz_height</code> layer (left) with the subset <code>canterbury_height</code> (right). <!-- jn: do we need to repeat the `base = nz.plot(color='white', edgecolor='lightgrey')` code here? --></p>
 <div>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Original</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>nz_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset (intersects)</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>canterbury.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>canterbury_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset (intersects)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>canterbury.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>canterbury_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div id="fig-spatial-subset" class="cell quarto-layout-panel" data-execution_count="9">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
@@ -490,21 +492,20 @@ Length: 101, dtype: bool</code></pre>
 </div>
 </div>
 <p>Like in attribute subsetting (<a href="02-attribute-operations.html#sec-vector-attribute-subsetting"><span>Section&nbsp;2.3.1</span></a>), we are using a boolean series (<code>sel</code>), of the same length as the number of rows in the filtered table (<code>nz_height</code>), created based on a condition applied on itself. The difference is that the condition is not a comparison of attribute values, but an evaluation of a spatial relation. Namely, we evaluate whether each geometry of <code>nz_height</code> intersects with <code>canterbury</code> geometry, using the <code>.intersects</code> method.</p>
-<p>Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected. These include touches, crosses, or within, as we will see shortly in <a href="#sec-topological-relations"><span>Section&nbsp;3.3.2</span></a>. The most commonly used method is <code>.intersects</code>, which we used in the last example. This is a ‘catch all’ topological relation, that will return features in the target that touch, cross or are within the source ‘subsetting’ object. As an example of another method, we can use <code>.disjoint</code> to obtain all points that <em>do not</em> intersect with Canterbury:</p>
+<p>Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected. These include touches, crosses, or within, as we will see shortly in <a href="#sec-topological-relations"><span>Section&nbsp;3.3.2</span></a>. Intersects (<code>.intersects</code>), which we used in the last example, is the the most commonly used method. This is a ‘catch all’ topological relation, that will return features in the target that touch, cross or are within the source ‘subsetting’ object. As an example of another method, we can use <code>.disjoint</code> to obtain all points that <em>do not</em> intersect with Canterbury.</p>
 <div class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.disjoint(canterbury.geometry.iloc[<span class="dv">0</span>])</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>canterbury_height2 <span class="op">=</span> nz_height[sel]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The result is shown in <a href="#fig-spatial-subset-disjoint">Figure&nbsp;<span>3.2</span></a>:</p>
+<p>The results are shown in <a href="#fig-spatial-subset-disjoint">Figure&nbsp;<span>3.2</span></a>, which compares the original <code>nz_height</code> layer (left) with the subset <code>canterbury_height2</code> (right).</p>
 <div>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Original</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>nz_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset (disjoint)</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>canterbury.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>canterbury_height2.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset (disjoint)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>canterbury.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>canterbury_height2.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div id="fig-spatial-subset-disjoint" class="cell quarto-layout-panel" data-execution_count="11">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
@@ -529,7 +530,7 @@ Length: 101, dtype: bool</code></pre>
 </figure>
 </div>
 </div>
-<p>In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using <code>.unary_union</code>, before applying the <code>.intersects</code> (or any other) operator. For example, here is how we can subset the <code>nz_height</code> points which intersect with Canterbury or Southland:</p>
+<p>In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using <code>.unary_union</code>, before applying the <code>.intersects</code> (or any other) operator. For example, here is how we can subset the <code>nz_height</code> points which intersect with Canterbury or Southland. <!-- jn: `nz['Name'].isin(['Canterbury', 'Southland'])` isin was not explained earlier... it should be either explained in the previous chapter or here. Preferably in the previous chapter where we explain subsetting... --></p>
 <div class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>canterbury_southland <span class="op">=</span> nz[nz[<span class="st">'Name'</span>].isin([<span class="st">'Canterbury'</span>, <span class="st">'Southland'</span>])]</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz_height.intersects(canterbury_southland.unary_union)</span>
@@ -586,7 +587,7 @@ Length: 101, dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>Alternatively, we can use <code>.overlay</code> to calculate the pairwise intersection between the <code>canterbury_southland</code> subset and <code>nz_height</code>. This approach is applicable for points (such as in the present example), where the intersection is the point itself, or when we are interested in line or polygon geometries (i.e., just the parts that intersect with the subsetting object) rather than complete geometries (such as in the example in <a href="#sec-joining-incongruent-layers"><span>Section&nbsp;3.3.6</span></a>)</p>
+<p>Alternatively, we can use <code>.overlay</code> to calculate the pairwise intersection between the <code>canterbury_southland</code> subset and <code>nz_height</code>. This approach is applicable for points (such as in the present example), where the intersection is the point itself, or when we are interested in line or polygon geometries (i.e., just the parts that intersect with the subsetting object) rather than complete geometries (such as in the example in <a href="#sec-joining-incongruent-layers"><span>Section&nbsp;3.3.6</span></a>). <!-- jn: the above paragraph is very dense and hard to follow... I would suggest expanding the explanation of what is overlay and how it differs from .intersects --></p>
 <div class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>nz_height.overlay(canterbury_southland)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="12">
@@ -664,16 +665,15 @@ Length: 101, dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>The resulting subset is shown in <a href="#fig-spatial-subset2">Figure&nbsp;<span>3.3</span></a>:</p>
+<p><a href="#fig-spatial-subset2">Figure&nbsp;<span>3.3</span></a> shows the results of the spatial subsetting of <code>nz_height</code> points by intersection with Canterbury and Southland.</p>
 <div>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Original</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>nz_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset by intersection with two polygons</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>canterbury_southland.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>canterbury_southland_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset by intersection with two polygons</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> nz.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>canterbury_southland.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'lightgrey'</span>, edgecolor<span class="op">=</span><span class="st">'darkgrey'</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>canterbury_southland_height.plot(ax<span class="op">=</span>base, color<span class="op">=</span><span class="st">'None'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div id="fig-spatial-subset2" class="cell quarto-layout-panel" data-execution_count="14">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
@@ -698,7 +698,7 @@ Length: 101, dtype: bool</code></pre>
 </figure>
 </div>
 </div>
-<p>The next section further explores different types of spatial relation, also known as binary predicates (of which <code>.intersects</code> and <code>.disjoint</code> are two examples), that can be used to identify whether or not two features are spatially related or not.</p>
+<p>The next section further explores different types of spatial relation, also known as binary predicates (of which <code>.intersects</code> and <code>.disjoint</code> are two examples), that can be used to identify whether or not two features are spatially related.</p>
 </section>
 <section id="sec-topological-relations" class="level3" data-number="3.3.2">
 <h3 data-number="3.3.2" class="anchored" data-anchor-id="sec-topological-relations"><span class="header-section-number">3.3.2</span> Topological relations</h3>
@@ -2314,7 +2314,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="60">
 <div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="59">
-<pre><code>&lt;generator object sample_gen at 0x7f5f988554e0&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f39e91814e0&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once, we can apply <code>list</code>. Since there was just one point, the result is just one extracted value, in this case <code>16</code>:</p>
@@ -2736,7 +2736,7 @@ NDVI=\frac{NIR-Red} {NIR+Red}
 <span id="cb107-8"><a href="#cb107-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb107-9"><a href="#cb107-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_253/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_257/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="82">
