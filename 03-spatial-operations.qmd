@@ -16,7 +16,7 @@ pd.options.display.max_colwidth = 35
 plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
-Let's import the required packages:
+This chapter requires importing the following packages:
 
 ```{python}
 import shapely
@@ -36,7 +36,7 @@ import scipy.stats
 import richdem as rd
 ```
 
-and load the sample data for this chapter:
+It also relies on the following data files:
 
 ```{python}
 #| echo: false
@@ -66,16 +66,22 @@ src_grain = rasterio.open('data/grain.tif')
 
 ## Introduction
 
+<!-- jn: general vector + raster intro is missing -->
+
 ## Spatial operations on vector data {#sec-spatial-vec}
 
+<!-- jn: vector data intro is missing -->
+
 ### Spatial subsetting {#sec-spatial-subsetting-vector}
+
+<!-- jn: have we considered switching the order of spatial subsetting with topological relations? -->
 
 Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object.
 Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is a boolean `Series`.
 The difference is, that, in spatial subsetting `y` is created based on another geometry and using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations), rather based on comparison based on ordinary columns.
 
 To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset (a)), in a projected coordinate system.
-The following expression creates an object representing Canterbury (`canterbury`):
+The following expression creates a new object, `canterbury`, representing only one region --- Canterbury.
 
 ```{python}
 canterbury = nz[nz['Name'] == 'Canterbury']
@@ -83,21 +89,22 @@ canterbury
 ```
 
 Then, we use the `.intersects` method evaluate, for each of the `nz_height` points, whether they intersect with Canterbury.
-The result `canterbury_height` is a boolean `Series` with the "answers":
+The result `canterbury_height` is a boolean `Series` with the "answers".
 
 ```{python}
 sel = nz_height.intersects(canterbury.geometry.iloc[0])
 sel
 ```
 
-Finally, we can subset `nz_height` using the latter series, resulting in the subset `canterbury_height` with only those points that intersect with Canterbury:
+Finally, we can subset `nz_height` using the obtained `Series`, resulting in the subset `canterbury_height` with only those points that intersect with Canterbury.
 
 ```{python}
 canterbury_height = nz_height[sel]
 canterbury_height
 ```
 
-The result is shown in @fig-spatial-subset (b):
+@fig-spatial-subset compares the original `nz_height` layer (left) with the subset `canterbury_height` (right).
+<!-- jn: do we need to repeat the `base = nz.plot(color='white', edgecolor='lightgrey')` code here? -->
 
 ```{python}
 #| label: fig-spatial-subset
@@ -106,11 +113,9 @@ The result is shown in @fig-spatial-subset (b):
 #| - Original points (red)
 #| - Spatial subset based on intersection (red), geometry used for subsetting (Canterbury) (grey)
 #| layout-ncol: 2
-
 # Original
 base = nz.plot(color='white', edgecolor='lightgrey')
 nz_height.plot(ax=base, color='None', edgecolor='red');
-
 # Subset (intersects)
 base = nz.plot(color='white', edgecolor='lightgrey')
 canterbury.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
@@ -123,16 +128,16 @@ Namely, we evaluate whether each geometry of `nz_height` intersects with `canter
 
 Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected.
 These include touches, crosses, or within, as we will see shortly in @sec-topological-relations.
-The most commonly used method is `.intersects`, which we used in the last example.
+Intersects (`.intersects`), which we used in the last example, is the the most commonly used method.
 This is a 'catch all' topological relation, that will return features in the target that touch, cross or are within the source 'subsetting' object.
-As an example of another method, we can use `.disjoint` to obtain all points that *do not* intersect with Canterbury:
+As an example of another method, we can use `.disjoint` to obtain all points that *do not* intersect with Canterbury.
 
 ```{python}
 sel = nz_height.disjoint(canterbury.geometry.iloc[0])
 canterbury_height2 = nz_height[sel]
 ```
 
-The result is shown in @fig-spatial-subset-disjoint:
+The results are shown in @fig-spatial-subset-disjoint, which compares the original `nz_height` layer (left) with the subset `canterbury_height2` (right).
 
 ```{python}
 #| label: fig-spatial-subset-disjoint
@@ -141,11 +146,9 @@ The result is shown in @fig-spatial-subset-disjoint:
 #| - Original points (red)
 #| - Spatial subset based on disjoint (red), geometry used for subsetting (Canterbury) (grey)
 #| layout-ncol: 2
-
 # Original
 base = nz.plot(color='white', edgecolor='lightgrey')
 nz_height.plot(ax=base, color='None', edgecolor='red');
-
 # Subset (disjoint)
 base = nz.plot(color='white', edgecolor='lightgrey')
 canterbury.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
@@ -153,7 +156,8 @@ canterbury_height2.plot(ax=base, color='None', edgecolor='red');
 ```
 
 In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using `.unary_union`, before applying the `.intersects` (or any other) operator.
-For example, here is how we can subset the `nz_height` points which intersect with Canterbury or Southland:
+For example, here is how we can subset the `nz_height` points which intersect with Canterbury or Southland.
+<!-- jn: `nz['Name'].isin(['Canterbury', 'Southland'])` isin was not explained earlier... it should be either explained in the previous chapter or here. Preferably in the previous chapter where we explain subsetting... -->
 
 ```{python}
 canterbury_southland = nz[nz['Name'].isin(['Canterbury', 'Southland'])]
@@ -163,13 +167,14 @@ canterbury_southland_height
 ```
 
 Alternatively, we can use `.overlay` to calculate the pairwise intersection between the `canterbury_southland` subset and `nz_height`.
-This approach is applicable for points (such as in the present example), where the intersection is the point itself, or when we are interested in line or polygon geometries (i.e., just the parts that intersect with the subsetting object) rather than complete geometries (such as in the example in @sec-joining-incongruent-layers)
+This approach is applicable for points (such as in the present example), where the intersection is the point itself, or when we are interested in line or polygon geometries (i.e., just the parts that intersect with the subsetting object) rather than complete geometries (such as in the example in @sec-joining-incongruent-layers).
+<!-- jn: the above paragraph is very dense and hard to follow... I would suggest expanding the explanation of what is overlay and how it differs from .intersects -->
 
 ```{python}
 nz_height.overlay(canterbury_southland)
 ```
 
-The resulting subset is shown in @fig-spatial-subset2:
+@fig-spatial-subset2 shows the results of the spatial subsetting of `nz_height` points by intersection with Canterbury and Southland.
 
 ```{python}
 #| label: fig-spatial-subset2
@@ -178,18 +183,16 @@ The resulting subset is shown in @fig-spatial-subset2:
 #| - Original points (red)
 #| - Spatial subset based on intersection (red), geometry used for subsetting (Canterbury and Southland) (grey)
 #| layout-ncol: 2
-
 # Original
 base = nz.plot(color='white', edgecolor='lightgrey')
 nz_height.plot(ax=base, color='None', edgecolor='red');
-
 # Subset by intersection with two polygons
 base = nz.plot(color='white', edgecolor='lightgrey')
 canterbury_southland.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
 canterbury_southland_height.plot(ax=base, color='None', edgecolor='red');
 ```
 
-The next section further explores different types of spatial relation, also known as binary predicates (of which `.intersects` and `.disjoint` are two examples), that can be used to identify whether or not two features are spatially related or not.
+The next section further explores different types of spatial relation, also known as binary predicates (of which `.intersects` and `.disjoint` are two examples), that can be used to identify whether or not two features are spatially related.
 
 ### Topological relations {#sec-topological-relations}
 
