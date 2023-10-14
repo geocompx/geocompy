@@ -1711,8 +1711,8 @@ world.iloc[:, x]
 </section>
 <section id="sec-vector-attribute-joining" class="level3" data-number="2.3.3">
 <h3 data-number="2.3.3" class="anchored" data-anchor-id="sec-vector-attribute-joining"><span class="header-section-number">2.3.3</span> Vector attribute joining</h3>
-<p>Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared “key” variable. <strong>pandas</strong> has a function named <code>pd.merge</code> for joining <code>(Geo)DataFrames</code> based on common column(s). The <code>pd.merge</code> function follows conventions used in the database language SQL <span class="citation" data-cites="grolemund_r_2016">(<a href="#ref-grolemund_r_2016" role="doc-biblioref">Grolemund and Wickham 2016</a>)</span>. The <code>pd.merge</code> function works the same on <code>DataFrame</code> and <code>GeoDataFrame</code> objects. The result of <code>pd.merge</code> can be either a <code>DataFrame</code> or a <code>GeoDataFrame</code> object, depending on the inputs.</p>
-<p>A common type of attribute join on spatial data is to join <code>DataFrames</code> to <code>GeoDataFrames</code>. To achieve this, we use <code>pd.merge</code> with a <code>GeoDataFrame</code> as the first argument and add columns to it from a <code>DataFrame</code> specified as the second argument. In the following example, we combine data on coffee production with the <code>world</code> dataset. The coffee data is in a <code>DataFrame</code> called <code>coffee_data</code> imported from a CSV file of major coffee-producing nations:</p>
+<p>Combining data from different sources is a common task in data preparation. Joins do this by combining tables based on a shared “key” variable. <strong>pandas</strong> has a function named <code>pd.merge</code> for joining <code>(Geo)DataFrames</code> based on common column(s) that follows conventions used in the database language SQL <span class="citation" data-cites="grolemund_r_2016">(<a href="#ref-grolemund_r_2016" role="doc-biblioref">Grolemund and Wickham 2016</a>)</span>. The <code>pd.merge</code> result can be either a <code>DataFrame</code> or a <code>GeoDataFrame</code> object, depending on the inputs.</p>
+<p>A common type of attribute join on spatial data is to join <code>DataFrames</code> to <code>GeoDataFrames</code>. To achieve this, we use <code>pd.merge</code> with a <code>GeoDataFrame</code> as the first argument and add columns to it from a <code>DataFrame</code> specified as the second argument. In the following example, we combine data on coffee production with the <code>world</code> dataset. The coffee data is in a <code>DataFrame</code> called <code>coffee_data</code> imported from a CSV file of major coffee-producing nations.</p>
 <div class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>coffee_data <span class="op">=</span> pd.read_csv(<span class="st">'data/coffee_data.csv'</span>)</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>coffee_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1779,11 +1779,7 @@ world.iloc[:, x]
 </div>
 </div>
 </div>
-<p>Its columns are:</p>
-<ul>
-<li><code>name_long</code>—country name</li>
-<li><code>coffee_production_2016</code> and <code>coffee_production_2017</code>—estimated values for coffee production in units of 60-kg bags per year, for 2016 and 2017, respectively</li>
-</ul>
+<p>Its columns are <code>name_long</code>—country name, and <code>coffee_production_2016</code> and <code>coffee_production_2017</code>—estimated values for coffee production in units of 60-kg bags per year, for 2016 and 2017, respectively.</p>
 <p>A left join, which preserves the first dataset, merges <code>world</code> with <code>coffee_data</code>, based on the common <code>'name_long'</code> column:</p>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>world_coffee <span class="op">=</span> pd.merge(world, coffee_data, on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'left'</span>)</span>
@@ -1883,7 +1879,7 @@ world.iloc[:, x]
 </div>
 </div>
 </div>
-<p>The result is a <code>GeoDataFrame</code> object identical to the original <code>world</code> object, but with two new variables (<code>coffee_production_2016</code> and <code>coffee_production_2017</code>) on coffee production. This can be plotted as a map, as illustrated (for <code>coffee_production_2017</code>) in <a href="#fig-join-coffee-production">Figure&nbsp;<span>2.3</span></a>:</p>
+<p>The result is a <code>GeoDataFrame</code> object identical to the original <code>world</code> object, but with two new variables (<code>coffee_production_2016</code> and <code>coffee_production_2017</code>) on coffee production. This can be plotted as a map, as illustrated (for <code>coffee_production_2017</code>) in <a href="#fig-join-coffee-production">Figure&nbsp;<span>2.3</span></a>. <!-- jn: this plotting code style is slightly different from the previous examples in this chapter... why? (I think it would be good to have a consistent style throughout the chapter) --></p>
 <div class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> world_coffee.plot(color<span class="op">=</span><span class="st">'white'</span>, edgecolor<span class="op">=</span><span class="st">'lightgrey'</span>)</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>coffee_map <span class="op">=</span> world_coffee.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'coffee_production_2017'</span>)</span>
@@ -1897,10 +1893,9 @@ world.iloc[:, x]
 </div>
 </div>
 </div>
-<p>To work, attribute-based joins need a “key variable” in both datasets (<code>on</code> parameter of <code>pd.merge</code>). In the above example, both <code>world_coffee</code> and <code>world</code> DataFrames contained a column called <code>name_long</code>. (By default <code>pd.merge</code> uses all columns with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example.)</p>
-<p>In case where column names are not the same, you can use <code>left_on</code> and <code>right_on</code> to specify the respective columns.</p>
+<p>To work, attribute-based joins need a “key variable” in both datasets (<code>on</code> parameter of <code>pd.merge</code>). In the above example, both <code>world_coffee</code> and <code>world</code> DataFrames contained a column called <code>name_long</code>. (By default <code>pd.merge</code> uses all columns with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example.) <!-- jn: maybe replace the above sentence with a block? --> In case where column names are not the same, you can use <code>left_on</code> and <code>right_on</code> to specify the respective columns.</p>
 <p>Note that the result <code>world_coffee</code> has the same number of rows as the original dataset <code>world</code>. Although there are only 47 rows in <code>coffee_data</code>, all 177 country records are kept intact in <code>world_coffee</code>. Rows in the original dataset with no match are assigned <code>np.nan</code> values for the new coffee production variables. This is a characteristic of a left join (specified with <code>how='left'</code>) and is what we typically want to do.</p>
-<p>What if we only want to keep countries that have a match in the key variable? In that case an inner join can be used:</p>
+<p>What if we only want to keep countries that have a match in the key variable? In that case an inner join can be used, which keeps only rows with a match in both datasets. We can use it with the <code>how='inner'</code> argument.</p>
 <div class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>pd.merge(world, coffee_data, on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'inner'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="27">
@@ -1998,7 +1993,7 @@ world.iloc[:, x]
 </div>
 </div>
 </div>
-<p>An alternative way to join two <code>(Geo)DataFrame</code>s is the aptly called <code>join</code> function:</p>
+<p>An alternative way to join two <code>(Geo)DataFrame</code>s is the aptly called <code>join</code> function. <!-- jn: 1. I think it would be good to explain the difference between `pd.merge` and `join` --> <!-- jn: 2. I think it would be good to explain why we need to set the index of `coffee_data` to `name_long`  --> <!-- jn: 3. if the difference is minor -- consider using a block for it --></p>
 <div class="cell" data-execution_count="29">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>world.join(coffee_data.set_index(<span class="st">'name_long'</span>), on<span class="op">=</span><span class="st">'name_long'</span>, how<span class="op">=</span><span class="st">'inner'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="28">
