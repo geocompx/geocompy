@@ -724,20 +724,24 @@ nz_height.iloc[:3, :].plot(ax=base, color='none', edgecolor='black');
 
 ## Spatial operations on raster data {#sec-spatial-ras}
 
+<!-- jn: raster data intro is missing -->
+
 ### Spatial subsetting {#sec-spatial-subsetting-raster}
 
-The previous chapter (Section @sec-manipulating-raster-objects) demonstrated how to retrieve values associated with specific cell IDs, or row and column combinations, from a raster.
+The previous chapter (and especially @sec-manipulating-raster-objects) demonstrated how to retrieve values associated with specific cell IDs, or row and column combinations, from a raster.
+<!-- jn: specific cell IDs are not mentioned in the previous chapter! -->
 Raster values can also be extracted by location (coordinates) and other spatial objects.
 To use coordinates for subsetting, we can use the [`.sample`](https://rasterio.readthedocs.io/en/stable/api/rasterio.io.html#rasterio.io.DatasetReader.sample) method of a `rasterio` file connection object, combined with a list of coordinate tuples.
 The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of `(0.1,0.1)` in `elev`.
-The returned object is a *generator*:
+The returned object is a *generator*.
+<!-- jn: explain what is a generator, and why it is useful here -->
 
 ```{python}
 src_elev.sample([(0.1, 0.1)])
 ```
 
 In case we want all values at once, we can apply `list`.
-Since there was just one point, the result is just one extracted value, in this case `16`:
+Since there was just one point, the result is just one extracted value, in this case `16`.
 
 ```{python}
 list(src_elev.sample([(0.1, 0.1)]))
@@ -745,13 +749,13 @@ list(src_elev.sample([(0.1, 0.1)]))
 
 We can use the same technique to extract the values of multiple points at once.
 For example, here we extract the raster values at two points, `(0.1,0.1)` and `(1.1,1.1)`.
-The resulting values are `16` and `6`:
+The resulting values are `16` and `6`.
 
 ```{python}
 list(src_elev.sample([(0.1, 0.1), (1.1, 1.1)]))
 ```
 
-The location of the two sample points on top of the `elev.tif` raster is illustrated in @fig-elev-sample-points:
+The location of the two sample points on top of the `elev.tif` raster is illustrated in @fig-elev-sample-points.
 
 ```{python}
 #| label: fig-elev-sample-points
@@ -762,41 +766,38 @@ gpd.GeoSeries([shapely.Point(0.1, 0.1)]).plot(color='black', ax=ax)
 gpd.GeoSeries([shapely.Point(1.1, 1.1)]).plot(color='black', ax=ax);
 ```
 
+<!-- jn: the following paragraph should be a block -->
 We elaborate on the plotting technique used to display the points and the raster in @sec-plot-static-layers.
 We will also introduce a more user-friendly and general method to extract raster values to points, using the **rasterstats** package, in @sec-extraction-to-points.
 
 Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in @fig-raster-subset.
 To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster.
-For example, let us read (@sec-using-rasterio) the `elev.tif` raster values into an array named `elev` (we will also close the connection, to avoid too many open connections in this chapter which may lead to an error):
+For example, let us read (@sec-using-rasterio) the `elev.tif` raster values into an array named `elev` (we will also close the connection, to avoid too many open connections in this chapter which may lead to an error) and create a corresponding random boolean mask named `mask`.
+<!-- jn: why do we need to create elev here? cannot we just use src_elev to create a mask? -->
+<!-- jn: why this may lead to an error? maybe it is worth to add a block or a reference? -->
 
 ```{python}
 elev = src_elev.read(1)
 src_elev.close()
-elev
-```
-
-and create a corresponding random boolean mask named `mask`:
-
-```{python}
 np.random.seed(1)
 mask = np.random.choice([True, False], elev.shape)
 mask
 ```
 
-In the code chunk above, we have created a mask object called `mask` with values randomly assigned to `True` and `False`.
+In the code chunk above, we have created a `mask` object with values randomly assigned to `True` and `False`.
 Next, suppose that we want to keep those values of `elev` which are `False` in `mask` (i.e., they are *not* masked).
 In other words, we want to mask `elev` with `mask`.
-The result is stored in a copy named `elev1`.
-To be able to store `np.nan` in the raster, we also need to convert it to `float` (see @sec-summarizing-raster-objects):
+The result will be stored in a copy named `masked_elev`.
+To be able to store `np.nan` in the raster, we also need to convert it to `float` (see @sec-summarizing-raster-objects).
 
 ```{python}
-elev1 = elev.copy()
-elev1 = elev1.astype('float64')
-elev1[mask] = np.nan
-elev1
+masked_elev = elev.copy()
+masked_elev = masked_elev.astype('float64')
+masked_elev[mask] = np.nan
+masked_elev
 ```
 
-The result is shown in @fig-raster-subset:
+@fig-raster-subset shows the original `elev` raster, the `mask` raster, and the resulting `masked_elev` raster.
 
 ```{python}
 #| label: fig-raster-subset
@@ -808,19 +809,18 @@ The result is shown in @fig-raster-subset:
 #| - Output masked raster
 rasterio.plot.show(elev);
 rasterio.plot.show(mask);
-rasterio.plot.show(elev1);
+rasterio.plot.show(masked_elev);
 ```
 
-The above approach can be also used to replace some values (e.g., expected to be wrong) with `np.nan`:
+The above approach can be also used to replace some values (e.g., expected to be wrong) with `np.nan` by using a logical operation.
 
 ```{python}
-elev1 = elev.copy()
-elev1 = elev1.astype('float64')
-elev1[elev1 < 20] = np.nan
-elev1
+elev2 = elev.copy()
+elev2 = elev2.astype('float64')
+elev2[elev2 < 20] = np.nan
+elev2
 ```
 
-These operations are in fact Boolean local operations, since we compare, cell-wise, two rasters.
 The next subsection explores these and related operations in more detail.
 
 ### Map algebra {#sec-map-algebra}
@@ -832,8 +832,6 @@ Map algebra operations tend to be fast, because raster datasets only implicitly 
 The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the raster metadata, @sec-using-rasterio).
 For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing.
 Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
-
-<!-- This is the way that map algebra works with the terra package. First, the headers of the raster datasets are queried and (in cases where map algebra operations work on more than one dataset) checked to ensure the datasets are compatible. Second, map algebra retains the so-called one-to-one locational correspondence, meaning that cells cannot move. This differs from matrix algebra, in which values change position, for example when multiplying or dividing matrices. -->
 
 Map algebra (or cartographic modeling with raster data) divides raster operations into four subclasses [@tomlin_geographic_1990], with each working on one or several grids simultaneously:
 
@@ -853,34 +851,36 @@ Raster algebra is a classical use case of local operations---this includes addin
 Raster algebra also allows logical operations such as finding all raster cells that are greater than a specific value (e.g., `5` in our example below).
 Local operations are applied using the **numpy** array operations syntax, as demonstrated below.
 
-First, let's take the array of `elev.tif` raster values, which we already read earlier (@sec-spatial-subsetting-raster):
+First, let's take the array of `elev.tif` raster values, which we already read earlier (@sec-spatial-subsetting-raster).
 
 ```{python}
 elev
 ```
 
 Now, any element-wise array operation can be applied using **numpy** arithmetic or conditional operators and functions, comprising local raster operations in spatial analysis terminology.
-For example:
+For example `elev + elev` adds the values of `elev` to itself, resulting in a raster with double values.
 
 ```{python}
 elev + elev
 ```
 
 Note that some functions and operators automatically change the data type to accommodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as `255` for `int8`).
-For example, `elev**2` (`elev` squared) results in overflow:
+For example, `elev**2` (`elev` squared) results in overflow.
+<!-- jn: maybe a block explaining what is overflow and why it is bad? -->
 
 ```{python}
 elev**2
 ```
 
-To accommodate the results, we can, for instance, transform `elev` to the standard `int64` data type before applying the operator.
-Now we get correct results:
+To accommodate the results, we can, for instance, transform `elev` to the standard `int64` data type using `astype` before applying the operator.
+<!-- jn: we should explain why int64 in the text and int in the code -->
 
 ```{python}
 elev.astype(int)**2
 ```
 
-@fig-raster-local-operations demonstrates the result of the last two examples (`elev+elev` and `elev.astype(int)**2`), and two other ones (`np.log(elev)` and `elev>5`):
+Now we get correct results.
+@fig-raster-local-operations demonstrates the result of the last two examples (`elev+elev` and `elev.astype(int)**2`), and two other ones (`np.log(elev)` and `elev>5`).
 
 ```{python}
 #| label: fig-raster-local-operations
@@ -897,7 +897,7 @@ rasterio.plot.show(np.log(elev), cmap='Oranges');
 rasterio.plot.show(elev > 5, cmap='Oranges');
 ```
 
-Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class 1), middle (class 2) and high elevations (class 3).
+Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class `1`), middle (class `2`) and high elevations (class `3`).
 Here, we assign the raster values in the ranges `0`--`12`, `12`--`24` and `24`--`36` are reclassified to take values `1`, `2` and `3`, respectively.
 
 ```{python}
@@ -907,7 +907,7 @@ recl[(elev > 12) & (elev <= 24)] = 2
 recl[(elev > 24) & (elev <= 36)] = 3
 ```
 
-The reclassified result is shown in @fig-raster-reclassify:
+@fig-raster-reclassify compares the original `elev` raster with the reclassified `recl` one.
 
 ```{python}
 #| label: fig-raster-reclassify
@@ -922,18 +922,18 @@ rasterio.plot.show(recl, cmap='Oranges');
 
 The calculation of the [Normalized Difference Vegetation Index (NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) is a well-known local (pixel-by-pixel) raster operation.
 It returns a raster with values between `-1` and `1`; positive values indicate the presence of living plants (mostly \> `0.2`).
-NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel.
-Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, explaining the NVDI formula (@eq-ndvi):
+NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel 2.
+Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, which is emulated in the NVDI formula (@eq-ndvi).
 
-::: {#eq-ndvi}
 $$
 NDVI=\frac{NIR-Red} {NIR+Red}
-$$
-:::
+$$ {#eq-ndvi}
 
-where $NIR$ is the near-infrared band and $Red$ is the red band.
+, where $NIR$ is the near-infrared band and $Red$ is the red band.
 
-Let's calculate NDVI for the multispectral Landsat satellite file (`landsat.tif`) of the Zion National Park:
+Let's calculate NDVI for the multispectral Landsat satellite file (`landsat.tif`) of the Zion National Park.
+We start by reading the file and extracting the NIR and red bands, which are the fourth and third bands, respectively.
+Next, we apply the formula to calculate the NDVI values.
 
 ```{python}
 landsat = src_landsat.read()
@@ -943,24 +943,22 @@ red = landsat[2]
 ndvi = (nir-red)/(nir+red)
 ```
 
-Convert values \>`1` to "No Data":
+We also convert values \>`1` to "No Data".
+<!-- jn: explain why -->
 
 ```{python}
 ndvi[ndvi>1] = np.nan
 ```
 
-When plotting an RGB image using the `rasterio.plot.show` function, the function assumes that:
-
--   Values are in the range `[0,1]` for floats, or `[0,255]` for integers (otherwise clipped)
--   The order of bands is RGB
-
-To "prepare" the multi-band raster for `rasterio.plot.show`, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the `[:3]` slice to select the first three bands and then the `[::-1]` slice to reverse the bands order, and divide by the maximum to set the maximum value at `1`:
+When plotting an RGB image using the `rasterio.plot.show` function, the function assumes that values are in the range `[0,1]` for floats, or `[0,255]` for integers (otherwise clipped) and the order of bands is RGB.
+To "prepare" the multi-band raster for `rasterio.plot.show`, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the `[:3]` slice to select the first three bands and then the `[::-1]` slice to reverse the bands order, and divide by the raster maximum to set the maximum value to `1`.
+<!-- jn: maybe explain or reference [::-1]? -->
 
 ```{python}
 landsat_rgb = landsat[:3][::-1] / landsat.max()
 ```
 
-The result is shown in the right panel of @fig-raster-ndvi:
+@fig-raster-ndvi shows the RGB image and the NDVI values calculated for the Landsat satellite image of the Zion National Park.
 
 ```{python}
 #| label: fig-raster-ndvi
@@ -969,7 +967,6 @@ The result is shown in the right panel of @fig-raster-ndvi:
 #| fig-subcap: 
 #| - RGB image
 #| - NDVI
-
 rasterio.plot.show(landsat_rgb, cmap='RdYlGn');
 rasterio.plot.show(ndvi, cmap='Greens');
 ```
