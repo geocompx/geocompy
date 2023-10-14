@@ -217,20 +217,21 @@ Aggregation involves summarizing data based on one or more *grouping variables* 
 A classic example of this attribute-based aggregation is calculating the number of people per continent based on country-level data (one row per country).
 The `world` dataset contains the necessary ingredients: the columns `pop` and `continent`, the population and the grouping variable, respectively.
 The aim is to find the `sum()` of country populations for each continent, resulting in a smaller table or vector layer (of continents).
-(Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets).
+Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets.
 
-Non-spatial aggregation can be achieved using a combination of `.groupby` and `.sum`:
+Attribute-based aggregation can be achieved using a combination of `.groupby` and `.sum`, where the former groups the data by the grouping variable(s) and the latter calculates the sum of the remaining columns.
 
 ```{python}
 world_agg1 = world[['continent', 'pop']].groupby('continent').sum()
 world_agg1
 ```
 
-The result is a (non-spatial) table with eight rows, one per continent, and two columns reporting the name and population of each continent.
+The result, in this case, is a (non-spatial) table with eight rows, one per unique value in `continent`, and two columns reporting the name and population of each continent.
 
 If we want to include the geometry in the aggregation result, we can use the `.dissolve` method.
 That way, in addition to the summed population, we also get the associated geometry per continent, i.e., the union of all countries.
-Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the aggregation function for non-geometry columns:
+Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the aggregation function for non-geometry columns.
+<!-- jn: `reset_index()` should be explained in the text -->
 
 ```{python}
 world_agg2 = world[['continent', 'pop', 'geometry']] \
@@ -239,31 +240,23 @@ world_agg2 = world[['continent', 'pop', 'geometry']] \
 world_agg2
 ```
 
-@fig-spatial-aggregation shows the result:
+In this case, the resulting `world_agg2` object is a `GeoDataFrame` containing 8 features representing the continents of the world (and the open ocean) that we can plot (@fig-spatial-aggregation).
+<!-- jn: plt.subplots should be either explained here or there should be a link to the relevant section in some other chapter -->
 
 ```{python}
 #| label: fig-spatial-aggregation
 #| fig-cap: Continents with summed population
-
 fig, ax = plt.subplots(figsize=(6, 3))
 world_agg2.plot(column='pop', edgecolor='black', legend=True, ax=ax);
 ```
 
-The resulting `world_agg2` object is a `GeoDataFrame` containing 8 features representing the continents of the world (and the open ocean).
+Other options for the `aggfunc` parameter in `.dissolve` [include](https://geopandas.org/en/stable/docs/user_guide/aggregation_with_dissolve.html)`'first'`, `'last'`, `'min'`, `'max'`, `'sum'`, `'mean'`, `'median'`.
+Additionally, we can pass custom functions here.
 
-Other options for the `aggfunc` parameter in `.dissolve` [include](https://geopandas.org/en/stable/docs/user_guide/aggregation_with_dissolve.html):
-
--   `'first'`
--   `'last'`
--   `'min'`
--   `'max'`
--   `'sum'`
--   `'mean'`
--   `'median'`
-
-Additionally, we can pass custom functions.
-
-As a more complex example, here is how we can calculate the total population, area, and count of countries, per continent:
+As a more complex example, the following code shows how we can calculate the total population, area, and count of countries, per continent.
+It is done by passing a dictionary to the `aggfunc` parameter, where the keys are the column names and the values are the aggregation functions.
+The result is a `GeoDataFrame` object with 8 rows (one per continent) and 4 columns (one for the continent name and one for each of the three aggregated attributes).
+<!-- jn: rename here should be also explained in the text -->
 
 ```{python}
 world_agg3 = world.dissolve(
@@ -276,32 +269,29 @@ world_agg3 = world.dissolve(
 world_agg3
 ```
 
-Figure @fig-spatial-aggregation-different-functions visualizes the resulting layer (`world_agg3`) of continents with the three aggregated attributes.
+Figure @fig-spatial-aggregation-different-functions visualizes the three aggregated attributes of our resulting layer `world_agg3`.
 
 ```{python}
 #| label: fig-spatial-aggregation-different-functions
-#| fig-cap: 'Continent properties, calculated using spatial aggregation using different functions'
+#| fig-cap: "Continent's properties, calculated using spatial aggregation using different functions"
 #| fig-subcap: 
 #| - Summed population
 #| - Summed area
 #| - Count of countries
-#| layout-ncol: 2
-
+#| layout-ncol: 3
 # Summed population
 fig, ax = plt.subplots(figsize=(5, 2.5))
 world_agg3.plot(column='pop', edgecolor='black', legend=True, ax=ax);
-
 # Summed area
 fig, ax = plt.subplots(figsize=(5, 2.5))
 world_agg3.plot(column='area_km2', edgecolor='black', legend=True, ax=ax);
-
 # Count of countries
 fig, ax = plt.subplots(figsize=(5, 2.5))
 world_agg3.plot(column='n', edgecolor='black', legend=True, ax=ax);
 ```
 
-Let's proceed with the last result to demonstrate other table-related operations.
-Given the `world_agg3` continent summary (@fig-spatial-aggregation-different-functions), we:
+There are several other table-related operations that are possible, such as creating new columns or sorting the values.
+In the following code example, given the `world_agg3` continent summary (@fig-spatial-aggregation-different-functions), we:
 
 -   drop the geometry columns,
 -   calculate population density of each continent,
