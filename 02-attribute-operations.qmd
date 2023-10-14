@@ -379,7 +379,7 @@ Note that in this case, we need to set the index of `coffee_data` to the `name_l
 Often, we would like to create a new column based on already existing columns.
 For example, we want to calculate population density for each country.
 For this we need to divide a population column, here `pop`, by an area column, here `area_km2`.
-Note that we are working on a copy of `world` named `world2` so that we do not modify the original layer:
+Note that we are working on a copy of `world` named `world2` so that we do not modify the original layer.
 
 ```{python}
 world2 = world.copy()
@@ -399,7 +399,8 @@ world2
 
 The resulting `GeoDataFrame` object has a new column called `con_reg` representing the continent and region of each country, e.g., `'South America:Americas'` for Argentina and other South America countries.
 The opposite operation, splitting one column into multiple columns based on a separator string, is done using the `.str.split` method.
-As a result we go back to the previous state of two separate `continent` and `region_un` columns (only that their position is now last, since they are newly created):
+As a result we go back to the previous state of two separate `continent` and `region_un` columns (only that their position is now last, since they are newly created).
+<!-- jn: what is the purpose of the `expand=True` argument? (I think it would be good to explain it in the text) -->
 
 ```{python}
 world2[['continent', 'region_un']] = world2['con_reg'] \
@@ -408,7 +409,7 @@ world2
 ```
 
 Renaming one or more columns can be done using the `.rename` method combined with the `columns` argument, which should be a dictionary of the form `old_name:new_name`.
-The following command, for example, renames the lengthy `name_long` column to simply `name`:
+The following command, for example, renames the lengthy `name_long` column to simply `name`.
 
 ```{python}
 world2.rename(columns={'name_long': 'name'})
@@ -416,7 +417,7 @@ world2.rename(columns={'name_long': 'name'})
 
 To change all column names at once, we assign a `list` of the "new" column names into the `.columns` property.
 The `list` must be of the same length as the number of columns (i.e., `world.shape[1]`).
-This is illustrated below, which outputs the same `world2` object, but with very short names:
+This is illustrated below, which outputs the same `world2` object, but with very short names.
 
 ```{python}
 new_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'geom', 'i', 'j', 'k', 'l']
@@ -425,7 +426,7 @@ world2
 ```
 
 To reorder columns, we can pass a modified columns list to the subsetting operator `[`.
-For example, the following expressions reorder `world2` columns in reverse alphabetical order:
+For example, the following expressions reorder `world2` columns in reverse alphabetical order.
 
 ```{python}
 names = sorted(world2.columns, reverse=True)
@@ -435,12 +436,12 @@ world2
 
 Each of these attribute data operations, even though they are defined in the **pandas** package and applicable to any `DataFrame`, preserve the geometry column and the `GeoDataFrame` class.
 Sometimes, however, it makes sense to remove the geometry, for example to speed-up aggregation or to export just the attribute data for statistical analysis.
-To go from `GeoDataFrame` to `DataFrame` we need to:
+To go from `GeoDataFrame` to `DataFrame` we need to.
 
 1.  Drop the geometry column
 2.  Convert from `GeoDataFrame` into a `DataFrame`
 
-For example, by the end of the following code section `world2` becomes a `DataFrame`:
+For example, by the end of the following code section `world2` becomes a regular `DataFrame`.
 
 ```{python}
 world2 = world2.drop('geom', axis=1)
@@ -450,45 +451,50 @@ world2
 
 ## Manipulating raster objects {#sec-manipulating-raster-objects}
 
+<!-- jn:there should be a sentence or two of an intro (see the intro to the vector section above) -->
+
 ### Raster subsetting {#sec-raster-subsetting}
 
-When using **rasterio**, raster values are accessible through a **numpy** array, which can be imported with the `.read` method:
+When using **rasterio**, raster values are accessible through a **numpy** array, which can be imported with the `.read` method (as we saw in @sec-using-rasterio).
 
 ```{python}
 elev = src_elev.read(1)
 elev
 ```
 
-Then, we can access any subset of cell values using **numpy** methods, e.g.:
+Then, we can access any subset of cell values using **numpy** methods, e.g., `elev[1, 2]` returns the value at row 2, column 3.
 
 ```{python}
 elev[1, 2]  ## Value at row 2, column 3
 ```
 
-Cell values can be modified by overwriting existing values in conjunction with a subsetting operation, e.g. to set cell at row 2, column 3 of `elev` to `0`:
+Cell values can be modified by overwriting existing values in conjunction with a subsetting operation, e.g., `elev[1, 2] = 0` to set cell at row 2, column 3 of `elev` to `0`.
 
 ```{python}
 elev[1, 2] = 0
 elev
 ```
 
-Multiple cells can also be modified in this way:
+Multiple cells can also be modified in this way, e.g., `elev[0, 0:3] = 0` to set the first three cells in the first row to `0`.
 
 ```{python}
 elev[0, 0:3] = 0
 elev
 ```
 
+<!-- jn: how to deal with multilayer rasters? -->
+
 ### Summarizing raster objects {#sec-summarizing-raster-objects}
 
-Global summaries of raster values can be calculated by applying **numpy** summary functions on the array with raster values, e.g. `np.mean`:
+Global summaries of raster values can be calculated by applying **numpy** summary functions on the array with raster values, e.g., `np.mean`.
 
 ```{python}
 np.mean(elev)
 ```
 
 Note that "No Data"-safe functions--such as `np.nanmean`---should be used in case the raster contains "No Data" values which need to be ignored.
-Before we can demonstrate that, we must convert the array from `int` to `float`, as `int` arrays cannot contain `np.nan` (due to computer memory limitations):
+Before we can demonstrate that, we must convert the array from `int` to `float`, as `int` arrays cannot contain `np.nan` (due to computer memory limitations).
+<!--jn: "due to computer memory limitations" can we add some reference to this? -->
 
 ```{python}
 elev1 = elev.copy()
@@ -496,15 +502,16 @@ elev1 = elev1.astype('float64')
 elev1
 ```
 
-Now we can insert an `np.nan` value into the array.
+Now we can insert an `np.nan` value into the array, for example to a cell located in the first row and third column.
 (Trying to do so in the original `elev` array raises an error, try it to see for yourself.)
+<!--jn: "(Trying to do so in the original `elev` array raises an error, try it to see for yourself.)" why? please explain -->
 
 ```{python}
 elev1[0, 2] = np.nan
 elev1
 ```
 
-With the `np.nan` value inplace, the summary value becomes unknown:
+With the `np.nan` value inplace, the summary value becomes unknown (`np.nan`).
 
 ```{python}
 np.mean(elev1)
@@ -517,15 +524,16 @@ np.nanmean(elev1)
 ```
 
 Raster value statistics can be visualized in a variety of ways.
-One approach is to "flatten" the raster values into a one-dimensional array, then use a graphical function such as `plt.hist` or `plt.boxplot` (from `matplotlib.pyplot`).
-For example, the following code section shows the distribution of values in `elev` using a histogram (@fig-raster-hist):
+One approach is to "flatten" the raster values into a one-dimensional array (`flatten`), then use a graphical function such as `plt.hist` or `plt.boxplot` (from `matplotlib.pyplot`).
+For example, the following code section shows the distribution of values in `elev` using a histogram (@fig-raster-hist).
 
 ```{python}
 #| label: fig-raster-hist
 #| fig-cap: Distribution of cell values in `elev`
-
 x = elev.flatten()
 plt.hist(x);
 ```
+
+<!-- jn: how to deal with categorical rasters? -->
 
 ## Exercises
