@@ -1,28 +1,13 @@
 ---
 jupyter: python3
+warning: false
 ---
 
 # Geographic data in Python {#sec-spatial-class}
 
 ## Introduction
 
-This chapter introduces key Python packages and data structures for working with the two major types of spatial data, namely **shapely** and **geopandas**---for working with vector layers and **rasterio**---for working with rasters.
-
-As we will see in the example code presented later in this chapter, **shapely** and **geopandas** are related:
-
--   **shapely** is a "low-level" package for working with individual vector geometry objects
--   **geopandas** is a "high-level" package for working with geometry columns (`GeoSeries` objects), which internally contain **shapely** geometries, and vector layers (`GeoDataFrame` objects)
-
-The **geopandas** ecosystem provides a comprehensive approach for working with vector layers in Python, with many packages building on it.
-This is not the case for raster data, however: there are several partially overlapping packages for working with raster data, each with its own advantages and disadvantages.
-In this book, we focus on the most prominent one:
-
--   **rasterio** is a spatial-oriented package, focused on "simple" raster formats (such as GeoTIFF), representing a raster using a combination of a **numpy** array, and a metadata object (`dict`) specifying the spatial reference of the array
-
-Another raster-related package worth mentioning is **xarray**.
-It is a general-purpose package for working with labeled arrays, thus advantageous for processing "complex" raster formats (such as NetCDF), representing a raster using its own native classes, namely `xarray.Dataset` and `xarray.DataArray`.
-
-This chapter will briefly explain the fundamental geographic data models: vector and raster.
+This chapter outlines two fundamental geographic data models --- vector and raster --- and introduces the main Python packages for working with them.
 Before demonstrating their implementation in Python, we will introduce the theory behind each data model and the disciplines in which they predominate.
 
 The vector data model (@sec-vector-data) represents the world using points, lines, and polygons.
@@ -36,6 +21,17 @@ The answer likely depends on your domain of application, and the datasets you ha
 
 -   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?-->
 -   Raster datasets and methods dominate many environmental sciences because of the reliance on remote sensing data
+
+Python has strong support for both data models.
+We will focus on **shapely** and **geopandas** for working with geograpic vector data, and **rasterio** for working with rasters.
+
+**shapely** is a "low-level" package for working with individual vector geometry objects.
+**geopandas** is a "high-level" package for working with geometry columns (`GeoSeries` objects), which internally contain **shapely** geometries, and vector layers (`GeoDataFrame` objects).
+The **geopandas** ecosystem provides a comprehensive approach for working with vector layers in Python, with many packages building on it.
+
+There are several partially overlapping packages for working with raster data, each with its own advantages and disadvantages.
+In this book, we focus on the most prominent one: **rasterio**, which represents "simple" raster datasets with a combination of a **numpy** array, and a metadata object (`dict`) providing geographic metadata such as the coordinate system.
+**xarray** is a notable alternative to **rasterio** not covered in this book which uses native `xarray.Dataset` and `xarray.DataArray` classes to effectively represent complex raster datasets such as 'NetCDF' files with multiple bands and metadata.
 
 There is much overlap in some fields and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data.
 Furthermore, it is possible to convert between the two forms (see @sec-raster-vector).
@@ -198,7 +194,7 @@ Finally, to get a sense of the spatial component of the vector layer, it can be 
 gdf.plot();
 ```
 
-Alternatively, we can get a more interactive plot by using `.explore` (@fig-gdf-explore).
+Interactive maps of `GeoDataFrame` objects can be created with the `.explore` method, as illustrated in @fig-gdf-explore which was created with the following command:
 
 ```{python}
 #| label: fig-gdf-explore
@@ -987,7 +983,7 @@ We are going to elaborate on reprojection from one CRS to another (`.to_crs` in 
 
 ## Units
 
-An essential feature of CRSs is that they contain information about spatial units.
+An important feature of CRSs is that they contain information about spatial units.
 Clearly, it is vital to know whether a house's measurements are in feet or meters, and the same applies to maps.
 It is a good cartographic practice to add a scale bar or some other distance indicator onto maps to demonstrate the relationship between distances on the page or screen and distances on the ground.
 Likewise, it is important for the user to be aware of the units in which the geometry coordinates are, to ensure that subsequent calculations are done in the right context.
@@ -1000,10 +996,10 @@ For example, according to the `.transform` matrix of `srtm.tif` we can see that 
 src.meta
 ```
 
-We may already know (or can find out) that the units of WGS84 are decimal degrees.
-However, that information is not encoded in any numeric calculation (i.e., the results are always unitless numbers).
+You may already know that the units of the WGS84 coordinate system (EPSG:4326) are decimal degrees.
+However, that information is not accounted for in any numeric calculation, meaning that operations such as buffers can be returned in units of degrees, which is not appropriate in most cases.
 
-Consequently, we need to be aware of the CRS units we are working with.
+Consequently, you should always be aware of the CRS of your datasets and the units they use.
 Typically, these are decimal degrees, in a geographic CRS, or $m$, in a projected CRS, although there are exceptions.
 Geometric calculations such as length, area, or distance, return plain numbers in the same units of the CRS (such as $m$ or $m^2$).
 It is up to the user to determine which units the result is given in, and treat the result accordingly.
