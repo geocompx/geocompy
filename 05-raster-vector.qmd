@@ -16,7 +16,8 @@ pd.options.display.max_colwidth = 35
 plt.rcParams['figure.figsize'] = (5, 5)
 ```
 
-Let's import the required packages:
+This chapter requires importing the following packages:
+<!--jn:two packages are commented out -- should these lines be removed?-->
 
 ```{python}
 import numpy as np
@@ -34,7 +35,7 @@ import os
 # import osgeo.gdal
 ```
 
-and load the sample data:
+It also relies on the following data files:
 
 ```{python}
 src_srtm = rasterio.open('data/srtm.tif')
@@ -52,12 +53,12 @@ src_nz_elev = rasterio.open('data/nz_elev.tif')
 
 ## Introduction
 
-This Chapter focuses on interactions between raster and vector geographic data models, both introduced in @sec-spatial-class.
+This chapter focuses on interactions between raster and vector geographic data models, both introduced in @sec-spatial-class.
 It includes four main techniques:
 
--   raster cropping and masking using vector objects (@sec-raster-cropping),
--   extracting raster values using different types of vector data (Section @sec-raster-extraction), and
--   raster-vector conversion (@sec-rasterization and @sec-spatial-vectorization).
+-   Raster cropping and masking using vector objects (@sec-raster-cropping)
+-   Extracting raster values using different types of vector data (Section @sec-raster-extraction)
+-   Raster-vector conversion (@sec-rasterization and @sec-spatial-vectorization)
 
 These concepts are demonstrated using data from in previous chapters, to understand their potential real-world applications.
 
@@ -70,17 +71,19 @@ Both operations reduce object memory use and associated computational resources 
 
 We will use two layers to illustrate raster cropping:
 
--   The `srtm.tif` raster representing elevation (meters above sea level) in south-western Utah (a **rasterio** file connection named `src_srtm`) (see @fig-raster-crop (a))
+-   The `srtm.tif` raster representing elevation, in meters above sea level, in south-western Utah: a **rasterio** file connection named `src_srtm` (see @fig-raster-crop (a))
 -   The `zion.gpkg` vector layer representing the Zion National Park boundaries (a `GeoDataFrame` named `zion`)
 
 Both target and cropping objects must have the same projection.
-Since it is easier and more precise to reproject vector layers, compared to rasters, we use the following expression to reproject the vector layer `zion` into the CRS of the raster `src_srtm`:
+Since it is easier and more precise to reproject vector layers, compared to rasters, we use the following expression to reproject the vector layer `zion` into the CRS of the raster `src_srtm`.
+<!-- jn: maybe reference to the CRS section/chapter -->
 
 ```{python}
 zion = zion.to_crs(src_srtm.crs)
 ```
 
-To mask the image, i.e., convert all pixels which do not intersect with the `zion` polygon to "No Data", we use the [`rasterio.mask.mask`](https://rasterio.readthedocs.io/en/stable/api/rasterio.mask.html#rasterio.mask.mask) function, as follows:
+To mask the image, i.e., convert all pixels which do not intersect with the `zion` polygon to "No Data", we use the [`rasterio.mask.mask`](https://rasterio.readthedocs.io/en/stable/api/rasterio.mask.html#rasterio.mask.mask) function.
+
 
 ```{python}
 out_image_mask, out_transform_mask = rasterio.mask.mask(
@@ -94,29 +97,26 @@ out_image_mask, out_transform_mask = rasterio.mask.mask(
 Note that we need to choose and specify a "No Data" value, within the valid range according to the data type.
 Since `srtm.tif` is of type `uint16` (how can we check?), we choose `9999` (a positive integer that is guaranteed not to occur in the raster).
 Also note that **rasterio** does not directly support **geopandas** data structures, so we need to pass a "collection" of **shapely** geometries: a `GeoSeries` (see below) or a `list` of **shapely** geometries (see next example) both work.
-
-The result is the `out_image` array with the masked values:
+<!-- jn: (see below) or (see above) -->
+The output consists of two objects.
+The first one is the `out_image` array with the masked values.
 
 ```{python}
 out_image_mask
 ```
 
-and the new transformation matrix `out_transform`:
+The second one is a new transformation matrix `out_transform`.
 
 ```{python}
 out_transform_mask
 ```
 
-Note that masking (without cropping!) does not modify the raster spatial configuration.
-Therefore, the new transform is identical to the original:
+Note that masking (without cropping!) does not modify the raster extent.
+Therefore, the new transform is identical to the original (`src_srtm.transform`).
 
-```{python}
-src_srtm.transform
-```
-
-Unfortunately, the `out_image` and `out_transform` object do not contain any information indicating that `9999` represents "No Data".
+Unfortunately, the `out_image` and `out_transform` objects do not contain any information indicating that `9999` represents "No Data".
 To associate the information with the raster, we must write it to file along with the corresponding metadata.
-For example, to write the cropped raster to file, we need to modify the "No Data" setting in the metadata:
+For example, to write the masked raster to file, we first need to modify the "No Data" setting in the metadata.
 
 ```{python}
 dst_kwargs = src_srtm.meta
@@ -124,7 +124,7 @@ dst_kwargs.update(nodata=9999)
 dst_kwargs
 ```
 
-Then we can write the cropped raster to file:
+Then we can write the masked raster to file with the updated metadata object.
 
 ```{python}
 new_dataset = rasterio.open('output/srtm_masked.tif', 'w', **dst_kwargs)
@@ -132,36 +132,35 @@ new_dataset.write(out_image_mask)
 new_dataset.close()
 ```
 
-Now we can re-import the raster:
+Now we can re-import the raster and check that the "No Data" value is correctly set.
 
 ```{python}
 src_srtm_mask = rasterio.open('output/srtm_masked.tif')
 ```
 
 The `.meta` property contains the `nodata` entry.
-Now, any relevant operation (such as plotting) will take "No Data" into account:
+Now, any relevant operation (such as plotting) will take "No Data" into account.
 
 ```{python}
 src_srtm_mask.meta
 ```
 
-*Cropping* means reducing the raster extent to the extent of the vector layer:
+The related operation, cropping, reduces the raster extent to the extent of the vector layer:
 
--   To just crop, *without* masking, we can derive the bounding box polygon of the vector layer, and then crop using that polygon (see further below), also combined with `crop=True`
--   To crop *and* mask, we can use `rasterio.mask.mask` same shown as above for masking, just setting `crop=True` instead of the default `crop=False` (see further below)
+-   To just crop, *without* masking, we can derive the bounding box polygon of the vector layer, and then crop using that polygon, also combined with `crop=True` (@fig-raster-crop (c))
+-   To crop *and* mask, we can use `rasterio.mask.mask`, same as above for masking, just setting `crop=True` instead of the default `crop=False` (@fig-raster-crop (d))
 
-For the example of cropping only, here is how we can obtain the extent polygon of `zion`, as a `shapely` geometry object (@fig-zion-bbox):
+For the example of cropping only, the extent polygon of `zion` can be obtained as a `shapely` geometry object using the `.unary_union.envelope` property(@fig-zion-bbox).
 
 ```{python}
 #| label: fig-zion-bbox
 #| fig-cap: Bounding box `'Polygon'` geometry of the `zion` layer
-
 bb = zion.unary_union.envelope
 bb
 ```
 
 The extent can now be used for masking.
-Here, we are also using the `all_touched=True` option so that pixels partially overlapping with the extent are included:
+Here, we are also using the `all_touched=True` option so that pixels partially overlapping with the extent are also included in the output.
 
 ```{python}
 out_image_crop, out_transform_crop = rasterio.mask.mask(
@@ -173,9 +172,12 @@ out_image_crop, out_transform_crop = rasterio.mask.mask(
 )
 ```
 
-Finally, here is how we crop and mask, using `rasterio.mask.mask` with `crop=True`.
+<!-- jn: why [bb] and not bb? -->
+Finally, we can perform crop and mask operations, using `rasterio.mask.mask` with `crop=True`.
 When writing to file, it is now crucial to update the transform and dimensions, since they were modified as a result of cropping.
-Also note that `out_image_mask_crop` is a three-dimensional array (even tough it has one band in this case), so the number of rows and columns are in `.shape[1]` and `.shape[2]` (rather than `.shape[0]` and `.shape[1]`), respectively:
+Also note that `out_image_mask_crop` is a three-dimensional array (even tough it has one band in this case), so the number of rows and columns are in `.shape[1]` and `.shape[2]` (rather than `.shape[0]` and `.shape[1]`), respectively.
+<!-- jn: why? -->
+<!-- jn: maybe split the code below into two chunks and describe them separately...? -->
 
 ```{python}
 out_image_mask_crop, out_transform_mask_crop = rasterio.mask.mask(
@@ -201,7 +203,7 @@ src_srtm_mask_crop = rasterio.open('output/srtm_masked_cropped.tif')
 out_image_mask_crop.shape
 ```
 
-@fig-raster-crop shows the original raster, and the cropped and masked results:
+@fig-raster-crop shows the original raster, and the all of the masked and cropped results.
 
 ```{python}
 #| label: fig-raster-crop
@@ -212,22 +214,18 @@ out_image_mask_crop.shape
 #| - Masked
 #| - Cropped
 #| - Masked+Cropped
-
 # Original
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(src_srtm, ax=ax)
 zion.plot(ax=ax, color='none', edgecolor='black');
-
 # Masked
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(src_srtm_mask, ax=ax)
 zion.plot(ax=ax, color='none', edgecolor='black');
-
 # Cropped
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(out_image_crop, transform=out_transform_crop, ax=ax)
 zion.plot(ax=ax, color='none', edgecolor='black');
-
 # Masked+Cropped
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(src_srtm_mask_crop, ax=ax)
@@ -239,26 +237,25 @@ zion.plot(ax=ax, color='none', edgecolor='black');
 Raster extraction is the process of identifying and returning the values associated with a 'target' raster at specific locations, based on a (typically vector) geographic 'selector' object.
 The reverse of raster extraction---assigning raster cell values based on vector objects---is rasterization, described in @sec-rasterization.
 
-In the following examples, we use a third-party package called **rasterstats**, which is specifically aimed at extracting raster values:
+In the following examples, we use a package called **rasterstats**, which is specifically aimed at extracting raster values:
 
--   to *points* (@sec-extraction-to-points) or to *lines* (@sec-extraction-to-lines), via the `rasterstats.point_query` function, or
--   to *polygons* (@sec-extraction-to-polygons), via the `rasterstats.zonal_stats` function.
+-   To *points* (@sec-extraction-to-points) or to *lines* (@sec-extraction-to-lines), via the `rasterstats.point_query` function
+-   To *polygons* (@sec-extraction-to-polygons), via the `rasterstats.zonal_stats` function
 
 ### Extraction to points {#sec-extraction-to-points}
 
-The simplest type of raster extraction is extracting the values of raster cells at specific points.
-To demonstrate extraction to points, we will use `zion_points`, which contains a sample of 30 locations within the Zion National Park (@fig-zion-points):
+The simplest type of raster extraction is getting the values of raster cells at specific points.
+To demonstrate extraction to points, we will use `zion_points`, which contains a sample of 30 locations within the Zion National Park (@fig-zion-points).
 
 ```{python}
 #| label: fig-zion-points
 #| fig-cap: 30 point locations within the Zion National Park, with elevation in the background
-
 fig, ax = plt.subplots()
 rasterio.plot.show(src_srtm, ax=ax)
 zion_points.plot(ax=ax, color='black');
 ```
 
-The following expression extracts elevation values from `srtm.tif` according to `zion_points`, using `rasterstats.point_query`:
+The following expression extracts elevation values from `srtm.tif` according to `zion_points`, using `rasterstats.point_query`.
 
 ```{python}
 result = rasterstats.point_query(
@@ -270,19 +267,23 @@ result = rasterstats.point_query(
 )
 ```
 
+<!-- jn: explain the above arguments -->
+
 The resulting object is a `list` of raster values, corresponding to `zion_points`.
-For example, here are the elevations of the first five points:
+For example, here are the elevations of the first five points.
 
 ```{python}
 result[:5]
 ```
 
-To get a `GeoDataFrame` with the original points geometries (and other attributes, if any), as well as the extracted raster values, we can assign the extraction result into a new column:
+To get a `GeoDataFrame` with the original points geometries (and other attributes, if any), as well as the extracted raster values, we can assign the extraction result into a new column.
 
 ```{python}
 zion_points['elev'] = result
 zion_points
 ```
+
+<!-- jn: what with multilayer raster? -->
 
 ### Extraction to lines {#sec-extraction-to-lines}
 
@@ -291,45 +292,34 @@ The typical line extraction algorithm is to extract one value for each raster ce
 However, this particular approach is not recommended to obtain values along the transects, as it is hard to get the correct distance between each pair of extracted raster values.
 
 For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points using the "extraction to points" technique (@sec-extraction-to-points).
-To demonstrate this, the code below creates (see @sec-vector-data for recap) `zion_transect`, a straight line going from northwest to southeast of the Zion National Park (@fig-zion-transect-shapely):
+To demonstrate this, the code below creates (see @sec-vector-data for recap) `zion_transect`, a straight line going from northwest to southeast of the Zion National Park.
 
 ```{python}
-#| label: fig-zion-transect-shapely
-#| fig-cap: Transect through the Zion National Park
-
 coords = [[-113.2, 37.45], [-112.9, 37.2]]
 zion_transect = shapely.LineString(coords)
-zion_transect
-```
-
-Here is a printout demonstrating that this is a `'LineString'` geometry representing a straight line between two points:
-
-```{python}
 print(zion_transect)
 ```
-
-The line is also illustrated in the context of the raster in @fig-zion-transect.
 
 The utility of extracting heights from a linear selector is illustrated by imagining that you are planning a hike.
 The method demonstrated below provides an 'elevation profile' of the route (the line does not need to be straight), useful for estimating how long it will take due to long climbs.
 
-First, we need to create a layer `zion_transect_pnt` consisting of points along our line (`zion_transect`), at specified intervals (e.g., `250`).
+First, we need to create a layer consisting of points along our line (`zion_transect`), at specified intervals (e.g., `250`).
 To do that, we need to transform the line into a projected CRS (so that we work with true distances, in $m$), such as UTM.
-This requires going through a `GeoSeries`, as **shapely** geometries have no CRS definition nor concept of reprojection (see @sec-vector-layer-from-scratch):
+This requires going through a `GeoSeries`, as **shapely** geometries have no CRS definition nor concept of reprojection (see @sec-vector-layer-from-scratch).
 
 ```{python}
 zion_transect_utm = gpd.GeoSeries(zion_transect, crs=4326).to_crs(32612)
 zion_transect_utm = zion_transect_utm.iloc[0]
 ```
 
-The printout of the new geometry shows this is still a straight line between two points, only with coordinates in a projected CRS:
+The printout of the new geometry shows this is still a straight line between two points, only with coordinates in a projected CRS.
 
 ```{python}
 print(zion_transect_utm)
 ```
 
 Next, we need to calculate the distances, along the line, where points are going to be generated, using [`np.arange`](https://numpy.org/doc/stable/reference/generated/numpy.arange.html).
-This is a numeric sequence starting at `0`, going up to line `.length`, in steps of `250` ($m$):
+This is a numeric sequence starting at `0`, going up to line `.length`, in steps of `250` ($m$).
 
 ```{python}
 distances = np.arange(0, zion_transect_utm.length, 250)
@@ -337,18 +327,16 @@ distances[:7]  ## First 7 distance cutoff points
 ```
 
 The distances cutoffs are used to sample ("interpolate") points along the line.
-The **shapely** [`.interpolate`](https://shapely.readthedocs.io/en/stable/manual.html#object.interpolate) method is used to generate the points.
-The points are then reprojected back to the geographic CRS of the raster (EPSG:`4326`):
+The **shapely** [`.interpolate`](https://shapely.readthedocs.io/en/stable/manual.html#object.interpolate) method is used to generate the points, which then are reprojected back to the geographic CRS of the raster (EPSG:`4326`).
 
 ```{python}
 zion_transect_pnt = [zion_transect_utm.interpolate(distance) for distance in distances]
-zion_transect_pnt = gpd.GeoSeries(zion_transect_pnt, crs=32612)
-zion_transect_pnt = zion_transect_pnt.to_crs(src_srtm.crs)
+zion_transect_pnt = gpd.GeoSeries(zion_transect_pnt, crs=32612).to_crs(src_srtm.crs)
 zion_transect_pnt
 ```
 
 Finally, we extract the elevation values for each point in our transect and combine the information with `zion_transect_pnt` (after "promoting" it to a `GeoDataFrame`, to accommodate extra attributes), using the point extraction method shown earlier (@sec-extraction-to-points).
-We also attach the respective distance cutoff points `distances`:
+We also attach the respective distance cutoff points `distances`.
 
 ```{python}
 result = rasterstats.point_query(
@@ -364,7 +352,7 @@ zion_transect_pnt['elev'] = result
 zion_transect_pnt
 ```
 
-The information in `zion_transect_pnt`, namely the `'dist'` and `'elev'` attributes, can now be used to draw an elevation profile, as illustrated in @fig-zion-transect (b):
+The information in `zion_transect_pnt`, namely the `'dist'` and `'elev'` attributes, can now be used to draw an elevation profile, as illustrated in @fig-zion-transect.
 
 ```{python}
 #| label: fig-zion-transect
@@ -373,13 +361,11 @@ The information in `zion_transect_pnt`, namely the `'dist'` and `'elev'` attribu
 #| fig-subcap: 
 #| - Raster and a line transect
 #| - Extracted elevation profile
-
 # Raster and a line transect
 fig, ax = plt.subplots()
 rasterio.plot.show(src_srtm, ax=ax)
 gpd.GeoSeries(zion_transect).plot(ax=ax, color='black')
-zion.plot(ax=ax, color='none', edgecolor='darkgrey');
-
+zion.plot(ax=ax, color='none', edgecolor='white');
 # Elevation profile
 fig, ax = plt.subplots()
 zion_transect_pnt.set_index('dist')['elev'].plot(ax=ax)
@@ -387,12 +373,12 @@ ax.set_xlabel('Distance (m)')
 ax.set_ylabel('Elevation (m)');
 ```
 
-### Extraction to polygons
+### Extraction to polygons {#sec-extraction-to-polygons}
 
 The final type of geographic vector object for raster extraction is polygons.
 Like lines, polygons tend to return many raster values per polygon.
 For continuous rasters (@fig-raster-extract-to-polygon (a)), we typically want to generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions.
-The generation of raster summary statistics, by polygons, is demonstrated in the code below, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon), using `rasterstats.zonal_stats`:
+The generation of raster summary statistics, by polygons, is demonstrated in the code below using `rasterstats.zonal_stats`, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon).
 
 ```{python}
 result = rasterstats.zonal_stats(
@@ -405,7 +391,7 @@ result = rasterstats.zonal_stats(
 result
 ```
 
-Transformation of the `list` to a `DataFrame` (e.g., to attach the derived attributes to the original polygon layer), is straightforward:
+Transformation of the `list` to a `DataFrame` (e.g., to attach the derived attributes to the original polygon layer), is straightforward with the `pd.DataFrame` constructor.
 
 ```{python}
 pd.DataFrame(result)
@@ -426,7 +412,7 @@ Possible values other than `'mean'`, `'min'`, `'max'` are:
 See the [documentation](https://pythonhosted.org/rasterstats/manual.html#statistics) of `rasterstats.zonal_stats` for the complete list.
 Additionally, the `rasterstats.zonal_stats` function accepts user-defined functions for calculating any custom statistics.
 
-To count occurrences of categorical raster values within polygons (@fig-raster-extract-to-polygon (b)), we can use masking (@sec-raster-cropping) combined with `np.unique`, as follows:
+To count occurrences of categorical raster values within polygons (@fig-raster-extract-to-polygon (b)), we can use masking (@sec-raster-cropping) combined with `np.unique`, as follows.
 
 ```{python}
 out_image, out_transform = rasterio.mask.mask(
@@ -436,15 +422,12 @@ out_image, out_transform = rasterio.mask.mask(
     nodata=9999
 )
 counts = np.unique(out_image, return_counts=True)
-```
-
-According to the result, for example, pixel value `2` ("Developed" class) appears in `4205` pixels within the Zion polygon:
-
-```{python}
 counts
 ```
 
-The input data for raster to polygon extraction examples in this section are illustrated in @fig-raster-extract-to-polygon:
+According to the result, for example, pixel value `2` ("Developed" class) appears in `4205` pixels within the Zion polygon.
+
+@fig-raster-extract-to-polygon illustrates the two types of raster extraction to polygons described above.
 
 ```{python}
 #| label: fig-raster-extract-to-polygon
@@ -453,17 +436,17 @@ The input data for raster to polygon extraction examples in this section are ill
 #| fig-subcap: 
 #| - Continuous raster
 #| - Categorical raster
-
 # Continuous raster
 fig, ax = plt.subplots()
 rasterio.plot.show(src_srtm, ax=ax)
 zion.plot(ax=ax, color='none', edgecolor='black');
-
 # Categorical raster
 fig, ax = plt.subplots()
 rasterio.plot.show(src_nlcd, ax=ax, cmap='Set3')
 zion.to_crs(src_nlcd.crs).plot(ax=ax, color='none', edgecolor='black');
 ```
+
+<!-- jn: what is the state of plotting categorical rasters? can it read the color palette from a file? -->
 
 ## Rasterization {#sec-rasterization}
 
