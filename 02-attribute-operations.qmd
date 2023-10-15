@@ -566,24 +566,41 @@ np.nanmean(elev1)
 ```
 
 Raster value statistics can be visualized in a variety of ways.
-One approach is to "flatten" the raster values into a one-dimensional array (`flatten`), then use a graphical function such as `plt.hist` or `plt.boxplot` (from `matplotlib.pyplot`).
+One approach is to "flatten" the raster values into a one-dimensional array (`flatten`), then use a graphical function such as [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html) or [`plt.boxplot`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.boxplot.html) (from **matplotlib.pyplot**).
 For example, the following code section shows the distribution of values in `elev` using a histogram (@fig-raster-hist).
 
 ```{python}
 #| label: fig-raster-hist
-#| fig-cap: Distribution of cell values in `elev`
-x = elev.flatten()
-plt.hist(x);
+#| fig-cap: Distribution of cell values in continuous raster (`elev.tif`)
+plt.hist(elev.flatten());
 ```
 
 <!-- jn: how to deal with categorical rasters? -->
+<!-- md: great idea! now added -->
+
+To summarize the distribution of values in a categorical raster, we can calculate the frequencies of unique values, and draw them using a barplot. 
+Let's demonstrate using the `grain.tif` small categorical raster. 
 
 ```{python}
 grain = src_grain.read(1)
 grain
 ```
 
-...
+To calculate the frequency of unique values in an array, we use the [`np.unique`](https://numpy.org/doc/stable/reference/generated/numpy.unique.html) with the `return_counts=True` option. 
+The result is a `tuple` with two corresponding arrays: the unique values, and their counts.
+
+```{python}
+freq = np.unique(grain, return_counts=True)
+freq
+```
+
+These two arrays can be passed to the [`plt.bar`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html) function to draw a barplot, as shown in @fig-raster-bar.
+
+```{python}
+#| label: fig-raster-bar
+#| fig-cap: Distribution of cell values in categorical raster (`grain.tif`)
+plt.bar(*freq);
+```
 
 ## Exercises
 
