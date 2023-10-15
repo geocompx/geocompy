@@ -73,13 +73,7 @@ Another reason for simplifying objects is to reduce the amount of memory, disk s
 The **geopandas** package provides the `.simplify` method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count.
 `.simplify` uses the `tolerance` to control the level of generalization in map units [@douglas_algorithms_1973].
 
-For example, a simplified geometry of a `'LineString'` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the following command:
-
-```{python}
-seine_simp = seine.simplify(2000)
-```
-
-Figure @fig-simplify-lines illustrates the input and the result of the simplification:
+For example, a simplified geometry of a `'LineString'` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the `seine.simplify(2000)` command (@fig-simplify-lines).
 
 ```{python}
 #| label: fig-simplify-lines
@@ -88,13 +82,13 @@ Figure @fig-simplify-lines illustrates the input and the result of the simplific
 #| fig-subcap: 
 #| - Original
 #| - Simplified (tolerance = 2000 $m$)
-
+seine_simp = seine.simplify(2000)
 seine.plot();
 seine_simp.plot();
 ```
 
 The resulting `seine_simp` object is a copy of the original `seine` but with fewer vertices.
-This is apparent, with the result being visually simpler (@fig-simplify-lines, right) and consuming about twice less memory than the original object, as shown below:
+This is apparent, with the result being visually simpler (@fig-simplify-lines, right) and consuming about twice less memory than the original object, as shown in the comparison below.
 
 ```{python}
 print(f'Original: {sys.getsizeof(seine)} bytes')
@@ -103,8 +97,10 @@ print(f'Simplified: {sys.getsizeof(seine_simp)} bytes')
 
 Simplification is also applicable for polygons.
 This is illustrated using `us_states`, representing the contiguous United States.
-As we show in @sec-reproj-geo-data, **geopandas** (through **shapely**, and, ultimately, GEOS) assumes that the data is in a projected CRS and this could lead to unexpected results when applying distance-related operators.
-Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (EPSG:`9311`) (on the left in Figure @fig-simplify-polygons):
+As we show in @sec-reproj-geo-data, for many calculations **geopandas** (through **shapely**, and, ultimately, GEOS) assumes that the data is in a projected CRS and this could lead to unexpected results when applying distance-related operators.
+Therefore, the first step is to project the data into some adequate projected CRS, such as US National Atlas Equal Area (EPSG:`9311`) (on the left in Figure @fig-simplify-polygons), using `to_crs`.
+<!-- jn: why not EPSG:2163 as in geocompr? -->
+<!-- jn: ref to CRS chapter? -->
 
 ```{python}
 us_states9311 = us_states.to_crs(9311)
@@ -117,20 +113,20 @@ us_states_simp1 = us_states9311.simplify(100000)
 ```
 
 A limitation with `.simplify`, however, is that it simplifies objects on a per-geometry basis.
-This means the "topology" is lost, resulting in overlapping and "holey" areal units illustrated in @fig-simplify-polygons (b).
+This means the "topology" is lost, resulting in overlapping and "holey" areal units as illustrated in @fig-simplify-polygons (b).
 The `.toposimplify` method from package **topojson** provides an alternative that overcomes this issue.
 By [default](https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm) it uses the Douglas-Peucker algorithm like the `.simplify` method.
-Another algorithm, known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm [@visvalingam_line_1993], is also available in `.toposimplify`.
-The main advanatage of `.toposimplify`, however, is that it is topologically "aware".
-That is, it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained.
-The following code chunk uses `.toposimplify` to simplify `us_states9311`:
+However, another algorithm, known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm [@visvalingam_line_1993], is also available in `.toposimplify`.
+The main advanatage of `.toposimplify` is that it is topologically "aware": it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained.
+The following code chunk uses `.toposimplify` to simplify `us_states9311`.
+<!-- jn: add a sentence or two explaining the code chunk below -->
 
 ```{python}
 topo = tp.Topology(us_states9311, prequantize=False)
 us_states_simp2 = topo.toposimplify(100000).to_gdf()
 ```
 
-@fig-simplify-polygons demonstrates the two simplification methods applied to `us_states9311`.
+@fig-simplify-polygons compares the original input polygons and two simplification methods applied to `us_states9311`.
 
 ```{python}
 #| label: fig-simplify-polygons
@@ -140,7 +136,6 @@ us_states_simp2 = topo.toposimplify(100000).to_gdf()
 #| - Original
 #| - Simplified using **geopandas**
 #| - Simplified using **topojson**
-
 us_states9311.plot(color='lightgrey', edgecolor='black');
 us_states_simp1.plot(color='lightgrey', edgecolor='black');
 us_states_simp2.plot(color='lightgrey', edgecolor='black');
