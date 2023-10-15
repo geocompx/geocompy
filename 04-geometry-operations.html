@@ -1466,14 +1466,19 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-geo-ras" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="sec-geo-ras"><span class="header-section-number">4.3</span> Geometric operations on raster data</h2>
+<!-- jn: raster intro is missing (vector has an intro) -->
 <section id="sec-raster-geometric-intersections" class="level3" data-number="4.3.1">
 <h3 data-number="4.3.1" class="anchored" data-anchor-id="sec-raster-geometric-intersections"><span class="header-section-number">4.3.1</span> Geometric intersections</h3>
-<p>In <a href="#sec-spatial-subsetting-raster"><span class="quarto-unresolved-ref">sec-spatial-subsetting-raster</span></a> we have shown how to extract values from a raster overlaid by points, or by a matching boolean mask. In the different case when the area of interest is defined by any general (possibly non-matching) raster B, to retrieve a spatial output, that is, a (smaller) subset of raster A, we can:</p>
+<!-- jn: Michael, what is the difference between this section and the section about cropping and masking in the next chapter?  -->
+<!-- In geocompr, the difference is clean -- the first section is about cliping a raster with another raster; the second section is about cropping a raster with a vector. -->
+<!-- Here, the difference is not clear to me. -->
+<!-- If there is no difference, maybe we should either rewrite this section or remove it. -->
+<p>In <a href="#sec-spatial-subsetting-raster"><span class="quarto-unresolved-ref">sec-spatial-subsetting-raster</span></a> we have shown how to extract values from a raster overlaid by coordinates or by a matching boolean mask. A different case is when the area of interest is defined by any general (possibly non-matching) raster B, to retrieve a spatial output of a (smaller) subset of raster A we can:</p>
 <ul>
 <li>Extract the bounding box polygon of B (hereby, <code>clip</code>)</li>
 <li>Mask and crop A (hereby, <code>elev.tif</code>) using B (<a href="#sec-raster-cropping"><span class="quarto-unresolved-ref">sec-raster-cropping</span></a>)</li>
 </ul>
-<p>For example, suppose that we want to get a subset of the <code>elev.tif</code> raster using another, smaller, raster. For demonstration, let’s create (see <a href="#sec-raster-from-scratch"><span class="quarto-unresolved-ref">sec-raster-from-scratch</span></a>) that smaller raster, hereby named <code>clip</code>. We first create a <span class="math inline">\(3 \times 3\)</span> array of raster values:</p>
+<p>For example, suppose that we want to get a subset of the <code>elev.tif</code> raster using another, smaller, raster. To demonstrate this, let’s create (see <a href="#sec-raster-from-scratch"><span class="quarto-unresolved-ref">sec-raster-from-scratch</span></a>) that smaller raster, hereby named <code>clip</code>. First, we need to create a <span class="math inline">\(3 \times 3\)</span> array of raster values.</p>
 <div class="cell" data-execution_count="64">
 <div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>clip <span class="op">=</span> np.array([<span class="dv">1</span>] <span class="op">*</span> <span class="dv">9</span>).reshape(<span class="dv">3</span>, <span class="dv">3</span>)</span>
 <span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>clip</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1483,7 +1488,7 @@ dtype: geometry</code></pre>
        [1, 1, 1]])</code></pre>
 </div>
 </div>
-<p>Then, we define the transformation matrix, in such a way that <code>clip</code> intersects with <code>elev.tif</code> (<a href="#fig-raster-intersection">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection</span></a>):</p>
+<p>Then, we define the transformation matrix, in such a way that <code>clip</code> intersects with <code>elev.tif</code> (<a href="#fig-raster-intersection">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection</span></a>).</p>
 <div class="cell" data-execution_count="65">
 <div class="sourceCode cell-code" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
 <span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span><span class="fl">0.9</span>, </span>
@@ -1497,7 +1502,7 @@ dtype: geometry</code></pre>
        0.0, -0.3, 0.45)</code></pre>
 </div>
 </div>
-<p>Now, for subsetting, we will derive a <code>shapely</code> geometry representing the <code>clip</code> raster extent, using <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.array_bounds"><code>rasterio.transform.array_bounds</code></a>:</p>
+<p>Now, for subsetting, we will derive a <code>shapely</code> geometry representing the <code>clip</code> raster extent, using <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.array_bounds"><code>rasterio.transform.array_bounds</code></a>.</p>
 <div class="cell" data-execution_count="66">
 <div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>bbox <span class="op">=</span> rasterio.transform.array_bounds(</span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>    clip.shape[<span class="dv">1</span>], <span class="co"># columns</span></span>
@@ -1509,14 +1514,11 @@ dtype: geometry</code></pre>
 <pre><code>(0.9, -0.4499999999999999, 1.7999999999999998, 0.45)</code></pre>
 </div>
 </div>
-<p>The four numeric values can be transformed into a rectangular <code>shapely</code> geometry using <code>shapely.box</code> :</p>
+<p>The four numeric values can be transformed into a rectangular <code>shapely</code> geometry using <code>shapely.box</code> (<a href="#fig-raster-clip-bbox">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-clip-bbox</span></a>).</p>
 <div class="cell" data-execution_count="67">
-<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>bbox <span class="op">=</span> shapely.box(<span class="op">*</span>bbox)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The <code>bbox</code> geometry is shown in <a href="#fig-raster-clip-bbox">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-clip-bbox</span></a>:</p>
-<div class="cell" data-execution_count="68">
-<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>bbox</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="68">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>bbox <span class="op">=</span> shapely.box(<span class="op">*</span>bbox)</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>bbox</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="67">
 <div id="fig-raster-clip-bbox" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="04-geometry-operations_files/figure-html/fig-raster-clip-bbox-output-1.svg" class="img-fluid figure-img"></p>
@@ -1525,11 +1527,11 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p><a href="#fig-raster-intersection">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection</span></a> shows the alignment of <code>bbox</code> and <code>elev.tif</code>:</p>
-<div class="cell" data-execution_count="69">
-<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_elev, ax<span class="op">=</span>ax)</span>
-<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries([bbox]).plot(color<span class="op">=</span><span class="st">'none'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="#fig-raster-intersection">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection</span></a> shows the alignment of <code>bbox</code> and <code>elev.tif</code>.</p>
+<div class="cell" data-execution_count="68">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_elev, ax<span class="op">=</span>ax)</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries([bbox]).plot(color<span class="op">=</span><span class="st">'none'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-intersection" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1540,28 +1542,28 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <p>From here on, subsetting can be done using masking and cropping, just like with any vector layer other than <code>bbox</code>, regardless whether it is rectangular or not. We elaborate on masking and cropping in <a href="#sec-raster-cropping"><span class="quarto-unresolved-ref">sec-raster-cropping</span></a> (check that section for details about <code>rasterio.mask.mask</code>), but, for completeness, here is the code for the last step of masking and cropping:</p>
-<div class="cell" data-execution_count="70">
-<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.mask.mask(</span>
-<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>    src_elev, </span>
-<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>    [bbox], </span>
-<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>    crop<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>    all_touched<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>    nodata<span class="op">=</span><span class="dv">0</span></span>
-<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="69">
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.mask.mask(</span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>    src_elev, </span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>    [bbox], </span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>    crop<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>    all_touched<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>    nodata<span class="op">=</span><span class="dv">0</span></span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The resulting subset array <code>out_image</code> contains all pixels intersecting with <code>clip</code> <em>pixels</em> (not necessarily with the centroids!). However, due to the <code>all_touched=True</code> argument, those pixels which intersect with <code>clip</code>, but their centroid does not, retain their original values (e.g., <code>17</code>, <code>23</code>) rather than turned into “No Data” (e.g., <code>0</code>):</p>
-<div class="cell" data-execution_count="71">
-<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>out_image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="71">
+<p>The resulting subset array <code>out_image</code> contains all pixels intersecting with <code>clip</code> <em>pixels</em> (not necessarily with the centroids!). However, due to the <code>all_touched=True</code> argument, those pixels which intersect with <code>clip</code>, but their centroid does not, retain their original values (e.g., <code>17</code>, <code>23</code>) rather than turned into “No Data” (e.g., <code>0</code>).</p>
+<div class="cell" data-execution_count="70">
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>out_image</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="70">
 <pre><code>array([[[17, 18],
         [23, 24]]], dtype=uint8)</code></pre>
 </div>
 </div>
-<p>Therefore, in our case, subset <code>out_image</code> dimensions are <span class="math inline">\(2 \times 2\)</span> (<a href="#fig-raster-intersection2">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection2</span></a>; also see <a href="#fig-raster-intersection">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection</span></a>):</p>
-<div class="cell" data-execution_count="72">
-<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(out_image, transform<span class="op">=</span>out_transform, ax<span class="op">=</span>ax)</span>
-<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries([bbox]).plot(color<span class="op">=</span><span class="st">'none'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Therefore, in our case, subset <code>out_image</code> dimensions are <span class="math inline">\(2 \times 2\)</span> (<a href="#fig-raster-intersection2">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection2</span></a>; also see <a href="#fig-raster-intersection">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-intersection</span></a>).</p>
+<div class="cell" data-execution_count="71">
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(out_image, transform<span class="op">=</span>out_transform, ax<span class="op">=</span>ax)</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries([bbox]).plot(color<span class="op">=</span><span class="st">'none'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-intersection2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1574,12 +1576,12 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-extent-and-origin" class="level3" data-number="4.3.2">
 <h3 data-number="4.3.2" class="anchored" data-anchor-id="sec-extent-and-origin"><span class="header-section-number">4.3.2</span> Extent and origin</h3>
-<p>When merging or performing map algebra on rasters, their resolution, projection, origin and/or extent have to match. Otherwise, how should we add the values of one raster with a resolution of <code>0.2</code> decimal degrees to a second raster with a resolution of <code>1</code> decimal degree? The same problem arises when we would like to merge satellite imagery from different sensors with different projections and resolutions. We can deal with such mismatches by aligning the rasters. Typically, raster alignment is done through resampling—that way, it is guaranteed that the rasters match exactly (<a href="#sec-raster-resampling"><span class="quarto-unresolved-ref">sec-raster-resampling</span></a>). However, sometimes it can be useful to modify raster placement and extent “manually”, by adding or removing rows and columns, or by modifying the origin, that is, shifting the raster. Sometimes, there are reasons other than alignment with a second raster for manually modifying raster extent and placement. For example, it may be useful to add extra rows and columns to a raster prior to focal operations, so that it is easier to operate on the edges.</p>
+<p>When merging or performing map algebra on rasters, their resolution, projection, origin and/or extent have to match. Otherwise, how should we add the values of one raster with a resolution of <code>0.2</code> decimal degrees to a second raster with a resolution of <code>1</code> decimal degree? The same problem arises when we would like to merge satellite imagery from different sensors with different projections and resolutions. We can deal with such mismatches by aligning the rasters. Typically, raster alignment is done through resampling—that way, it is guaranteed that the rasters match exactly (<a href="#sec-raster-resampling"><span class="quarto-unresolved-ref">sec-raster-resampling</span></a>). However, sometimes it can be useful to modify raster placement and extent “manually”, by adding or removing rows and columns, or by modifying the origin, that is, slightly shifting the raster. Sometimes, there are reasons other than alignment with a second raster for manually modifying raster extent and placement. For example, it may be useful to add extra rows and columns to a raster prior to focal operations, so that it is easier to operate on the edges.</p>
 <p>Let’s demostrate the first operation, raster padding. First, we will read the array with the <code>elev.tif</code> values:</p>
-<div class="cell" data-execution_count="73">
-<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
-<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="73">
+<div class="cell" data-execution_count="72">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>r</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="72">
 <pre><code>array([[ 1,  2,  3,  4,  5,  6],
        [ 7,  8,  9, 10, 11, 12],
        [13, 14, 15, 16, 17, 18],
@@ -1589,12 +1591,12 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <p>To pad an <code>ndarray</code>, we can use the <code>np.pad</code> function. The function accepts an array, and a tuple of the form <code>((rows_top,rows_bottom),(columns_left, columns_right))</code>. Also, we can specify the value that’s being used for padding with <code>constant_values</code> (e.g., <code>18</code>). For example, here we pad <code>r</code> with one extra row and two extra columns, on both sides:</p>
-<div class="cell" data-execution_count="74">
-<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> <span class="dv">2</span></span>
-<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> np.pad(r, ((rows,rows),(cols,cols)), constant_values<span class="op">=</span><span class="dv">18</span>)</span>
-<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a>s</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="74">
+<div class="cell" data-execution_count="73">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> np.pad(r, ((rows,rows),(cols,cols)), constant_values<span class="op">=</span><span class="dv">18</span>)</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>s</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="73">
 <pre><code>array([[18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
        [18, 18,  1,  2,  3,  4,  5,  6, 18, 18],
        [18, 18,  7,  8,  9, 10, 11, 12, 18, 18],
@@ -1605,60 +1607,60 @@ dtype: geometry</code></pre>
        [18, 18, 18, 18, 18, 18, 18, 18, 18, 18]], dtype=uint8)</code></pre>
 </div>
 </div>
-<p>However, for <code>s</code> to be used in spatial operations, we also have to update its transformation matrix. Whenever we add extra columns on the left, or extra rows on top, the raster <em>origin</em> changes. To reflect this fact, we have to take to “original” origin and add the required multiple of pixel widths or heights (i.e., raster resolution steps).</p>
-<p>The transformation matrix of a raster is accessible from the raster file metadata (<a href="#sec-raster-from-scratch"><span class="quarto-unresolved-ref">sec-raster-from-scratch</span></a>) or, as a shortcut, through the <code>.transform</code> property of the raster file connection. For example, here is the transformation matrix of <code>elev.tif</code>:</p>
-<div class="cell" data-execution_count="75">
-<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>src_elev.transform </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="75">
+<!-- jn: why the object is named 's'? cannot we use a better name here? -->
+<p>However, for <code>s</code> to be used in spatial operations, we also have to update its transformation matrix. Whenever we add extra columns on the left, or extra rows on top, the raster <em>origin</em> changes. To reflect this fact, we have to take to “original” origin and add the required multiple of pixel widths or heights (i.e., raster resolution steps). The transformation matrix of a raster is accessible from the raster file metadata (<a href="#sec-raster-from-scratch"><span class="quarto-unresolved-ref">sec-raster-from-scratch</span></a>) or, as a shortcut, through the <code>.transform</code> property of the raster file connection. For example, the next code chunk shows the transformation matrix of <code>elev.tif</code>.</p>
+<div class="cell" data-execution_count="74">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>src_elev.transform </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="74">
 <pre><code>Affine(0.5, 0.0, -1.5,
        0.0, -0.5, 1.5)</code></pre>
 </div>
 </div>
-<p>From the transformation matrix, we can extract the origin:</p>
-<div class="cell" data-execution_count="76">
-<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>xmin, ymax <span class="op">=</span> src_elev.transform[<span class="dv">2</span>], src_elev.transform[<span class="dv">5</span>]</span>
-<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>xmin, ymax</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="76">
+<p>From the transformation matrix, we are able to extract the origin.</p>
+<div class="cell" data-execution_count="75">
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>xmin, ymax <span class="op">=</span> src_elev.transform[<span class="dv">2</span>], src_elev.transform[<span class="dv">5</span>]</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>xmin, ymax</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="75">
 <pre><code>(-1.5, 1.5)</code></pre>
 </div>
 </div>
-<p>And the resolution:</p>
-<div class="cell" data-execution_count="77">
-<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>dx, dy <span class="op">=</span> src_elev.transform[<span class="dv">0</span>], src_elev.transform[<span class="dv">4</span>]</span>
-<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>dx, dy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="77">
+<p>We can also get the resolution of the data, which is the distance between two adjacent pixels.</p>
+<div class="cell" data-execution_count="76">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>dx, dy <span class="op">=</span> src_elev.transform[<span class="dv">0</span>], src_elev.transform[<span class="dv">4</span>]</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a>dx, dy</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="76">
 <pre><code>(0.5, -0.5)</code></pre>
 </div>
 </div>
-<p>Now we can calculate the padded raster origin (<code>xmin_new,ymax_new</code>):</p>
-<div class="cell" data-execution_count="78">
-<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>xmin_new <span class="op">=</span> xmin <span class="op">-</span> dx <span class="op">*</span> cols</span>
-<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>ymax_new <span class="op">=</span> ymax <span class="op">-</span> dy <span class="op">*</span> rows</span>
-<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>xmin_new, ymax_new</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="78">
+<p>These two parts of information are enough to calculate the new origin (<code>xmin_new,ymax_new</code>) of the padded raster.</p>
+<div class="cell" data-execution_count="77">
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>xmin_new <span class="op">=</span> xmin <span class="op">-</span> dx <span class="op">*</span> cols</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>ymax_new <span class="op">=</span> ymax <span class="op">-</span> dy <span class="op">*</span> rows</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>xmin_new, ymax_new</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="77">
 <pre><code>(-2.5, 2.0)</code></pre>
 </div>
 </div>
 <p>Using the updated origin, we can update the transformation matrix (<a href="#sec-raster-from-scratch"><span class="quarto-unresolved-ref">sec-raster-from-scratch</span></a>). Keep in mind that the meaning of the last two arguments is <code>xsize</code>, <code>ysize</code>, so we need to pass the absolute value of <code>dy</code> (since it is negative).</p>
-<div class="cell" data-execution_count="79">
-<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
-<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin_new, </span>
-<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax_new, </span>
-<span id="cb100-4"><a href="#cb100-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>dx, </span>
-<span id="cb100-5"><a href="#cb100-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="bu">abs</span>(dy)</span>
-<span id="cb100-6"><a href="#cb100-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb100-7"><a href="#cb100-7" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="79">
+<div class="cell" data-execution_count="78">
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin_new, </span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax_new, </span>
+<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>dx, </span>
+<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="bu">abs</span>(dy)</span>
+<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="78">
 <pre><code>Affine(0.5, 0.0, -2.5,
        0.0, -0.5, 2.0)</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-shift-origin">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-shift-origin</span></a> shows the padded raster, with the outline of the original <code>elev.tif</code> (in red), demonstrating that the origin was shifted correctly and the <code>new_transform</code> works fine:</p>
-<div class="cell" data-execution_count="80">
-<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(s, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>elev_bbox <span class="op">=</span> gpd.GeoSeries(shapely.box(<span class="op">*</span>src_elev.bounds))</span>
-<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>elev_bbox.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="#fig-raster-shift-origin">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-shift-origin</span></a> shows the padded raster, with the outline of the original <code>elev.tif</code> (in red), demonstrating that the origin was shifted correctly and the <code>new_transform</code> works fine.</p>
+<div class="cell" data-execution_count="79">
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(s, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>elev_bbox <span class="op">=</span> gpd.GeoSeries(shapely.box(<span class="op">*</span>src_elev.bounds))</span>
+<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a>elev_bbox.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-shift-origin" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1668,35 +1670,35 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>We can shift a raster origin not just when padding, but in any other use case, just by changing its transformation matrix. The effect is that the raster is going to be shifted (which is analogous to <code>.translate</code> for shifting a vector layer, see <a href="#sec-affine-transformations"><span class="quarto-unresolved-ref">sec-affine-transformations</span></a>). Manually shifting a raster to arbitrary distance is rarely needed in real-life scenarios, but it is useful to know how to do it at least for better understanding the concept of <em>raster origin</em>. As an example, let’s shift the origin of <code>elev.tif</code> by <code>(-0.25,0.25)</code>. First, we calculate the new origin:</p>
-<div class="cell" data-execution_count="81">
-<div class="sourceCode cell-code" id="cb103"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>xmin_new <span class="op">=</span> xmin <span class="op">-</span> <span class="fl">0.25</span>  <span class="co"># shift xmin to the left</span></span>
-<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>ymax_new <span class="op">=</span> ymax <span class="op">+</span> <span class="fl">0.25</span>  <span class="co"># shift ymax upwards</span></span>
-<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a>xmin_new, ymax_new</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="81">
+<p>We can shift a raster origin not just when padding, but in any other use case, just by changing its transformation matrix. The effect is that the raster is going to be shifted (which is analogous to <code>.translate</code> for shifting a vector layer, see <a href="#sec-affine-transformations"><span class="quarto-unresolved-ref">sec-affine-transformations</span></a>). Manually shifting a raster to arbitrary distance is rarely needed in real-life scenarios, but it is useful to know how to do it at least for better understanding the concept of <em>raster origin</em>. As an example, let’s shift the origin of <code>elev.tif</code> by <code>(-0.25,0.25)</code>. First, we need to calculate the new origin.</p>
+<div class="cell" data-execution_count="80">
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>xmin_new <span class="op">=</span> xmin <span class="op">-</span> <span class="fl">0.25</span>  <span class="co"># shift xmin to the left</span></span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>ymax_new <span class="op">=</span> ymax <span class="op">+</span> <span class="fl">0.25</span>  <span class="co"># shift ymax upwards</span></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>xmin_new, ymax_new</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="80">
 <pre><code>(-1.75, 1.75)</code></pre>
 </div>
 </div>
-<p>To shift the origin in other directions change the two operators (<code>-</code>, <code>+</code>) accordingly.</p>
-<p>Then, same as when padding (see above), we create an updated transformation matrix:</p>
-<div class="cell" data-execution_count="82">
-<div class="sourceCode cell-code" id="cb105"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
-<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin_new, </span>
-<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax_new, </span>
-<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>dx, </span>
-<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="bu">abs</span>(dy)</span>
-<span id="cb105-6"><a href="#cb105-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb105-7"><a href="#cb105-7" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="82">
+<p>To shift the origin in other directions we should change the two operators (<code>-</code>, <code>+</code>) accordingly. <!-- jn: the above sentence as a block? --></p>
+<p>Then, same as when padding (see above), we create an updated transformation matrix.</p>
+<div class="cell" data-execution_count="81">
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin_new, </span>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax_new, </span>
+<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>dx, </span>
+<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span><span class="bu">abs</span>(dy)</span>
+<span id="cb104-6"><a href="#cb104-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb104-7"><a href="#cb104-7" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="81">
 <pre><code>Affine(0.5, 0.0, -1.75,
        0.0, -0.5, 1.75)</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-shift-origin2">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-shift-origin2</span></a> shows the shifted raster and the outline of the original <code>elev.tif</code> raster (in red):</p>
-<div class="cell" data-execution_count="83">
-<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>elev_bbox.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><a href="#fig-raster-shift-origin2">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-shift-origin2</span></a> shows the shifted raster and the outline of the original <code>elev.tif</code> raster (in red).</p>
+<div class="cell" data-execution_count="82">
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform, cmap<span class="op">=</span><span class="st">'Greys'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a>elev_bbox.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'red'</span>, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-shift-origin2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1709,46 +1711,47 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-raster-agg-disagg" class="level3" data-number="4.3.3">
 <h3 data-number="4.3.3" class="anchored" data-anchor-id="sec-raster-agg-disagg"><span class="header-section-number">4.3.3</span> Aggregation and disaggregation</h3>
-<p>Raster datasets vary based on their resolution, from high resolution datasets that enable individual trees to be seen, to low resolution datasets covering the whole Earth. Raster datasets can be transformed, to either decrease (aggregate), or increase (disaggregate), their resolution, for a number of reasons. For example, aggregation can be used to reduce computational resource requirements of raster storage and subsequent steps, while disaggregation can be used to match other datasets, or to add detail. As an example, we here change the spatial resolution of <code>dem.tif</code> by a factor of <code>5</code> (Figure <a href="#fig-raster-aggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-aggregate</span></a>).</p>
-<p>Raster aggregation is, in fact, a special case of raster resampling (see <a href="#sec-raster-resampling"><span class="quarto-unresolved-ref">sec-raster-resampling</span></a>), where the target raster grid is aligned with the original raster, only with coarser pixels. Conversely, raster resampling is the general case where the new grid is not necessarily an aggregation of the original one, but any other type of grid (such as a rotated and/or shifted one, etc.).</p>
-<p>To aggregate a raster using <code>rasterio</code>, we go through <a href="https://rasterio.readthedocs.io/en/stable/topics/resampling.html">two steps</a>:</p>
+<p>Raster datasets vary based on their resolution, from high resolution datasets that enable individual trees to be seen, to low resolution datasets covering large swaths of the Earth. Raster datasets can be transformed to either decrease (aggregate) or increase (disaggregate) their resolution, for a number of reasons. For example, aggregation can be used to reduce computational resource requirements of raster storage and subsequent steps, while disaggregation can be used to match other datasets, or to add detail. As an example, we here change the spatial resolution of <code>dem.tif</code> by a factor of <code>5</code> (<a href="#fig-raster-aggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-aggregate</span></a>).</p>
+<p>Raster aggregation is, in fact, a special case of raster resampling (see <a href="#sec-raster-resampling"><span class="quarto-unresolved-ref">sec-raster-resampling</span></a>), where the target raster grid is aligned with the original raster, only with coarser pixels. Conversely, raster resampling is the general case where the new grid is not necessarily an aggregation of the original one, but any other type of grid (such as a rotated and/or shifted one, etc.). <!-- jn: the above paragraph as a block? --></p>
+<p>To aggregate a raster using <strong>rasterio</strong>, we go through <a href="https://rasterio.readthedocs.io/en/stable/topics/resampling.html">two steps</a>:</p>
 <ul>
 <li>Reading the raster values (using <code>.read</code>) into an <code>out_shape</code> that is different from the original <code>.shape</code></li>
 <li>Updating the <code>transform</code> according to <code>out_shape</code></li>
 </ul>
-<p>Let’s demonstrate, using the <code>dem.tif</code> file. Note the original shape of the raster; it has <code>117</code> rows and <code>117</code> columns:</p>
-<div class="cell" data-execution_count="84">
-<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>src.read(<span class="dv">1</span>).shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="84">
+<p>Let’s demonstrate it, using the <code>dem.tif</code> file. Note the original shape of the raster; it has <code>117</code> rows and <code>117</code> columns.</p>
+<div class="cell" data-execution_count="83">
+<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>src.read(<span class="dv">1</span>).shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="83">
 <pre><code>(117, 117)</code></pre>
 </div>
 </div>
-<p>Also note the transform, which tells us that the raster resolution is 30.85 <span class="math inline">\(m\)</span>:</p>
-<div class="cell" data-execution_count="85">
-<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>src.transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="85">
+<p>Also note the transform, which tells us that the raster resolution is about 30.85 <span class="math inline">\(m\)</span>.</p>
+<div class="cell" data-execution_count="84">
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>src.transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="84">
 <pre><code>Affine(30.849999999999604, 0.0, 794599.1076146346,
        0.0, -30.84999999999363, 8935384.324602526)</code></pre>
 </div>
 </div>
-<p>To aggregate, instead of reading the raster values the usual way, as in <code>src.read(1)</code>, we can specify <code>out_shape</code> to read the values into a different shape. Here, we calculate a new shape which is downscaled by a factor of <code>5</code>, i.e., the number of rows and columns is multiplied by <code>0.2</code>. We must truncate any “partial” rows and columns, e.g., using <code>int</code>. Each new pixel is now obtained, or “resampled”, from <span class="math inline">\(\sim 5 \times 5 = \sim 25\)</span> “old” raster values. We can choose the resampling method through the <code>resampling</code> parameter. Here we use <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling"><code>rasterio.enums.Resampling.average</code></a>, i.e., the new “large” pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in <code>dem.tif</code>:</p>
-<div class="cell" data-execution_count="86">
-<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="fl">0.2</span></span>
-<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read(<span class="dv">1</span>,</span>
-<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
-<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.height <span class="op">*</span> factor),</span>
-<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.width <span class="op">*</span> factor)</span>
-<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a>        ),</span>
-<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.average</span>
-<span id="cb112-8"><a href="#cb112-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>To aggregate, instead of reading the raster values the usual way, as in <code>src.read(1)</code>, we can specify <code>out_shape</code> to read the values into a different shape. Here, we calculate a new shape which is downscaled by a factor of <code>5</code>, i.e., the number of rows and columns is multiplied by <code>0.2</code>. We must truncate any “partial” rows and columns, e.g., using <code>int</code>. Each new pixel is now obtained, or “resampled”, from <span class="math inline">\(\sim 5 \times 5 = \sim 25\)</span> “old” raster values. We can choose the resampling method through the <code>resampling</code> parameter. Here we use <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling"><code>rasterio.enums.Resampling.average</code></a>, i.e., the new “large” pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in <code>dem.tif</code>.</p>
+<div class="cell" data-execution_count="85">
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="fl">0.2</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src.read(<span class="dv">1</span>,</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.height <span class="op">*</span> factor),</span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.width <span class="op">*</span> factor)</span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.average</span>
+<span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>As expected, the resulting array <code>r</code> has ~5 times smaller dimensions, as shown below:</p>
-<div class="cell" data-execution_count="87">
-<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>r.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="87">
+<p>As expected, the resulting array <code>r</code> has ~5 times smaller dimensions, as shown below.</p>
+<div class="cell" data-execution_count="86">
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>r.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="86">
 <pre><code>(23, 23)</code></pre>
 </div>
 </div>
+<!-- jn: maybe it is worth moving this list to the next section and connect them to some explanations? here you can just mention that more options are mentioned in the next section -->
 <p>Other useful options for <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling"><code>resampling</code></a> include:</p>
 <ul>
 <li><code>rasterio.enums.Resampling.nearest</code>—Nearest neighbor resampling</li>
@@ -1762,23 +1765,23 @@ dtype: geometry</code></pre>
 <li><code>rasterio.enums.Resampling.sum</code>—Median resampling</li>
 </ul>
 <p>See below (<a href="#sec-raster-resampling"><span class="quarto-unresolved-ref">sec-raster-resampling</span></a>) for an explanation of these methods.</p>
-<p>What’s left to be done is the second step, to update the transform, taking into account the change in raster shape. This can be done as follows, using <code>.transform.scale</code>:</p>
-<div class="cell" data-execution_count="88">
-<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> src.transform <span class="op">*</span> src.transform.scale(</span>
-<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>    (src.width <span class="op">/</span> r.shape[<span class="dv">1</span>]),</span>
-<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a>    (src.height <span class="op">/</span> r.shape[<span class="dv">0</span>])</span>
-<span id="cb115-4"><a href="#cb115-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb115-5"><a href="#cb115-5" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="88">
+<p>What’s left to be done is the second step, to update the transform, taking into account the change in raster shape. This can be done as follows, using <code>.transform.scale</code>.</p>
+<div class="cell" data-execution_count="87">
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>new_transform <span class="op">=</span> src.transform <span class="op">*</span> src.transform.scale(</span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>    (src.width <span class="op">/</span> r.shape[<span class="dv">1</span>]),</span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>    (src.height <span class="op">/</span> r.shape[<span class="dv">0</span>])</span>
+<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a>new_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="87">
 <pre><code>Affine(156.93260869565017, 0.0, 794599.1076146346,
        0.0, -156.9326086956198, 8935384.324602526)</code></pre>
 </div>
 </div>
-<p>The original raster, and the aggregated one, are shown in <a href="#fig-raster-aggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-aggregate</span></a>:</p>
+<p><a href="#fig-raster-aggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-aggregate</span></a> shows the original raster and the aggregated one.</p>
 <div>
-<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src)<span class="op">;</span></span>
-<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div id="fig-raster-aggregate" class="cell quarto-layout-panel" data-execution_count="89">
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src)<span class="op">;</span></span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r, transform<span class="op">=</span>new_transform)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-raster-aggregate" class="cell quarto-layout-panel" data-execution_count="88">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
 <div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
@@ -1802,16 +1805,16 @@ dtype: geometry</code></pre>
 </figure>
 </div>
 </div>
-<p>This is a good opportunity to demonstrate exporting a raster with modified dimensions and transformation matrix. Here is how we can update the raster metadata required for writing:</p>
-<div class="cell" data-execution_count="90">
-<div class="sourceCode cell-code" id="cb118"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src.meta.copy()</span>
-<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
-<span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: new_transform,</span>
-<span id="cb118-4"><a href="#cb118-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: r.shape[<span class="dv">1</span>],</span>
-<span id="cb118-5"><a href="#cb118-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: r.shape[<span class="dv">0</span>],</span>
-<span id="cb118-6"><a href="#cb118-6" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb118-7"><a href="#cb118-7" aria-hidden="true" tabindex="-1"></a>dst_kwargs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="90">
+<p>This is a good opportunity to demonstrate exporting a raster with modified dimensions and transformation matrix. We can update the raster metadata required for writing with the <code>update</code> method.</p>
+<div class="cell" data-execution_count="89">
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src.meta.copy()</span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: new_transform,</span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: r.shape[<span class="dv">1</span>],</span>
+<span id="cb117-5"><a href="#cb117-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: r.shape[<span class="dv">0</span>],</span>
+<span id="cb117-6"><a href="#cb117-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb117-7"><a href="#cb117-7" aria-hidden="true" tabindex="-1"></a>dst_kwargs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="89">
 <pre><code>{'driver': 'GTiff',
  'dtype': 'float32',
  'nodata': nan,
@@ -1823,52 +1826,52 @@ dtype: geometry</code></pre>
         0.0, -156.9326086956198, 8935384.324602526)}</code></pre>
 </div>
 </div>
-<p>Then we can create a new file (<code>dem_agg5.tif</code>) in writing mode, and write the values from the aggregated array <code>r</code> into that file (see <a href="#sec-data-output-raster"><span class="quarto-unresolved-ref">sec-data-output-raster</span></a>):</p>
-<div class="cell" data-execution_count="91">
-<div class="sourceCode cell-code" id="cb120"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_agg5.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
-<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
-<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Then we can create a new file (<code>dem_agg5.tif</code>) in writing mode, and write the values from the aggregated array <code>r</code> into that file (see <a href="#sec-data-output-raster"><span class="quarto-unresolved-ref">sec-data-output-raster</span></a>). <!-- jn: some explanation is needed here: (a) what are **? (b) what is the meaning of 1 here? --></p>
+<div class="cell" data-execution_count="90">
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_agg5.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>dst.write(r, <span class="dv">1</span>)</span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The opposite operation, namely disaggregation, is when we increase the resolution of raster objects. Either of the supported resampling methods (see above) can be used. However, since we are not actually summarizing information but transferring the value of a large pixel into multiple small pixels, it makes sense to use either:</p>
+<p>The opposite operation, namely disaggregation, is when we increase the resolution of raster objects. Either of the supported resampling methods (see above) can be used. <!-- jn: update the above sentence after moving the resampling methods list to the next section --> However, since we are not actually summarizing information but transferring the value of a large pixel into multiple small pixels, it makes sense to use either:</p>
 <ul>
 <li>Nearest neighbor resampling (<code>rasterio.enums.Resampling.nearest</code>), when want to keep the original values as-is, since modifying them would be incorrect (such as in categorical rasters)</li>
-<li>Smoothing techniques, such as Bilinear resampling (<code>rasterio.enums.Resampling.bilinear</code>), when we would like the smaller pixels to reflect gradual change between the original values, e.g., when the disaggregated raster is used for visualization purposes</li>
+<li>Smoothing techniques, such as bilinear resampling (<code>rasterio.enums.Resampling.bilinear</code>), when we would like the smaller pixels to reflect gradual change between the original values, e.g., when the disaggregated raster is used for visualization purposes</li>
 </ul>
-<p>To disaggregate a raster, we go through exactly the same workflow as for aggregation, only using a different scaling factor, such as <code>factor=5</code> instead of <code>factor=0.2</code>, i.e., <em>increasing</em> the number of raster pixels instead of decreasing. In the example below, we disaggregate using bilinear interpolation, to get a smoothed high-resolution raster:</p>
-<div class="cell" data-execution_count="92">
-<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="dv">5</span></span>
-<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>r2 <span class="op">=</span> src.read(<span class="dv">1</span>,</span>
-<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
-<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.height <span class="op">*</span> factor),</span>
-<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.width <span class="op">*</span> factor)</span>
-<span id="cb121-6"><a href="#cb121-6" aria-hidden="true" tabindex="-1"></a>        ),</span>
-<span id="cb121-7"><a href="#cb121-7" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.bilinear</span>
-<span id="cb121-8"><a href="#cb121-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>To disaggregate a raster, we go through exactly the same workflow as for aggregation, only using a different scaling factor, such as <code>factor=5</code> instead of <code>factor=0.2</code>, i.e., <em>increasing</em> the number of raster pixels instead of decreasing. In the example below, we disaggregate using bilinear interpolation, to get a smoothed high-resolution raster.</p>
+<div class="cell" data-execution_count="91">
+<div class="sourceCode cell-code" id="cb120"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>r2 <span class="op">=</span> src.read(<span class="dv">1</span>,</span>
+<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>(</span>
+<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.height <span class="op">*</span> factor),</span>
+<span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">int</span>(src.width <span class="op">*</span> factor)</span>
+<span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.bilinear</span>
+<span id="cb120-8"><a href="#cb120-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Naturally, the dimensions of the disaggregated raster are this time ~5 times <em>bigger</em> than the original ones:</p>
-<div class="cell" data-execution_count="93">
-<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a>r2.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="93">
+<p>As expected, the dimensions of the disaggregated raster are this time ~5 times <em>bigger</em> than the original ones.</p>
+<div class="cell" data-execution_count="92">
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>r2.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="92">
 <pre><code>(585, 585)</code></pre>
 </div>
 </div>
-<p>And here is the same expression as shown for aggregation, to calculate the new transform:</p>
-<div class="cell" data-execution_count="94">
-<div class="sourceCode cell-code" id="cb124"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a>new_transform2 <span class="op">=</span> src.transform <span class="op">*</span> src.transform.scale(</span>
-<span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a>    (src.width <span class="op">/</span> r2.shape[<span class="dv">1</span>]),</span>
-<span id="cb124-3"><a href="#cb124-3" aria-hidden="true" tabindex="-1"></a>    (src.height <span class="op">/</span> r2.shape[<span class="dv">0</span>])</span>
-<span id="cb124-4"><a href="#cb124-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb124-5"><a href="#cb124-5" aria-hidden="true" tabindex="-1"></a>new_transform2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="94">
+<p>To calculate the new transform, we use the same expression as for aggregation, only with the new <code>r2</code> shape.</p>
+<div class="cell" data-execution_count="93">
+<div class="sourceCode cell-code" id="cb123"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a>new_transform2 <span class="op">=</span> src.transform <span class="op">*</span> src.transform.scale(</span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>    (src.width <span class="op">/</span> r2.shape[<span class="dv">1</span>]),</span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a>    (src.height <span class="op">/</span> r2.shape[<span class="dv">0</span>])</span>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a>new_transform2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="93">
 <pre><code>Affine(6.169999999999921, 0.0, 794599.1076146346,
        0.0, -6.169999999998726, 8935384.324602526)</code></pre>
 </div>
 </div>
-<p>The original raster <code>dem.tif</code> was already quite detailed, so it would be difficult to see any difference when plotting it along with the disaggregation result. A zoom-in of a small section of the rasters works better. Here we can see the top-left corner of the original raster, and the disaggregated one (<a href="#fig-raster-disaggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-disaggregate</span></a>), demonstrating the increase in the number of pixels through disaggregation:</p>
+<p>The original raster <code>dem.tif</code> was already quite detailed, so it would be difficult to see any difference when plotting it along with the disaggregation result. A zoom-in of a small section of the rasters works better. <a href="#fig-raster-disaggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-disaggregate</span></a> allows us to see the top-left corner of the original raster and the disaggregated one, demonstrating the increase in the number of pixels through disaggregation.</p>
 <div>
-<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src.read(<span class="dv">1</span>)[:<span class="dv">5</span>, :<span class="dv">5</span>], transform<span class="op">=</span>src.transform)<span class="op">;</span></span>
-<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r2[:<span class="dv">25</span>, :<span class="dv">25</span>], transform<span class="op">=</span>new_transform2)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div id="fig-raster-disaggregate" class="cell quarto-layout-panel" data-execution_count="95">
+<div class="sourceCode cell-code" id="cb125"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src.read(<span class="dv">1</span>)[:<span class="dv">5</span>, :<span class="dv">5</span>], transform<span class="op">=</span>src.transform)<span class="op">;</span></span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(r2[:<span class="dv">25</span>, :<span class="dv">25</span>], transform<span class="op">=</span>new_transform2)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-raster-disaggregate" class="cell quarto-layout-panel" data-execution_count="94">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
 <div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
@@ -1892,120 +1895,119 @@ dtype: geometry</code></pre>
 </figure>
 </div>
 </div>
-<p>Code to export the disaggregated raster would be identical to the one used above for the aggregated raster, so we omit it to save space.</p>
+<p>Code to export the disaggregated raster would be identical to the one used above for the aggregated raster.</p>
 </section>
 <section id="sec-raster-resampling" class="level3" data-number="4.3.4">
 <h3 data-number="4.3.4" class="anchored" data-anchor-id="sec-raster-resampling"><span class="header-section-number">4.3.4</span> Resampling</h3>
 <p>Raster aggregation and disaggregation (<a href="#sec-raster-agg-disagg"><span class="quarto-unresolved-ref">sec-raster-agg-disagg</span></a>) are only suitable when we want to change just the resolution of our raster by a fixed factor. However, what to do when we have two or more rasters with different resolutions and origins? This is the role of resampling—a process of computing values for new pixel locations. In short, this process takes the values of our original raster and recalculates new values for a target raster with custom resolution and origin (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>).</p>
 <p>There are several methods for estimating values for a raster with different resolutions/origins (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>). The main resampling methods include:</p>
 <ul>
-<li>Nearest neighbor: assigns the value of the nearest cell of the original raster to the cell of the target one. This is a fast simple technique that is usually suitable for resampling categorical rasters.</li>
-<li>Bilinear interpolation: assigns a weighted average of the four nearest cells from the original raster to the cell of the target one. This is the fastest method that is appropriate for continuous rasters.</li>
-<li>Cubic interpolation: uses values of the 16 nearest cells of the original raster to determine the output cell value, applying third-order polynomial functions. Used for continuous rasters and results in a smoother surface compared to bilinear interpolation, but is computationally more demanding.</li>
-<li>Cubic spline interpolation: also uses values of the 16 nearest cells of the original raster to determine the output cell value, but applies cubic splines (piecewise third-order polynomial functions). Used for continuous rasters.</li>
-<li>Lanczos windowed sinc resampling: uses values of the 36 nearest cells of the original raster to determine the output cell value. Used for continuous rasters.</li>
-<li>Additionally, we can use straightforward summary methods, taking into account all pixels that coincide with the target pixel, such as average (<a href="#fig-raster-aggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-aggregate</span></a>), minimum, maximum (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>), median, mode, and sum.</li>
+<li>Nearest neighbor: assigns the value of the nearest cell of the original raster to the cell of the target one. This is a fast simple technique that is usually suitable for resampling categorical rasters</li>
+<li>Bilinear interpolation: assigns a weighted average of the four nearest cells from the original raster to the cell of the target one. This is the fastest method that is appropriate for continuous rasters</li>
+<li>Cubic interpolation: uses values of the 16 nearest cells of the original raster to determine the output cell value, applying third-order polynomial functions. Used for continuous rasters and results in a smoother surface compared to bilinear interpolation, but is computationally more demanding</li>
+<li>Cubic spline interpolation: also uses values of the 16 nearest cells of the original raster to determine the output cell value, but applies cubic splines (piecewise third-order polynomial functions). Used for continuous rasters</li>
+<li>Lanczos windowed sinc resampling: uses values of the 36 nearest cells of the original raster to determine the output cell value. Used for continuous rasters</li>
+<li>Additionally, we can use straightforward summary methods, taking into account all pixels that coincide with the target pixel, such as average (<a href="#fig-raster-aggregate">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-aggregate</span></a>), minimum, maximum (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>), median, mode, and sum</li>
 </ul>
 <p>The above explanation highlights that only nearest neighbor resampling is suitable for categorical rasters, while all remaining methods can be used (with different outcomes) for continuous rasters.</p>
-<p>With <code>rasterio</code>, resampling can be done using function <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.warp.html#rasterio.warp.reproject"><code>rasterio.warp.reproject</code></a>. To clarify this naming convention, note that raster <em>reprojection</em> is not fundamentally different from <em>resampling</em>—the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection). In other words, reprojection is <em>resampling</em> into a grid that is in a different CRS. Accordingly, both resampling and reprojection are done using the same function <code>rasterio.warp.reproject</code>. We will demonstrate reprojection using <code>rasterio.warp.reproject</code> later on (<a href="#sec-reprojecting-raster-geometries"><span class="quarto-unresolved-ref">sec-reprojecting-raster-geometries</span></a>).</p>
+<!-- jn: you explain here the "reproject" part of the name; maybe it would be also introduce the "warp" part of the name as well? -->
+<p>With <strong>rasterio</strong>, resampling can be done using the <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.warp.html#rasterio.warp.reproject"><code>rasterio.warp.reproject</code></a> function . To clarify this naming convention, note that raster <em>reprojection</em> is not fundamentally different from <em>resampling</em>—the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection). In other words, reprojection is <em>resampling</em> into a grid that is in a different CRS. Accordingly, both resampling and reprojection are done using the same function <code>rasterio.warp.reproject</code>. We will demonstrate reprojection using <code>rasterio.warp.reproject</code> later in <a href="#sec-reprojecting-raster-geometries"><span class="quarto-unresolved-ref">sec-reprojecting-raster-geometries</span></a>.</p>
 <p>The information required for <code>rasterio.warp.reproject</code>, whether we are resampling or reprojecting, is:</p>
 <ul>
-<li>The source and target <em>CRS</em>. These may be identical, when resampling, or different, when reprojecting.</li>
+<li>The source and target <em>CRS</em>. These may be identical, when resampling, or different, when reprojecting</li>
 <li>The source and target <em>transform</em></li>
 </ul>
-<p>Importantly, <code>rasterio.warp.reproject</code> can work with file connections, such as a connection to an output file in write (<code>'w'</code>) mode. This makes the function efficient for large rasters.</p>
-<p>The target and destination CRS are straightforward to specify, depending on our choice. The source transform is also available, e.g., through the <code>.transform</code> property of the source file connection. The only complicated part is to figure out the <em>destination transform</em>. When resampling, the transform is typically derived either from a <em>template</em> raster, such as an existing raster file that we would like our origin raster to match, or from a numeric specification of our target grid (see below). Otherwise, when the exact grid is not of importance, we can simply aggregate or disaggregate our raster as shown above (<a href="#sec-raster-agg-disagg"><span class="quarto-unresolved-ref">sec-raster-agg-disagg</span></a>). (Note that when <em>reprojecting</em>, the target transform is not as straightforward to figure out, therefore we further use the <code>rasterio.warp.calculate_default_transform</code> function to calculate it, as will be shown in <a href="#sec-reprojecting-raster-geometries"><span class="quarto-unresolved-ref">sec-reprojecting-raster-geometries</span></a>.)</p>
-<p>Let’s demonstrate resampling into a destination grid which is specified through numeric constraints, such as the extent and resolution. These could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match. Note that the resolution of the destination grid is ~10 times more coarse (300 <span class="math inline">\(m\)</span>) than the original resolution of <code>dem.tif</code> (~30 <span class="math inline">\(m\)</span>) (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>):</p>
-<div class="cell" data-execution_count="96">
-<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a>xmin <span class="op">=</span> <span class="dv">794650</span></span>
-<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a>xmax <span class="op">=</span> <span class="dv">798250</span></span>
-<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a>ymin <span class="op">=</span> <span class="dv">8931750</span> </span>
-<span id="cb127-4"><a href="#cb127-4" aria-hidden="true" tabindex="-1"></a>ymax <span class="op">=</span> <span class="dv">8935350</span></span>
-<span id="cb127-5"><a href="#cb127-5" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> <span class="dv">300</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Importantly, <code>rasterio.warp.reproject</code> can work with file connections, such as a connection to an output file in write (<code>'w'</code>) mode. This makes the function efficient for large rasters. <!-- jn: maybe the above sentence could be a block? --></p>
+<p>The target and destination CRS are straightforward to specify, depending on our choice. The source transform is also available, e.g., through the <code>.transform</code> property of the source file connection. The only complicated part is to figure out the <em>destination transform</em>. When resampling, the transform is typically derived either from a <em>template</em> raster, such as an existing raster file that we would like our origin raster to match, or from a numeric specification of our target grid (see below). Otherwise, when the exact grid is not of importance, we can simply aggregate or disaggregate our raster as shown above (<a href="#sec-raster-agg-disagg"><span class="quarto-unresolved-ref">sec-raster-agg-disagg</span></a>). (Note that when <em>reprojecting</em>, the target transform is not as straightforward to figure out, therefore we further use the <code>rasterio.warp.calculate_default_transform</code> function to compute it, as will be shown in <a href="#sec-reprojecting-raster-geometries"><span class="quarto-unresolved-ref">sec-reprojecting-raster-geometries</span></a>.)</p>
+<p>Let’s demonstrate resampling into a destination grid which is specified through numeric constraints, such as the extent and resolution. These could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match. Note that the resolution of the destination grid is ~10 times more coarse (300 <span class="math inline">\(m\)</span>) than the original resolution of <code>dem.tif</code> (~30 <span class="math inline">\(m\)</span>) (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>).</p>
+<div class="cell" data-execution_count="95">
+<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a>xmin <span class="op">=</span> <span class="dv">794650</span></span>
+<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a>xmax <span class="op">=</span> <span class="dv">798250</span></span>
+<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a>ymin <span class="op">=</span> <span class="dv">8931750</span> </span>
+<span id="cb126-4"><a href="#cb126-4" aria-hidden="true" tabindex="-1"></a>ymax <span class="op">=</span> <span class="dv">8935350</span></span>
+<span id="cb126-5"><a href="#cb126-5" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> <span class="dv">300</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The corresponding transform based on these constraints can be created using the <code>rasterio.transform.from_origin</code> function, as follows:</p>
-<div class="cell" data-execution_count="97">
-<div class="sourceCode cell-code" id="cb128"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a>dst_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
-<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin, </span>
-<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax, </span>
-<span id="cb128-4"><a href="#cb128-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>res, </span>
-<span id="cb128-5"><a href="#cb128-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span>res</span>
-<span id="cb128-6"><a href="#cb128-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb128-7"><a href="#cb128-7" aria-hidden="true" tabindex="-1"></a>dst_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="97">
+<div class="cell" data-execution_count="96">
+<div class="sourceCode cell-code" id="cb127"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a>dst_transform <span class="op">=</span> rasterio.transform.from_origin(</span>
+<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a>    west<span class="op">=</span>xmin, </span>
+<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a>    north<span class="op">=</span>ymax, </span>
+<span id="cb127-4"><a href="#cb127-4" aria-hidden="true" tabindex="-1"></a>    xsize<span class="op">=</span>res, </span>
+<span id="cb127-5"><a href="#cb127-5" aria-hidden="true" tabindex="-1"></a>    ysize<span class="op">=</span>res</span>
+<span id="cb127-6"><a href="#cb127-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb127-7"><a href="#cb127-7" aria-hidden="true" tabindex="-1"></a>dst_transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="96">
 <pre><code>Affine(300.0, 0.0, 794650.0,
        0.0, -300.0, 8935350.0)</code></pre>
 </div>
 </div>
 <p>Again, note that in case we needed to resample into a grid specified by an existing “template” raster, we could skip this step and simply read the transform from the template file, as in <code>rasterio.open('template.tif').transform</code>.</p>
-<p>We move on to creating the destination file connection. For that, we also have to know the raster dimensions. These can be derived from the extent and the resolution, as follows:</p>
-<div class="cell" data-execution_count="98">
-<div class="sourceCode cell-code" id="cb130"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> <span class="bu">int</span>((xmax <span class="op">-</span> xmin) <span class="op">/</span> res)</span>
-<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>height <span class="op">=</span> <span class="bu">int</span>((ymax <span class="op">-</span> ymin) <span class="op">/</span> res)</span>
-<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a>width, height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="98">
+<p>Now, we can move on to creating the destination file connection. For that, we also have to know the raster dimensions that can be derived from the extent and the resolution.</p>
+<div class="cell" data-execution_count="97">
+<div class="sourceCode cell-code" id="cb129"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> <span class="bu">int</span>((xmax <span class="op">-</span> xmin) <span class="op">/</span> res)</span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a>height <span class="op">=</span> <span class="bu">int</span>((ymax <span class="op">-</span> ymin) <span class="op">/</span> res)</span>
+<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a>width, height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="97">
 <pre><code>(12, 12)</code></pre>
 </div>
 </div>
-<p>Now we can create the destination file connection. We are using the same metadata as the source file, except for the dimensions and the transform, which are going to be different and reflecting the resampling process:</p>
-<div class="cell" data-execution_count="99">
-<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src.meta.copy()</span>
-<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
-<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: dst_transform,</span>
-<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: width,</span>
-<span id="cb132-5"><a href="#cb132-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: height</span>
-<span id="cb132-6"><a href="#cb132-6" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb132-7"><a href="#cb132-7" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_nearest.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now we can create the destination file connection. We are using the same metadata as the source file, except for the dimensions and the transform, which are going to be different and reflecting the resampling process.</p>
+<div class="cell" data-execution_count="98">
+<div class="sourceCode cell-code" id="cb131"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src.meta.copy()</span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'transform'</span>: dst_transform,</span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'width'</span>: width,</span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'height'</span>: height</span>
+<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_nearest.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Finally, we reproject using function <code>rasterio.warp.reproject</code>. Note that the source and destination are specified using <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.html#rasterio.band"><code>rasterio.band</code></a> applied on either the file connection, reflecting the fact that we operate on a specific layer of the rasters. The resampling method being used here is nearest neighbor resampling (<code>rasterio.enums.Resampling.nearest</code>):</p>
-<div class="cell" data-execution_count="100">
-<div class="sourceCode cell-code" id="cb133"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
-<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src, <span class="dv">1</span>),</span>
-<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst, <span class="dv">1</span>),</span>
-<span id="cb133-4"><a href="#cb133-4" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src.transform,</span>
-<span id="cb133-5"><a href="#cb133-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src.crs,</span>
-<span id="cb133-6"><a href="#cb133-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
-<span id="cb133-7"><a href="#cb133-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>src.crs,</span>
-<span id="cb133-8"><a href="#cb133-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
-<span id="cb133-9"><a href="#cb133-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="100">
+<p>Finally, we reproject using function <code>rasterio.warp.reproject</code>. Note that the source and destination are specified using <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.html#rasterio.band"><code>rasterio.band</code></a> applied on either the file connection, reflecting the fact that we operate on a specific layer of the rasters. The resampling method being used here is nearest neighbor resampling (<code>rasterio.enums.Resampling.nearest</code>).</p>
+<div class="cell" data-execution_count="99">
+<div class="sourceCode cell-code" id="cb132"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
+<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src, <span class="dv">1</span>),</span>
+<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst, <span class="dv">1</span>),</span>
+<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src.transform,</span>
+<span id="cb132-5"><a href="#cb132-5" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src.crs,</span>
+<span id="cb132-6"><a href="#cb132-6" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
+<span id="cb132-7"><a href="#cb132-7" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>src.crs,</span>
+<span id="cb132-8"><a href="#cb132-8" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.nearest</span>
+<span id="cb132-9"><a href="#cb132-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="99">
 <pre><code>(Band(ds=&lt;open DatasetWriter name='output/dem_resample_nearest.tif' mode='w'&gt;, bidx=1, dtype='float32', shape=(12, 12)),
  Affine(300.0, 0.0, 794650.0,
         0.0, -300.0, 8935350.0))</code></pre>
 </div>
 </div>
-<p>In the end, we close the file. There have now created a new file <code>output/dem_resample_nearest.tif</code> with the resampling result (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>):</p>
+<p>In the end, we close the file and create a new file <code>output/dem_resample_nearest.tif</code> with the resampling result (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>). <!-- jn: close the file or the file connection? --></p>
+<div class="cell" data-execution_count="100">
+<div class="sourceCode cell-code" id="cb134"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here is another code section just to demonstrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. Note that the transform is identical (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>), all arguments other than the resampling method are identical. <!-- jn: something is wrong with the above sentence... --></p>
 <div class="cell" data-execution_count="101">
-<div class="sourceCode cell-code" id="cb135"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb135"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_maximum.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
+<span id="cb135-3"><a href="#cb135-3" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src, <span class="dv">1</span>),</span>
+<span id="cb135-4"><a href="#cb135-4" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst, <span class="dv">1</span>),</span>
+<span id="cb135-5"><a href="#cb135-5" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src.transform,</span>
+<span id="cb135-6"><a href="#cb135-6" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src.crs,</span>
+<span id="cb135-7"><a href="#cb135-7" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
+<span id="cb135-8"><a href="#cb135-8" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>src.crs,</span>
+<span id="cb135-9"><a href="#cb135-9" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.<span class="bu">max</span></span>
+<span id="cb135-10"><a href="#cb135-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb135-11"><a href="#cb135-11" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Here is another code section just to demonstrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with. Note that the transform is identical (<a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>), all arguments other than the resampling method are identical:</p>
-<div class="cell" data-execution_count="102">
-<div class="sourceCode cell-code" id="cb136"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a>dst <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_maximum.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
-<span id="cb136-2"><a href="#cb136-2" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
-<span id="cb136-3"><a href="#cb136-3" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src, <span class="dv">1</span>),</span>
-<span id="cb136-4"><a href="#cb136-4" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst, <span class="dv">1</span>),</span>
-<span id="cb136-5"><a href="#cb136-5" aria-hidden="true" tabindex="-1"></a>    src_transform<span class="op">=</span>src.transform,</span>
-<span id="cb136-6"><a href="#cb136-6" aria-hidden="true" tabindex="-1"></a>    src_crs<span class="op">=</span>src.crs,</span>
-<span id="cb136-7"><a href="#cb136-7" aria-hidden="true" tabindex="-1"></a>    dst_transform<span class="op">=</span>dst_transform,</span>
-<span id="cb136-8"><a href="#cb136-8" aria-hidden="true" tabindex="-1"></a>    dst_crs<span class="op">=</span>src.crs,</span>
-<span id="cb136-9"><a href="#cb136-9" aria-hidden="true" tabindex="-1"></a>    resampling<span class="op">=</span>rasterio.enums.Resampling.<span class="bu">max</span></span>
-<span id="cb136-10"><a href="#cb136-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb136-11"><a href="#cb136-11" aria-hidden="true" tabindex="-1"></a>dst.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The original raster <code>dem.tif</code>, and the two resampling results <code>dem_resample_nearest.tif</code> and <code>dem_resample_maximum.tif</code>, are shown in <a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>:</p>
+<p>The original raster <code>dem.tif</code>, and the two resampling results <code>dem_resample_nearest.tif</code> and <code>dem_resample_maximum.tif</code>, are shown in <a href="#fig-raster-resample">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-resample</span></a>.</p>
 <div>
-<div class="sourceCode cell-code" id="cb137"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input</span></span>
-<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
-<span id="cb137-3"><a href="#cb137-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src, ax<span class="op">=</span>ax)<span class="op">;</span></span>
-<span id="cb137-4"><a href="#cb137-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb137-5"><a href="#cb137-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Nearest neighbor</span></span>
-<span id="cb137-6"><a href="#cb137-6" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
-<span id="cb137-7"><a href="#cb137-7" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_nearest.tif'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
-<span id="cb137-8"><a href="#cb137-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb137-9"><a href="#cb137-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Maximum</span></span>
-<span id="cb137-10"><a href="#cb137-10" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
-<span id="cb137-11"><a href="#cb137-11" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_maximum.tif'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div id="fig-raster-resample" class="cell quarto-layout-panel" data-execution_count="103">
+<div class="sourceCode cell-code" id="cb136"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input</span></span>
+<span id="cb136-2"><a href="#cb136-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
+<span id="cb136-3"><a href="#cb136-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src, ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb136-4"><a href="#cb136-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Nearest neighbor</span></span>
+<span id="cb136-5"><a href="#cb136-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
+<span id="cb136-6"><a href="#cb136-6" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_nearest.tif'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb136-7"><a href="#cb136-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Maximum</span></span>
+<span id="cb136-8"><a href="#cb136-8" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
+<span id="cb136-9"><a href="#cb136-9" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(rasterio.<span class="bu">open</span>(<span class="st">'output/dem_resample_maximum.tif'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="fig-raster-resample" class="cell quarto-layout-panel" data-execution_count="102">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
 <div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.5%;justify-content: center;">
