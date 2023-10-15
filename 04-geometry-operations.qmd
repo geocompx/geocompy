@@ -150,24 +150,23 @@ All of them create single point representations of more complex vector objects.
 The most commonly used centroid operation is the geographic centroid.
 This type of centroid operation (often referred to as 'the centroid') represents the center of mass in a spatial object (think of balancing a plate on your finger).
 Geographic centroids have many uses, for example to create a simple point representation of complex geometries, to estimate distances between polygons, or to specify the location where polygon text labels are placed.
-Centroids of the geometries in a `GeoSeries` or a `GeoDataFrame` are accessible through the `.centroid` property, as demonstrated in the code below, which generates the geographic centroids of regions in New Zealand and tributaries to the River Seine, illustrated with black points in @fig-centroid-pnt-on-surface:
+Centroids of the geometries in a `GeoSeries` or a `GeoDataFrame` are accessible through the `.centroid` property, as demonstrated in the code below, which generates the geographic centroids of regions in New Zealand and tributaries to the River Seine (black points in @fig-centroid-pnt-on-surface).
 
 ```{python}
 nz_centroid = nz.centroid
 seine_centroid = seine.centroid
 ```
 
-Sometimes the geographic centroid falls outside the boundaries of their parent objects (think of a doughnut).
-In such cases 'point on surface' operations can be used to guarantee the point will be in the parent object (e.g., for labeling irregular multipolygon objects such as island states), as illustrated by the red points in @fig-centroid-pnt-on-surface.
+Sometimes the geographic centroid falls outside the boundaries of their parent objects (think of vector data in shape of a doughnut).
+In such cases 'point on surface' operations, created with the `.representative_point` method, can be used to guarantee the point will be in the parent object (e.g., for labeling irregular multipolygon objects such as island states), as illustrated by the red points in @fig-centroid-pnt-on-surface.
 Notice that these red points always lie on their parent objects.
-They were created with the `.representative_point` method, as follows:
 
 ```{python}
 nz_pos = nz.representative_point()
 seine_pos = seine.representative_point()
 ```
 
-The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surface:
+The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surface.
 
 ```{python}
 #| label: fig-centroid-pnt-on-surface
@@ -176,12 +175,10 @@ The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surf
 #| fig-subcap: 
 #| - New Zealand
 #| - Seine
-
 # New Zealand
 base = nz.plot(color='white', edgecolor='lightgrey')
 nz_centroid.plot(ax=base, color='None', edgecolor='black')
 nz_pos.plot(ax=base, color='None', edgecolor='red');
-
 # Seine
 base = seine.plot(color='grey')
 seine_pos.plot(ax=base, color='None', edgecolor='red')
@@ -191,21 +188,14 @@ seine_centroid.plot(ax=base, color='None', edgecolor='black');
 ### Buffers {#sec-buffers}
 
 Buffers are polygons representing the area within a given distance of a geometric feature: regardless of whether the input is a point, line or polygon, the output is a polygon (when using positive buffer distance).
-Unlike simplification (which is often used for visualization and reducing file size) buffering tends to be used for geographic data analysis.
+Unlike simplification, which is often used for visualization and reducing file size, buffering tends to be used for geographic data analysis.
 How many points are within a given distance of this line?
 Which demographic groups are within travel distance of this new shop?
 These kinds of questions can be answered and visualized by creating buffers around the geographic entities of interest.
 
-@fig-buffers illustrates buffers of different sizes (5 and 50 $km$) surrounding the river Seine and tributaries.
-These buffers were created with commands below, using the `.buffer` method, applied to a `GeoSeries` (or `GeoDataFrame`).
-The `.buffer` method requires one important argument: the buffer distance, provided in the units of the CRS (in this case, meters):
-
-```{python}
-seine_buff_5km = seine.buffer(5000)
-seine_buff_50km = seine.buffer(50000)
-```
-
-The 5 and 50 $km$ buffers are visualized in @fig-buffers:
+@fig-buffers illustrates buffers of two different sizes (5 and 50 $km$) surrounding the river Seine and tributaries.
+These buffers were created with commands below, using the `.buffer` method, applied to a `GeoSeries` or `GeoDataFrame`.
+The `.buffer` method requires one important argument: the buffer distance, provided in the units of the CRS, in this case, meters (@fig-buffers).
 
 ```{python}
 #| label: fig-buffers
@@ -214,18 +204,19 @@ The 5 and 50 $km$ buffers are visualized in @fig-buffers:
 #| fig-subcap: 
 #| - 5 $km$ buffer
 #| - 50 $km$ buffer
-
-seine_buff_5km.plot(color='none', edgecolor=['red', 'green', 'blue']);
-seine_buff_50km.plot(color='none', edgecolor=['red', 'green', 'blue']);
+seine_buff_5km = seine.buffer(5000)
+seine_buff_50km = seine.buffer(50000)
+seine_buff_5km.plot(color='none', edgecolor=['c', 'm', 'y']);
+seine_buff_50km.plot(color='none', edgecolor=['c', 'm', 'y']);
 ```
 
-Note that both `.centroid` and `.buffer` return a `GeoSeries` object, even when the input is a `GeoDataFrame`:
+Note that both `.centroid` and `.buffer` return a `GeoSeries` object, even when the input is a `GeoDataFrame`.
 
 ```{python}
 seine_buff_5km
 ```
 
-In the common scenario when the original attributes of the input features need to be retained, you can replace the existing geometry with the new `GeoSeries` as in:
+In the common scenario when the original attributes of the input features need to be retained, you can replace the existing geometry with the new `GeoSeries` by creating a copy of the original `GeoDataFrame` and assigning the new buffer `GeoSeries` to the `geometry` column.
 
 ```{python}
 seine_buff_5km = seine.copy()
@@ -233,7 +224,7 @@ seine_buff_5km.geometry = seine.buffer(5000)
 seine_buff_5km
 ```
 
-Another option is to add a secondary geometry column:
+Alternative option is to add a secondary geometry column directly to the original `GeoDataFrame`.
 
 ```{python}
 seine['geometry_5km'] = seine.buffer(5000)
@@ -246,28 +237,26 @@ You can then switch to either geometry column (i.e., make it the "active" geomet
 seine = seine.set_geometry('geometry_5km')
 ```
 
-Let's revert to the original state of `seine` before moving on:
+Let's revert to the original state of `seine` before moving on to the next section.
 
 ```{python}
 seine = seine.set_geometry('geometry')
 seine = seine.drop('geometry_5km', axis=1)
-seine
 ```
 
 ### Affine transformations {#sec-affine-transformations}
 
-Affine transformation is any transformation that preserves lines and parallelism.
-However, angles or length are not necessarily preserved.
-Affine transformations include, among others, shifting (translation), scaling and rotation.
-Additionally, it is possible to use any combination of these.
-Affine transformations are an essential part of geocomputation.
+Affine transformations include, among others, shifting (translation), scaling and rotation, or any combination of these.
+They preserves lines and parallelism, by angles and lengths are not necessarily preserved.
+These transformations are an essential part of geocomputation.
 For example, shifting is needed for labels placement, scaling is used in non-contiguous area cartograms, and many affine transformations are applied when reprojecting or improving the geometry that was created based on a distorted or wrongly projected map.
 
 The **geopandas** package implements affine transformation, for objects of classes `GeoSeries` and `GeoDataFrame`.
 In both cases, the method is applied on the `GeoSeries` part, returning a new `GeoSeries` of transformed geometries.
+<!-- jn: and what if the input is a GeoDataFrame? what happens to the other columns? -->
 
 Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function.
-According to the [documentation](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2):
+As [documented](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2)/
 
 $$
 x' = a x + b y + x_\mathrm{off}
@@ -277,7 +266,7 @@ $$
 y' = d x + e y + y_\mathrm{off}
 $$ {#eq-affine2}
 
-There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations) for specific scenarios:
+There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations) for specific scenarios, such as:
 
 -   `.translate(xoff=0.0, yoff=0.0, zoff=0.0)`
 -   `.scale(xfact=1.0, yfact=1.0, zfact=1.0, origin='center')`
@@ -285,20 +274,21 @@ There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/
 -   `.skew(angle, origin='center', use_radians=False)`
 
 For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using `.translate`.
-The code below shifts the y-coordinates of `nz` by 100 $km$ to the north, but leaves the x-coordinates untouched:
+<!-- jn: and what with z_off? -->
+The code below shifts the y-coordinates of `nz` by 100 $km$ to the north, but leaves the x-coordinates untouched.
 
 ```{python}
 nz_shift = nz.translate(0, 100000)
 ```
 
-Scaling enlarges or shrinks objects by a factor.
-It can be applied either globally or locally.
+Scaling enlarges or shrinks objects by a factor, and can be applied either globally or locally.
 Global scaling increases or decreases all coordinates values in relation to the origin coordinates, while keeping all geometries topological relations intact.
-
 **geopandas** implements local scaling using the `.scale` method.
+<!-- jn: what with global scaling? -->
 Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids.
 In the example below, each geometry is shrunk by a factor of two around the centroids (@fig-affine-transformations (b)).
 To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respectively), and the `'centroid'` option for the point of origin.
+<!-- jn: next sentence as a block? -->
 (Other than `'centroid'`, it is possible to use `'center'`, for the bounding box center, or specific point coordinates.)
 
 ```{python}
@@ -307,13 +297,13 @@ nz_scale = nz.scale(0.5, 0.5, origin='centroid')
 
 Rotating the geometries can be done using the `.rotate` method.
 When rotating, we need to specify the rotation angle (positive values imply clockwise rotation) and the `origin` points (using the same options as in `scale`).
-For example, the following expression rotates `nz` by 30 degrees counter-clockwise, around the geometry centroids:
+For example, the following expression rotates `nz` by 30 degrees counter-clockwise, around the geometry centroids.
 
 ```{python}
 nz_rotate = nz.rotate(-30, origin='centroid')
 ```
 
-@fig-affine-transformations shows the original layer `nz`, and the shifting, scaling and rotation results:
+@fig-affine-transformations shows the original layer `nz`, and the shifting, scaling and rotation results.
 
 ```{python}
 #| label: fig-affine-transformations
@@ -323,31 +313,28 @@ nz_rotate = nz.rotate(-30, origin='centroid')
 #| - Shift
 #| - Scale
 #| - Rotate
-
 # Shift
 base = nz.plot(color='lightgrey', edgecolor='darkgrey')
 nz_shift.plot(ax=base, color='red', edgecolor='darkgrey');
-
 # Scale
 base = nz.plot(color='lightgrey', edgecolor='darkgrey')
 nz_scale.plot(ax=base, color='red', edgecolor='darkgrey');
-
 # Rotate
 base = nz.plot(color='lightgrey', edgecolor='darkgrey')
 nz_rotate.plot(ax=base, color='red', edgecolor='darkgrey');
 ```
 
+<!-- jn: you also mentioned skew before -- why it is not shown here? -->
+
 ### Pairwise geometry-generating operations {#sec-clipping}
 
 Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features.
-
 Clipping can only apply to features more complex than points: lines, polygons and their 'multi' equivalents.
 To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (@fig-overlapping-circles).
 
 ```{python}
 #| label: fig-overlapping-circles
 #| fig-cap: Overlapping polygon (circle) geometries `x` and `y`
-
 x = shapely.Point((0, 0)).buffer(1)
 y = shapely.Point((1, 0)).buffer(1)
 shapely.GeometryCollection([x, y])
@@ -359,46 +346,38 @@ This can be done using the `.intersection` method from **shapely**, illustrated 
 ```{python}
 #| label: fig-intersection
 #| fig-cap: Intersection between `x` and `y`
-
 x.intersection(y)
 ```
 
 More generally, clipping is an example of a 'pairwise geometry-generating operation', where new geometries are generated from two inputs.
 Other than `.intersection` (@fig-intersection), there are three other standard pairwise operators: `.difference` (@fig-difference), `.union` (@fig-union), and `.symmetric_difference` (@fig-symmetric-difference).
-For example, applied to `x` and `y`:
 
 ```{python}
 #| label: fig-difference
 #| fig-cap: Difference between `x` and `y` (namely, `x` "minus" `y`)
-
 x.difference(y)
 ```
 
 ```{python}
 #| label: fig-union
 #| fig-cap: Union of `x` and `y` 
-
 x.union(y)
 ```
 
 ```{python}
 #| label: fig-symmetric-difference
 #| fig-cap: Symmetric difference between `x` and `y`
-
 x.symmetric_difference(y)
 ```
 
-Keep in mind that `x` and `y` are interchangeable in all predicates except for `.difference`, where:
-
--   `x.difference(y)` means `x` minus `y`, whereas
--   `y.difference(x)` means `y` minus `x`.
+Keep in mind that `x` and `y` are interchangeable in all predicates except for `.difference`, where `x.difference(y)` means `x` minus `y`, whereas `y.difference(x)` means `y` minus `x`.
 
 The latter examples demonstrate pairwise operations between individual `shapely` geometries.
 The **geopandas** package, as is often the case, contains wrappers of these **shapely** functions to be applied to multiple, or pairwise, use cases.
 For example, applying either of the pairwise methods on a `GeoSeries` or `GeoDataFrame`, combined with a `shapely` geometry, returns the pairwise (many-to-one) results (which is analogous to other operators, like `.intersects` or `.distance`, see @sec-spatial-subsetting-vector and @sec-distance-relations, respectively).
 
 Let's demonstrate the "many-to-one" scenario by calculating the difference between each geometry in a `GeoSeries` and a "fixed" `shapely` geometry.
-To create the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` or `2` units "upwards" on the y-axis:
+To create the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` and `2` units "upwards" on the y-axis.
 
 ```{python}
 geom1 = gpd.GeoSeries([x])
@@ -408,57 +387,56 @@ geom = pd.concat([geom1, geom2, geom3])
 geom
 ```
 
-Here is a plot of the `GeoSeries`, with the `shapely` geometry (in red) that we will intersect with it (@fig-geom-intersection):
+@fig-geom-intersection shows the `GeoSeries` `geom` with the `shapely` geometry (in red) that we will intersect with it.
 
 ```{python}
 #| label: fig-geom-intersection
-#| fig-cap: A `GeoSeries` with two circles, and a `shapely` geometry that we will "subtract" from it (in red)
-
+#| fig-cap: A `GeoSeries` with three circles, and a `shapely` geometry that we will "subtract" from it (in red)
 fig, ax = plt.subplots()
-geom.plot(color='none', ax=ax)
+geom.plot(color='lightgrey', edgecolor='black', ax=ax)
 gpd.GeoSeries(y).plot(color='#FF000040', edgecolor='black', ax=ax);
 ```
 
 Now, using `.intersection` automatically applies the **shapely** method of the same name on each geometry in `geom`, returning a new `GeoSeries`, which we name `geom_inter_y`, with the pairwise "intersections".
-Note the empty third geometry (can you explain the meaning of this result?):
+Note the empty third geometry (can you explain the meaning of this result?).
 
 ```{python}
 geom_inter_y = geom.intersection(y)
 geom_inter_y
 ```
 
-Here is a plot of the result `geom_inter_y` (@fig-geom-intersection2):
+@fig-geom-intersection2 is a plot of the result `geom_inter_y`.
 
 ```{python}
 #| label: fig-geom-intersection2
 #| fig-cap: The output `GeoSeries`, after subtracting a `shapely` geometry using `.intersection`
 
-geom_inter_y.plot(color='none');
+geom_inter_y.plot(color='lightgrey', edgecolor='black');
 ```
 
 The `.overlay` method (see @sec-joining-incongruent-layers) further extends this technique, making it possible to apply "many-to-many" pairwise geometry generations between all pairs of two `GeoDataFrame`s.
 The output is a new `GeoDataFrame` with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry.
-See the [Set operations with overlay](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
+See the ["Set operations with overlay"](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
 
 ### Subsetting vs. clipping
 
-In this section, we illustrate the difference between the two types of operators introduced in the last two chapters: boolean, such as `.intersects` (@sec-spatial-subsetting-vector), and geometry-generating, such as `.intersection` (@sec-clipping).
+In the last two chapters we have introduced two types of spatial operators: boolean, such as `.intersects` (@sec-spatial-subsetting-vector), and geometry-generating, such as `.intersection` (@sec-clipping).
+Here, we illustrate the difference between them.
 We do this using the specific scenario of subsetting points by polygons, where (unlike in other cases) both methods can be used for the same purpose and giving the same result.
-
 <!-- Clipping objects can change their geometry but it can also subset objects, returning only features that intersect (or partly intersect) with a clipping/subsetting object.  -->
 
-To illustrate the point, we will subset points that cover the bounding box of the circles `x` and `y` in @fig-overlapping-circles.
+To illustrate the point, we will subset points that cover the bounding box of the circles `x` and `y` from @fig-overlapping-circles.
 Some points will be inside just one circle, some will be inside both and some will be inside neither.
 The following code sections generates the sample data for this section, a simple random distribution of points within the extent of circles `x` and `y`, resulting in output illustrated in @fig-random-points.
 We create the sample points in two steps.
-First, we figure out the bounds where random points are to be generated:
+First, we figure out the bounds where random points are to be generated.
 
 ```{python}
 bounds = x.union(y).bounds
 bounds
 ```
 
-Second, we use `np.random.uniform` to calculate `n` random x- and y-coordinates within the given bounds:
+Second, we use `np.random.uniform` to calculate `n` random x- and y-coordinates within the given bounds.
 
 ```{python}
 np.random.seed(1)
@@ -469,48 +447,34 @@ coords = list(zip(coords_x, coords_y))
 coords
 ```
 
-Third, we transform the list of coordinates into a `list` of `shapely` points:
+Third, we transform the list of coordinates into a `list` of `shapely` points and then to a `GeoSeries`.
 
 ```{python}
 pnt = [shapely.Point(i) for i in coords]
-pnt
-```
-
-and then to a `GeoSeries`:
-
-```{python}
 pnt = gpd.GeoSeries(pnt)
-pnt
 ```
 
-The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-random-points:
+The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-random-points.
 
 ```{python}
 #| label: fig-random-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
-
 base = pnt.plot(color='none', edgecolor='black')
 gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
 ```
 
-Now, we get back to our question: how to subset the points to only return the point that intersects with both `x` and `y`?
+Now, we can get back to our question: how to subset the points to only return the point that intersects with both `x` and `y`?
 The code chunks below demonstrate two ways to achieve the same result.
-We can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of `x` and `y` (see @sec-spatial-subsetting-vector):
+In the first approach, we can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of `x` and `y` (see @sec-spatial-subsetting-vector) and then use it to subset `pnt` to get the result `pnt1`.
 
 ```{python}
 sel = pnt.intersects(x.intersection(y))
-sel
-```
-
-then use it to subset `pnt` to get the result `pnt1`:
-
-```{python}
 pnt1 = pnt[sel]
 pnt1
 ```
 
-We can also find the intersection between the input points represented by `pnt`, using the intersection of `x` and `y` as the subsetting/clipping object.
+In the second approach, we can also find the intersection between the input points represented by `pnt`, using the intersection of `x` and `y` as the subsetting/clipping object.
 Since the second argument is an individual `shapely` geometry (`x.intersection(y)`), we get "pairwise" intersections of each `pnt` with it (see @sec-clipping):
 
 ```{python}
@@ -518,12 +482,11 @@ pnt2 = pnt.intersection(x.intersection(y))
 pnt2
 ```
 
-The subset `pnt2` is shown in @fig-intersection-points:
+The subset `pnt2` is shown in @fig-intersection-points.
 
 ```{python}
 #| label: fig-intersection-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
-
 base = pnt.plot(color='none', edgecolor='black')
 gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
@@ -540,13 +503,15 @@ pnt2
 
 <!-- This second approach will return features that partly intersect with `x.intersection(y)` but with modified geometries for spatially extensive features that cross the border of the subsetting object. The results are identical, but the implementation differs substantially. -->
 
-Although the example above is rather contrived and provided for educational rather than applied purposes, and we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in Python, it raises an important question: which implementation to use?
+The example above is rather contrived and provided for educational rather than applied purposes.
+However, we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in Python as it raises an important question: which implementation to use?
 Generally, more concise implementations should be favored, meaning the first approach above.
+<!-- jn: is the first approach really more concise? why? -->
 
 ### Geometry unions {#sec-geometry-unions}
 
-As we saw in @sec-vector-attribute-aggregation, spatial aggregation can silently dissolve the geometries of touching polygons in the same group.
-This is demonstrated in the code chunk below, in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method:
+Spatial aggregation can silently dissolve the geometries of touching polygons in the same group, as we saw in @sec-vector-attribute-aggregation.
+This is demonstrated in the code chunk below, in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method.
 
 ```{python}
 regions = us_states[['REGION', 'geometry', 'total_pop_15']] \
@@ -554,7 +519,7 @@ regions = us_states[['REGION', 'geometry', 'total_pop_15']] \
 regions
 ```
 
-The result is shown in @fig-dissolve:
+@fig-dissolve compares the original `us_states` layer with the aggregated `regions` layer.
 
 ```{python}
 #| label: fig-dissolve
@@ -563,61 +528,51 @@ The result is shown in @fig-dissolve:
 #| fig-subcap: 
 #| - 49 States
 #| - 4 Regions
-
 # States
 fig, ax = plt.subplots(figsize=(9, 2.5))
 us_states.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
-
 # Regions
 fig, ax = plt.subplots(figsize=(9, 2.5))
 regions.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
 ```
 
-What is going on in terms of the geometries?
+What is happening with the geometries here?
 Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method per group.
-This is demonstrated in the code chunk below which creates a united western US using the standalone `unary_union` operation:
-
-```{python}
-us_west = us_states[us_states['REGION'] == 'West']
-us_west_union = us_west.geometry.unary_union
-```
-
-Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving (@fig-dissolve2):
+This is demonstrated in the code chunk below which creates a united western US using the standalone `unary_union` operation.
+Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving (@fig-dissolve2).
 
 ```{python}
 #| label: fig-dissolve2
 #| fig-cap: Western US
-
+us_west = us_states[us_states['REGION'] == 'West']
+us_west_union = us_west.geometry.unary_union
 us_west_union
 ```
 
-To dissolve two (or more) groups of a `GeoDataFrame` into one geometry, we can either use a combined condition:
+To dissolve two (or more) groups of a `GeoDataFrame` into one geometry, we can either (a) use a combined condition or  (b) concatenate the two separate subsets and then dissove using `.unary_union`.
 
 ```{python}
+# Approach 1
 sel = (us_states['REGION'] == 'West') | (us_states['NAME'] == 'Texas')
 texas_union = us_states[sel]
 texas_union = texas_union.geometry.unary_union
-```
-
-or concatenate the two separate subsets:
-
-```{python}
+# Approach 2
 us_west = us_states[us_states['REGION'] == 'West']
 texas = us_states[us_states['NAME'] == 'Texas']
 texas_union = pd.concat([us_west, texas]).unary_union
 ```
 
-and then dissove using `.unary_union`.
-The result is identical in both cases, shown in @fig-dissolve3:
+The result is identical in both cases, shown in @fig-dissolve3.
 
 ```{python}
 #| label: fig-dissolve3
 #| fig-cap: Western US and Texas
-
 texas_union
 ```
 
 ### Type transformations {#sec-type-transformations}
+
+<!-- jn: I do not fully understand the story(ies) in this section. Please think about it -- maybe it can be reordered or some connecting sentences could be added... -->
 
 Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis.
 Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation.
@@ -625,42 +580,39 @@ The exact expression(s) depend on the specific transformation we are interested 
 In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
 Or, when available, you can use a wrapper from **geopandas**.
 
-Let's create a `'MultiPoint'` to illustrate how geometry casting works on **shapely** geometry objects (@fig-type-transform-multipoint):
+Let's create a `'MultiPoint'` to illustrate how geometry casting works on **shapely** geometry objects (@fig-type-transform-multipoint).
 
 ```{python}
 #| label: fig-type-transform-multipoint
 #| fig-cap: A `'MultiPoint'` geometry used to demonstrate **shapely** type transformations
-
 multipoint = shapely.MultiPoint([(1,1), (3,3), (5,1)])
 multipoint
 ```
 
 A `'LineString'` can be created using `shapely.LineString` from a `list` of points.
-Consequently, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring):
+Thus, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring).
+<!--jn: maybe it would be worth reexplaing .geoms here? -->
 
 ```{python}
 #| label: fig-type-transform-linestring
 #| fig-cap: A `'LineString'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
-
 linestring = shapely.LineString(list(multipoint.geoms))
 linestring
 ```
 
 Similarly, a `'Polygon'` can be created using function `shapely.Polygon`, which accepts a sequence of point coordinates.
 In principle, the last coordinate must be equal to the first, in order to form a closed shape.
-However, `shapely.Polygon` is able to complete the last coordinate automatically.
-Therefore (@fig-type-transform-polygon):
+However, `shapely.Polygon` is able to complete the last coordinate automatically, and therefore we can pass all of the coordinates of the `'MultiPoint'` directly to `shapely.Polygon` (@fig-type-transform-polygon).
 
 ```{python}
 #| label: fig-type-transform-polygon
 #| fig-cap: A `'Polygon'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
-
 polygon = shapely.Polygon([[p.x, p.y] for p in multipoint.geoms])
 polygon
 ```
 
 The source `'MultiPoint'` geometry, and the derived `'LineString'` and `'Polygon'` geometries are shown in @fig-casting1.
-Note that we convert the `shapely` geometries to `GeoSeries` to use the **geopandas** plotting method:
+Note that we convert the `shapely` geometries to `GeoSeries` to use the **geopandas** plotting method.
 
 ```{python}
 #| label: fig-casting1
@@ -670,7 +622,6 @@ Note that we convert the `shapely` geometries to `GeoSeries` to use the **geopan
 #| - 'MultiPoint'
 #| - 'LineString'
 #| - 'Polygon'
-
 gpd.GeoSeries(multipoint).plot();
 gpd.GeoSeries(linestring).plot();
 gpd.GeoSeries(polygon).plot();
@@ -680,21 +631,19 @@ Conversion from `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring
 This allows spatial operations such as the length of the path traveled.
 Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
-Our `'LineString'` geometry can be converted back to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2):
+Our `'LineString'` geometry can be converted back to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2).
 
 ```{python}
 #| label: fig-type-transform-multipoint2
 #| fig-cap: A `'MultiPoint'` created from the `'LineString'` in @fig-type-transform-linestring
-
 shapely.MultiPoint(linestring.coords)
 ```
 
-A `'Polygon'` (exterior) coordinates can be passed to `shapely.MultiPoint`, to go back to a `'MultiPoint'` geometry, as well (@fig-type-transform-polygon2):
+A `'Polygon'` (exterior) coordinates can be passed to `shapely.MultiPoint`, to go back to a `'MultiPoint'` geometry, as well (@fig-type-transform-polygon2).
 
 ```{python}
 #| label: fig-type-transform-polygon2
 #| fig-cap: A `'MultiPoint'` created from the `'Polygon'` in @fig-type-transform-polygon
-
 shapely.MultiPoint(polygon.exterior.coords)
 ```
 
@@ -734,14 +683,15 @@ multipolygon.geoms[1]
 ```
 
 However, dealing with multi-part geometries is easier with **geopandas**, since that way we can keep track of the associated attributes: duplicating them when going from multi-part to single-part (using `.explode`, see below), or collapsing them through aggregation when going from single-part to multi-part (using `.dissolve`, see @sec-geometry-unions).
+<!-- jn: the above paragraph is dense and hard to read -->
 
 Let's apply another commonly used type transformation to demonstrate.
-As input, we will create a `'MultiLineString'` geometry composed of three lines (@fig-type-transform-multilinestring3):
+<!-- jn: demonstrate what? -->
+As input, we will create a `'MultiLineString'` geometry composed of three lines (@fig-type-transform-multilinestring3).
 
 ```{python}
 #| label: fig-type-transform-multilinestring3
 #| fig-cap: A `'MultiLineString'` geometry composed of three lines
-
 l1 = shapely.LineString([(1, 5), (4, 3)])
 l2 = shapely.LineString([(4, 4), (4, 1)])
 l3 = shapely.LineString([(2, 2), (4, 2)])
@@ -749,14 +699,14 @@ ml = shapely.MultiLineString([l1, l2, l3])
 ml
 ```
 
-Let's place it into a `GeoSeries`:
+Let's place it into a `GeoSeries`.
 
 ```{python}
 geom = gpd.GeoSeries([ml])
 geom
 ```
 
-and finally into a `GeoDataFrame` with an attribute called `'id'`:
+Then, put it into a `GeoDataFrame` with an attribute called `'id'`:
 
 ```{python}
 dat = gpd.GeoDataFrame(geometry=geom, data=pd.DataFrame({'id': [1]}))
@@ -766,7 +716,7 @@ dat
 You can imagine it as a road or river network.
 The above layer `dat` has only one row that defines all the lines.
 This restricts the number of operations that can be done, for example it prevents adding names to each line segment or calculating lengths of single lines.
-Using **shapely** methods which we are already familiar with (see above), the individual single-part geometries (i.e., the "parts") can be accessed through the `.geoms` property:
+Using **shapely** methods with which we are already familiar with (see above), the individual single-part geometries (i.e., the "parts") can be accessed through the `.geoms` property.
 
 ```{python}
 list(ml.geoms)
@@ -774,7 +724,7 @@ list(ml.geoms)
 
 However, specifically for the "multi-part to single part" type transformation scenarios, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one.
 The advantage is that the original attributes (such as `id`) are retained, so that we can keep track of the original multi-part geometry properties that each part came from.
-The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively:
+The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively.
 
 ```{python}
 dat1 = dat.explode(index_parts=True).reset_index()
@@ -782,7 +732,6 @@ dat1
 ```
 
 For example, here we see that all `'LineString'` geometries came from the same multi-part geometry (`level_0`=`0`), which had three parts (`level_1`=`0`,`1`,`2`).
-
 @fig-multilinestring-to-linestring demonstrates the effect of `.explode` in converting a layer with multi-part geometries into a layer with single part geometries.
 
 ```{python}
@@ -792,7 +741,6 @@ For example, here we see that all `'LineString'` geometries came from the same m
 #| fig-subcap: 
 #| - MultiLineString layer
 #| - LineString layer, after applying `.explode`
-
 dat.plot(column='id');
 dat1.plot(column='level_1');
 ```
@@ -804,7 +752,7 @@ For example, here is how we can get back to the `'MultiLineString'` geometry:
 dat1.dissolve(by='id').reset_index()
 ```
 
-Here is another example, dissolving the `nz` north and south parts into `'MultiPolygon'` geometries:
+The next code chunk is another example, dissolving the `nz` north and south parts into `'MultiPolygon'` geometries.
 
 ```{python}
 nz_dis1 = nz[['Island', 'Population', 'geometry']] \
@@ -816,11 +764,10 @@ nz_dis1
 Note that `.dissolve` not only combines single-part into multi-part geometries, but also dissolves any internal borders.
 So, in fact, the result may be single-part (in case when all parts touch each other, unlike in `nz`).
 If, for some reason, we want to combine geometries into multi-part *without* dissolving, we can fall back to the **pandas** `.agg` method (custom table aggregation), supplemented with a **shapely** function specifying how exactly we want to transform each group of geometries into a new single geometry.
-In the following example, for instance, we collect all `'Polygon'`, and `'MultiPolygon'` parts, of `nz`, into a single `'MultiPolygon'` geometry with many separate parts (i.e., without dissolving), per group (`Island`):
+In the following example, for instance, we collect all `'Polygon'` and `'MultiPolygon'` parts of `nz` into a single `'MultiPolygon'` geometry with many separate parts (i.e., without dissolving), per group (`Island`).
 
 ```{python}
 #| warning: false
-
 nz_dis2 = nz \
     .groupby('Island') \
     .agg({
@@ -843,9 +790,8 @@ This is illustrated in @fig-combine-geoms:
 #| fig-subcap: 
 #| - Dissolving (using the **geopandas** `.dissolve` method)
 #| - Combining into multi-part without dissolving (using `.agg` and a custom **shapely**-based function)
-
-nz_dis1.plot(color='none', edgecolor='black');
-nz_dis2.plot(color='none', edgecolor='black');
+nz_dis1.plot(color='lightgrey', edgecolor='black');
+nz_dis2.plot(color='lightgrey', edgecolor='black');
 ```
 
 ## Geometric operations on raster data {#sec-geo-ras}
