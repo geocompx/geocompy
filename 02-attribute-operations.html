@@ -2863,20 +2863,21 @@ Note
 <pre><code>18.6</code></pre>
 </div>
 </div>
-<p>Raster value statistics can be visualized in a variety of ways. One approach is to “flatten” the raster values into a one-dimensional array (<code>flatten</code>), then use a graphical function such as <code>plt.hist</code> or <code>plt.boxplot</code> (from <code>matplotlib.pyplot</code>). For example, the following code section shows the distribution of values in <code>elev</code> using a histogram (<a href="#fig-raster-hist">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-hist</span></a>).</p>
+<p>Raster value statistics can be visualized in a variety of ways. One approach is to “flatten” the raster values into a one-dimensional array (<code>flatten</code>), then use a graphical function such as <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html"><code>plt.hist</code></a> or <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.boxplot.html"><code>plt.boxplot</code></a> (from <strong>matplotlib.pyplot</strong>). For example, the following code section shows the distribution of values in <code>elev</code> using a histogram (<a href="#fig-raster-hist">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-hist</span></a>).</p>
 <div class="cell" data-execution_count="47">
-<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> elev.flatten()</span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>plt.hist(x)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>plt.hist(elev.flatten())<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-raster-hist" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="02-attribute-operations_files/figure-html/fig-raster-hist-output-1.png" width="422" height="411" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;2.4: Distribution of cell values in <code>elev</code></figcaption>
+<figcaption class="figure-caption">Figure&nbsp;2.4: Distribution of cell values in continuous raster (<code>elev.tif</code>)</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <!-- jn: how to deal with categorical rasters? -->
+<!-- md: great idea! now added -->
+<p>To summarize the distribution of values in a categorical raster, we can calculate the frequencies of unique values, and draw them using a barplot. Let’s demonstrate using the <code>grain.tif</code> small categorical raster.</p>
 <div class="cell" data-execution_count="48">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>grain <span class="op">=</span> src_grain.read(<span class="dv">1</span>)</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>grain</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2889,7 +2890,26 @@ Note
        [2, 1, 2, 2, 0, 2]], dtype=uint8)</code></pre>
 </div>
 </div>
-<p>…</p>
+<p>To calculate the frequency of unique values in an array, we use the <a href="https://numpy.org/doc/stable/reference/generated/numpy.unique.html"><code>np.unique</code></a> with the <code>return_counts=True</code> option. The result is a <code>tuple</code> with two corresponding arrays: the unique values, and their counts.</p>
+<div class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>freq <span class="op">=</span> np.unique(grain, return_counts<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>freq</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="48">
+<pre><code>(array([0, 1, 2], dtype=uint8), array([10, 13, 13]))</code></pre>
+</div>
+</div>
+<p>These two arrays can be passed to the <a href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html"><code>plt.bar</code></a> function to draw a barplot, as shown in <a href="#fig-raster-bar">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-bar</span></a>.</p>
+<div class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>plt.bar(<span class="op">*</span>freq)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div id="fig-raster-bar" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="02-attribute-operations_files/figure-html/fig-raster-bar-output-1.png" width="423" height="411" class="figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;2.5: Distribution of cell values in categorical raster (<code>grain.tif</code>)</figcaption>
+</figure>
+</div>
+</div>
+</div>
 </section>
 </section>
 <section id="exercises" class="level2" data-number="2.4">
