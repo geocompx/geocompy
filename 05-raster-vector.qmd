@@ -450,6 +450,8 @@ zion.to_crs(src_nlcd.crs).plot(ax=ax, color='none', edgecolor='black');
 
 ## Rasterization {#sec-rasterization}
 
+<!-- jn: intro is missing -->
+
 ### Rasterizing points {#sec-rasterizing-points}
 
 Rasterization is the conversion of vector objects into their representation in raster objects.
@@ -460,7 +462,7 @@ Furthermore, the process of rasterization can help simplify datasets because the
 The **rasterio** package contains the [`rasterio.features.rasterize`](https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.rasterize) function for doing this work.
 To make it happen, we need to have the "template" grid definition, i.e., the "template" raster defining the extent, resolution and CRS of the output, in the `out_shape` (the output dimensions) and `transform` (the transformation matrix) arguments of `rasterio.features.rasterize`.
 In case we have an existing template raster, we simply need to query its `.shape` and `.transform`.
-In case we create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).
+On the other hand, if we need to create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).
 
 Furthermore, the `rasterio.features.rasterize` function requires the input vector shapes in the form for a generator of `(geom,value)` tuples, where:
 
@@ -507,35 +509,37 @@ shape
 Now, we can rasterize.
 Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel "activation" method, and the function applied when there is more than one match.
 
-To illustrate this flexibility we will try three different approaches to rasterization (@fig-rasterize-points (b)-(d)).
+To illustrate this flexibility, we will try three different approaches to rasterization (@fig-rasterize-points (b)-(d)).
 First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters).
 In this case, we transfer the value of `1` to all pixels where at least one point falls in.
-To transform the point `GeoDataFrame` into a generator of `shapely` geometries and the (fixed) values, we use the following expression:
+To transform the point `GeoDataFrame` into a generator of `shapely` geometries and the (fixed) values, we use the following expression.
+<!-- jn: maybe explain the code below in more detail? -->
+<!-- jn: also maybe use a different name than g? -->
 
 ```{python}
 g = ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
 g
 ```
 
-Then, the rasterizing expression is:
+Then, the rasterizing expression takes the generator `g`, the template `shape` and `transform` as arguments.
 
 ```{python}
+#| output: false
 ch_raster1 = rasterio.features.rasterize(
     shapes=g, 
     out_shape=shape, 
     transform=transform
 )
-```
-
-The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in "unaffected" pixels:
-
-```{python}
 ch_raster1
 ```
 
-To count the number of bike hire stations, we can use the fixed value of `1` combined with the `merge_alg=rasterio.enums.MergeAlg.add`, which means that multiple values burned into the same pixel are *summed*, rather than replaced keeping last (the default):
+The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in "unaffected" pixels.
+
+To count the number of bike hire stations, we can use the fixed value of `1` combined with the `merge_alg=rasterio.enums.MergeAlg.add`, which means that multiple values burned into the same pixel are *summed*, rather than replaced keeping last (the default).
+<!--jn: rasterio.enums.MergeAlg.add definetely needs more explanation (maybe as a block)...-->
 
 ```{python}
+#| output: false
 g = ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
 ch_raster2 = rasterio.features.rasterize(
     shapes=g,
@@ -543,20 +547,17 @@ ch_raster2 = rasterio.features.rasterize(
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
 )
-```
-
-Here is the resulting array of point counts `ch_raster2`:
-
-```{python}
 ch_raster2
 ```
 
 The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell.
-The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what's the capacity in each grid cell?
+The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what is the capacity in each grid cell?
 To calculate that, we must sum the field (`'capacity'`) rather than the fixed values of `1`.
-This requires using an expanded generator of geometries and values, where we (1) extract both geometries and attribute values, and (2) filter out "No Data" values, as follows:
+This requires using an expanded generator of geometries and values, where we (1) extract both geometries and attribute values, and (2) filter out "No Data" values, which can be done as follows.
+<!-- jn: I think the code below should be explained in more detail... -->
 
 ```{python}
+#| output: false
 g = ((g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']] \
         .dropna(subset='capacity')
         .to_numpy() \
@@ -567,38 +568,31 @@ ch_raster3 = rasterio.features.rasterize(
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
 )
-```
-
-Here is the resulting array of capacity sums `ch_raster3`:
-
-```{python}
 ch_raster3
 ```
 
-The input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it `ch_raster1`, `ch_raster2`, and `ch_raster3` are shown in @fig-rasterize-points:
+The result `ch_raster3` shows the total capacity of cycle hire points in each grid cell.
+
+The input point layer `cycle_hire_osm_projected` and the three variants of rasterizing it `ch_raster1`, `ch_raster2`, and `ch_raster3` are shown in @fig-rasterize-points.
 
 ```{python}
 #| label: fig-rasterize-points
-#| fig-cap: Three variants of point rasterization
+#| fig-cap: Original data and three variants of point rasterization
 #| layout-ncol: 2
 #| fig-subcap: 
 #| - Input points
 #| - Presence/Absence
 #| - Point counts
 #| - Summed attribute values
-
 # Input points
 fig, ax = plt.subplots()
 cycle_hire_osm_projected.plot(column='capacity', ax=ax);
-
 # Presence/Absence
 fig, ax = plt.subplots()
 rasterio.plot.show(ch_raster1, transform=transform, ax=ax);
-
 # Point counts
 fig, ax = plt.subplots()
 rasterio.plot.show(ch_raster2, transform=transform, ax=ax);
-
 # Summed attribute values
 fig, ax = plt.subplots()
 rasterio.plot.show(ch_raster3, transform=transform, ax=ax);
@@ -608,21 +602,21 @@ rasterio.plot.show(ch_raster3, transform=transform, ax=ax);
 
 Another dataset based on California's polygons and borders (created below) illustrates rasterization of lines.
 There are three preliminary steps.
-First, we subset the California polygon:
+First, we subset the California polygon.
 
 ```{python}
 california = us_states[us_states['NAME'] == 'California']
 california
 ```
 
-Second, we "cast" the polygon into a `'MultiLineString'` geometry, using the [`.boundary`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.boundary.html) property that `GeoSeries` have:
+Second, we "cast" the polygon into a `'MultiLineString'` geometry, using the [`.boundary`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.boundary.html) property that `GeoSeries` have.
 
 ```{python}
 california_borders = california.geometry.boundary
 california_borders
 ```
 
-Third, we create a template raster with a resolution of a `0.5` degree, using the same approach as in @sec-rasterizing-points:
+Third, we create a template raster with a resolution of a `0.5` degree, using the same approach as in @sec-rasterizing-points.
 
 ```{python}
 bounds = california_borders.total_bounds
@@ -643,7 +637,7 @@ Finally, we rasterize `california_borders` based on the calculated template's `s
 When considering line or polygon rasterization, one useful additional argument is `all_touched`.
 By default it is `False`, but when changed to `True`---all cells that are touched by a line or polygon border get a value.
 Line rasterization with `all_touched=True` is demonstrated in the code below (@fig-rasterize-lines-polygons, left).
-We are also using `fill=np.nan` to set "background" values as "No Data":
+We are also using `fill=np.nan` to set "background" values as "No Data".
 
 ```{python}
 california_raster1 = rasterio.features.rasterize(
@@ -655,7 +649,7 @@ california_raster1 = rasterio.features.rasterize(
 )
 ```
 
-Compare it to a polygon rasterization, with `all_touched=False` (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in @fig-rasterize-lines-polygons (right):
+Compare it to a polygon rasterization, with `all_touched=False` (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in @fig-rasterize-lines-polygons (right).
 
 ```{python}
 california_raster2 = rasterio.features.rasterize(
@@ -667,7 +661,7 @@ california_raster2 = rasterio.features.rasterize(
 ```
 
 To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points.
-This also requires the following code section to calculate the points, which we explain in @sec-spatial-vectorization:
+This also requires the following code section to calculate the points, which we explain in @sec-spatial-vectorization.
 
 ```{python}
 ids = california_raster1.copy()
@@ -680,7 +674,7 @@ pnt = [shapely.geometry.shape(i[0]).centroid for i in pol]
 pnt = gpd.GeoSeries(pnt)
 ```
 
-The input vector layer, the rasterization results, and the points `pnt`, are shown in @fig-rasterize-lines-polygons:
+@fig-rasterize-lines-polygons shows the input vector layer, the rasterization results, and the points `pnt`.
 
 ```{python}
 #| label: fig-rasterize-lines-polygons
@@ -689,13 +683,11 @@ The input vector layer, the rasterization results, and the points `pnt`, are sho
 #| fig-subcap: 
 #| - Line rasterization w/ `all_touched=True`
 #| - Polygon rasterization w/ `all_touched=False`
-
 # Line rasterization
 fig, ax = plt.subplots()
 rasterio.plot.show(california_raster1, transform=transform, ax=ax, cmap='Set3')
 gpd.GeoSeries(california_borders).plot(ax=ax, edgecolor='darkgrey', linewidth=1)
 pnt.plot(ax=ax, color='black', markersize=1);
-
 # Polygon rasterization
 fig, ax = plt.subplots()
 rasterio.plot.show(california_raster2, transform=transform, ax=ax, cmap='Set3')
@@ -705,27 +697,24 @@ pnt.plot(ax=ax, color='black', markersize=1);
 
 ## Spatial vectorization {#sec-spatial-vectorization}
 
-Spatial vectorization is the counterpart of rasterization (@sec-rasterization), but in the opposite direction.
+Spatial vectorization is the counterpart of rasterization (@sec-rasterization).
 It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons.
-
 There are three standard methods to convert a raster to a vector layer, which we cover next:
 
--   Raster to polygons (@sec-raster-to-polygons)
--   Raster to points (@sec-raster-to-points)
+-   Raster to polygons (@sec-raster-to-polygons)---the most straightforward form of vectorization, converting raster cells to polygons, where each pixel is represented by a rectangular polygon
+-   Raster to points (@sec-raster-to-points)---has the additional step of calculating polygon centroids
 -   Raster to contours (@sec-raster-to-contours)
 
-The most straightforward form of vectorization is the first one, converting raster cells to polygons, where each pixel is represented by a rectangular polygon.
-The second method, raster to points, has the additional step of calculating polygon centroids.
-The third method, raster to contours, is somewhat unrelated.
-Let us demonstrate the three in the given order.
+Let us demonstrate all three in the given order.
 
 ### Raster to polygons {#sec-raster-to-polygons}
 
 The [`rasterio.features.shapes`](https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.shapes) function can be used to access to the raster pixel as polygon geometries, as well as raster values.
 The returned object is a generator, which yields `geometry,value` pairs.
 The additional `transform` argument is used to yield true spatial coordinates of the polygons, which is usually what we want.
+<!-- jn: the above paragraph is not easy to read, maybe rephrase? -->
 
-For example, the following expression returns a generator named `shapes`, referring to the pixel polygons:
+For example, the following expression returns a generator named `shapes`, referring to the pixel polygons.
 
 ```{python}
 shapes = rasterio.features.shapes(
@@ -735,26 +724,20 @@ shapes = rasterio.features.shapes(
 shapes
 ```
 
-We can generate all shapes at once, into a `list` named `pol`, as follows:
+We can generate all shapes at once into a `list` named `pol` with `list(shapes)`.
 
 ```{python}
 pol = list(shapes)
 ```
 
-Each element in `pol` is a `tuple` of length 2, containing:
+Each element in `pol` is a `tuple` of length 2, containing the GeoJSON-like `dict`---representing the polygon geometry and the value of the pixel(s)---which comprise the polygon.
+For example, check the first element of `pol` with `pol[0]`.
 
--   The GeoJSON-like `dict` representing the polygon geometry
--   The value of the pixel(s) which comprise the polygon
-
-For example:
-
-```{python}
-pol[0]
-```
-
+<!-- jn: maybe the next sentence as a block -->
 Note that each raster cell is converted into a polygon consisting of five coordinates, all of which are stored in memory (explaining why rasters are often fast compared with vectors!).
 
-To transform this `list` into a `GeoDataFrame`, we need few more steps of data reshaping:
+To transform this `list` into a `GeoDataFrame`, we need few more steps of data reshaping.
+<!-- jn: add a sentence or two here... -->
 
 ```{python}
 # 'GeoSeries' with the polygons
@@ -776,7 +759,6 @@ One way to work around that is to convert an array with consecutive IDs, instead
 ```{python}
 #| label: fig-raster-to-polygons
 #| fig-cap: '`grain.tif` converted to a polygon layer'
-
 result.plot(column='value', edgecolor='black', legend=True);
 ```
 
@@ -785,7 +767,7 @@ result.plot(column='value', edgecolor='black', legend=True);
 To transform raster to points, we can use `rasterio.features.shapes`, same as in conversion to polygons (@sec-raster-to-points), only with the addition of the `.centroid` method to go from polygons to their centroids.
 However, to avoid dissolving nearby pixels, we will actually convert a raster with consecutive IDs, then extract the "true" values by point (it is not strictly necessary in this example, since the values of `elev.tif` are all unique).
 
-First, we create an `ndarray` with consecutive IDs, matching the shape of `elev.tif` raster values:
+First, we create an `ndarray` with consecutive IDs, matching the shape of `elev.tif` raster values.
 
 ```{python}
 r = src_elev.read(1)
@@ -794,7 +776,7 @@ ids = np.arange(0, r.size).reshape(r.shape).astype(np.int32)
 ids
 ```
 
-Next, we use the `rasterio.features.shapes` function to create a point layer with the raster cell IDs:
+Next, we use the `rasterio.features.shapes` function to create a point layer with the raster cell IDs.
 
 ```{python}
 shapes = rasterio.features.shapes(ids, transform=src_elev.transform)
@@ -805,7 +787,7 @@ result = gpd.GeoDataFrame(geometry=geom)
 result
 ```
 
-Finally, we extract (@sec-extraction-to-points) the `elev.tif` raster values to points, technically finalizing the raster-to-points conversion:
+Finally, we extract (@sec-extraction-to-points) the `elev.tif` raster values to points, technically finalizing the raster-to-points conversion.
 
 ```{python}
 result['value'] = rasterstats.point_query(
@@ -817,7 +799,7 @@ result['value'] = rasterstats.point_query(
 )
 ```
 
-The input raster and the resulting point layer are shown in @fig-raster-to-points:
+@fig-raster-to-points shows the input raster and the resulting point layer.
 
 ```{python}
 #| label: fig-raster-to-points
@@ -826,12 +808,10 @@ The input raster and the resulting point layer are shown in @fig-raster-to-point
 #| fig-subcap: 
 #| - Input raster
 #| - Points
-
 # Input raster
 fig, ax = plt.subplots()
 result.plot(column='value', legend=True, ax=ax)
 rasterio.plot.show(src_elev, ax=ax);
-
 # Points
 fig, ax = plt.subplots()
 result.plot(column='value', legend=True, ax=ax)
@@ -840,14 +820,13 @@ rasterio.plot.show(src_elev, cmap='Greys', ax=ax);
 
 ### Raster to contours {#sec-raster-to-contours}
 
-Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (isotherms) for example.
+Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (*isotherms*), for example.
 We will use a real-world digital elevation model (DEM) because the artificial raster `elev.tif` produces parallel lines (task for the reader: verify this and explain why this happens).
-Plotting contour lines is straightforward, using the `contour=True` option of `rasterio.plot.show` (@fig-raster-contours1):
+Plotting contour lines is straightforward, using the `contour=True` option of `rasterio.plot.show` (@fig-raster-contours1).
 
 ```{python}
 #| label: fig-raster-contours1
 #| fig-cap: Displaying raster contours
-
 fig, ax = plt.subplots()
 rasterio.plot.show(src_dem, ax=ax)
 rasterio.plot.show(
@@ -866,10 +845,10 @@ There are two possible workarounds:
 1.  Using `gdal_contour` on the [command line](https://gdal.org/programs/gdal_contour.html) (see below), or through its Python interface [**osgeo**](https://gis.stackexchange.com/questions/360431/how-can-i-create-contours-from-geotiff-and-python-gdal-rasterio-etc-into-sh)
 2.  Writing a custom function to export contour coordinates generated by, e.g., [**matplotlib**](https://www.tutorialspoint.com/how-to-get-coordinates-from-the-contour-in-matplotlib) or [**skimage**](https://gis.stackexchange.com/questions/268331/how-can-i-extract-contours-from-a-raster-with-python)
 
-We hereby demonstrate the first approach, using `gdal_contour`.
+We demonstrate the first approach, using `gdal_contour`.
 Although we deviate from the Python-focused approach towards more direct interaction with GDAL, the benefit of `gdal_contour` is the proven algorithm, customized to spatial data, and with many relevant options.
-Both the `gdal_contour` program (along with other GDAL programs) and its **osgeo** Python wrapper, should already be installed on your system since GDAL is a dependency of `rasterio`.
-Using the command line pathway, generating 50 $m$ contours of the `dem.tif` file can be done as follows:
+Both the `gdal_contour` program (along with other GDAL programs) and its **osgeo** Python wrapper, should already be installed on your system since GDAL is a dependency of **rasterio**.
+Using the command line pathway, generating 50 $m$ contours of the `dem.tif` file can be done as follows.
 
 ```{python}
 #| eval: false
@@ -877,25 +856,21 @@ os.system('gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0')
 ```
 
 Like all GDAL programs (also see `gdaldem` example in @sec-focal-operations), `gdal_contour` works with files.
-Here:
-
--   The input is the `data/dem.tif` file
--   The result is exported to the `output/dem_contour.gpkg` file
+Here, the input is the `data/dem.tif` file and the result is exported to the `output/dem_contour.gpkg` file.
 
 To illustrate the result, let's read the resulting `dem_contour.gpkg` layer back into the Python environment.
-Note that the layer contains an attribute named `'elev'` (as specified using `-a elev`) with the contour elevation values:
+Note that the layer contains an attribute named `'elev'` (as specified using `-a elev`) with the contour elevation values.
 
 ```{python}
 contours1 = gpd.read_file('output/dem_contour.gpkg')
 contours1
 ```
 
-Here is a plot of the contour layer `dem_contour.gpkg` (@fig-raster-contours2):
+@fig-raster-contours2 shows the input raster and the resulting contour layer.
 
 ```{python}
 #| label: fig-raster-contours2
 #| fig-cap: Contours of the `dem.tif` raster, calculated using the `gdal_contour` program
-
 fig, ax = plt.subplots()
 rasterio.plot.show(src_dem, ax=ax)
 contours1.plot(ax=ax, edgecolor='black');
@@ -907,7 +882,7 @@ Calculating a raster of distances to the nearest geometry is an example of a "gl
 To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand.
 This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation (@sec-raster-agg-disagg), raster conversion to points (@sec-raster-to-points), and rasterizing points (@sec-rasterizing-points).
 
-For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary (as a `'MultiLineString'` geometry):
+For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary as a `'MultiLineString'` geometry.
 
 ```{python}
 coastline = gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
@@ -918,7 +893,8 @@ coastline
 
 For a "template" raster, we will aggregate the New Zealand DEM, in the `nz_elev.tif` file, to 5 times coarser resolution.
 The code section below follows the aggeregation example in @sec-raster-agg-disagg, then replaces the original (aggregated) values with unique IDs, which is a preliminary step when converting to points, as explained in @sec-raster-to-points.
-Finally, we also replace "erase" (i.e., replace with `np.nan`) IDs which were `np.nan` in the aggregated elevation raster, i.e., beyond the land area of New Zealand:
+Finally, we also replace "erase" (i.e., replace with `np.nan`) IDs which were `np.nan` in the aggregated elevation raster, i.e., beyond the land area of New Zealand.
+<!-- jn: the last sentence could be rephrased... -->
 
 ```{python}
 factor = 0.2
@@ -943,7 +919,7 @@ ids[np.isnan(r)] = np.nan
 ids
 ```
 
-The result is an array named `ids` with the IDs, and the corresponding `new_transform`, as plotted in @fig-raster-distances1:
+The result is an array named `ids` with the IDs, and the corresponding `new_transform`, as plotted in @fig-raster-distances1.
 
 ```{python}
 #| label: fig-raster-distances1
@@ -955,7 +931,7 @@ gpd.GeoSeries(coastline).plot(ax=ax, edgecolor='black');
 ```
 
 To calculate distances, we must convert each pixel to a vector (point) geometry.
-We use the technique demonstrated in @sec-raster-to-points:
+For this purpose, we use the technique demonstrated in @sec-raster-to-points.
 
 ```{python}
 shapes = rasterio.features.shapes(ids, transform=new_transform)
@@ -965,18 +941,14 @@ pnt = [shapely.geometry.shape(i[0]).centroid for i in pol]
 
 The result `pnt` is a `list` of `shapely` geometries, representing raster cell centroids (excluding `np.nan` pixels):
 
-```{python}
-print(pnt[0])
-```
-
-Now we can calculate the correspinding `list` of distances, using the `.distance` method from **shapely**:
+Now we can calculate the corresponding `list` of distances, using the `.distance` method from **shapely**:
 
 ```{python}
 distances = [(i, i.distance(coastline)) for i in pnt]
 distances[0]
 ```
 
-Finally, we rasterize (see @sec-rasterizing-points) the distances into our raster template:
+Finally, we rasterize (see @sec-rasterizing-points) the distances into our raster template.
 
 ```{python}
 image = rasterio.features.rasterize(
@@ -988,13 +960,13 @@ image = rasterio.features.rasterize(
 )
 image
 ```
+<!-- jn: there is a file path in the code output... can we remove it? -->
 
-The final result, a raster of distances to the nearest coastline, is shown in @fig-raster-distances2:
+The final result, a raster of distances to the nearest coastline, is shown in @fig-raster-distances2.
 
 ```{python}
 #| label: fig-raster-distances2
 #| fig-cap: Distance to nearest coastline in New Zealand
-
 fig, ax = plt.subplots()
 rasterio.plot.show(image, transform=new_transform, ax=ax)
 gpd.GeoSeries(coastline).plot(ax=ax, edgecolor='black');
