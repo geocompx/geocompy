@@ -232,6 +232,79 @@ rasterio.plot.show(nz_elev, cmap='BrBG', ax=ax);
 fig.colorbar(i, ax=ax);
 ```
 
+### Labels {#sec-plot-static-labels}
+
+...
+
+```{python}
+nz1 = nz[nz['Island'] == 'South']
+```
+
+... @fig-labels-polygon.
+
+```{python}
+#| label: fig-labels-polygon
+#| fig-cap: Labels at polygon centroids
+
+fig, ax = plt.subplots()
+nz1.plot(ax=ax, color='lightgrey', edgecolor='grey')
+nz1.apply(
+    lambda x: ax.annotate(
+        text=x['Name'], 
+        xy=x.geometry.centroid.coords[0], 
+        ha='center'
+    ), 
+    axis=1
+);
+```
+
+...
+
+```{python}
+ctr = nz[['Island', 'geometry']].dissolve(by='Island').reset_index()
+ctr['geometry'] = ctr.centroid
+ctr
+```
+
+... @fig-labels-points1.
+
+```{python}
+#| label: fig-labels-points1
+#| fig-cap: Labels at points
+
+fig, ax = plt.subplots()
+nz.plot(ax=ax, color='none', edgecolor='lightgrey')
+ctr.apply(
+    lambda x: ax.annotate(
+        text=x['Island'], 
+        xy=x.geometry.coords[0], 
+        ha='center',
+        weight='bold'
+    ), 
+    axis=1
+);
+```
+
+... @fig-labels-points2.
+
+```{python}
+#| label: fig-labels-points2
+#| fig-cap: Labels at points (manual)
+
+fig, ax = plt.subplots()
+nz.plot(ax=ax, color='none', edgecolor='lightgrey')
+ax.annotate(
+    ctr['Island'].iloc[0], 
+    xy=(ctr.geometry.iloc[0].x, ctr.geometry.iloc[0].y),
+    ha='center', weight='bold'
+)
+ax.annotate(
+    ctr['Island'].iloc[1], 
+    xy=(ctr.geometry.iloc[1].x, ctr.geometry.iloc[1].y),
+    ha='center', weight='bold'
+);
+```
+
 ### Layers {#sec-plot-static-layers}
 
 To display more than one layer in the same static map, we need to:

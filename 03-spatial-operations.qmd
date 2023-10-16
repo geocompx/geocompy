@@ -251,7 +251,9 @@ poly = gpd.GeoSeries([
 ```
 
 The sample dataset which we created is composed of three is `GeoSeries`: named `points`, `line`, and `poly`, which are visualized in @fig-spatial-relations-geoms.
+The last expression is a `for` loop used to add text labels (`1`, `2`, and `3`) to identify the points; we are going to explain the concepts of text annotations with **geopandas** `.plot` in @sec-plot-static-labels.
 <!--jn: the ploting for loop should be either explained here or (preferably) there should be a reference to some information about this approach that can be found in the vis chapter-->
+<!--md: agree, now added-->
 
 ```{python}
 #| label: fig-spatial-relations-geoms
@@ -259,8 +261,11 @@ The sample dataset which we created is composed of three is `GeoSeries`: named `
 base = poly.plot(color='lightgrey', edgecolor='red')
 line.plot(ax=base, color='black', linewidth=7)
 points.plot(ax=base, color='none', edgecolor='black')
-for x, y, label in zip(points.x, points.y, [1,2,3]):
-    base.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords='offset points')
+for i in enumerate(points):
+    base.annotate(
+        i[0], xy=(i[1].x, i[1].y), 
+        xytext=(3, 3), textcoords='offset points', weight='bold'
+    )
 ```
 
 A simple query is: which of the points in `points` intersect in some way with polygon `poly`?
@@ -299,8 +304,11 @@ Our two input objects, `points` and `poly2`, are illustrated in @fig-spatial-rel
 #| fig-cap: Inputs for demonstrating the evaluation of all pairwise intersection relations between three points (`points`) and two polygons (`poly2`)
 base = poly2.plot(color='lightgrey', edgecolor='red')
 points.plot(ax=base, color='none', edgecolor='black')
-for x, y, label in zip(points.x, points.y, [1,2,3]):
-    base.annotate(label, xy=(x, y), xytext=(3, 3), weight='bold', textcoords="offset points")
+for i in enumerate(points):
+    base.annotate(
+        i[0], xy=(i[1].x, i[1].y), 
+        xytext=(3, 3), textcoords='offset points', weight='bold'
+    )
 ```
 
 Now we can use `.apply` to get the intersection relations matrix.
