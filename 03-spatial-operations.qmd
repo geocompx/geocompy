@@ -10,10 +10,10 @@ jupyter: python3
 #| echo: false
 import pandas as pd
 import matplotlib.pyplot as plt
-pd.set_option("display.max_rows", 4)
-pd.set_option("display.max_columns", 6)
+pd.set_option('display.max_rows', 4)
+pd.set_option('display.max_columns', 6)
 pd.options.display.max_colwidth = 35
-plt.rcParams["figure.figsize"] = (5, 5)
+plt.rcParams['figure.figsize'] = (5, 5)
 ```
 
 This chapter requires importing the following packages:
@@ -67,10 +67,24 @@ src_grain = rasterio.open('output/grain.tif')
 ## Introduction
 
 <!-- jn: general vector + raster intro is missing -->
+<!-- md: now added -->
+
+Spatial operations, including spatial joins between vector datasets and local and focal operations on raster datasets, are a vital part of geocomputation. This chapter shows how spatial objects can be modified in a multitude of ways based on their location and shape. Many spatial operations have a non-spatial (attribute) equivalent, so concepts such as subsetting and joining datasets demonstrated in the previous chapter are applicable here. This is especially true for vector operations: @sec-vector-attribute-manipulation on vector attribute manipulation provides the basis for understanding its spatial counterpart, namely spatial subsetting (covered in @sec-spatial-subsetting-vector). Spatial joining (@sec-spatial-joining) and aggregation (@sec-vector-spatial-aggregation) also have non-spatial counterparts, covered in the previous chapter.
+
+Spatial operations differ from non-spatial operations in a number of ways, however. Spatial joins, for example, can be done in a number of ways---including matching entities that intersect with or are within a certain distance of the target dataset---while the attribution joins discussed in @sec-vector-attribute-joining in the previous chapter can only be done in one way. Different types of spatial relationship between objects, including intersects and disjoint, are described in @sec-topological-relations. Another unique aspect of spatial objects is distance: all spatial objects are related through space, and distance calculations can be used to explore the strength of this relationship, as described in the context of vector data in @sec-distance-relations.
+
+Spatial operations on raster objects include subsetting---covered in @sec-spatial-subsetting-raster---and merging several raster 'tiles' into a single object, as demonstrated in @sec-merging-rasters. Map algebra covers a range of operations that modify raster cell values, with or without reference to surrounding cell values. The concept of map algebra, vital for many applications, is introduced in @sec-map-algebra; local, focal and zonal map algebra operations are covered in sections @sec-raster-local-operations, @sec-focal-operations, and @sec-zonal-operations, respectively. Global map algebra operations, which generate summary statistics representing an entire raster dataset, and distance calculations on rasters, are discussed in Section @sec-global-operations-and-distances. In the final section (@sec-merging-rasters) the process of merging two raster datasets is discussed and demonstrated with reference to a reproducible example.
+
+::: callout-note
+It is important to note that spatial operations that use two spatial objects rely on both objects having the same coordinate reference system, a topic that was introduced in @sec-coordinate-reference-systems-intro and which will be covered in more depth in @sec-reproj-geo-data. 
+:::
 
 ## Spatial operations on vector data {#sec-spatial-vec}
 
 <!-- jn: vector data intro is missing -->
+<!-- md: now added -->
+
+This section provides an overview of spatial operations on vector geographic data represented as simple features using the **shapely** and **geopandas** packages. @sec-spatial-ras then presents spatial operations on raster datasets, using the **rasterio** and **scipy** packages.
 
 ### Spatial subsetting {#sec-spatial-subsetting-vector}
 
@@ -725,6 +739,9 @@ nz_height.iloc[:3, :].plot(ax=base, color='none', edgecolor='black');
 ## Spatial operations on raster data {#sec-spatial-ras}
 
 <!-- jn: raster data intro is missing -->
+<!-- md: now added -->
+
+This section builds on @sec-manipulating-raster-objects, which highlights various basic methods for manipulating raster datasets, to demonstrate more advanced and explicitly spatial raster operations, and uses the `elev.tif` and `grain.tif` rasters manually created in @sec-raster-from-scratch.
 
 ### Spatial subsetting {#sec-spatial-subsetting-raster}
 
@@ -1191,7 +1208,7 @@ Sometimes the same words have slightly different meanings for raster and vector 
 While aggregating polygon geometries means dissolving boundaries, for raster data geometries it means increasing cell sizes and thereby reducing spatial resolution.
 Zonal operations dissolve the cells of one raster in accordance with the zones (categories) of another raster dataset using an aggregating function.
 
-### Merging rasters
+### Merging rasters {#sec-merging-rasters}
 
 Suppose we would like to compute the NDVI (see @sec-raster-local-operations), and additionally want to compute terrain attributes from elevation data for observations within a study area.
 Such computations rely on remotely sensed information.
