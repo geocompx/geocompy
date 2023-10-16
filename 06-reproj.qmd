@@ -425,24 +425,25 @@ The last section, @sec-custom-map-projections, shows how to create custom map pr
 
 ## Reprojecting vector geometries {#sec-reprojecting-vector-geometries}
 
-@sec-spatial-class demonstrated how vector geometries are made-up of points, and how points form the basis of more complex objects such as lines and polygons.
+@sec-vector-data demonstrated how vector geometries are made-up of points, and how points form the basis of more complex objects such as lines and polygons.
 Reprojecting vectors thus consists of transforming the coordinates of these points, which form the vertices of lines and polygons.
 
-@sec-geometry-operations-on-projected-and-unprojected-data contains an example in which at a `GeoDataFrame` had to be transformed into an equivalent object, with a different CRS, to calculate the distance between two objects:
+@sec-geometry-operations-on-projected-and-unprojected-data contains an example in which at a `GeoDataFrame` had to be transformed into an equivalent object, with a different CRS, to calculate the distance between two objects.
 
 ```{python}
 lnd_layer2 = lnd_layer.to_crs(27700)
 ```
 
-Now that a transformed version of `lnd_layer` has been created, using the `.distance` method, the distance between the two representations of London can be found:
+Now that a transformed version of `lnd_layer` has been created, the distance between the two representations of London can be found using the `.distance` method.
 
 ```{python}
 lnd_layer2.distance(lnd_layer_proj)
 ```
 
 It may come as a surprise that `lnd_layer` and `lnd_layer2` are just over 2 $km$ apart!
-The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually-created coordinates that created `lnd_layer` and `lnd_layer_proj`:
+The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually-created coordinates that created `lnd_layer` and `lnd_layer_proj`.
 
+<!-- jn: maybe we can remove the text from here to my next comment, as it is already explained in the previous section..? -->
 The CRS of `GeoSeries` and `GeoDataFrame` objects can be queried and set---as we learned in @sec-querying-and-setting-coordinate-systems---using the `.crs` property and the `.set_crs` method, respectively.
 The output is printed as multiple lines of text containing information about the coordinate system:
 
@@ -467,10 +468,11 @@ crs_lnd.to_epsg()
 
 As mentioned in @sec-coordinate-reference-systems, WKT representation, accessible through `.to_wkt()` of the `crs_lnd` object is the ultimate source of truth.
 This means that the outputs of the previous code chunk are queries from the WKT representation provided by PROJ, rather than inherent attributes of the object and its CRS.
+<!-- jn: end -->
 
 Reprojecting to a different CRS is also demonstrated below using `cycle_hire_osm`, a point layer that represents 'docking stations' where you can hire bicycles in London.
 The contents of the CRS object associated with a given geometry column is changed when the object's CRS is transformed.
-In the code chunk below, we create a new version of `cycle_hire_osm` with a projected CRS:
+In the code chunk below, we create a new version of `cycle_hire_osm` with a projected CRS.
 
 ```{python}
 cycle_hire_osm_projected = cycle_hire_osm.to_crs(27700)
@@ -480,21 +482,23 @@ cycle_hire_osm_projected.crs
 The resulting object has a new CRS with an EPSG code `27700`.
 But how to find out more details about this EPSG code, or any code?
 One option is to search for it online.
-Another option is to create a standalone CRS object within the Python environment (using `pyproj.CRS.from_string` or `pyproj.CRS.from_epsg`, see @sec-coordinate-reference-systems), and then query its properties:
+Another option is to create a standalone CRS object within the Python environment (using `pyproj.CRS.from_string` or `pyproj.CRS.from_epsg`, see @sec-coordinate-reference-systems), and then query its properties, such as `.name`, `.to_proj4()`, and `.to_wkt()`.
 
 ```{python}
 crs_lnd_new = pyproj.CRS.from_epsg(27700)
 crs_lnd_new.name, crs_lnd_new.to_proj4(), crs_lnd_new.to_wkt()
 ```
 
+<!-- jn: what to do with the long message: '/home/jn/micromamba/envs/geocompy/lib/python3.11/site-packages/pyproj/crs/crs.py:1293: UserWarning: You will likely lose important projection information when converting to a PROJ string from another format. See: https://proj.org/faq.html#what-is-the-best-format-for-describing-coordinate-reference-systems proj = self._crs.to_proj4(version=version)' ? -->
+  
 The result shows that the EPSG code `27700` represents the British National Grid, a result that could have been found by searching online for "[EPSG 27700](https://www.google.com/search?q=CRS+27700)".
 
 ## Reprojecting raster geometries {#sec-reprojecting-raster-geometries}
 
-The projection concepts described in the previous section apply equally to rasters.
+The CRSs concepts described in the previous section apply equally to rasters.
 However, there are important differences in reprojection of vectors and rasters: transforming a vector object involves changing the coordinates of every vertex, but this does not apply to raster data.
 Rasters are composed of rectangular cells of the same size (expressed by map units, such as degrees or meters), so it is usually impracticable to transform coordinates of pixels separately.
-Raster reprojection involves creating a new raster object, often with a different number of columns and rows than the original.
+Raster reprojection involves creating a new raster object in the destination CRS, often with a different number of columns and rows than the original.
 The attributes must subsequently be re-estimated, allowing the new pixels to be "filled" with appropriate values.
 In other words, raster reprojection can be thought of as two separate spatial operations: a vector reprojection of the raster extent to another CRS (@sec-reprojecting-vector-geometries), and computation of new pixel values through resampling (@sec-raster-resampling).
 Due to this additional complexity, in most cases when both raster and vector data are used, it is better to avoid reprojecting rasters and reproject vectors instead.
@@ -506,42 +510,30 @@ Instead of resampling all of the values, it leaves all values intact but recompu
 For example, it could convert the input raster (a regular grid) into a curvilinear grid.
 The **rasterio**, like common raster file formats (such as GeoTIFF), does not support curvilinear grids.
 :::
+<!-- jn: regarding above note: is there any Python package supporting curvilinear grids? if yes, maybe mention it there... -->
 
 The raster reprojection process is done using two functions from the `rasterio.warp` sub-package:
 
--   `rasterio.warp.calculate_default_transform`
--   `rasterio.warp.reproject`
-
-The first function, [`calculate_default_transform`](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.calculate_default_transform), is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds.
-Alternatively, the destination transformation matrix can be obtained from an existing raster; this is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (@sec-raster-local-operations) (see below).
-The second function, `rasterio.warp.reproject` (introduced in @sec-raster-resampling), then actually calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear).
+1. `rasterio.warp.calculate_default_transform`: [`calculate_default_transform`](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.calculate_default_transform), is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds.
+Alternatively, the destination transformation matrix can be obtained from an existing raster; this is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (@sec-raster-local-operations) (see below)
+2. `rasterio.warp.reproject`: introduced in @sec-raster-resampling, calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear)
 
 Let's take a look at two examples of raster transformation: using categorical and continuous data.
 Land cover data are usually represented by categorical maps.
 The `nlcd.tif` file provides information for a small area in Utah, USA obtained from National Land Cover Database 2011 in the NAD83 / UTM zone 12N CRS.
-We already created a connection to the `nlcd.tif` file at the beginning of this chapter, named `src_nlcd`:
+We already created a connection to the `nlcd.tif` file at the beginning of this chapter, named `src_nlcd`.
 
 ```{python}
 src_nlcd
 ```
 
-Recall from previous chapters that the raster transformation matrix and dimensions are accessible from the file connection as follows.
-This information will be required to calculate the destination transformation matrix:
+Recall from previous chapters that the raster transformation matrix and dimensions are accessible from the file connection using `src_nlcd.transform`, `src_nlcd.width`, and `src_nlcd.height`, respectively.
+<!--src_nlcd.bounds is not mentioned here but it is used in the code chunk below... -->
 
-```{python}
-src_nlcd.transform
-```
-
-```{python}
-src_nlcd.width
-```
-
-```{python}
-src_nlcd.height
-```
+This information will be required to calculate the destination transformation matrix.
 
 First, let's define the destination CRS.
-In this case, we choose WGS84 (EPSG code `4326`):
+In this case, we choose WGS84 (EPSG code `4326`).
 
 ```{python}
 dst_crs = 'EPSG:4326'
@@ -560,17 +552,15 @@ dst_transform, dst_width, dst_height = rasterio.warp.calculate_default_transform
 dst_transform, dst_width, dst_height
 ```
 
-Note that `*`, in `*src_nlcd.bounds`, is used to unpack `src_nlcd.bounds` to four separate arguments (`left`, `bottom`, `right`, and `top`), which `rasterio.warp.calculate_default_transform` requires:
-
-```{python}
-src_nlcd.bounds
-```
+Note that `*`, in `*src_nlcd.bounds`, is used to unpack `src_nlcd.bounds` to four separate arguments (`left`, `bottom`, `right`, and `top`), which `rasterio.warp.calculate_default_transform` requires.
+<!-- jn: what does it mean "unpack" here? -->
 
 Recall from @sec-raster-resampling that resampling using `rasterio.warp.reproject` can take place directly into a "destination" raster file connection.
 Therefore, our next step is to create the metadata file used for writing the reprojected raster to file.
 For convenience, we are taking the metadata of the source raster (`src_nlcd.meta`), making a copy (`dst_kwargs`), and then updating those specific properties that need to be changed.
 Note that the reprojection process typically creates "No Data" pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be "filled" to get back a rectangular extent.
-We need to specify a "No Data" value of our choice, if there is no existing definition, or keep the existing source raster "No Data" setting, such as `255` in this case:
+<!--jn: I am unsure if I understand the above sentence... can you try to rephrase it? -->
+We need to specify a "No Data" value of our choice, if there is no existing definition, or keep the existing source raster "No Data" setting, such as `255` in this case.
 
 ```{python}
 dst_kwargs = src_nlcd.meta.copy()
@@ -583,7 +573,7 @@ dst_kwargs.update({
 dst_kwargs
 ```
 
-We are ready to create the reprojected raster.
+Now, we are ready to create the reprojected raster.
 Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once.
 It is also possible to reproject into an in-memory `ndarray` object, see the [documentation](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject).
 
@@ -594,9 +584,7 @@ dst_nlcd = rasterio.open('output/nlcd_4326.tif', 'w', **dst_kwargs)
 ```
 
 Then, we use the `rasterio.warp.reproject` function to calculate and write the reprojection result into the `dst_nlcd` file connection.
-Note--like in the example in @sec-raster-resampling---that the `source` and `destination` accept a "band" object, created using `rasterio.band`.
-In this case, there is just one band.
-If there were more bands, we would have to repeat the procedure for each band, using `i` instead of `1` inside a [loop](https://rasterio.readthedocs.io/en/latest/topics/reproject.html#reprojecting-a-geotiff-dataset):
+
 
 ```{python}
 rasterio.warp.reproject(
@@ -610,13 +598,16 @@ rasterio.warp.reproject(
 )
 ```
 
-Finally, we close the file connection so that the data are actually written:
+Note--like in the example in @sec-raster-resampling---that the `source` and `destination` accept a "band" object, created using `rasterio.band`.
+In this case, there is just one band.
+If there were more bands, we would have to repeat the procedure for each band, using `i` instead of `1` inside a [loop](https://rasterio.readthedocs.io/en/latest/topics/reproject.html#reprojecting-a-geotiff-dataset).
+Finally, we close the file connection so that the data are actually written.
 
 ```{python}
 dst_nlcd.close()
 ```
 
-Many properties of the new object differ from the previous one, including the number of columns and rows (and therefore number of cells), resolution (transformed from meters into degrees), and extent, as summarized below by comparing the `.meta` object of the source and destination rasters:
+Many properties of the new object differ from the previous one, including the number of columns and rows (and therefore number of cells), resolution (transformed from meters into degrees), and extent, as summarized below by comparing the `.meta` object of the source and destination rasters.
 
 ```{python}
 src_nlcd.meta
@@ -637,7 +628,7 @@ np.unique(src_nlcd.read(1))
 np.unique(src_nlcd_4326.read(1))
 ```
 
-@fig-raster-reproject-nlcd illustrates the effect of reprojection, comparing `nlcd_4326.tif` (the input) and `nlcd_4326.tif` (the reprojection result), visually:
+@fig-raster-reproject-nlcd illustrates the effect of reprojection, comparing `nlcd.tif` (the input) and `nlcd_4326.tif` (the reprojection result), visually.
 
 ```{python}
 #| label: fig-raster-reproject-nlcd
@@ -646,7 +637,6 @@ np.unique(src_nlcd_4326.read(1))
 #| fig-subcap: 
 #| - Original (`EPSG:26912`)
 #| - Reprojected (`EPSG:4326`)
-
 rasterio.plot.show(src_nlcd, cmap='Set3');
 rasterio.plot.show(src_nlcd_4326, cmap='Set3');
 ```
@@ -656,22 +646,23 @@ This is appropriate when there are no specific requirements for the destination 
 Namely, we are not required to obtain a specific origin and resolution, but just wish to preserve the raster values as much as possible.
 To do that, `rasterio.warp.calculate_default_transform` "tries" to keep the extent and resolution of the destination raster as similar as possible to the source.
 In other situations, however, we need to reproject a raster into a specific "template", so that it corresponds, for instance, with other rasters we use in the analysis.
-In the following code section, we reproject the `nlcd.tif` raster, again, built this time using the `nlcd_4326.tif` reprojection result as the "template" to demonstrate this alternative workflow.
+In the following code examples, we reproject the `nlcd.tif` raster, again, but this time using the `nlcd_4326.tif` reprojection result as the "template" to demonstrate this alternative workflow.
 
-First, we create a connection to our "template" raster to read its metadata:
+First, we create a connection to our "template" raster to read its metadata.
 
 ```{python}
 template = rasterio.open('output/nlcd_4326.tif')
 template.meta
 ```
 
-Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the "template":
+Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the "template".
+<!-- jn: why 'w' and not 'rw' or 'r+'? -->
 
 ```{python}
 dst_nlcd_2 = rasterio.open('output/nlcd_4326_2.tif', 'w', **template.meta)
 ```
 
-Now, we can resample and write the result:
+Now, we can resample and write the result with `rasterio.warp.reproject`.
 
 ```{python}
 rasterio.warp.reproject(
@@ -683,32 +674,21 @@ rasterio.warp.reproject(
     dst_crs=dst_nlcd_2.crs,
     resampling=rasterio.enums.Resampling.nearest
 )
-```
-
-```{python}
 dst_nlcd_2.close()
 ```
 
-Naturally, the outputs of the last two examples---`nlcd_4326.tif` and `nlcd_4326_2.tif`---are identical, as we used the same destination grid and the same source data:
+Naturally, the outputs of the last two examples---`nlcd_4326.tif` and `nlcd_4326_2.tif`---are identical, as we used the same destination grid and the same source data.
+We can check it with `np.all`.
 
 ```{python}
 d = rasterio.open('output/nlcd_4326.tif').read(1) == \
     rasterio.open('output/nlcd_4326_2.tif').read(1)
-d
-```
-
-```{python}
 np.all(d)
 ```
 
 The difference is that in the first example we calculated the template automatically, using `rasterio.warp.calculate_default_transform`, while in the second example we used an existing raster as the "template".
 
-Importantly, when the template raster has much more "coarse" resolution than the source raster, the:
-
--   `rasterio.enums.Resampling.average` (for continuous rasters), or
--   `rasterio.enums.Resampling.mode` (for categorical rasters)
-
-resampling methods should be used, instead of `rasterio.enums.Resampling.nearest` which was used in the above examples.
+Importantly, when the template raster has much more "coarse" resolution than the source raster, the `rasterio.enums.Resampling.average` (for continuous rasters) or `rasterio.enums.Resampling.mode` (for categorical rasters) resampling methods should be used, instead of `rasterio.enums.Resampling.nearest`.
 Otherwise, much of the data will be lost, as the "nearest" method can capture one pixel value only for each destination raster pixel.
 
 Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure.
@@ -718,7 +698,7 @@ We will reproject this dataset into a projected CRS, but not with the nearest ne
 Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster.
 The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight.
 The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method.
-The code is practically the same, except for changing the source and destination file names, and replacing `rasterio.enums.Resampling.nearest` with `rasterio.enums.Resampling.bilinear`:
+The code is practically the same, except for changing the source and destination file names, and replacing `rasterio.enums.Resampling.nearest` with `rasterio.enums.Resampling.bilinear`.
 
 ```{python}
 dst_crs = 'EPSG:32612'
@@ -758,7 +738,6 @@ dst_srtm.close()
 #| fig-subcap: 
 #| - Original (`EPSG:4326`)
 #| - Reprojected (`EPSG:32612`)
-
 rasterio.plot.show(src_srtm);
 rasterio.plot.show(rasterio.open('output/srtm_32612.tif'));
 ```
@@ -771,7 +750,6 @@ However, it is desirable to use alternative projections or to create custom CRSs
 Here, we show how to apply these ideas in Python.
 
 One is to take an existing WKT definition of a CRS, modify some of its elements, and then use the new definition for reprojecting, using the reprojection methods shown above for vector layers (@sec-reprojecting-vector-geometries) and rasters (@sec-reprojecting-raster-geometries).
-
 For example, let's transforms the `zion.gpkg` vector layer to a custom azimuthal equidistant (AEQD) CRS.
 Using a custom AEQD CRS requires knowing the coordinates of the center point of a dataset in degrees (geographic CRS).
 In our case, this information can be extracted by calculating the centroid of the `zion` layer transformed into WGS84:
@@ -782,7 +760,8 @@ lon, lat
 ```
 
 Next, we can use the obtained lon/lat coordinates in `coords` to update the WKT definition of the azimuthal equidistant (AEQD) CRS seen below.
-Notice that we modified just two values below---`"Central_Meridian"` to the longitude and `"Latitude_Of_Origin"` to the latitude of our centroid:
+Notice that we modified just two values below---`"Central_Meridian"` to the longitude and `"Latitude_Of_Origin"` to the latitude of our centroid.
+<!-- jn: can you explain the below syntax (if that Python-obvious, then just as a comment for me)? what's f? what's '''? -->
 
 ```{python}
 my_wkt = f'''PROJCS["Custom_AEQD",
@@ -798,7 +777,7 @@ my_wkt = f'''PROJCS["Custom_AEQD",
 print(my_wkt)
 ```
 
-This approach's last step is to transform our original object (`zion`) to our new custom CRS (`zion_aeqd`):
+This approach's last step is to transform our original object (`zion`) to our new custom CRS (`zion_aeqd`).
 
 ```{python}
 zion_aeqd = zion.to_crs(my_wkt)
@@ -809,7 +788,7 @@ This website allows you to select a spatial extent of your data and a distortion
 The list also contains WKT definitions of the projections that you can copy and use for reprojections.
 See Open Geospatial Consortium ([2019](https://r.geocompx.org/references.html#ref-opengeospatialconsortium_wellknown_2019)) for details on creating custom CRS definitions with WKT strings.
 
-PROJ strings can also be used to create custom projections, accepting the limitations inherent to projections, especially of geometries covering large geographic areas, mentioned in @sec-coordinate-reference-systems.
+PROJ strings can also be used to create custom projections, accepting the limitations inherent to projections, especially of geometries covering large geographic areas, as mentioned in @sec-coordinate-reference-systems.
 Many projections have been developed and can be set with the `+proj=` element of PROJ strings, with dozens of projects described in detail on the [PROJ website](https://proj.org/operations/projections/index.html) alone.
 
 When mapping the world while preserving area relationships the Mollweide projection, illustrated in @fig-mollweide, is a popular and often sensible choice [@jenny_guide_2017].
@@ -818,17 +797,15 @@ To use this projection, we need to specify it using the proj-string element, `'+
 ```{python}
 #| label: fig-mollweide
 #| fig-cap: Mollweide projection of the world
-
 world.to_crs('+proj=moll').plot(color='none', edgecolor='black');
 ```
 
 It is often desirable to minimize distortion for all spatial properties (area, direction, distance) when mapping the world.
-One of the most popular projections to achieve this is [Winkel tripel](http://www.winkel.org/other/Winkel%20Tripel%20Projections.htm) (`'+proj=wintri'`), illustrated in @fig-wintri:
+One of the most popular projections to achieve this is [Winkel tripel](http://www.winkel.org/other/Winkel%20Tripel%20Projections.htm) (`'+proj=wintri'`), illustrated in @fig-wintri.
 
 ```{python}
 #| label: fig-wintri
 #| fig-cap: Winkel tripel projection of the world
-
 world.to_crs('+proj=wintri').plot(color='none', edgecolor='black');
 ```
 
@@ -838,7 +815,6 @@ The below code transforms the coordinates to the Lambert azimuthal equal-area pr
 ```{python}
 #| label: fig-azimuthal-equal-area
 #| fig-cap: Lambert azimuthal equal-area projection of the world centered on New York City
-
 world.to_crs('+proj=laea +x_0=0 +y_0=0 +lon_0=-74 +lat_0=40') \
     .plot(color='none', edgecolor='black');
 ```
