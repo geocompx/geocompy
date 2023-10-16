@@ -31,11 +31,6 @@ import scipy.ndimage
 import scipy.stats
 ```
 
-```{python}
-#| eval: false
-import richdem as rd
-```
-
 It also relies on the following data files:
 
 ```{python}
@@ -89,6 +84,7 @@ This section provides an overview of spatial operations on vector geographic dat
 ### Spatial subsetting {#sec-spatial-subsetting-vector}
 
 <!-- jn: have we considered switching the order of spatial subsetting with topological relations? -->
+<!-- md: I don't think we considered it yet (the order as the moment is the same as in 'geocompr') -->
 
 Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object.
 Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is a boolean `Series`.
@@ -119,6 +115,7 @@ canterbury_height
 
 @fig-spatial-subset compares the original `nz_height` layer (left) with the subset `canterbury_height` (right).
 <!-- jn: do we need to repeat the `base = nz.plot(color='white', edgecolor='lightgrey')` code here? -->
+<!-- md: The expression to create 'base' has to be repeated. can't say I completely understand the mechanism, but I think that once a 'matplotlib' plot is drawn, the plot objects are emptied, so we have to re-create them when making a new plot. maybe there is a solution to it that I missed, but currently we're creating each plot intependently like in the code below. -->
 
 ```{python}
 #| label: fig-spatial-subset
@@ -171,7 +168,9 @@ canterbury_height2.plot(ax=base, color='None', edgecolor='red');
 
 In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using `.unary_union`, before applying the `.intersects` (or any other) operator.
 For example, here is how we can subset the `nz_height` points which intersect with Canterbury or Southland.
+(Note that we are also using the `isin` method, as demonstrated in the end of @sec-vector-attribute-subsetting.)
 <!-- jn: `nz['Name'].isin(['Canterbury', 'Southland'])` isin was not explained earlier... it should be either explained in the previous chapter or here. Preferably in the previous chapter where we explain subsetting... -->
+<!-- md: good point! I've added an explanation in ch02 -->
 
 ```{python}
 canterbury_southland = nz[nz['Name'].isin(['Canterbury', 'Southland'])]

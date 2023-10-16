@@ -163,7 +163,7 @@ We can also rename columns using the [`.rename`](https://pandas.pydata.org/docs/
 world[['name_long', 'pop']].rename(columns={'pop': 'population'})
 ```
 
-The standard **numpy** comparison operators can be used in boolean subsetting, as illustrated in Table @tbl-comparison-operators.
+The standard **numpy** comparison operators (@tbl-comparison-operators) can be used in boolean subsetting with **pandas**/**geopandas**.
 
 | `Symbol`      | `Name`                          |
 |---------------|---------------------------------|
@@ -207,6 +207,27 @@ For example, the following code selects only countries from Asia, keeps only the
 world[world['continent'] == 'Asia']  \
     .loc[:, ['name_long', 'continent']]  \
     .iloc[0:5, :]
+```
+
+Logical operators `&`, `|`, and `~` (@tbl-comparison-operators) can be used to combine multiple conditions.
+For example, here are all countries in North America or South America.
+Keep in mind that the parentheses around each condition (here, and in analogous cases using other operators) are crucial; otherwise, due to Python's [precedence rules](https://docs.python.org/3/reference/expressions.html#operator-precedence), the `|` operator is executed before `==` and we get an error.
+
+```{python}
+world[
+        (world['continent'] == 'North America') | 
+        (world['continent'] ==  'South America')
+    ]  \
+    .loc[:, ['name_long', 'continent']]
+```
+
+However, specifically, expressions combining multiple comparisons with `==` combined with `|` can be replaced with the [`.isin`](https://pandas.pydata.org/docs/reference/api/pandas.Series.isin.html) method and a `list` of values to compare with.
+The advantage of `.isin` is more concise and easy to manage code, especially when the number of comparisons is large.
+For example, the following expression gives the same result as above.
+
+```{python}
+world[world['continent'].isin(['North America', 'South America'])]  \
+    .loc[:, ['name_long', 'continent']]
 ```
 
 ### Vector attribute aggregation {#sec-vector-attribute-aggregation}
