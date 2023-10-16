@@ -6,7 +6,7 @@ jupyter: python3
 
 ## Prerequisites {.unnumbered}
 
-Let's import the required packages:
+This chapter requires importing the following packages:
 
 ```{python}
 import matplotlib.pyplot as plt
@@ -21,6 +21,7 @@ import shutil
 import math
 ```
 
+<!-- jn: question -- cannot we just somehow set all of these pandas options globally (for the whole book), instead of repeating them in every chapter? -->
 ```{python}
 #| echo: false
 import pandas as pd
@@ -30,7 +31,7 @@ pd.options.display.max_colwidth = 35
 plt.rcParams['figure.figsize'] = (5, 5)
 ```
 
-and load the sample data:
+It also relies on the following data files:
 
 ```{python}
 src_srtm = rasterio.open('data/srtm.tif')
@@ -42,29 +43,30 @@ cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
 
 ## Introduction
 
-@sec-coordinate-reference-systems introduced coordinate reference systems (CRSs), with a focus on the two major types: geographic ('lon/lat', with units in degrees longitude and latitude) and projected (typically with units of meters from a datum) coordinate systems.
+@sec-coordinate-reference-systems-intro introduced coordinate reference systems (CRSs), with a focus on the two major types: geographic ('lon/lat', with units in degrees longitude and latitude) and projected (typically with units of meters from a datum) coordinate systems.
 This chapter builds on that knowledge and goes further.
 It demonstrates how to set and transform geographic data from one CRS to another and, furthermore, highlights specific issues that can arise due to ignoring CRSs that you should be aware of, especially if your data is stored with lon/lat coordinates.
 
 In many projects there is no need to worry about, let alone convert between, different CRSs.
+<!-- jn: these two sentences do not "glue" well -->
 It is important to know if your data is in a projected or geographic coordinate system, and the consequences of this for geometry operations.
 However, if you know the CRS of your data and the consequences for geometry operations (covered in the next section), CRSs should just work behind the scenes: people often suddenly need to learn about CRSs when things go wrong.
-Having a clearly defined project CRS that all project data is in, plus understanding how and why to use different CRSs, can ensure that things don't go wrong.
+Having a clearly defined project CRS that all project data is in, plus understanding how and why to use different CRSs, can ensure that things do not go wrong.
 Furthermore, learning about coordinate systems will deepen your knowledge of geographic datasets and how to use them effectively.
 
 This chapter teaches the fundamentals of CRSs, demonstrates the consequences of using different CRSs (including what can go wrong), and how to "reproject" datasets from one coordinate system to another.
 In the next section we introduce CRSs in Python, followed by @sec-querying-and-setting-coordinate-systems which shows how to get and set CRSs associated with spatial objects.
 @sec-geometry-operations-on-projected-and-unprojected-data demonstrates the importance of knowing what CRS your data is in with reference to a worked example of creating buffers.
 We tackle questions of when to reproject and which CRS to use in @sec-when-to-reproject and @sec-which-crs-to-use, respectively.
-We cover reprojecting vector and raster objects in @sec-reprojecting-vector-geometries and @sec-reprojecting-raster-geometries and modifying map projections in @sec-custom-map-projections.
+Finally, we cover reprojecting vector and raster objects in @sec-reprojecting-vector-geometries and @sec-reprojecting-raster-geometries and modifying map projections in @sec-custom-map-projections.
 
 ## Coordinate Reference Systems {#sec-coordinate-reference-systems}
 
 Most modern geographic tools that require CRS conversions, including Python packages and desktop GIS software such as QGIS, interface with [PROJ](https://proj.org/), an open source C++ library that "transforms coordinates from one coordinate reference system (CRS) to another".
 CRSs can be described in many ways, including the following:
 
--   Simple yet potentially ambiguous statements such as "it's in lon/lat coordinates"
--   Formalized yet now outdated 'proj4 strings' such as `+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs`
+-   Simple, yet potentially ambiguous, statements, such as, "it's in lon/lat coordinates"
+-   Formalized, yet now outdated, 'proj4 strings' such as `+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs`
 -   With an identifying 'authority:code' text string such as `EPSG:4326`
 
 Each refers to the same thing: the 'WGS84' coordinate system that forms the basis of Global Positioning System (GPS) coordinates and many other datasets.
@@ -74,27 +76,33 @@ The short answer is that the third way to identify CRSs is correct: `EPSG:4326` 
 `EPSG:4326` is future-proof.
 Furthermore, although it is machine readable, unlike the proj-string representation `EPSG:4326` is short, easy to remember and highly 'findable' online (searching for `EPSG:4326` yields a dedicated page on the website [epsg.io](https://epsg.io/4326), for example).
 The more concise identifier `4326` is also understood by **geopandas** and **rasterio**, but we recommend the more explicit `AUTHORITY:CODE` representation to prevent ambiguity and to provide context.
+<!-- jn: if we recommend the more explicit representation, why do we use the shorter one in the book? I prefer the longer one, but it is open for the discussion. We need to be consistent. -->
 
 The longer answer is that none of the three descriptions are sufficient, and more detail is needed for unambiguous CRS handling and transformations: due to the complexity of CRSs, it is not possible to capture all relevant information about them in such short text strings.
 For this reason, the Open Geospatial Consortium (OGC, which also developed the simple features specification that the **geopandas** package implements) developed an open standard format for describing CRSs that is called WKT (Well Known Text).
+<!-- jn: simple features or Simple Features? We need to be consistent -- please also take a look at previous chapters... -->
 This is detailed in a [100+ page document](file:///home/michael/Downloads/18-010r7_Geographic_information__Well-known_text_representation_of_coordinate_reference_systems.pdf) that "defines the structure and content of a text string implementation of the abstract model for coordinate reference systems described in ISO 19111:2019" [@opengeospatialconsortium_wellknown_2019].
-The WKT representation of the WGS84 CRS, which has the identifier `EPSG:4326` is as follows:
+<!-- jn: the document link is broken... -->
+The WKT representation of the WGS84 CRS, which has the identifier `EPSG:4326` is as follows.
+<!-- jn: I still struggle with a decision if we should show EPSG:4326 or OGC:CRS84. I think that the latter is more correct, but the former is more common. I am open for the discussion. -->
+
 
 ```{python}
 crs = pyproj.CRS.from_string('EPSG:4326') # or '.from_epsg(4326)'
 print(crs.to_wkt(pretty=True))
 ```
 
+<!-- jn: maybe it would be good to add a sentence or two explaining the about wkt representation..? -->
 The output of the command shows how the CRS identifier (also known as a Spatial Reference Identifier or [SRID](https://postgis.net/workshops/postgis-intro/projection.html)) works: it is simply a look-up, providing a unique identifier associated with a more complete WKT representation of the CRS.
 This raises the question: what happens if there is a mismatch between the identifier and the longer WKT representation of a CRS?
 On this point Open Geospatial Consortium [@opengeospatialconsortium_wellknown_2019] is clear, the verbose WKT representation takes precedence over the [identifier](https://docs.opengeospatial.org/is/18-010r7/18-010r7.html#37):
 
 > Should any attributes or values given in the cited identifier be in conflict with attributes or values given explicitly in the WKT description, the WKT values shall prevail.
 
-The convention of referring to CRSs identifiers in the form `AUTHORITY:CODE`, which is also used by geographic software written in other languages, allows a wide range of formally defined coordinate systems to be referred to.
+The convention of referring to CRSs identifiers in the form `AUTHORITY:CODE` allows a wide range of formally defined coordinate systems to be referred to.
 The most commonly used authority in CRS identifiers is EPSG, an acronym for the European Petroleum Survey Group which published a standardized list of CRSs.
 Other authorities can be used in CRS identifiers.
-`ESRI:54030`, for example, refers to ESRI's implementation of the Robinson projection, which has the following WKT string:
+`ESRI:54030`, for example, refers to ESRI's implementation of the Robinson projection, which has the following WKT string.
 
 ```{python}
 crs = pyproj.CRS.from_string('ESRI:54030')
@@ -103,19 +111,21 @@ print(crs.to_wkt(pretty=True))
 
 WKT strings are exhaustive, detailed, and precise, allowing for unambiguous CRSs storage and transformations.
 They contain all relevant information about any given CRS, including its datum and ellipsoid, prime meridian, projection, and units.
+<!-- jn: maybe it would be good to add a sentence or two explaining the about wkt representation..? -->
 
 Recent PROJ versions (6+) still allow use of proj-strings to define coordinate operations, but some proj-string keys (`+nadgrids`, `+towgs84`, `+k`, `+init=epsg:`) are either no longer supported or are discouraged.
+<!-- jn: "proj4 strings" or "proj-string"? We need to be consistent -- please also take a look at previous chapters... -->
 Additionally, only three datums (i.e., WGS84, NAD83, and NAD27) can be directly set in proj-string.
 Longer explanations of the evolution of CRS definitions and the PROJ library can be found in [@bivand_progress_2021], Chapter 2 of [@pebesma_spatial_2022], and a [blog post by Floris Vanderhaeghe](https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/).
-As outlined in the [PROJ documentation](https://proj.org/development/reference/cpp/cpp_general.html) there are different versions of the WKT CRS format including WKT1 and two variants of WKT2, the latter of which (WKT2, 2018 specification) corresponds to the ISO 19111:2019 [@opengeospatialconsortium_wellknown_2019].
+As outlined in the [PROJ documentation](https://proj.org/development/reference/cpp/cpp_general.html), there are different versions of the WKT CRS format including WKT1 and two variants of WKT2, the latter of which (WKT2, 2018 specification) corresponds to the ISO 19111:2019 [@opengeospatialconsortium_wellknown_2019].
+<!-- jn: maybe the last sentence could be a block? -->
 
 ## Querying and setting coordinate systems {#sec-querying-and-setting-coordinate-systems}
 
-Let's look at how CRSs are stored in Python spatial objects and how they can be queried and set.
+Let's see how CRSs are stored in Python spatial objects and how they can be queried and set.
 First we will look at getting and setting CRSs in vector geographic data objects.
-Consider the `GeoDataFrame` object named `world`, imported from a file `world.gpkg`.
-The object `world` represents countries worldwide.
-Its CRS can be retrieved using the `.crs` property:
+Consider the `GeoDataFrame` object named `world`, imported from a file `world.gpkg` that represents countries worldwide.
+Its CRS can be retrieved using the `.crs` property.
 
 ```{python}
 world.crs
@@ -123,62 +133,55 @@ world.crs
 
 The output specifies the following pieces of information:
 
-1.  The CRS type (`Geographic 2D CRS`) and EPSG code (`EPSG:4326`)
+1.  The CRS type (`Geographic 2D CRS`) and SRID code (`EPSG:4326`)
 2.  The CRS name (`WGS 84`)
 3.  The axes (`latitude`, `longitude`) and their units (`degree`)
 4.  The applicable area name (`World`) and bounding box (`(-180.0, -90.0, 180.0, 90.0)`)
 5.  The datum (`WGS 84`)
 
 The WKT representation, which is internally used when saving the object to a file or doing any coordinate operations, can be extracted using `.crs.to_wkt()` as shown above (@sec-coordinate-reference-systems).
-Above, we can see that the `world` object has the WGS84 ellipsoid, uses the Greenwich prime meridian, and the latitude and longitude axis order.
+We can also see that the `world` object has the WGS84 ellipsoid, the latitude and longitude axis order, and uses the Greenwich prime meridian.
 We also have the suitable suitable area specification for the use of this CRS, and CRS identifier: `EPSG:4326`.
 
 The CRS specification object, such as `world.crs`, has several useful properties and methods to explicitly retrieve information about the used CRS.
-For example, whether the CRS is geographic:
+For example, we can check whether the CRS is geographic with the `.is_geographic` property.
 
 ```{python}
 world.crs.is_geographic
 ```
 
-Here are the CRS units of both axes (typically identical):
+CRS units of both axes (typically identical) can be retrieved with the `.axis_info` property.
 
 ```{python}
 world.crs.axis_info[0].unit_name
-```
-
-```{python}
 world.crs.axis_info[1].unit_name
 ```
 
-Here is the `AUTHORITY` and `CODE` strings:
+`AUTHORITY` and `CODE` strings may be obtained with the `.to_authority()` method.
 
 ```{python}
 world.crs.to_authority()
 ```
 
-And here is the proj-string representation:
-
+The `to_proj4()` method returns the proj-string representation of the CRS.
 ```{python}
 world.crs.to_proj4()
 ```
 
+<!--jn: the last code example leaves the following message (I think we should either remove the whole code example, or just remove the message but explaining it in the text..): '/home/jn/micromamba/envs/geocompy/lib/python3.11/site-packages/pyproj/crs/crs.py:1293: UserWarning: You will likely lose important projection information when converting to a PROJ string from another format. See: https://proj.org/faq.html#what-is-the-best-format-for-describing-coordinate-reference-systems proj = self._crs.to_proj4(version=version)' -->
+
 In cases when a coordinate reference system (CRS) is missing or the wrong CRS is set, the `.set_crs` method can be used on a `GeoSeries` or a `GeoDataFrame` to set it.
 The CRS can be specified using an EPSG code as the first argument.
 In case the object already has a different CRS definition, we must also specify `allow_override=True` to replace it (otherwise we get an error).
-For example, here we set the `EPSG:4326` CRS, which has no effect because `world` already has that exact CRS definition:
+In the first example we set the `EPSG:4326` CRS, which has no effect because `world` already has that exact CRS definition, while the second example replaces the existing CRS with a new definition of `EPSG:3857`.
 
 ```{python}
 world2 = world.set_crs(4326)
-```
-
-and here we replace the definition from the existing `EPSG:4326`, to a new definition `EPSG:3857`:
-
-```{python}
 world3 = world.set_crs(3857, allow_override=True)
 ```
 
-A number is interpreted as an `EPSG` code.
-We can also use strings, as in `'EPSG:4326'`, which is useful to make the code more clear and when using other authorities:
+The provided number is interpreted as an `EPSG` code.
+We can also use strings, as in `'EPSG:4326'`, which is useful to make the code more clear and when using other authorities than `EPSG`.
 
 ```{python}
 world4 = world.set_crs('ESRI:54009', allow_override=True)
@@ -187,28 +190,24 @@ world4 = world.set_crs('ESRI:54009', allow_override=True)
 In **rasterio**, the CRS information is stored as part of a raster file connection metadata (@sec-using-rasterio).
 Replacing the CRS definition for a **rasterio** file connection is typically not necessary, because it is not considered in any operation; only the transformation matrix and coordinates are.
 One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch).
-However, if we do for some reason need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode.
-To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`:
+However, if we, for some reason, need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode.
+<!-- jn: what's the difference between `r+` and `rw`? -->
+To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`, and examine its existing CRS.
 
 ```{python}
 shutil.copy('data/nlcd.tif', 'output/nlcd_modified_crs.tif')
-```
-
-Now, let's examine the existing CRS:
-
-```{python}
 src_nlcd2 = rasterio.open('output/nlcd_modified_crs.tif', 'r+')
 src_nlcd2.crs
 ```
 
-Here is how we replace the definition with a new one, such as `EPSG:3857`:
+To replace the definition with a new one, such as `EPSG:3857`, we can use the `.crs` method, as shown below.
 
 ```{python}
 src_nlcd2.crs = 3857
 src_nlcd2.close()
 ```
 
-Examining the file connection demonstrates that the CRS was indeed changed:
+Next, examining the file connection demonstrates that the CRS was indeed changed.
 
 ```{python}
 rasterio.open('output/nlcd_modified_crs.tif').crs
@@ -218,7 +217,7 @@ Importantly, the `.set_crs` (for vector layers) or the assignment to `.crs` (for
 Their role is only to set a metadata information about the object CRS.
 Consequently, the objects we created, `world3`, `world4`, and `src_nlcd2` are "incorrect", in the sense that the geometries are in fact given in a different CRS than specified in the associated CRS definition.
 
-In some cases the CRS of a geographic object is unknown, as is the case in the London dataset created in the code chunk below, building on the example of London introduced in @sec-vector-layer-from-scratch:
+In some cases, the CRS of a geographic object is unknown, as is the case in the London dataset created in the code chunk below, building on the example of London introduced in @sec-vector-layer-from-scratch.
 
 ```{python}
 lnd_point = shapely.Point(-0.1, 51.5)
@@ -227,7 +226,7 @@ lnd_layer = gpd.GeoDataFrame({'geometry': lnd_geom})
 lnd_layer
 ```
 
-Querying the `.crs` of such a layer returns `None`, therefore nothing is printed:
+Querying the `.crs` of such a layer returns `None`, therefore nothing is printed.
 
 ```{python}
 lnd_layer.crs
@@ -236,17 +235,16 @@ lnd_layer.crs
 This implies that **geopandas** does not know what the CRS is and is unwilling to guess.
 Unless a CRS is manually specified or is loaded from a source that has CRS metadata, **geopandas** does not make any explicit assumptions about which coordinate systems, other than to say "I don't know".
 This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying assumption that all coordinates have a lon/lat CRS: `EPSG:4326`.
+<!-- jn: Michael, please check if the above statement is still correct (I vaguely recall some recent discussion about this...)  -->
 
 A CRS can be added to `GeoSeries` or `GeoDataFrame` objects using the `.set_crs` method, as mentioned above.
-Since the definition is missing, we do not need to specify `allow_override=True`, as there is nothing to override.
-For example:
 
 ```{python}
 lnd_layer = lnd_layer.set_crs(4326)
-lnd_layer.crs
 ```
 
-In general, all geographic coordinates have a coordinate system and software can only make good decisions around plotting and and geometry operations if it knows what type of CRS it is working with.
+<!-- jn: "all geographic coordinates have a coordinate system" what does it mean? -->
+In general, all geographic coordinates have a coordinate system and software can only make good decisions about plotting and geometry operations if it knows what type of CRS it is working with.
 When working with **geopandas** and **rasterio**, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered.
 It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not).
 When exporting the results, though, it is important to keep the CRS definition in place, because other software typically *do* use, and require, the CRS definition in calculation.
@@ -262,12 +260,9 @@ Accordingly, it is crucial to make sure that:
 -   If there is more than one layer involved---all layers have to be in the same (projected) CRS
 -   Distance and area values, are passed, and returned, in CRS units
 
-For example, to calculate a buffer of 100 $km$ around London, we need to:
+For example, to calculate a buffer of 100 $km$ around London, we need to work with a layer representing London in a projected CRS (e.g., `EPSG:27700`) and pass the distance value in the CRS units (e.g., `100000` $m$).
 
--   Work with a layer representing London in a projected CRS (e.g., `EPSG:27700`)
--   Pass the distance value in the CRS units (e.g., `100000` $m$)
-
-In the following code section we create, from scratch, a point layer `lnd_layer_proj` with a point representing London (compare to `lnd_layer`, in a geographical CRS which we created above, see @sec-querying-and-setting-coordinate-systems):
+In the following code chunk we create, from scratch, a point layer `lnd_layer_proj` with a point representing London (compare it to `lnd_layer`, in a geographical CRS which we created above, see @sec-querying-and-setting-coordinate-systems).
 
 ```{python}
 lnd_point_proj = shapely.Point(530000, 180000)
@@ -276,16 +271,16 @@ lnd_layer_proj = gpd.GeoDataFrame({'geometry': lnd_geom_proj})
 lnd_layer_proj
 ```
 
-Now we can use the `.buffer` method (@sec-buffers) to calculate the buffer:
+Now, we can use the `.buffer` method (@sec-buffers) to calculate the buffer of 100 $km$ around London.
 
 ```{python}
 lnd_layer_proj_buff = lnd_layer_proj.buffer(100000)
 lnd_layer_proj_buff
 ```
 
-The resulting buffer is shown in the left panel of @fig-reprojection-geo-proj (a).
+The resulting buffer is shown in the left panel of @fig-reprojection-geo-proj.
 
-Calculating a 100-$km$ buffer `lnd_layer`, which is in a geographical CRS, is impossible.
+Calculating a 100-$km$ buffer directly for `lnd_layer`, which is in a geographical CRS, is impossible.
 Since the `lnd_layer` is in decimal degrees, the closest thing to a 100-$km$ buffer would be to use a distance of 1 degree, which is roughly equivalent to 100 $km$ (1 degree is about 111 $km$ at the equator):
 
 ```{python}
@@ -294,7 +289,7 @@ lnd_layer_buff
 ```
 
 However, this is incorrect, as told by the warning message and shown in the right panel of @fig-reprojection-geo-proj.
-The association between degrees and true distance varies over the surface of the earth and we cannot assume it is fixed (such as 1 degree = 111 $km$).
+The association between degrees and true distance varies over the surface of the earth and we cannot assume it is fixed.
 
 ```{python}
 #| label: fig-reprojection-geo-proj
@@ -303,19 +298,16 @@ The association between degrees and true distance varies over the surface of the
 #| fig-subcap:
 #| - Around a projected point and distance of 100 $km$
 #| - Around a point in lon/lat using distance of 1 degree (incorrectly approximating 100 $km$)
-
 uk = world[world['name_long'] == 'United Kingdom']
 uk_proj = uk.to_crs(27700)
-
 # Around projected point
 base = uk_proj.plot(color='none', edgecolor='darkgrey')
-lnd_layer_proj.plot(color='red', ax=base)
-lnd_layer_proj_buff.plot(color='none', ax=base);
-
+lnd_layer_proj_buff.plot(color='lightgrey', edgecolor='black', ax=base)
+lnd_layer_proj.plot(color='red', ax=base);
 # Around point in lon/lat
 base = uk.plot(color='none', edgecolor='darkgrey')
-lnd_layer.plot(color='red', ax=base)
-lnd_layer_buff.plot(color='none', ax=base);
+lnd_layer_buff.plot(color='lightgrey', edgecolor='black', ax=base)
+lnd_layer.plot(color='red', ax=base);
 ```
 
 ::: callout-note
@@ -326,14 +318,14 @@ Lines of latitude, by contrast, are equidistant from each other irrespective of 
 :::
 
 ::: callout-note
-The [**spherely**](https://github.com/benbovy/spherely) package, which is in early stages of development, is aimed at providing a spherical-geometry counterpart to **shapely**, so that true distances (in $m$) and areas (in $m^2$) can be calculated on geometries in geographic CRS.
+The [**spherely**](https://github.com/benbovy/spherely) package, which is in early stages of development, is aimed at providing a spherical-geometry counterpart to **shapely**, so that true distances (in $m$) and areas (in $m^2$) can be directly calculated on geometries in geographic CRS.
 :::
 
 ## When to reproject? {#sec-when-to-reproject}
 
 The previous section showed how to set the CRS manually, with an expression such as `lnd_layer.set_crs(4326)`.
 In real world applications, however, CRSs are usually set automatically when data is read-in.
-In many projects the main CRS-related task is to transform objects, from one CRS into another.
+Thus, in many projects the main CRS-related task is to transform objects, from one CRS into another.
 But when should data be transformed?
 And into which CRS?
 There are no clear-cut answers to these questions and CRS selection always involves trade-offs [@maling_coordinate_1992].
@@ -341,19 +333,20 @@ However, there are some general principles provided in this section that can hel
 
 First, it's worth considering when to transform.
 In some cases transformation to a geographic CRS is essential, such as when publishing data online (for example, a Leaflet-based map using Python package [**folium**](https://python-visualization.github.io/folium/latest/)).
-Another case is when two objects with different CRSs must be compared or combined, as shown when we try to find the distance between two objects with different CRSs:
+Another case is when two objects with different CRSs must be compared or combined, as shown when we try to find the distance between two objects with different CRSs.
 
 ```{python}
 lnd_layer.distance(lnd_layer_proj)
 ```
 
-We got a meaningless result, and a warning.
+Here, we got a meaningless result, and a warning.
 
 To make the `lnd_layer` and `lnd_layer_proj` objects geographically comparable, one of them must be transformed into the CRS of the other.
 But which CRS to use?
 The answer depends on context: many projects, especially those involving web mapping, require outputs in `EPSG:4326`, in which case it is worth transforming the projected object.
-If, however, the project requires geometric calculations, implying planar geometry, e.g., to calculating buffers (@sec-geometry-operations-on-projected-and-unprojected-data), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (`EPSG:27700`).
+If, however, the project requires geometric calculations, implying planar geometry, e.g., calculating buffers (@sec-geometry-operations-on-projected-and-unprojected-data), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (`EPSG:27700`).
 That is the subject of @sec-reprojecting-raster-geometries.
+<!-- jn: is the above cross-reference correct? does not seem to be... -->
 
 ## Which CRS to use? {#sec-which-crs-to-use}
 
@@ -370,20 +363,17 @@ This "magic number" can be used to convert objects with unusual projected CRSs i
 What about when a *projected* CRS is required?
 In some cases, it is not something that we are free to decide: "often the choice of projection is made by a public mapping agency" [@bivand_applied_2013].
 This means that when working with local data sources, it is likely preferable to work with the CRS in which the data was provided, to ensure compatibility, even if the official CRS is not the most accurate.
-The example of London was easy to answer because:
-
--   the British National Grid (with its associated EPSG code `27700`) is well known, and
--   the original dataset (`lnd_layer`) already had that CRS.
+The example of London was easy to answer because the British National Grid (with its associated EPSG code `27700`) is well known, and the original dataset (`lnd_layer`) already had that CRS.
 
 A commonly used default is Universal Transverse Mercator ([UTM](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system)), a set of CRSs that divides the Earth into 60 longitudinal wedges and 20 latitudinal segments.
 The transverse Mercator projection used by UTM CRSs is conformal but distorts areas and distances with increasing severity with distance from the center of the UTM zone.
 Documentation from the GIS software Manifold therefore suggests restricting the longitudinal extent of projects using UTM zones to 6 degrees from the central meridian (source: [manifold.net](http://www.manifold.net/doc/mfd9/universal_transverse_mercator_projection.htm)).
 Therefore, we recommend using UTM only when your focus is on preserving angles for a relatively small area!
 
-Almost every place on Earth has a UTM code, such as `'60H'` which refers to northern New Zealand.
+Almost every place on Earth has a UTM code, such as `'60H'` which refers, amoung others, to northern New Zealand.
 UTM EPSG codes run sequentially from `32601` to `32660` for northern hemisphere locations and from `32701` to `32760` for southern hemisphere locations.
 
-To show how the system works, let's create a function, `lonlat2UTM` to calculate the EPSG code associated with any point on the planet:
+To show how the system works, let's create a function, `lonlat2UTM` to calculate the EPSG code associated with any point on the planet.
 
 ```{python}
 def lonlat2UTM(lon, lat):
@@ -395,20 +385,20 @@ def lonlat2UTM(lon, lat):
     return utm
 ```
 
-The following command uses this function to identify the UTM zone and associated EPSG code for Auckland:
+The following command uses this function to identify the UTM zone and associated EPSG code for Auckland.
 
 ```{python}
 lonlat2UTM(174.7, -36.9)
 ```
 
-Here is another example for London (where we "unpack" the coordinates of the 1^st^ geometry in `lnd_layer` into the `lonlat2UTM` function arguments):
+Here is another example for London (where we "unpack" the coordinates of the 1^st^ geometry in `lnd_layer` into the `lonlat2UTM` function arguments).
 
 ```{python}
 lonlat2UTM(*lnd_layer.geometry.iloc[0].coords[0])
 ```
 
 Currently, we also have tools helping us to select a proper CRS.
-For example, the webpage <https://jjimenezshaw.github.io/crs-explorer/> lists CRSs based on selected location and type.
+For example, the webpage <https://crs-explorer.proj.org/> lists CRSs based on selected location and type.
 Important note: while these tools are helpful in many situations, you need to be aware of the properties of the recommended CRS before you apply it.
 
 In cases where an appropriate CRS is not immediately clear, the choice of CRS should depend on the properties that are most important to preserve in the subsequent maps and analysis.
@@ -420,11 +410,8 @@ Regardless of the projected CRS used, the results may not be accurate for geomet
 When deciding on a custom CRS, we recommend the following:
 
 -   A Lambert azimuthal equal-area ([LAEA](https://en.wikipedia.org/wiki/Lambert_azimuthal_equal-area_projection)) projection for a custom local projection (set latitude and longitude of origin to the center of the study area), which is an equal-area projection at all locations but distorts shapes beyond thousands of kilometers
-
 -   Azimuthal equidistant ([AEQD](https://en.wikipedia.org/wiki/Azimuthal_equidistant_projection)) projections for a specifically accurate straight-line distance between a point and the center point of the local projection
-
 -   Lambert conformal conic ([LCC](https://en.wikipedia.org/wiki/Lambert_conformal_conic_projection)) projections for regions covering thousands of kilometers, with the cone set to keep distance and area properties reasonable between the secant lines
-
 -   Stereographic ([STERE](https://en.wikipedia.org/wiki/Stereographic_projection)) projections for polar regions, but taking care not to rely on area and distance calculations thousands of kilometers from the center
 
 One possible approach to automatically select a projected CRS specific to a local dataset is to create an azimuthal equidistant (AEQD) projection for the center-point of the study area.
@@ -434,7 +421,7 @@ Note that this approach should be used with caution: no other datasets will be c
 The principles outlined in this section apply equally to vector and raster datasets.
 Some features of CRS transformation however are unique to each geographic data model.
 We will cover the particularities of vector data transformation in @sec-reprojecting-vector-geometries and those of raster transformation in @sec-reprojecting-raster-geometries.
-The last section, shows how to create custom map projections (@sec-custom-map-projections).
+The last section, @sec-custom-map-projections, shows how to create custom map projections.
 
 ## Reprojecting vector geometries {#sec-reprojecting-vector-geometries}
 
