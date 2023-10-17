@@ -323,20 +323,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="introduction" class="level2" data-number="5.1">
 <h2 data-number="5.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">5.1</span> Introduction</h2>
-<p>This chapter focuses on interactions between raster and vector geographic data models, both introduced in <a href="01-spatial-data.html"><span>Chapter&nbsp;1</span></a>. It includes four main techniques:</p>
+<p>This chapter focuses on interactions between raster and vector geographic data models, both introduced in <a href="#sec-spatial-class"><span class="quarto-unresolved-ref">sec-spatial-class</span></a>. It includes four main techniques:</p>
 <ul>
-<li>Raster cropping and masking using vector objects (<a href="#sec-raster-cropping"><span>Section&nbsp;5.2</span></a>)</li>
-<li>Extracting raster values using different types of vector data (Section <a href="#sec-raster-extraction"><span>Section&nbsp;5.3</span></a>)</li>
-<li>Raster-vector conversion (<a href="#sec-rasterization"><span>Section&nbsp;5.4</span></a> and <a href="#sec-spatial-vectorization"><span>Section&nbsp;5.5</span></a>)</li>
+<li>Raster cropping and masking using vector objects (<a href="#sec-raster-cropping"><span class="quarto-unresolved-ref">sec-raster-cropping</span></a>)</li>
+<li>Extracting raster values using different types of vector data (Section <a href="#sec-raster-extraction"><span class="quarto-unresolved-ref">sec-raster-extraction</span></a>)</li>
+<li>Raster-vector conversion (<a href="#sec-rasterization"><span class="quarto-unresolved-ref">sec-rasterization</span></a> and <a href="#sec-spatial-vectorization"><span class="quarto-unresolved-ref">sec-spatial-vectorization</span></a>)</li>
 </ul>
 <p>These concepts are demonstrated using data from in previous chapters, to understand their potential real-world applications.</p>
 </section>
 <section id="sec-raster-cropping" class="level2" data-number="5.2">
 <h2 data-number="5.2" class="anchored" data-anchor-id="sec-raster-cropping"><span class="header-section-number">5.2</span> Raster masking and cropping</h2>
-<p>Many geographic data projects involve integrating data from many different sources, such as remote sensing images (rasters) and administrative boundaries (vectors). Often the extent of input raster datasets is larger than the area of interest. In this case raster <em>masking</em>, <em>cropping</em>, or both, are useful for unifying the spatial extent of input data (<a href="#fig-raster-crop">Figure&nbsp;<span>5.2</span></a> (b) and (c), and the following two examples, illustrate the difference between masking and cropping). Both operations reduce object memory use and associated computational resources for subsequent analysis steps, and may be a necessary preprocessing step before creating attractive maps involving raster data.</p>
+<p>Many geographic data projects involve integrating data from many different sources, such as remote sensing images (rasters) and administrative boundaries (vectors). Often the extent of input raster datasets is larger than the area of interest. In this case raster <em>masking</em>, <em>cropping</em>, or both, are useful for unifying the spatial extent of input data (<a href="#fig-raster-crop">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-crop</span></a> (b) and (c), and the following two examples, illustrate the difference between masking and cropping). Both operations reduce object memory use and associated computational resources for subsequent analysis steps, and may be a necessary preprocessing step before creating attractive maps involving raster data.</p>
 <p>We will use two layers to illustrate raster cropping:</p>
 <ul>
-<li>The <code>srtm.tif</code> raster representing elevation, in meters above sea level, in south-western Utah: a <strong>rasterio</strong> file connection named <code>src_srtm</code> (see <a href="#fig-raster-crop">Figure&nbsp;<span>5.2</span></a> (a))</li>
+<li>The <code>srtm.tif</code> raster representing elevation, in meters above sea level, in south-western Utah: a <strong>rasterio</strong> file connection named <code>src_srtm</code> (see <a href="#fig-raster-crop">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-crop</span></a> (a))</li>
 <li>The <code>zion.gpkg</code> vector layer representing the Zion National Park boundaries (a <code>GeoDataFrame</code> named <code>zion</code>)</li>
 </ul>
 <p>Both target and cropping objects must have the same projection. Since it is easier and more precise to reproject vector layers, compared to rasters, we use the following expression to reproject the vector layer <code>zion</code> into the CRS of the raster <code>src_srtm</code>. <!-- jn: maybe reference to the CRS section/chapter --></p>
@@ -418,10 +418,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>The related operation, cropping, reduces the raster extent to the extent of the vector layer:</p>
 <ul>
-<li>To just crop, <em>without</em> masking, we can derive the bounding box polygon of the vector layer, and then crop using that polygon, also combined with <code>crop=True</code> (<a href="#fig-raster-crop">Figure&nbsp;<span>5.2</span></a> (c))</li>
-<li>To crop <em>and</em> mask, we can use <code>rasterio.mask.mask</code>, same as above for masking, just setting <code>crop=True</code> instead of the default <code>crop=False</code> (<a href="#fig-raster-crop">Figure&nbsp;<span>5.2</span></a> (d))</li>
+<li>To just crop, <em>without</em> masking, we can derive the bounding box polygon of the vector layer, and then crop using that polygon, also combined with <code>crop=True</code> (<a href="#fig-raster-crop">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-crop</span></a> (c))</li>
+<li>To crop <em>and</em> mask, we can use <code>rasterio.mask.mask</code>, same as above for masking, just setting <code>crop=True</code> instead of the default <code>crop=False</code> (<a href="#fig-raster-crop">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-crop</span></a> (d))</li>
 </ul>
-<p>For the example of cropping only, the extent polygon of <code>zion</code> can be obtained as a <code>shapely</code> geometry object using the <code>.unary_union.envelope</code> property(<a href="#fig-zion-bbox">Figure&nbsp;<span>5.1</span></a>).</p>
+<p>For the example of cropping only, the extent polygon of <code>zion</code> can be obtained as a <code>shapely</code> geometry object using the <code>.unary_union.envelope</code> property(<a href="#fig-zion-bbox">Figure&nbsp;<span class="quarto-unresolved-ref">fig-zion-bbox</span></a>).</p>
 <div class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>bb <span class="op">=</span> zion.unary_union.envelope</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>bb</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -471,7 +471,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>(1, 436, 439)</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-crop">Figure&nbsp;<span>5.2</span></a> shows the original raster, and the all of the masked and cropped results.</p>
+<p><a href="#fig-raster-crop">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-crop</span></a> shows the original raster, and the all of the masked and cropped results.</p>
 <div>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Original</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="fl">3.5</span>, <span class="fl">3.5</span>))</span>
@@ -534,15 +534,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="sec-raster-extraction" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="sec-raster-extraction"><span class="header-section-number">5.3</span> Raster extraction</h2>
-<p>Raster extraction is the process of identifying and returning the values associated with a ‘target’ raster at specific locations, based on a (typically vector) geographic ‘selector’ object. The reverse of raster extraction—assigning raster cell values based on vector objects—is rasterization, described in <a href="#sec-rasterization"><span>Section&nbsp;5.4</span></a>.</p>
+<p>Raster extraction is the process of identifying and returning the values associated with a ‘target’ raster at specific locations, based on a (typically vector) geographic ‘selector’ object. The reverse of raster extraction—assigning raster cell values based on vector objects—is rasterization, described in <a href="#sec-rasterization"><span class="quarto-unresolved-ref">sec-rasterization</span></a>.</p>
 <p>In the following examples, we use a package called <strong>rasterstats</strong>, which is specifically aimed at extracting raster values:</p>
 <ul>
-<li>To <em>points</em> (<a href="#sec-extraction-to-points"><span>Section&nbsp;5.3.1</span></a>) or to <em>lines</em> (<a href="#sec-extraction-to-lines"><span>Section&nbsp;5.3.2</span></a>), via the <code>rasterstats.point_query</code> function</li>
-<li>To <em>polygons</em> (<a href="#sec-extraction-to-polygons"><span>Section&nbsp;5.3.3</span></a>), via the <code>rasterstats.zonal_stats</code> function</li>
+<li>To <em>points</em> (<a href="#sec-extraction-to-points"><span class="quarto-unresolved-ref">sec-extraction-to-points</span></a>) or to <em>lines</em> (<a href="#sec-extraction-to-lines"><span class="quarto-unresolved-ref">sec-extraction-to-lines</span></a>), via the <code>rasterstats.point_query</code> function</li>
+<li>To <em>polygons</em> (<a href="#sec-extraction-to-polygons"><span class="quarto-unresolved-ref">sec-extraction-to-polygons</span></a>), via the <code>rasterstats.zonal_stats</code> function</li>
 </ul>
 <section id="sec-extraction-to-points" class="level3" data-number="5.3.1">
 <h3 data-number="5.3.1" class="anchored" data-anchor-id="sec-extraction-to-points"><span class="header-section-number">5.3.1</span> Extraction to points</h3>
-<p>The simplest type of raster extraction is getting the values of raster cells at specific points. To demonstrate extraction to points, we will use <code>zion_points</code>, which contains a sample of 30 locations within the Zion National Park (<a href="#fig-zion-points">Figure&nbsp;<span>5.3</span></a>).</p>
+<p>The simplest type of raster extraction is getting the values of raster cells at specific points. To demonstrate extraction to points, we will use <code>zion_points</code>, which contains a sample of 30 locations within the Zion National Park (<a href="#fig-zion-points">Figure&nbsp;<span class="quarto-unresolved-ref">fig-zion-points</span></a>).</p>
 <div class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm, ax<span class="op">=</span>ax)</span>
@@ -638,7 +638,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="sec-extraction-to-lines" class="level3" data-number="5.3.2">
 <h3 data-number="5.3.2" class="anchored" data-anchor-id="sec-extraction-to-lines"><span class="header-section-number">5.3.2</span> Extraction to lines</h3>
 <p>Raster extraction is also applicable with line selectors. The typical line extraction algorithm is to extract one value for each raster cell touched by a line. However, this particular approach is not recommended to obtain values along the transects, as it is hard to get the correct distance between each pair of extracted raster values.</p>
-<p>For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points using the “extraction to points” technique (<a href="#sec-extraction-to-points"><span>Section&nbsp;5.3.1</span></a>). To demonstrate this, the code below creates (see <a href="01-spatial-data.html#sec-vector-data"><span>Section&nbsp;1.2</span></a> for recap) <code>zion_transect</code>, a straight line going from northwest to southeast of the Zion National Park.</p>
+<p>For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points using the “extraction to points” technique (<a href="#sec-extraction-to-points"><span class="quarto-unresolved-ref">sec-extraction-to-points</span></a>). To demonstrate this, the code below creates (see <a href="#sec-vector-data"><span class="quarto-unresolved-ref">sec-vector-data</span></a> for recap) <code>zion_transect</code>, a straight line going from northwest to southeast of the Zion National Park.</p>
 <div class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>coords <span class="op">=</span> [[<span class="op">-</span><span class="fl">113.2</span>, <span class="fl">37.45</span>], [<span class="op">-</span><span class="fl">112.9</span>, <span class="fl">37.2</span>]]</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>zion_transect <span class="op">=</span> shapely.LineString(coords)</span>
@@ -648,7 +648,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>The utility of extracting heights from a linear selector is illustrated by imagining that you are planning a hike. The method demonstrated below provides an ‘elevation profile’ of the route (the line does not need to be straight), useful for estimating how long it will take due to long climbs.</p>
-<p>First, we need to create a layer consisting of points along our line (<code>zion_transect</code>), at specified intervals (e.g., <code>250</code>). To do that, we need to transform the line into a projected CRS (so that we work with true distances, in <span class="math inline">\(m\)</span>), such as UTM. This requires going through a <code>GeoSeries</code>, as <strong>shapely</strong> geometries have no CRS definition nor concept of reprojection (see <a href="01-spatial-data.html#sec-vector-layer-from-scratch"><span>Section&nbsp;1.2.6</span></a>).</p>
+<p>First, we need to create a layer consisting of points along our line (<code>zion_transect</code>), at specified intervals (e.g., <code>250</code>). To do that, we need to transform the line into a projected CRS (so that we work with true distances, in <span class="math inline">\(m\)</span>), such as UTM. This requires going through a <code>GeoSeries</code>, as <strong>shapely</strong> geometries have no CRS definition nor concept of reprojection (see <a href="#sec-vector-layer-from-scratch"><span class="quarto-unresolved-ref">sec-vector-layer-from-scratch</span></a>).</p>
 <div class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>zion_transect_utm <span class="op">=</span> gpd.GeoSeries(zion_transect, crs<span class="op">=</span><span class="dv">4326</span>).to_crs(<span class="dv">32612</span>)</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>zion_transect_utm <span class="op">=</span> zion_transect_utm.iloc[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -684,7 +684,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 Length: 154, dtype: geometry</code></pre>
 </div>
 </div>
-<p>Finally, we extract the elevation values for each point in our transect and combine the information with <code>zion_transect_pnt</code> (after “promoting” it to a <code>GeoDataFrame</code>, to accommodate extra attributes), using the point extraction method shown earlier (<a href="#sec-extraction-to-points"><span>Section&nbsp;5.3.1</span></a>). We also attach the respective distance cutoff points <code>distances</code>.</p>
+<p>Finally, we extract the elevation values for each point in our transect and combine the information with <code>zion_transect_pnt</code> (after “promoting” it to a <code>GeoDataFrame</code>, to accommodate extra attributes), using the point extraction method shown earlier (<a href="#sec-extraction-to-points"><span class="quarto-unresolved-ref">sec-extraction-to-points</span></a>). We also attach the respective distance cutoff points <code>distances</code>.</p>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> rasterstats.point_query(</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    zion_transect_pnt, </span>
@@ -760,7 +760,7 @@ Length: 154, dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>The information in <code>zion_transect_pnt</code>, namely the <code>'dist'</code> and <code>'elev'</code> attributes, can now be used to draw an elevation profile, as illustrated in <a href="#fig-zion-transect">Figure&nbsp;<span>5.4</span></a>.</p>
+<p>The information in <code>zion_transect_pnt</code>, namely the <code>'dist'</code> and <code>'elev'</code> attributes, can now be used to draw an elevation profile, as illustrated in <a href="#fig-zion-transect">Figure&nbsp;<span class="quarto-unresolved-ref">fig-zion-transect</span></a>.</p>
 <div>
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Raster and a line transect</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
@@ -799,7 +799,7 @@ Length: 154, dtype: geometry</code></pre>
 </section>
 <section id="sec-extraction-to-polygons" class="level3" data-number="5.3.3">
 <h3 data-number="5.3.3" class="anchored" data-anchor-id="sec-extraction-to-polygons"><span class="header-section-number">5.3.3</span> Extraction to polygons</h3>
-<p>The final type of geographic vector object for raster extraction is polygons. Like lines, polygons tend to return many raster values per polygon. For continuous rasters (<a href="#fig-raster-extract-to-polygon">Figure&nbsp;<span>5.5</span></a> (a)), we typically want to generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. The generation of raster summary statistics, by polygons, is demonstrated in the code below using <code>rasterstats.zonal_stats</code>, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon).</p>
+<p>The final type of geographic vector object for raster extraction is polygons. Like lines, polygons tend to return many raster values per polygon. For continuous rasters (<a href="#fig-raster-extract-to-polygon">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-extract-to-polygon</span></a> (a)), we typically want to generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. The generation of raster summary statistics, by polygons, is demonstrated in the code below using <code>rasterstats.zonal_stats</code>, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon).</p>
 <div class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> rasterstats.zonal_stats(</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    zion, </span>
@@ -855,7 +855,7 @@ Length: 154, dtype: geometry</code></pre>
 <li><code>'median'</code>—The median value</li>
 </ul>
 <p>See the <a href="https://pythonhosted.org/rasterstats/manual.html#statistics">documentation</a> of <code>rasterstats.zonal_stats</code> for the complete list. Additionally, the <code>rasterstats.zonal_stats</code> function accepts user-defined functions for calculating any custom statistics.</p>
-<p>To count occurrences of categorical raster values within polygons (<a href="#fig-raster-extract-to-polygon">Figure&nbsp;<span>5.5</span></a> (b)), we can use masking (<a href="#sec-raster-cropping"><span>Section&nbsp;5.2</span></a>) combined with <code>np.unique</code>, as follows.</p>
+<p>To count occurrences of categorical raster values within polygons (<a href="#fig-raster-extract-to-polygon">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-extract-to-polygon</span></a> (b)), we can use masking (<a href="#sec-raster-cropping"><span class="quarto-unresolved-ref">sec-raster-cropping</span></a>) combined with <code>np.unique</code>, as follows.</p>
 <div class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.mask.mask(</span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    src_nlcd, </span>
@@ -871,7 +871,7 @@ Length: 154, dtype: geometry</code></pre>
 </div>
 </div>
 <p>According to the result, for example, pixel value <code>2</code> (“Developed” class) appears in <code>4205</code> pixels within the Zion polygon.</p>
-<p><a href="#fig-raster-extract-to-polygon">Figure&nbsp;<span>5.5</span></a> illustrates the two types of raster extraction to polygons described above.</p>
+<p><a href="#fig-raster-extract-to-polygon">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-extract-to-polygon</span></a> illustrates the two types of raster extraction to polygons described above.</p>
 <div>
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Continuous raster</span></span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
@@ -913,7 +913,7 @@ Length: 154, dtype: geometry</code></pre>
 <!-- jn: intro is missing -->
 <section id="sec-rasterizing-points" class="level3" data-number="5.4.1">
 <h3 data-number="5.4.1" class="anchored" data-anchor-id="sec-rasterizing-points"><span class="header-section-number">5.4.1</span> Rasterizing points</h3>
-<p>Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in <a href="01-spatial-data.html"><span>Chapter&nbsp;1</span></a>, the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.</p>
+<p>Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in <a href="#sec-spatial-class"><span class="quarto-unresolved-ref">sec-spatial-class</span></a>, the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.</p>
 <p>The <strong>rasterio</strong> package contains the <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.rasterize"><code>rasterio.features.rasterize</code></a> function for doing this work. To make it happen, we need to have the “template” grid definition, i.e., the “template” raster defining the extent, resolution and CRS of the output, in the <code>out_shape</code> (the output dimensions) and <code>transform</code> (the transformation matrix) arguments of <code>rasterio.features.rasterize</code>. In case we have an existing template raster, we simply need to query its <code>.shape</code> and <code>.transform</code>. On the other hand, if we need to create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).</p>
 <p>Furthermore, the <code>rasterio.features.rasterize</code> function requires the input vector shapes in the form for a generator of <code>(geom,value)</code> tuples, where:</p>
 <ul>
@@ -922,7 +922,7 @@ Length: 154, dtype: geometry</code></pre>
 </ul>
 <p>Again, this will be made clear in the next example.</p>
 <p>The geographic resolution of the “template” raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive. There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results. Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.</p>
-<p>To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data <code>cycle_hire_osm_projected</code> (a dataset on cycle hire points in London, illustrated in <a href="#fig-rasterize-points">Figure&nbsp;<span>5.6</span></a> (a)) and a spatial resolution of 1000 <span class="math inline">\(m\)</span>. First, we take the vector layer and transform it to a projected CRS:</p>
+<p>To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data <code>cycle_hire_osm_projected</code> (a dataset on cycle hire points in London, illustrated in <a href="#fig-rasterize-points">Figure&nbsp;<span class="quarto-unresolved-ref">fig-rasterize-points</span></a> (a)) and a spatial resolution of 1000 <span class="math inline">\(m\)</span>. First, we take the vector layer and transform it to a projected CRS:</p>
 <div class="cell" data-execution_count="32">
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected <span class="op">=</span> cycle_hire_osm.to_crs(<span class="dv">27700</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -953,12 +953,12 @@ Length: 154, dtype: geometry</code></pre>
 </div>
 </div>
 <p>Now, we can rasterize. Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel “activation” method, and the function applied when there is more than one match.</p>
-<p>To illustrate this flexibility, we will try three different approaches to rasterization (<a href="#fig-rasterize-points">Figure&nbsp;<span>5.6</span></a> (b)-(d)). First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of <code>1</code> to all pixels where at least one point falls in. To transform the point <code>GeoDataFrame</code> into a generator of <code>shapely</code> geometries and the (fixed) values, we use the following expression. <!-- jn: maybe explain the code below in more detail? --> <!-- jn: also maybe use a different name than g? --></p>
+<p>To illustrate this flexibility, we will try three different approaches to rasterization (<a href="#fig-rasterize-points">Figure&nbsp;<span class="quarto-unresolved-ref">fig-rasterize-points</span></a> (b)-(d)). First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of <code>1</code> to all pixels where at least one point falls in. To transform the point <code>GeoDataFrame</code> into a generator of <code>shapely</code> geometries and the (fixed) values, we use the following expression. <!-- jn: maybe explain the code below in more detail? --> <!-- jn: also maybe use a different name than g? --></p>
 <div class="cell" data-execution_count="35">
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>g <span class="op">=</span> ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry.to_list())</span>
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>g</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="35">
-<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7fb9e3394c70&gt;</code></pre>
+<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7ff50acd7ac0&gt;</code></pre>
 </div>
 </div>
 <p>Then, the rasterizing expression takes the generator <code>g</code>, the template <code>shape</code> and <code>transform</code> as arguments.</p>
@@ -997,7 +997,7 @@ Length: 154, dtype: geometry</code></pre>
 <span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>ch_raster3</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The result <code>ch_raster3</code> shows the total capacity of cycle hire points in each grid cell.</p>
-<p>The input point layer <code>cycle_hire_osm_projected</code> and the three variants of rasterizing it <code>ch_raster1</code>, <code>ch_raster2</code>, and <code>ch_raster3</code> are shown in <a href="#fig-rasterize-points">Figure&nbsp;<span>5.6</span></a>.</p>
+<p>The input point layer <code>cycle_hire_osm_projected</code> and the three variants of rasterizing it <code>ch_raster1</code>, <code>ch_raster2</code>, and <code>ch_raster3</code> are shown in <a href="#fig-rasterize-points">Figure&nbsp;<span class="quarto-unresolved-ref">fig-rasterize-points</span></a>.</p>
 <div>
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input points</span></span>
 <span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
@@ -1104,7 +1104,7 @@ Length: 154, dtype: geometry</code></pre>
 dtype: geometry</code></pre>
 </div>
 </div>
-<p>Third, we create a template raster with a resolution of a <code>0.5</code> degree, using the same approach as in <a href="#sec-rasterizing-points"><span>Section&nbsp;5.4.1</span></a>.</p>
+<p>Third, we create a template raster with a resolution of a <code>0.5</code> degree, using the same approach as in <a href="#sec-rasterizing-points"><span class="quarto-unresolved-ref">sec-rasterizing-points</span></a>.</p>
 <div class="cell" data-execution_count="42">
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>bounds <span class="op">=</span> california_borders.total_bounds</span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> <span class="fl">0.5</span></span>
@@ -1122,7 +1122,7 @@ dtype: geometry</code></pre>
 <pre><code>(19, 21)</code></pre>
 </div>
 </div>
-<p>Finally, we rasterize <code>california_borders</code> based on the calculated template’s <code>shape</code> and <code>transform</code>. When considering line or polygon rasterization, one useful additional argument is <code>all_touched</code>. By default it is <code>False</code>, but when changed to <code>True</code>—all cells that are touched by a line or polygon border get a value. Line rasterization with <code>all_touched=True</code> is demonstrated in the code below (<a href="#fig-rasterize-lines-polygons">Figure&nbsp;<span>5.7</span></a>, left). We are also using <code>fill=np.nan</code> to set “background” values as “No Data”.</p>
+<p>Finally, we rasterize <code>california_borders</code> based on the calculated template’s <code>shape</code> and <code>transform</code>. When considering line or polygon rasterization, one useful additional argument is <code>all_touched</code>. By default it is <code>False</code>, but when changed to <code>True</code>—all cells that are touched by a line or polygon border get a value. Line rasterization with <code>all_touched=True</code> is demonstrated in the code below (<a href="#fig-rasterize-lines-polygons">Figure&nbsp;<span class="quarto-unresolved-ref">fig-rasterize-lines-polygons</span></a>, left). We are also using <code>fill=np.nan</code> to set “background” values as “No Data”.</p>
 <div class="cell" data-execution_count="43">
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>california_raster1 <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> california_borders.to_list()),</span>
@@ -1132,7 +1132,7 @@ dtype: geometry</code></pre>
 <span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span>np.nan</span>
 <span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Compare it to a polygon rasterization, with <code>all_touched=False</code> (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in <a href="#fig-rasterize-lines-polygons">Figure&nbsp;<span>5.7</span></a> (right).</p>
+<p>Compare it to a polygon rasterization, with <code>all_touched=False</code> (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in <a href="#fig-rasterize-lines-polygons">Figure&nbsp;<span class="quarto-unresolved-ref">fig-rasterize-lines-polygons</span></a> (right).</p>
 <div class="cell" data-execution_count="44">
 <div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>california_raster2 <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> california.geometry.to_list()),</span>
@@ -1141,7 +1141,7 @@ dtype: geometry</code></pre>
 <span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span>np.nan</span>
 <span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points. This also requires the following code section to calculate the points, which we explain in <a href="#sec-spatial-vectorization"><span>Section&nbsp;5.5</span></a>.</p>
+<p>To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points. This also requires the following code section to calculate the points, which we explain in <a href="#sec-spatial-vectorization"><span class="quarto-unresolved-ref">sec-spatial-vectorization</span></a>.</p>
 <div class="cell" data-execution_count="45">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>ids <span class="op">=</span> california_raster1.copy()</span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>ids <span class="op">=</span> np.arange(<span class="dv">0</span>, california_raster1.size) <span class="op">\</span></span>
@@ -1152,7 +1152,7 @@ dtype: geometry</code></pre>
 <span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>pnt <span class="op">=</span> [shapely.geometry.shape(i[<span class="dv">0</span>]).centroid <span class="cf">for</span> i <span class="kw">in</span> pol]</span>
 <span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>pnt <span class="op">=</span> gpd.GeoSeries(pnt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><a href="#fig-rasterize-lines-polygons">Figure&nbsp;<span>5.7</span></a> shows the input vector layer, the rasterization results, and the points <code>pnt</code>.</p>
+<p><a href="#fig-rasterize-lines-polygons">Figure&nbsp;<span class="quarto-unresolved-ref">fig-rasterize-lines-polygons</span></a> shows the input vector layer, the rasterization results, and the points <code>pnt</code>.</p>
 <div>
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Line rasterization</span></span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
@@ -1192,11 +1192,11 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-spatial-vectorization" class="level2" data-number="5.5">
 <h2 data-number="5.5" class="anchored" data-anchor-id="sec-spatial-vectorization"><span class="header-section-number">5.5</span> Spatial vectorization</h2>
-<p>Spatial vectorization is the counterpart of rasterization (<a href="#sec-rasterization"><span>Section&nbsp;5.4</span></a>). It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons. There are three standard methods to convert a raster to a vector layer, which we cover next:</p>
+<p>Spatial vectorization is the counterpart of rasterization (<a href="#sec-rasterization"><span class="quarto-unresolved-ref">sec-rasterization</span></a>). It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons. There are three standard methods to convert a raster to a vector layer, which we cover next:</p>
 <ul>
-<li>Raster to polygons (<a href="#sec-raster-to-polygons"><span>Section&nbsp;5.5.1</span></a>)—the most straightforward form of vectorization, converting raster cells to polygons, where each pixel is represented by a rectangular polygon</li>
-<li>Raster to points (<a href="#sec-raster-to-points"><span>Section&nbsp;5.5.2</span></a>)—has the additional step of calculating polygon centroids</li>
-<li>Raster to contours (<a href="#sec-raster-to-contours"><span>Section&nbsp;5.5.3</span></a>)</li>
+<li>Raster to polygons (<a href="#sec-raster-to-polygons"><span class="quarto-unresolved-ref">sec-raster-to-polygons</span></a>)—the most straightforward form of vectorization, converting raster cells to polygons, where each pixel is represented by a rectangular polygon</li>
+<li>Raster to points (<a href="#sec-raster-to-points"><span class="quarto-unresolved-ref">sec-raster-to-points</span></a>)—has the additional step of calculating polygon centroids</li>
+<li>Raster to contours (<a href="#sec-raster-to-contours"><span class="quarto-unresolved-ref">sec-raster-to-contours</span></a>)</li>
 </ul>
 <p>Let us demonstrate all three in the given order.</p>
 <section id="sec-raster-to-polygons" class="level3" data-number="5.5.1">
@@ -1210,7 +1210,7 @@ dtype: geometry</code></pre>
 <span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>shapes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="47">
-<pre><code>&lt;generator object shapes at 0x7fb9e5faabd0&gt;</code></pre>
+<pre><code>&lt;generator object shapes at 0x7ff50f9a6bd0&gt;</code></pre>
 </div>
 </div>
 <p>We can generate all shapes at once into a <code>list</code> named <code>pol</code> with <code>list(shapes)</code>.</p>
@@ -1286,7 +1286,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>The resulting polygon layer is shown in <a href="#fig-raster-to-polygons">Figure&nbsp;<span>5.8</span></a>. As shown using the <code>edgecolor='black'</code> option, neighboring pixels sharing the same raster value are dissolved into larger polygons. The <code>rasterio.features.shapes</code> function does not offer a way to avoid this type of dissolving. One way to work around that is to convert an array with consecutive IDs, instead of the real values, to polygons, then extract the real values from the raster (see the example in <a href="#sec-raster-to-points"><span>Section&nbsp;5.5.2</span></a>).</p>
+<p>The resulting polygon layer is shown in <a href="#fig-raster-to-polygons">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-to-polygons</span></a>. As shown using the <code>edgecolor='black'</code> option, neighboring pixels sharing the same raster value are dissolved into larger polygons. The <code>rasterio.features.shapes</code> function does not offer a way to avoid this type of dissolving. One way to work around that is to convert an array with consecutive IDs, instead of the real values, to polygons, then extract the real values from the raster (see the example in <a href="#sec-raster-to-points"><span class="quarto-unresolved-ref">sec-raster-to-points</span></a>).</p>
 <div class="cell" data-execution_count="50">
 <div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>result.plot(column<span class="op">=</span><span class="st">'value'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
@@ -1301,7 +1301,7 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-raster-to-points" class="level3" data-number="5.5.2">
 <h3 data-number="5.5.2" class="anchored" data-anchor-id="sec-raster-to-points"><span class="header-section-number">5.5.2</span> Raster to points</h3>
-<p>To transform raster to points, we can use <code>rasterio.features.shapes</code>, same as in conversion to polygons (<a href="#sec-raster-to-points"><span>Section&nbsp;5.5.2</span></a>), only with the addition of the <code>.centroid</code> method to go from polygons to their centroids. However, to avoid dissolving nearby pixels, we will actually convert a raster with consecutive IDs, then extract the “true” values by point (it is not strictly necessary in this example, since the values of <code>elev.tif</code> are all unique).</p>
+<p>To transform raster to points, we can use <code>rasterio.features.shapes</code>, same as in conversion to polygons (<a href="#sec-raster-to-points"><span class="quarto-unresolved-ref">sec-raster-to-points</span></a>), only with the addition of the <code>.centroid</code> method to go from polygons to their centroids. However, to avoid dissolving nearby pixels, we will actually convert a raster with consecutive IDs, then extract the “true” values by point (it is not strictly necessary in this example, since the values of <code>elev.tif</code> are all unique).</p>
 <p>First, we create an <code>ndarray</code> with consecutive IDs, matching the shape of <code>elev.tif</code> raster values.</p>
 <div class="cell" data-execution_count="51">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src_elev.read(<span class="dv">1</span>)</span>
@@ -1372,7 +1372,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>Finally, we extract (<a href="#sec-extraction-to-points"><span>Section&nbsp;5.3.1</span></a>) the <code>elev.tif</code> raster values to points, technically finalizing the raster-to-points conversion.</p>
+<p>Finally, we extract (<a href="#sec-extraction-to-points"><span class="quarto-unresolved-ref">sec-extraction-to-points</span></a>) the <code>elev.tif</code> raster values to points, technically finalizing the raster-to-points conversion.</p>
 <div class="cell" data-execution_count="53">
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>result[<span class="st">'value'</span>] <span class="op">=</span> rasterstats.point_query(</span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    result, </span>
@@ -1386,7 +1386,7 @@ dtype: geometry</code></pre>
   warnings.warn("Setting nodata to -999; specify nodata explicitly")</code></pre>
 </div>
 </div>
-<p><a href="#fig-raster-to-points">Figure&nbsp;<span>5.9</span></a> shows the input raster and the resulting point layer.</p>
+<p><a href="#fig-raster-to-points">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-to-points</span></a> shows the input raster and the resulting point layer.</p>
 <div>
 <div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input raster</span></span>
 <span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
@@ -1423,7 +1423,7 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-raster-to-contours" class="level3" data-number="5.5.3">
 <h3 data-number="5.5.3" class="anchored" data-anchor-id="sec-raster-to-contours"><span class="header-section-number">5.5.3</span> Raster to contours</h3>
-<p>Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (<em>isotherms</em>), for example. We will use a real-world digital elevation model (DEM) because the artificial raster <code>elev.tif</code> produces parallel lines (task for the reader: verify this and explain why this happens). Plotting contour lines is straightforward, using the <code>contour=True</code> option of <code>rasterio.plot.show</code> (<a href="#fig-raster-contours1">Figure&nbsp;<span>5.10</span></a>).</p>
+<p>Another common type of spatial vectorization is the creation of contour lines representing lines of continuous height or temperatures (<em>isotherms</em>), for example. We will use a real-world digital elevation model (DEM) because the artificial raster <code>elev.tif</code> produces parallel lines (task for the reader: verify this and explain why this happens). Plotting contour lines is straightforward, using the <code>contour=True</code> option of <code>rasterio.plot.show</code> (<a href="#fig-raster-contours1">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-contours1</span></a>).</p>
 <div class="cell" data-execution_count="55">
 <div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_dem, ax<span class="op">=</span>ax)</span>
@@ -1453,7 +1453,7 @@ dtype: geometry</code></pre>
 <div class="cell" data-execution_count="56">
 <div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Like all GDAL programs (also see <code>gdaldem</code> example in <a href="03-spatial-operations.html#sec-focal-operations"><span>Section&nbsp;3.3.4</span></a>), <code>gdal_contour</code> works with files. Here, the input is the <code>data/dem.tif</code> file and the result is exported to the <code>output/dem_contour.gpkg</code> file.</p>
+<p>Like all GDAL programs (also see <code>gdaldem</code> example in <a href="#sec-focal-operations"><span class="quarto-unresolved-ref">sec-focal-operations</span></a>), <code>gdal_contour</code> works with files. Here, the input is the <code>data/dem.tif</code> file and the result is exported to the <code>output/dem_contour.gpkg</code> file.</p>
 <p>To illustrate the result, let’s read the resulting <code>dem_contour.gpkg</code> layer back into the Python environment. Note that the layer contains an attribute named <code>'elev'</code> (as specified using <code>-a elev</code>) with the contour elevation values.</p>
 <div class="cell" data-execution_count="57">
 <div class="sourceCode cell-code" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>contours1 <span class="op">=</span> gpd.read_file(<span class="st">'output/dem_contour.gpkg'</span>)</span>
@@ -1521,7 +1521,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p><a href="#fig-raster-contours2">Figure&nbsp;<span>5.11</span></a> shows the input raster and the resulting contour layer.</p>
+<p><a href="#fig-raster-contours2">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-contours2</span></a> shows the input raster and the resulting contour layer.</p>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb78"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_dem, ax<span class="op">=</span>ax)</span>
@@ -1539,7 +1539,7 @@ dtype: geometry</code></pre>
 </section>
 <section id="sec-distance-to-nearest-geometry" class="level2" data-number="5.6">
 <h2 data-number="5.6" class="anchored" data-anchor-id="sec-distance-to-nearest-geometry"><span class="header-section-number">5.6</span> Distance to nearest geometry</h2>
-<p>Calculating a raster of distances to the nearest geometry is an example of a “global” raster operation (<a href="03-spatial-operations.html#sec-global-operations-and-distances"><span>Section&nbsp;3.3.6</span></a>). To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand. This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation (<a href="04-geometry-operations.html#sec-raster-agg-disagg"><span>Section&nbsp;4.3.3</span></a>), raster conversion to points (<a href="#sec-raster-to-points"><span>Section&nbsp;5.5.2</span></a>), and rasterizing points (<a href="#sec-rasterizing-points"><span>Section&nbsp;5.4.1</span></a>).</p>
+<p>Calculating a raster of distances to the nearest geometry is an example of a “global” raster operation (<a href="#sec-global-operations-and-distances"><span class="quarto-unresolved-ref">sec-global-operations-and-distances</span></a>). To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand. This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation (<a href="#sec-raster-agg-disagg"><span class="quarto-unresolved-ref">sec-raster-agg-disagg</span></a>), raster conversion to points (<a href="#sec-raster-to-points"><span class="quarto-unresolved-ref">sec-raster-to-points</span></a>), and rasterizing points (<a href="#sec-rasterizing-points"><span class="quarto-unresolved-ref">sec-rasterizing-points</span></a>).</p>
 <p>For the coastline, we will dissolve the New Zealand administrative division polygon layer and “extract” the boundary as a <code>'MultiLineString'</code> geometry.</p>
 <div class="cell" data-execution_count="59">
 <div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>coastline <span class="op">=</span> gpd.GeoSeries(nz.unary_union, crs<span class="op">=</span>nz.crs) <span class="op">\</span></span>
@@ -1551,7 +1551,7 @@ dtype: geometry</code></pre>
 dtype: geometry</code></pre>
 </div>
 </div>
-<p>For a “template” raster, we will aggregate the New Zealand DEM, in the <code>nz_elev.tif</code> file, to 5 times coarser resolution. The code section below follows the aggeregation example in <a href="04-geometry-operations.html#sec-raster-agg-disagg"><span>Section&nbsp;4.3.3</span></a>, then replaces the original (aggregated) values with unique IDs, which is a preliminary step when converting to points, as explained in <a href="#sec-raster-to-points"><span>Section&nbsp;5.5.2</span></a>. Finally, we also replace “erase” (i.e., replace with <code>np.nan</code>) IDs which were <code>np.nan</code> in the aggregated elevation raster, i.e., beyond the land area of New Zealand. <!-- jn: the last sentence could be rephrased... --></p>
+<p>For a “template” raster, we will aggregate the New Zealand DEM, in the <code>nz_elev.tif</code> file, to 5 times coarser resolution. The code section below follows the aggeregation example in <a href="#sec-raster-agg-disagg"><span class="quarto-unresolved-ref">sec-raster-agg-disagg</span></a>, then replaces the original (aggregated) values with unique IDs, which is a preliminary step when converting to points, as explained in <a href="#sec-raster-to-points"><span class="quarto-unresolved-ref">sec-raster-to-points</span></a>. Finally, we also replace “erase” (i.e., replace with <code>np.nan</code>) IDs which were <code>np.nan</code> in the aggregated elevation raster, i.e., beyond the land area of New Zealand. <!-- jn: the last sentence could be rephrased... --></p>
 <div class="cell" data-execution_count="60">
 <div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="fl">0.2</span></span>
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading aggregated array</span></span>
@@ -1583,7 +1583,7 @@ dtype: geometry</code></pre>
        [nan, nan, nan, ..., nan, nan, nan]], dtype=float32)</code></pre>
 </div>
 </div>
-<p>The result is an array named <code>ids</code> with the IDs, and the corresponding <code>new_transform</code>, as plotted in <a href="#fig-raster-distances1">Figure&nbsp;<span>5.12</span></a>.</p>
+<p>The result is an array named <code>ids</code> with the IDs, and the corresponding <code>new_transform</code>, as plotted in <a href="#fig-raster-distances1">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-distances1</span></a>.</p>
 <div class="cell" data-execution_count="61">
 <div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(ids, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>ax)</span>
@@ -1597,7 +1597,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>To calculate distances, we must convert each pixel to a vector (point) geometry. For this purpose, we use the technique demonstrated in <a href="#sec-raster-to-points"><span>Section&nbsp;5.5.2</span></a>.</p>
+<p>To calculate distances, we must convert each pixel to a vector (point) geometry. For this purpose, we use the technique demonstrated in <a href="#sec-raster-to-points"><span class="quarto-unresolved-ref">sec-raster-to-points</span></a>.</p>
 <div class="cell" data-execution_count="62">
 <div class="sourceCode cell-code" id="cb84"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>shapes <span class="op">=</span> rasterio.features.shapes(ids, transform<span class="op">=</span>new_transform)</span>
 <span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> <span class="bu">list</span>(shapes)</span>
@@ -1614,7 +1614,7 @@ dtype: geometry</code></pre>
  dtype: float64)</code></pre>
 </div>
 </div>
-<p>Finally, we rasterize (see <a href="#sec-rasterizing-points"><span>Section&nbsp;5.4.1</span></a>) the distances into our raster template.</p>
+<p>Finally, we rasterize (see <a href="#sec-rasterizing-points"><span class="quarto-unresolved-ref">sec-rasterizing-points</span></a>) the distances into our raster template.</p>
 <div class="cell" data-execution_count="64">
 <div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>    distances,</span>
@@ -1635,7 +1635,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <!-- jn: there is a file path in the code output... can we remove it? -->
-<p>The final result, a raster of distances to the nearest coastline, is shown in <a href="#fig-raster-distances2">Figure&nbsp;<span>5.13</span></a>.</p>
+<p>The final result, a raster of distances to the nearest coastline, is shown in <a href="#fig-raster-distances2">Figure&nbsp;<span class="quarto-unresolved-ref">fig-raster-distances2</span></a>.</p>
 <div class="cell" data-execution_count="65">
 <div class="sourceCode cell-code" id="cb89"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
 <span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(image, transform<span class="op">=</span>new_transform, ax<span class="op">=</span>ax)</span>
