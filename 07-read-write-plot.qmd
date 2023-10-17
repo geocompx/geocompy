@@ -2,7 +2,7 @@
 
 ## Prerequisites {.unnumbered}
 
-Let's import the required packages:
+This chapter requires importing the following packages:
 
 ```{python}
 import urllib.request
@@ -27,7 +27,7 @@ pd.options.display.max_colwidth = 35
 plt.rcParams['figure.figsize'] = (5, 5)
 ```
 
-and load the sample data for this chapter:
+It also relies on the following data files:
 
 ```{python}
 nz = gpd.read_file('data/nz.gpkg')
@@ -37,18 +37,18 @@ nz_elev = rasterio.open('data/nz_elev.tif')
 ## Introduction
 
 This chapter is about reading and writing geographic data.
-Geographic data import is essential for geocomputation: real-world applications are impossible without data.
+Geographic data input is essential for geocomputation: real-world applications are impossible without data.
 Data output is also vital, enabling others to use valuable new or improved datasets resulting from your work.
-Taken together, these processes of import/output can be referred to as data I/O.
+Taken together, these processes of input/output can be referred to as data I/O.
 
 Geographic data I/O is often done with few lines of code at the beginning and end of projects.
 It is often overlooked as a simple one step process.
-However, mistakes made at the outset of projects (e.g. using an out-of-date or in some way faulty dataset) can lead to large problems later down the line, so it is worth putting considerable time into identifying which datasets are available, where they can be found and how to retrieve them.
+However, mistakes made at the outset of projects (e.g., using an out-of-date or in some way faulty dataset) can lead to large problems later down the line, so it is worth putting considerable time into identifying which datasets are available, where they can be found and how to retrieve them.
 These topics are covered in @sec-retrieving-open-data, which describes various geoportals, which collectively contain many terabytes of data, and how to use them.
 To further ease data access, a number of packages for downloading geographic data have been developed, as described in @sec-geographic-data-packages.
 
 There are many geographic file formats, each of which has pros and cons, described in @sec-file-formats.
-The process of reading and writing files in formats efficiently is covered in Sections @sec-data-input and @sec-data-output, respectively.
+The process of reading and writing files efficiently is covered in Sections @sec-data-input and @sec-data-output, respectively.
 
 ## Retrieving open data {#sec-retrieving-open-data}
 
@@ -58,7 +58,7 @@ Some datasets are of poor quality.
 In this context, it is vital to know where to look, so the first section covers some of the most important sources.
 Various 'geoportals' (web services providing geospatial datasets such as [Data.gov](https://catalog.data.gov/dataset?metadata_type=geospatial)) are a good place to start, providing a wide range of data but often only for specific locations (as illustrated in the updated [Wikipedia page](https://en.wikipedia.org/wiki/Geoportal) on the topic).
 
-[^07-read-write-plot-1]: For example, visit <https://freegisdata.rtwilson.com/> for a list of websites with freely available geographic datasets.
+[^07-read-write-plot-1]: For example, visit <https://freegisdata.rtwilson.com/> for a vast list of websites with freely available geographic datasets.
 
 Some global geoportals overcome this issue.
 The [GEOSS portal](http://www.geoportal.org/) and the [Copernicus Open Access Hub](https://scihub.copernicus.eu/), for example, contain many raster datasets with global coverage.
@@ -66,25 +66,23 @@ A wealth of vector datasets can be accessed from the [SEDAC](http://sedac.ciesin
 
 Most geoportals provide a graphical interface allowing datasets to be queried based on characteristics such as spatial and temporal extent, the United States Geological Survey's [EarthExplorer](https://earthexplorer.usgs.gov/) being a prime example.
 Exploring datasets interactively on a browser is an effective way of understanding available layers.
-Downloading data is best done with code, however, from reproducibility and efficiency perspectives.
-Downloads can be initiated from the command line using a variety of techniques, primarily via URLs and APIs (see the [Sentinel API](https://scihub.copernicus.eu/twiki/do/view/SciHubWebPortal/APIHubDescription) for example).
-Files hosted on static URLs can be downloaded with the following method, as illustrated in the code chunk below which accesses the [Natural Earth Data](https://www.naturalearthdata.com/) website to download the world airports layer zip file and to extract the contained Shapefile.
+From reproducibility and efficiency perspectives, downloading data is, however, best done with code.
+Downloads can be initiated from the command line using a variety of techniques, primarily via URLs and APIs (see the [Sentinel API](https://scihub.copernicus.eu/twiki/do/view/SciHubWebPortal/APIHubDescription), for example).
+Files hosted on static URLs can be downloaded with the following method, as illustrated in the code chunk below which accesses the [Natural Earth Data](https://www.naturalearthdata.com/) website to download the world airports layer zip file and to extract the contained ESRI Shapefile.
 Note that the download code is complicated by the fact that the server checks the `User-agent` header of the request, basically to make sure that the download takes place through a browser.
-To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code:
+To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code.
+<!-- jn: the following code example looks fairly complex (I think it can be done with download.file only in R) -- cannot we simplify it somehow? -->
 
 ```{python}
 #| eval: false
-
 # Set URL+filename
 url = 'https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/ne_10m_airports.zip'
 filename = 'output/ne_10m_airports.zip'
-
 # Download
 opener = urllib.request.build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0')]
 urllib.request.install_opener(opener)
 urllib.request.urlretrieve(url, filename)
-
 # Extract
 f = zipfile.ZipFile(filename, 'r')
 f.extractall('output')
@@ -93,16 +91,14 @@ f.close()
 
 ```{python}
 #| echo: false
-
 filename = 'output/ne_10m_airports.zip'
 ```
 
-The Shapefile that has been created in the `output` directory can then be imported and plotted (@fig-ne-airports) as follows:
+The ESRI Shapefile that has been created in the `output` directory can then be imported and plotted (@fig-ne-airports) as follows using **geopandas**.
 
 ```{python}
 #| label: fig-ne-airports
-#| fig-cap: World airports layer, downloaded using Python from the Natural Earth Data website
-
+#| fig-cap: World airports layer, downloaded from the Natural Earth Data website using Python
 ne = gpd.read_file(filename.replace('.zip', '.shp'))
 ne.plot();
 ```
@@ -111,6 +107,7 @@ ne.plot();
 
 Many Python packages have been developed for accessing geographic data, two of which are presented in @tbl-data-packages and demonstrated below.
 These provide interfaces to one or more spatial libraries or geoportals and aim to make data access even quicker from the command line.
+<!-- jn: a table with data packages should have more examples of packages (at least ~5)... we do not need, however, to explain all of them... is that possible? -->
 
 | Package     | Description                                                                                       |
 |-------------|---------------------------------------------------------------------------------------------------|
@@ -124,60 +121,51 @@ This diversity is demonstrated in the subsequent code chunks, which show how to 
 
 Administrative borders are often useful in spatial analysis.
 These can be accessed with the `cartopy.io.shapereader.natural_earth` function from the **cartopy** package.
-For example, the following code loads the `'admin_2_counties'` dataset of US counties:
+For example, the following code loads the `'admin_2_counties'` dataset of US counties into a `GeoDataFrame` (@fig-ne-counties).
 
 ```{python}
+#| label: fig-ne-counties
+#| fig-cap: US counties, downloaded from the Natural Earth Data website using package **cartopy**
 filename = cartopy.io.shapereader.natural_earth(
     resolution='10m',
     category='cultural',
     name='admin_2_counties'
 )
 counties = gpd.read_file(filename)
-counties
-```
-
-The layer of counties is plotted in @fig-ne-counties:
-
-```{python}
-#| label: fig-ne-counties
-#| fig-cap: US counties, downloaded from the Natural Earth Data website using package **cartopy**
-
 counties.plot();
 ```
 
-Other layers can be accessed the same way:
+<!-- jn: maybe it would be worth explaning why the visualization spans the whole world, not just the continental US? (I not it is obvious to many people, but I assume -- not all) -->
 
--   you need to locate the `resolution`, `category`, and `name` of the requested dataset in [Natural Earth Data](https://www.naturalearthdata.com/downloads/), then
--   run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and
--   read the file into the Python environment, e.g., using `gpd.read_file`.
-
+Other layers can be accessed the same way.
+You need to specify the `resolution`, `category`, and `name` of the requested dataset in [Natural Earth Data](https://www.naturalearthdata.com/downloads/), then  run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and read the file into the Python environment, e.g., using `gpd.read_file`.
 This is an alternative approach to "directly" downloading files as shown earlier (@sec-retrieving-open-data).
 
 The second example uses the **osmnx** package to find parks from the OpenStreetMap (OSM) database.
 As illustrated in the code-chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` function.
 The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can also be used to query a custom area of interest).
-The second argument specifies the OSM tag(s), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs:
+The second argument specifies the OSM tag(s), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs.
+<!-- jn: maybe this is a place to mention https://wiki.openstreetmap.org/wiki/Map_features ? -->
 
 ```{python}
 parks = ox.features.features_from_place(
     query='leeds uk', 
     tags={'leisure': 'park'}
 )
-parks
 ```
 
 The result is a `GeoDataFrame` with the parks in Leeds.
-The following expression plots the geometries with the `name` property in the tooltips (@fig-ox-features):
+Now, we can plots the geometries with the `name` property in the tooltips using `explore` (@fig-ox-features).
 
 ```{python}
 #| label: fig-ox-features
 #| fig-cap: Parks in Leeds, based on OpenStreetMap data, downloaded using package **osmnx**
-
 parks[['name', 'geometry']].explore()
 ```
 
 It should be noted that the **osmnx** package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas.
 To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from [Geofabrik](https://download.geofabrik.de/), and then load them from the file into the Python environment.
+<!-- jn: it seems that on the Geofabrik website there is no Shapefile format available for download (except for Antarctica)... we need to fix the above sentence... -->
 
 OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the [Overpass turbo](https://overpass-turbo.eu/) web service for rapid development and testing of OSM queries to [osm2pgsql](https://osm2pgsql.org/) for importing the data into a PostGIS database.
 Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers.
@@ -187,48 +175,53 @@ Sometimes, packages come with built-in datasets.
 These can be accessed just like any other object (e.g., function) that is imported as part of the package, or in other ways as specified in the package documentation.
 For example, package **geopandas** comes with few built-in datasets (see `gpd.datasets.available` for a list of names).
 Using the `gpd.datasets.get_path` function and the dataset name, we can obtain the path to the location of the dataset file on our computer.
-For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we've alredy met before):
+For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we have already seen before):
 
 ```{python}
-filename = gpd.datasets.get_path('naturalearth_lowres')
-filename
+ne_filename = gpd.datasets.get_path('naturalearth_lowres')
+ne_filename
 ```
 
-Then, we can import the dataset, just like from any other file:
+<!-- jn: the above code returns a warning -- please update the example -->
+
+Then, we can import the dataset, just like from any other file with `gpd.read_file`.
 
 ```{python}
-gpd.read_file(filename)
+ne = gpd.read_file(ne_filename)
 ```
 
-Another way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into its coordinates.
-This is usually done by sending a query to an online service and getting the location as a result.
+Another way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into a set of coordinates.
+This is typically done by sending a query to an online service and getting the location as a result.
 Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements.
 [Nominatim](https://nominatim.openstreetmap.org/ui/about.html) is a popular free service, based on OpenStreetMap data.
 It can be accessed in Python uisng the `osmnx.geocoder.geocode` function.
-The function returns a `tuple` of the form `(lat,lon)`.
-The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London:
+The function returns a `tuple` of the `(lat,lon)` form.
+<!-- jn: in what CRS? maybe it would be good to add this info -->
+The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London.
+<!-- jn: maybe we should add a website about the John Snow blue plaque? not everyone is probably familiar with it... -->
 
 ```{python}
 ox.geocoder.geocode('54 Frith St, London W1D 4SJ, UK')
 ```
 
 If the query returns no results, an `InsufficientResponseError` is raised, a scenario that the user can deal with using [`try`/`except`](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
+<!--jn: what do you mean by "deal" here? what is the expected outcome? how to deal with it? -->
 
 The alternative function `osmnx.geocoder.geocode_to_gdf` can be used to automatically geocode multiple addresses (accepting a `list` of `string`s) and transforming them into a `GeoDataFrame`.
 This function also returns `'Polygon'` geometries.
-For example:
+<!-- jn: why "also"? -->
+<!-- jn: why Polygon geometries? what is the logic behind it? -->
 
 ```{python}
 result = ox.geocoder.geocode_to_gdf(['54 Frith St, London W1D 4SJ, UK'])
 result
 ```
 
-The result is visualized below using `.explore` (@fig-ox-geocode):
+The result is visualized in @fig-ox-geocode using the `.explore` function.
 
 ```{python}
 #| label: fig-ox-geocode
 #| fig-cap: Specific address in London, geocoded into a `GeoDataFrame` using package **osmnx**
-
 result[['display_name', 'geometry']].explore(color='red')
 ```
 
@@ -237,13 +230,14 @@ result[['display_name', 'geometry']].explore(color='red')
 
 To complete... -->
 ```
+
 ## File formats {#sec-file-formats}
 
 Geographic datasets are usually stored as files or in spatial databases.
-File formats can either store vector or raster data, while spatial databases such as [PostGIS](https://postgis.net/) can store both.
+File formats usually can either store vector or raster data, while spatial databases such as [PostGIS](https://postgis.net/) can store both.
 The large variety of file formats may seem bewildering, but there has been much consolidation and standardization since the beginnings of GIS software in the 1960s when the first widely distributed program ([SYMAP](https://news.harvard.edu/gazette/story/2011/10/the-invention-of-gis/)) for spatial analysis was created at Harvard University [@coppock_history_1991].
 
-GDAL (which should be pronounced "goo-dal", with the double "o" making a reference to object-orientation), the Geospatial Data Abstraction Library, has resolved many issues associated with incompatibility between geographic file formats since its release in 2000.
+GDAL (which originally was pronounced as "goo-dal", with the double "o" making a reference to object-orientation), the Geospatial Data Abstraction Library, has resolved many issues associated with incompatibility between geographic file formats since its release in 2000.
 GDAL provides a unified and high-performance interface for reading and writing of many raster and vector data formats.
 Many open and proprietary GIS programs, including GRASS, ArcGIS and QGIS, use GDAL behind their GUIs for doing the legwork of ingesting and spitting out geographic data in appropriate formats.
 Most Pyhton packages for working with spatial data, including **geopandas** and **rasterio** used in this book, also rely on GDAL for importing and exporting spatial data files.
@@ -268,17 +262,18 @@ GDAL provides access to more than 200 vector and raster data formats.
 
 An important development ensuring the standardization and open-sourcing of file formats was the founding of the Open Geospatial Consortium ([OGC](http://www.opengeospatial.org/)) in 1994.
 Beyond defining the simple features data model (see @sec-simple-features), the OGC also coordinates the development of open standards, for example as used in file formats such as KML and GeoPackage.
+<!-- jn: simple features or Simple Features? -->
 Open file formats of the kind endorsed by the OGC have several advantages over proprietary formats: the standards are published, ensure transparency and open up the possibility for users to further develop and adjust the file formats to their specific needs.
 
-ESRI Shapefile is the most popular vector data exchange format; however, it is not an open format (though its specification is open).
-It was developed in the early 1990s and has a number of limitations.
+ESRI Shapefile is the most popular vector data exchange format; however, it is not an fully open format (though its specification is open).
+It was developed in the early 1990s and, from a modern standpoint, has a number of limitations.
 First of all, it is a multi-file format, which consists of at least three files.
-It only supports 255 columns, column names are restricted to ten characters and the file size limit is 2 GB.
+It also only supports 255 columns, its column names are restricted to ten characters and the file size limit is 2 GB.
 Furthermore, ESRI Shapefile does not support all possible geometry types, for example, it is unable to distinguish between a polygon and a multipolygon.
 Despite these limitations, a viable alternative had been missing for a long time.
-In the meantime, [GeoPackage](https://www.geopackage.org/) emerged, and seems to be a more than suitable replacement candidate for ESRI Shapefile.
+In 2014, [GeoPackage](https://www.geopackage.org/) emerged, and seems to be a more than suitable replacement candidate for ESRI Shapefile.
 GeoPackage is a format for exchanging geospatial information and an OGC standard.
-The GeoPackage standard describes the rules on how to store geospatial information in a tiny SQLite container.
+This standard describes the rules on how to store geospatial information in a tiny SQLite container.
 Hence, GeoPackage is a lightweight spatial database container, which allows the storage of vector and raster data but also of non-spatial data and extensions.
 Aside from GeoPackage, there are other geospatial data exchange formats worth checking out (@tbl-file-formats).
 
@@ -300,9 +295,10 @@ If necessary, the table can be converted to a point layer (see examples in @sec-
 
 ## Data input (I) {#sec-data-input}
 
-Executing commands such as `geopandas.read_file` (the main function we use for loading vector data) or `rasterio.open`+`.read` (the main functions used for loading raster data) silently sets off a chain of events that reads data from files.
+Executing commands such as `geopandas.read_file` (the main function we use for loading vector data) or `rasterio.open`+`.read` (the main group of functions used for loading raster data) silently sets off a chain of events that reads data from files.
 Moreover, there are many Python packages containing a wide range of geographic data or providing simple access to different data sources.
 All of them load the data into the Python environment or, more precisely, assign objects to your workspace, stored in RAM and accessible within the Python session.
+<!-- jn: what with large (>RAM) rasters? -->
 
 ### Vector data
 
@@ -310,13 +306,26 @@ Spatial vector data comes in a wide variety of file formats.
 Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with **geopandas** functions `read_file` and `to_file` (covered in @sec-data-output), respectively.
 
 **geopandas** uses GDAL to read and write data, via **fiona** (the [default](https://github.com/geopandas/geopandas/issues/2217)) or **pyogrio** packages (a recently developed alternative to **fiona**).
-After **fiona** is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`'r'`), append (`'a'`), or write (`'w'`) data, or all three:
+<!-- jn: as far as I understand, pyogrio will be the default in the future, right? if so, we should mention it here -->
+<!-- jn: also, given the above, which one should be present? -->
+After **fiona** is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
 
 ```{python}
+#| eval: false
 fiona.supported_drivers
 ```
 
+```python
+{'DXF': 'rw',
+ 'CSV': 'raw',
+ ...   
+ 'TopoJSON': 'r',
+ 'LIBKML': 'r'}
+```
+
 Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
+
+<!--jn: selfnote to restart the review from here-->
 
 The first argument of the **geopandas** versatile data import function `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection.
 The content of a string could vary between different drivers.
@@ -408,14 +417,7 @@ tanzania.apply(lambda x: ax.annotate(text=x['name_long'], xy=x.geometry.centroid
 fig, ax = plt.subplots()
 tanzania_neigh.plot(ax=ax, color='lightgrey', edgecolor='grey')
 tanzania_buf.plot(ax=ax, color='none', edgecolor='red')
-tanzania_neigh.apply(
-    lambda x: ax.annotate(
-        text=x['name_long'], 
-        xy=x.geometry.centroid.coords[0], 
-        ha='center'
-    ), 
-    axis=1
-);
+tanzania_neigh.apply(lambda x: ax.annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
 ```
 
 Often we need to read CSV files (or other tabular formats) which have x and y coordinate columns, and turn them into a `GeoDataFrame` with point geometries.
@@ -457,10 +459,9 @@ Please refer also to @sec-querying-and-setting-coordinate-systems for more infor
 As a final example, we will show how **geopandas** also reads KML files.
 A KML file stores geographic information in XML format---a data format for the creation of web pages and the transfer of data in an application-independent way [@nolan_xml_2014].
 Here, we access a KML file from the web.
-First, if necessary, we may need to "activate" the `KML` driver, which isn't always available by default (just one of these expressions should be sufficient, depending on your system):
+First, if necessary, we may need to "activate" the `KML` driver, which isn't always available by default:
 
 ```{python}
-fiona.supported_drivers['KML'] = 'r'
 fiona.supported_drivers['LIBKML'] = 'r'
 ```
 
