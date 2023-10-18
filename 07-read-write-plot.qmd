@@ -315,7 +315,7 @@ After **fiona** is imported, the command `fiona.supported_drivers` can be used t
 fiona.supported_drivers
 ```
 
-```python
+```
 {'DXF': 'rw',
  'CSV': 'raw',
  ...   
@@ -325,36 +325,30 @@ fiona.supported_drivers
 
 Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
 
-<!--jn: selfnote to restart the review from here-->
-
 The first argument of the **geopandas** versatile data import function `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection.
 The content of a string could vary between different drivers.
 In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.gpkg`), the `filename` argument would be a path or a URL to an actual file, such as `geodata.gpkg`.
-The driver is automatically selected based on the file extension, as demonstrated for a `.gpkg` file below:
+The driver is automatically selected based on the file extension, as demonstrated for a `.gpkg` file below.
 
 ```{python}
 world = gpd.read_file('data/world.gpkg')
-world
 ```
 
 For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name.
-
-GeoJSON, a plain text format, can be read from a `.geojson` file, but also from a string:
+GeoJSON, a plain text format, on the other hand, can be read from a `.geojson` file, but also from a string.
 
 ```{python}
 gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
 ```
 
-The `gpd.read_postgis` function can be used to read a vector layer from a PostGIS database.
-
 Some vector formats, such as GeoPackage, can store multiple data layers.
-By default, `gpd.read_file` automatically reads the first layer of the file specified in `filename`.
+By default, `gpd.read_file` reads the first layer of the file specified in `filename`.
 However, using the `layer` argument you can specify any other layer.
 
 The `gpd.read_file` function also allows for reading just parts of the file into RAM with two possible mechanisms.
 The first one is related to the `where` argument, which allows specifying what part of the data to read using an SQL `WHERE` expression.
-An example below extracts data for Tanzania only (@fig-read-shp-query (a)).
-It is done by specifying that we want to get all rows for which `name_long` equals to `'Tanzania'`:
+An example below extracts data for Tanzania only from the `world.gpkg` file (@fig-read-shp-query (a)).
+It is done by specifying that we want to get all rows for which `name_long` equals to `'Tanzania'`.
 
 ```{python}
 tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
@@ -370,35 +364,20 @@ gpd.read_file('data/world.gpkg', rows=1).columns
 The second mechanism uses the `mask` argument to filter data based on intersection with an existing geometry.
 This argument expects a geometry (`GeoDataFrame`, `GeoSeries`, or `shapely` geometry) representing the area where we want to extract the data.
 Let's try it using a small example---we want to read polygons from our file that intersect with the buffer of 50,000 $m$ of Tanzania's borders.
-To do it, we need to:
-
--   transform the geometry to a projected CRS (such as `EPSG:32736`),
--   prepare our "filter" by creating the buffer (@sec-buffers), and
--   transform back to the original CRS to be used as a mask:
+To do it, we need to transform the geometry to a projected CRS (such as `EPSG:32736`), prepare our "filter" by creating the buffer (@sec-buffers), and    transform back to the original CRS to be used as a mask (@fig-read-shp-query (a)).
 
 ```{python}
 tanzania_buf = tanzania.to_crs(32736).buffer(50000).to_crs(4326)
-tanzania_buf
 ```
 
-The resulting buffered geometry is shown in @fig-tanzania-mask:
-
-```{python}
-#| label: fig-tanzania-mask
-#| fig-cap: Tanzania polygon buffered by 50 $km$, to by used for reading a subset of `world.gpkg` (@fig-read-shp-query (b))
-
-tanzania_buf.plot()
-```
-
-Now, we can apply pass the "filter" geometry `tanzania_buf` to the `mask` argument of `gpd.read_file`:
+Now, we can pass the "filter" geometry `tanzania_buf` to the `mask` argument of `gpd.read_file`.
 
 ```{python}
 tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
-tanzania_neigh
 ```
 
 Our result, shown in @fig-read-shp-query (b), contains Tanzania and every country intersecting with its 50,000 $m$ buffer.
-Note that the last two expressions are used to add text labels with the `name_long` of each country, placed at the country centroid:
+Note that the last two expressions are used to add text labels with the `name_long` of each country, placed at the country centroid.
 
 ```{python}
 #| label: fig-read-shp-query
@@ -407,27 +386,28 @@ Note that the last two expressions are used to add text labels with the `name_lo
 #| fig-subcap: 
 #| - Using a `where` query (matching `'Tanzania'`)
 #| - Using a `mask` (a geometry shown in red)
-
 # Using 'where'
 fig, ax = plt.subplots()
 tanzania.plot(ax=ax, color='lightgrey', edgecolor='grey')
-tanzania.apply(lambda x: ax.annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
-
+tanzania.apply(lambda x: ax.annotate(text=x['name_long'], 
+               xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
 # Using 'mask'
 fig, ax = plt.subplots()
 tanzania_neigh.plot(ax=ax, color='lightgrey', edgecolor='grey')
 tanzania_buf.plot(ax=ax, color='none', edgecolor='red')
-tanzania_neigh.apply(lambda x: ax.annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+tanzania_neigh.apply(lambda x: ax.annotate(text=x['name_long'],
+                     xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
 ```
+
+A different, `gpd.read_postgis`, function can be used to read a vector layer from a PostGIS database.
 
 Often we need to read CSV files (or other tabular formats) which have x and y coordinate columns, and turn them into a `GeoDataFrame` with point geometries.
 To do that, we can import the file using **pandas** (e.g., using `pd.read_csv` or `pd.read_excel`), then go from `DataFrame` to `GeoDataFrame` using the `gpd.points_from_xy` function, as shown earlier in the book (See @sec-vector-layer-from-scratch and @sec-spatial-joining).
-For example, the table `cycle_hire_xy.csv`, where the coordinates are stored in the `X` and `Y` columns in `EPSG:4326`, can be imported, converted to a `GeoDataFrame`, and plotted, as follows (@fig-cycle_hire_xy-layer):
+For example, the table `cycle_hire_xy.csv`, where the coordinates are stored in the `X` and `Y` columns in `EPSG:4326`, can be imported, converted to a `GeoDataFrame`, and plotted, as follows (@fig-cycle_hire_xy-layer).
 
 ```{python}
 #| label: fig-cycle_hire_xy-layer
 #| fig-cap: The `cycle_hire_xy.csv` table transformed to a point layer
-
 cycle_hire = pd.read_csv('data/cycle_hire_xy.csv')
 geom = gpd.points_from_xy(cycle_hire['X'], cycle_hire['Y'], crs=4326)
 geom = gpd.GeoSeries(geom)
@@ -438,12 +418,12 @@ cycle_hire_xy.plot();
 Instead of columns describing 'XY' coordinates, a single column can also contain the geometry information, not necessarily points but possible any other geometry type.
 Well-known text (WKT), well-known binary (WKB), and GeoJSON are examples of formats used to encode geometry in such a column.
 For instance, the `world_wkt.csv` file has a column named `'WKT'`, representing polygons of the world's countries (in WKT format).
-To import and convert it to a `GeoDataFrame`, we can apply the `shapely.from_wkt` function (@sec-geometries) on the WKT strings, to convert them into `shapely` geometries (@fig-world_wkt-layer):
+To import and convert it to a `GeoDataFrame`, we can apply the `shapely.from_wkt` function (@sec-geometries) on the WKT strings, to convert them into `shapely` geometries (@fig-world_wkt-layer).
+<!-- jn: maybe it would be good to explain the `.apply` function here (or somewhere) -->
 
 ```{python}
 #| label: fig-world_wkt-layer
 #| fig-cap: The `world_wkt.csv` table transformed to a polygon layer
-
 world_wkt = pd.read_csv('data/world_wkt.csv')
 world_wkt['geometry'] = world_wkt['WKT'].apply(shapely.from_wkt)
 world_wkt = gpd.GeoDataFrame(world_wkt)
@@ -452,6 +432,7 @@ world_wkt.plot();
 
 ::: callout-note
 Not all of the supported vector file formats store information about their coordinate reference system.
+<!-- jn: what are the examples of such formats? -->
 In these situations, it is possible to add the missing information using the `.set_crs` function.
 Please refer also to @sec-querying-and-setting-coordinate-systems for more information.
 :::
@@ -459,7 +440,7 @@ Please refer also to @sec-querying-and-setting-coordinate-systems for more infor
 As a final example, we will show how **geopandas** also reads KML files.
 A KML file stores geographic information in XML format---a data format for the creation of web pages and the transfer of data in an application-independent way [@nolan_xml_2014].
 Here, we access a KML file from the web.
-First, if necessary, we may need to "activate" the `KML` driver, which isn't always available by default (just one of these expressions should be sufficient, depending on your system):
+First, if necessary, we may need to "activate" the `KML` driver, which is not always available by default (just one of these expressions should be sufficient, depending on your system).
 
 ```{python}
 fiona.supported_drivers['KML'] = 'r'
@@ -467,14 +448,15 @@ fiona.supported_drivers['LIBKML'] = 'r'
 ```
 
 The sample KML file `KML_Samples.kml` contains more than one layer.
-To list the available layers, we can use the `fiona.listlayers` function:
+To list the available layers, we can use the `fiona.listlayers` function.
+<!-- jn: maybe we could introduce this function earlier, for example around this sentence: "However, using the `layer` argument you can specify any other layer." -->
 
 ```{python}
 u = 'https://developers.google.com/kml/documentation/KML_Samples.kml'
 fiona.listlayers(u)
 ```
 
-We can choose, for instance, the first layer `'Placemarks'` and read it, using `gpd.read_file` with an additional `layer` argument:
+We can choose, for instance, the first layer `'Placemarks'` and read it, using `gpd.read_file` with an additional `layer` argument.
 
 ```{python}
 placemarks = gpd.read_file(u, layer='Placemarks')
@@ -483,9 +465,8 @@ placemarks
 
 ### Raster data {#sec-input-raster}
 
-Similar to vector data, raster data comes in many file formats with some of them supporting multilayer files.
+Similar to vector data, raster data comes in many file formats, some of which support multilayer files.
 `rasterio.open` is used to create a file connection to a raster file, which can be subsequently used to read the metadata and/or the values, as shown previously (@sec-using-rasterio).
-For example:
 
 ```{python}
 src = rasterio.open('data/srtm.tif')
@@ -497,7 +478,7 @@ However, GDAL also allows reading data directly from online resources, such as H
 The only thing we need to do is to add a `/vsicurl/` or `/vsicurl_streaming/` (see [here](https://gis.stackexchange.com/questions/450105/using-rasterio-to-read-ndvi-data-from-gimmss-cog-products)) prefix before the path to the file.
 Let's try it by connecting to the global monthly snow probability at 500 $m$ resolution for the period 2000-2012 [@hengl_t_2021_5774954].
 Snow probability for December is stored as a Cloud Optimized GeoTIFF (COG) file (see @sec-file-formats).
-To read an online file, we need to provide its URL together with the `/vsicurl_streaming/` prefix:
+To read an online file, we need to provide its URL together with the `/vsicurl_streaming/` prefix.
 
 ```{python}
 #| eval: false
@@ -506,7 +487,7 @@ src
 ```
 
 In the example above `rasterio.open` creates a connection to the file without obtaining any values, as we did for the local `srtm.tif` file.
-The values can read, into an `ndarray`, using the `.read` method of the file connection (@sec-using-rasterio).
+The values can be read into an `ndarray` using the `.read` method of the file connection (@sec-using-rasterio).
 Using parameters of `.read` allows us to just read a small portion of the data, without downloading the entire file.
 This is very useful when working with large datasets hosted online from resource-constrained computing environments such as laptops.
 
@@ -514,10 +495,10 @@ For example, we can read a specified rectangular extent of the raster.
 With **rasterio**, this is done using the so-called [windowed reading](https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html) capabilities.
 Note that, with windowed reading, we import just a subset of the raster extent into an `ndarray` covering any partial extent.
 Windowed reading is therefore memory- (and, in this case, bandwidth-) efficient, since it avoids reading the entire raster into memory.
-Windowed reading can also be considered an alternative pathway to *cropping* (@sec-raster-cropping).
+It can also be considered an alternative pathway to *cropping* (@sec-raster-cropping).
 
 To read a raster *window*, let's first define the bounding box coordinates.
-For example, here we use a $10 \times 10$ degrees extent coinciding with Reykjavik: 
+For example, here we use a $10 \times 10$ degrees extent coinciding with Reykjavik.
 
 ```{python}
 #| eval: false
@@ -528,7 +509,7 @@ ymax=70
 ```
 
 Using the extent coordinates along with the raster transformation matrix, we create a window object, using the [`rasterio.windows.from_bounds`](https://rasterio.readthedocs.io/en/stable/api/rasterio.windows.html#rasterio.windows.from_bounds) function.
-The `rasterio.windows.from_bounds` function basically "translates" the extent from coordinates, to row/column ranges:
+This function basically "translates" the extent from coordinates, to row/column ranges.
 
 ```{python}
 #| eval: false
@@ -542,7 +523,9 @@ w = rasterio.windows.from_bounds(
 w
 ```
 
-Now we can read the partial array, according to the specified window `w`, passing it to the `.read` method:
+<!-- jn: why eval:false for these examples? the output is not shown... -->
+
+Now we can read the partial array, according to the specified window `w`, by passing it to the `.read` method.
 
 ```{python}
 #| eval: false
@@ -551,7 +534,7 @@ r
 ```
 
 Note that the transformation matrix of the window is not the same as that of the original raster (unless it incidentally starts from the top-left corner)!
-Therefore, we must re-create the transformation matrix, with the modified origin (`xmin`,`ymax`), yet the same resolution, as follows:
+Therefore, we must re-create the transformation matrix, with the modified origin (`xmin`,`ymax`), yet the same resolution, as follows.
 
 ```{python}
 #| eval: false
@@ -565,20 +548,19 @@ w_transform
 ```
 
 The array `r` along with the updated transformation matrix `w_transform` comprise the partial window, which we can keep working with just like with any other raster, as shown in previous chapters.
-@fig-raster-window shows the result, along with the location of Reykjavik (see below):
+@fig-raster-window shows the result, along with the location of Reykjavik.
 
 ```{python}
 #| label: fig-raster-window
 #| fig-cap: Raster window read from a remote Cloud Optimized GeoTIFF (COG) file source
 #| eval: false
-
 fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=w_transform, ax=ax)
 gpd.GeoSeries(shapely.Point(-21.94, 64.15)).plot(ax=ax, color='red');
 ```
 
 Another option is to extract raster values at particular points, directly from the file connection, using the `.sample` method (see @sec-spatial-subsetting-raster).
-For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying `.sample`:
+For example, we can get the snow probability for December in Reykjavik (70%) by specifying its coordinates and applying `.sample`.
 
 ```{python}
 #| eval: false
