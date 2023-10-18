@@ -247,7 +247,7 @@ nz1 = nz[nz['Island'] == 'South']
 
 To add a label in **matplotlib**, we use the [`.annotate`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.annotate.html) method where the important arguments are the label string and the placement (a `tuple` of the form `(x,y)`). 
 When labeling vector layers, we typically want to add numerous labels, based on (one or more) attribute of each feature. 
-To do that, we can run a `for` loop or the `.apply` method, passing the label text and the coordinates of each feature.
+To do that, we can run a `for` loop, or use the `.apply` method, to pass the label text and the coordinates of each feature to `.annotate`.
 For example, in the following example we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
 We are also using `ha='center'` (short for `horizontalalignment`).
 
@@ -269,7 +269,8 @@ nz1.apply(
 );
 ```
 
-...
+As another example, let's create a map of all regions of New Zealand, with labels for the island names. 
+First, we will calculate the island centroids, which will be the label placement positions.
 
 ```{python}
 ctr = nz[['Island', 'geometry']].dissolve(by='Island').reset_index()
@@ -277,7 +278,11 @@ ctr['geometry'] = ctr.centroid
 ctr
 ```
 
-... @fig-labels-points1.
+Then, we again use `.apply`, combined with `.annotate`, to add the text labels. 
+The main difference compared to the previous example (@fig-labels-polygon) is that we are directly passing the geometry coordinates (`.geometry.coords[0]`), since the geometries are points rather than polygons.
+We are also using the `weight='bold'` argument to use bold font.
+
+The result is shown in @fig-labels-points1.
 
 ```{python}
 #| label: fig-labels-points1
@@ -296,7 +301,9 @@ ctr.apply(
 );
 ```
 
-... @fig-labels-points2.
+It should be noted that sometimes we wish to add text labels "manually", one by one, rather than use a loop or `.apply`. 
+For example, we may want to add labels of specific locations not stored in a layer, or to have control over the specific properties of each label. 
+To add text labels manually, we can run the `.annotate` expressions one at a time, as shown in the code section below recreating the last result with the "manual" approach (@fig-labels-points2).
 
 ```{python}
 #| label: fig-labels-points2
