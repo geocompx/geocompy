@@ -288,7 +288,7 @@ A second mode of those methods (not demonstrated here) is when both inputs are `
 In such case, a "pairwise" evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`).
 For example, the expression `nz.intersects(nz)` returns a `Series` of 16 `True` values, indicating (unsurprisingly) that each geometry in `nz` intersects with itself.
 
-A third mode is when we are interested in a "many-to-many" evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two `GeoSeries`/`GeoDataFrame` objects.
+A third mode is when we are interested in a "many-to-many" evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two `GeoSeries` objects.
 At the time of writing, there is no built-in method to do this in **geopandas**.
 However, the [`.apply`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html) method can be used to repeat a "many-to-one" evaluation over all geometries in the second layer, resulting in a matrix of *pairwise* results.
 We will create another `GeoSeries` with two polygons, named `poly2`, to demonstrate this.
@@ -314,8 +314,9 @@ for i in enumerate(points):
     )
 ```
 
-Now we can use `.apply` to get the intersection relations matrix.
+Now we can use  to get the intersection relations matrix.
 <!-- jn: the apply method should be explain here (even as a block...) -->
+<!-- md: now added -->
 The result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry.
 We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each.
 
@@ -323,12 +324,19 @@ We can see that the first point intersects with both polygons, while the second 
 points.apply(lambda x: poly2.intersects(x))
 ```
 
-A more natural way to work with this result is perhaps as an array.
+::: callout-note
+The `.apply` (package **pandas**) is used to apply a function along one of the axes of a `DataFrame` or `GeoDataFrame`. That is, we can apply a function on all rows (`axis=1`) or all columns (`axis=0`, the default). When the function being applied returns a single value, the output of `.apply` is a `Series` (e.g., `.apply(len)` returns the lengths of all columns, because `len` returns a single value). When the function returns a `Series`, then `.apply` returns a `DataFrame` (such as in the above example.)
+:::
+
+::: callout-note
+Since the above result, like any pairwise matrix, (1) is composed of values of the same type, and (2) has no contrasting role for rows and columns, is may be more convenient to use a plain **numpy** array to work with it. In such case, we can use the [`.to_numpy`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_numpy.html) method to go from `DataFrame` to `ndarray`.
 <!-- jn: why is this more natural? why is it better than a dataframe? which one should we use? if array is better -- keep it in the main text. if array is not better -- remove it from the main text and put it in a block. -->
+<!-- md: agree, now moved to a block -->
 
 ```{python}
 points.apply(lambda x: poly2.intersects(x)).to_numpy()
 ```
+:::
 
 The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in @fig-spatial-relations.
 More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it?
@@ -727,7 +735,7 @@ Now we are able to apply `.distance` to calculate the distances from each of the
 nz_highest.distance(canterbury_centroid)
 ```
 
-To obtain a distance matrix, i.e., a pairwise set of distances between all combinations of features in objects `x` and `y`, we need to use the `.apply` method (analogous to the way we created the `.intersects` boolean matrix in @sec-topological-relations).
+To obtain a distance matrix, i.e., a pairwise set of distances between all combinations of features in objects `x` and `y`, we need to use the  method (analogous to the way we created the `.intersects` boolean matrix in @sec-topological-relations).
 To illustrate this, let's now take two regions in `nz`, Otago and Canterbury, represented by the object `co`.
 
 ```{python}
