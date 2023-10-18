@@ -711,7 +711,7 @@ dtype: bool</code></pre>
 </div>
 <p>The result shown above is a boolean <code>Series</code>. Its contents should match our intuition: positive (<code>True</code>) results are returned for the first and third point, and a negative result (<code>False</code>) for the second. Each value in this <code>Series</code> represents a feature in the first input (<code>points</code>).</p>
 <p>All earlier examples in this chapter demonstrate the “many-to-one” mode of <code>.intersects</code> and analogous methods, where the relation is evaluated between each of several geometries in a <code>GeoSeries</code>/<code>GeoDataFrame</code>, and an individual <code>shapely</code> geometry. A second mode of those methods (not demonstrated here) is when both inputs are <code>GeoSeries</code>/<code>GeoDataFrame</code> objects. In such case, a “pairwise” evaluation takes place between geometries aligned by index (<code>align=True</code>, the default) or by position (<code>align=False</code>). For example, the expression <code>nz.intersects(nz)</code> returns a <code>Series</code> of 16 <code>True</code> values, indicating (unsurprisingly) that each geometry in <code>nz</code> intersects with itself.</p>
-<p>A third mode is when we are interested in a “many-to-many” evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two <code>GeoSeries</code>/<code>GeoDataFrame</code> objects. At the time of writing, there is no built-in method to do this in <strong>geopandas</strong>. However, the <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html"><code>.apply</code></a> method can be used to repeat a “many-to-one” evaluation over all geometries in the second layer, resulting in a matrix of <em>pairwise</em> results. We will create another <code>GeoSeries</code> with two polygons, named <code>poly2</code>, to demonstrate this.</p>
+<p>A third mode is when we are interested in a “many-to-many” evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two <code>GeoSeries</code> objects. At the time of writing, there is no built-in method to do this in <strong>geopandas</strong>. However, the <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html"><code>.apply</code></a> method can be used to repeat a “many-to-one” evaluation over all geometries in the second layer, resulting in a matrix of <em>pairwise</em> results. We will create another <code>GeoSeries</code> with two polygons, named <code>poly2</code>, to demonstrate this.</p>
 <div class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>poly2 <span class="op">=</span> gpd.GeoSeries([</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  shapely.Polygon([(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">0</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="dv">1</span>), (<span class="dv">1</span>,<span class="fl">0.5</span>), (<span class="dv">0</span>,<span class="dv">0</span>)]),</span>
@@ -736,7 +736,7 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>Now we can use <code>.apply</code> to get the intersection relations matrix. <!-- jn: the apply method should be explain here (even as a block...) --> The result is a <code>DataFrame</code>, where each row represents a <code>points</code> geometry and each column represents a <code>poly</code> geometry. We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each.</p>
+<p>Now we can use to get the intersection relations matrix. <!-- jn: the apply method should be explain here (even as a block...) --> <!-- md: now added --> The result is a <code>DataFrame</code>, where each row represents a <code>points</code> geometry and each column represents a <code>poly</code> geometry. We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each.</p>
 <div class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>points.<span class="bu">apply</span>(<span class="kw">lambda</span> x: poly2.intersects(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="18">
@@ -773,13 +773,38 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>A more natural way to work with this result is perhaps as an array. <!-- jn: why is this more natural? why is it better than a dataframe? which one should we use? if array is better -- keep it in the main text. if array is not better -- remove it from the main text and put it in a block. --></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <code>.apply</code> (package <strong>pandas</strong>) is used to apply a function along one of the axes of a <code>DataFrame</code> or <code>GeoDataFrame</code>. That is, we can apply a function on all rows (<code>axis=1</code>) or all columns (<code>axis=0</code>, the default). When the function being applied returns a single value, the output of <code>.apply</code> is a <code>Series</code> (e.g., <code>.apply(len)</code> returns the lengths of all columns, because <code>len</code> returns a single value). When the function returns a <code>Series</code>, then <code>.apply</code> returns a <code>DataFrame</code> (such as in the above example.)</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Since the above result, like any pairwise matrix, (1) is composed of values of the same type, and (2) has no contrasting role for rows and columns, is may be more convenient to use a plain <strong>numpy</strong> array to work with it. In such case, we can use the <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_numpy.html"><code>.to_numpy</code></a> method to go from <code>DataFrame</code> to <code>ndarray</code>. <!-- jn: why is this more natural? why is it better than a dataframe? which one should we use? if array is better -- keep it in the main text. if array is not better -- remove it from the main text and put it in a block. --> <!-- md: agree, now moved to a block --></p>
 <div class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>points.<span class="bu">apply</span>(<span class="kw">lambda</span> x: poly2.intersects(x)).to_numpy()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="19">
 <pre><code>array([[ True,  True],
        [False,  True],
        [ True, False]])</code></pre>
+</div>
+</div>
 </div>
 </div>
 <p>The <code>.intersects</code> method returns <code>True</code> even in cases where the features just touch: intersects is a ‘catch-all’ topological operation which identifies many types of spatial relation, as illustrated in <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a>. More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it? The first question can be answered with <code>.within</code>, and the second with <code>.touches</code>.</p>
@@ -2081,7 +2106,7 @@ dtype: bool</code></pre>
 dtype: float64</code></pre>
 </div>
 </div>
-<p>To obtain a distance matrix, i.e., a pairwise set of distances between all combinations of features in objects <code>x</code> and <code>y</code>, we need to use the <code>.apply</code> method (analogous to the way we created the <code>.intersects</code> boolean matrix in <a href="#sec-topological-relations"><span>Section&nbsp;3.2.2</span></a>). To illustrate this, let’s now take two regions in <code>nz</code>, Otago and Canterbury, represented by the object <code>co</code>.</p>
+<p>To obtain a distance matrix, i.e., a pairwise set of distances between all combinations of features in objects <code>x</code> and <code>y</code>, we need to use the method (analogous to the way we created the <code>.intersects</code> boolean matrix in <a href="#sec-topological-relations"><span>Section&nbsp;3.2.2</span></a>). To illustrate this, let’s now take two regions in <code>nz</code>, Otago and Canterbury, represented by the object <code>co</code>.</p>
 <div class="cell" data-execution_count="55">
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> nz[<span class="st">'Name'</span>].<span class="bu">str</span>.contains(<span class="st">'Canter|Otag'</span>)</span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>co <span class="op">=</span> nz[sel]</span>
@@ -2195,7 +2220,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7f668d3ed380&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f7ba1099380&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once, we can apply <code>list</code>. Since there was just one point, the result is just one extracted value, in this case <code>16</code>.</p>
@@ -2582,7 +2607,7 @@ NDVI=\frac{NIR-Red} {NIR+Red}
 <span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_256/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_253/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="79">
