@@ -235,17 +235,23 @@ fig.colorbar(i, ax=ax);
 ### Labels {#sec-plot-static-labels}
 
 Labels are often useful to annotate maps, to identify the location of specific features. 
-GIS software has specialized algorithms for label placement, e.g., to avoid overlaps. 
+GIS software has specialized algorithms for label placement, e.g., to avoid overlaps between adjacent labels. 
 Furthermore, editing in graphical editing software is sometimes used for fine tuning of label placement.
-Nevertheless, simple labels addend within the Python environment can be a good starting point.
+Nevertheless, simple labels added within the Python environment can be a good starting point, both for interactive exploration and sharing analysis results.
 
-To demonstrate, suppose that we have a layer of polygons comprising the New Zealand southern Island:
+To demonstrate, suppose that we have a layer `nz1` of regions comprising the New Zealand southern Island:
 
 ```{python}
 nz1 = nz[nz['Island'] == 'South']
 ```
 
-... @fig-labels-polygon.
+To add a label in **matplotlib**, we use the [`.annotate`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.annotate.html) method where the important arguments are the label string and the placement (a `tuple` of the form `(x,y)`). 
+When labeling vector layers, we typically want to add numerous labels, based on (one or more) attribute of each feature. 
+To do that, we can run a `for` loop or the `.apply` method, passing the label text and the coordinates of each feature.
+For example, in the following example we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
+We are also using `ha='center'` (short for `horizontalalignment`).
+
+The result is shown in @fig-labels-polygon.
 
 ```{python}
 #| label: fig-labels-polygon
