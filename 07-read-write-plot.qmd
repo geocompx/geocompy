@@ -579,7 +579,7 @@ You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>
 
 Writing geographic data allows you to convert from one format to another and to save newly created objects for permanent storage.
 Depending on the data type (vector or raster), object class (e.g., `GeoDataFrame`), and type and amount of stored information (e.g., object size, range of values), it is important to know how to store spatial files in the most efficient way.
-The next two sections will demonstrate how to do this.
+The next two subsections will demonstrate how to do this.
 
 ### Vector data
 
@@ -588,52 +588,48 @@ It allows you to write `GeoDataFrame` objects to a wide range of geographic vect
 Based on the file name, `.to_file` decides automatically which driver to use.
 The speed of the writing process depends also on the driver.
 
-For example, here is how we export the `world` layer to a GeoPackage file:
+For example, to export the `world` layer to a GeoPackage file, we can use `.to_file` and specify the output file name.
 
 ```{python}
 world.to_file('output/world.gpkg')
 ```
 
-Note that if you try to write to the same data source again, the function will overwrite the file:
+Note, that if you try to write to the same data source again, the function will overwrite the file.
 
 ```{python}
 world.to_file('output/world.gpkg')
 ```
 
-Instead of overwriting the file, we could add a new layer to the file with `mode='a'` ("append" mode, as opposed to the default `mode='w'` for "write" mode).
+Instead of overwriting the file, we could add a new layer to the file with `mode='a'` ("append" mode, as opposed to the default `mode='w'` for the "write" mode).
+<!-- jn: "a new layer"? or add new rows? -->
 Appending is supported by several spatial formats, including GeoPackage.
-For example:
 
 ```{python}
 world.to_file('output/world_many_features.gpkg')
 world.to_file('output/world_many_features.gpkg', mode='a')
 ```
 
-Here, `world_many_features.gpkg` will contain a polygonal layer named `world` with two "copies" of each country (that is 177×2=354 features, whereas the `world` layer has 177 features):
+Now, `world_many_features.gpkg` contains a polygonal layer named `world` with two "copies" of each country (that is 177×2=354 features, whereas the `world` layer has 177 features).
 
 ```{python}
 gpd.read_file('output/world_many_features.gpkg').shape
 ```
 
-Alternatively, you can create another, separate, layer, within the same file.
-The GeoPackage format also supports multiple layers within one file.
-For example:
+Alternatively, you can create another, separate, layer, within the same file, which is supported by some formats, including GeoPackage.
 
 ```{python}
 world.to_file('output/world_many_layers.gpkg')
 world.to_file('output/world_many_layers.gpkg', layer='world2')
 ```
 
-In this case, `world_many_layers.gpkg` has two "layers", `world_many_layers` (same as the file name, when `layer` is unspecified) and `world2`.
-Incidentally, the contents of the two layers is identical, but this doesn't have to be so.
-Each layer from such a file can be imported separately, as in:
+In this case, `world_many_layers.gpkg` has two "layers": `world_many_layers` (same as the file name, when `layer` is unspecified) and `world2`.
+Incidentally, the contents of the two layers is identical, but this does not have to be.
+Each layer from such a file can be imported separately using the `layer` argument of `gpd.read_file`.
 
 ```{python}
-gpd.read_file('output/world_many_layers.gpkg', layer='world_many_layers').head(1)
-```
-
-```{python}
-gpd.read_file('output/world_many_layers.gpkg', layer='world2').head(1)
+#| eval: false
+layer1 = gpd.read_file('output/world_many_layers.gpkg', layer='world_many_layers')
+layer2 = gpd.read_file('output/world_many_layers.gpkg', layer='world2')
 ```
 
 ### Raster data {#sec-data-output-raster}
