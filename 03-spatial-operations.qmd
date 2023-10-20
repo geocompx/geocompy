@@ -469,17 +469,19 @@ cycle_hire
 ```
 
 This is when a non-overlapping join is needed.
-Spatial join (`gpd.sjoin`) along with buffered geometries can be used to do that, as demonstrated below using a threshold distance of 20 $m$.
+Spatial join (`gpd.sjoin`) along with buffered geometries (see @sec-buffers) can be used to do that, as demonstrated below using a threshold distance of 20 $m$.
 <!-- jn: reference to buffer section is needed -->
-Note that we transform the data to a projected CRS (`27700`) to use real buffer distances, in meters.
+<!-- md: added -->
+Note that we transform the data to a projected CRS (`27700`) to use real buffer distances, in meters (see @sec-geometry-operations-on-projected-and-unprojected-data).
 <!-- jn: reference to CRS chapter is needed -->
+<!-- md: added -->
 
 ```{python}
 crs = 27700
 cycle_hire_buffers = cycle_hire.copy().to_crs(crs)
 cycle_hire_buffers.geometry = cycle_hire_buffers.buffer(20)
-z = gpd.sjoin(cycle_hire_buffers, cycle_hire_osm.to_crs(crs))
-z
+cycle_hire_buffers = gpd.sjoin(cycle_hire_buffers, cycle_hire_osm.to_crs(crs))
+cycle_hire_buffers
 ```
 
 Note that the number of rows in the joined result is greater than the target.
@@ -487,17 +489,19 @@ This is because some cycle hire stations in `cycle_hire_buffers` have multiple m
 To aggregate the values for the overlapping points and return the mean, we can use the aggregation methods shown in @sec-vector-attribute-aggregation, resulting in an object with the same number of rows as the target.
 We also go back from buffers to points using `.centroid` method.
 <!-- jn: explain or reference to explanation of .reset_index() -->
+<!-- md: The .reset_index method is now explained in sec-vector-attribute-aggregation, which we refer to (following your suggestion in ch02) -->
 <!-- jn: maybe use more descriptive object name than `z`? -->
+<!-- md: right, now changed -->
 
 ```{python}
-z = z[['id', 'capacity', 'geometry']] \
+cycle_hire_buffers = cycle_hire_buffers[['id', 'capacity', 'geometry']] \
     .dissolve(by='id', aggfunc='mean') \
     .reset_index()
-z.geometry = z.centroid
-z
+cycle_hire_buffers.geometry = cycle_hire_buffers.centroid
+cycle_hire_buffers
 ```
 
-The capacity of nearby stations can be verified by comparing a plot of the capacity of the source `cycle_hire_osm` data, with the join results in the new object `z` (@fig-cycle-hire-z).
+The capacity of nearby stations can be verified by comparing a plot of the capacity of the source `cycle_hire_osm` data, with the join results in the new object `cycle_hire_buffers` (@fig-cycle-hire-z).
 
 ```{python}
 #| label: fig-cycle-hire-z
@@ -511,7 +515,7 @@ fig, ax = plt.subplots(1, 1, figsize=(6, 3))
 cycle_hire_osm.plot(column='capacity', legend=True, ax=ax);
 # Join result
 fig, ax = plt.subplots(1, 1, figsize=(6, 3))
-z.plot(column='capacity', legend=True, ax=ax);
+cycle_hire_buffers.plot(column='capacity', legend=True, ax=ax);
 ```
 
 ### Spatial aggregation {#sec-vector-spatial-aggregation}
@@ -576,6 +580,7 @@ nz2.plot(
 ### Joining incongruent layers {#sec-joining-incongruent-layers}
 
 <!-- jn: maybe we should move spatial aggregation to the end of 3.3, and move this and the next section up? -->
+<!-- md: fine with me, as mentioned in another comment the order at the moment matches geocompr; we can change it (3.3 is about rasters, did you mean 3.2?) -->
 
 Spatial congruence is an important concept related to spatial aggregation.
 An aggregating object (which we will refer to as `y`) is congruent with the target object (`x`) if the two objects have shared borders.
