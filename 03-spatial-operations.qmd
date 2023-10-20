@@ -629,7 +629,7 @@ grid
 
 ```{python}
 #| label: fig-nz-and-grid
-#| fig-cap: The `nz` layer and a regular `grid` of rectangles
+#| fig-cap: The `nz` layer, with population size in each region, overlaid with a regular `grid` of rectangles
 base = grid.plot(color='none', edgecolor='grey')
 nz.plot(
     ax=base, 
@@ -725,20 +725,43 @@ nz['Population'].sum()
 grid['population'].sum()
 ```
 
-The procedure in this section is known as an area-weighted interpolation of a spatially extensive (e.g., population) variable.
-An area-weighted interpolation of a spatially intensive variable (e.g., population density) is almost identical, except that we would have to calculate the weighted `.mean` rather than `.sum`, to preserve the average rather than the sum.
+The procedure in this section is known as an area-weighted interpolation of a spatially *extensive* (e.g., population) variable.
+In extensive interpolation, we assume that the variable of interest represents counts (such as, here, inhabitants) uniformly distributed across space. 
+In such case, each "part" of a given polygon captures the respective proportion of counts (such as, half of a region with $N$ inhabitants contains $N/2$ ihnabitants).
+Accordingly, summing the parts gives the total count of the total area.
+
+An area-weighted interpolation of a spatially *intensive* variable (e.g., population density) is almost identical, except that we would have to calculate the weighted `.mean` rather than `.sum`, to preserve the average rather than the sum.
+In intensive interpolation, we assume that the variable of interest represents counts per unit area, i.e., density.
+Since density is (assumed to be) uniform, any "part" of a given polygon has exactly the same density as that of the whole polygon.
+Density values are therefore computed as weighted averages, rather than sums, of the parts. 
+Also see the "Area-weighted interpolation" [section](https://r-spatial.org/book/05-Attributes.html#sec-area-weighted) in @pebesma_spatial_2023.
 <!-- jn: I think there should be a block extending this thought, and explaining the difference between extensive and intensive variables. -->
+<!-- md: added more details and a reference to the "spatial data science" book -->
 
 ### Distance relations {#sec-distance-relations}
 
 <!-- jn: I think this section should be earlier in this chapter: after or before non-overlappling joins -->
+<!-- md: sounds good, I don't have any objection to that -->
 
 While topological relations are binary---a feature either intersects with another or does not---distance relations are continuous.
 The distance between two objects is calculated with the [`.distance`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.distance.html) method.
 The method is applied on a `GeoSeries` (or a `GeoDataFrame`), with the argument being an individual `shapely` geometry.
 The result is a `Series` of pairwise distances.
-(The `.distance` method syntax is thus analogous to the topological evaluations methods, such as `.intersects` (@sec-topological-relations), only that the results are numeric rather than boolean `Series`).
+
+::: callout-note
+**geopandas** uses similar syntax and mode of operation for many of its methods and functions, including:
+
+* Numeric calculations, such as `.distance` (this section), returning numeric values
+* Topological evaluations methods, such as `.intersects` or `.disjoint` (@sec-topological-relations), returning boolean values 
+* Geometry generating-methods, such as `.intersection` (@sec-clipping), returning geometries
+
+In all cases, the input is a `GeoSeries` and (or a `GeoDataFrame`) and a `shapely` geometry, and the output is a `Series` or `GeoSeries` of results, contrasting each geometry from the `GeoSeries` with the `shapely` geometry. The examples in this book demonstrate this, so called "many-to-one", mode of the functions. 
+
+All of the above-mentioned methods also have a pairwise mode, perhaps less useful and not used in the book, where we evaluate relations between pairs of geometries in two `GeoSeries`, aligned either by index or by position. 
+:::
+
 <!-- jn: the above sentence should be a block -->
+<!-- md: agree, now placed in a block (and expanded) -->
 
 To illustrate the `.distance` method, let's take the three highest point in New Zealand with `.sort_values` and `.iloc`.
 
@@ -797,8 +820,9 @@ This section builds on @sec-manipulating-raster-objects, which highlights variou
 
 ### Spatial subsetting {#sec-spatial-subsetting-raster}
 
-The previous chapter (and especially @sec-manipulating-raster-objects) demonstrated how to retrieve values associated with specific cell IDs, or row and column combinations, from a raster.
+The previous chapter (and especially @sec-manipulating-raster-objects) demonstrated how to retrieve values associated with specific row and column combinations from a raster.
 <!-- jn: specific cell IDs are not mentioned in the previous chapter! -->
+<!-- md: you're right! this was a mistake, now deleted. (it would be easy to add an example of extracting by ID but IMHO this is rarely useful and I suggest not doing that) -->
 Raster values can also be extracted by location (coordinates) and other spatial objects.
 To use coordinates for subsetting, we can use the [`.sample`](https://rasterio.readthedocs.io/en/stable/api/rasterio.io.html#rasterio.io.DatasetReader.sample) method of a `rasterio` file connection object, combined with a list of coordinate tuples.
 The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of `(0.1,0.1)` in `elev`.
