@@ -1573,24 +1573,32 @@ dtype: bool</code></pre>
 <!-- md: fine with me, as mentioned in another comment the order at the moment matches geocompr; we can change it (3.3 is about rasters, did you mean 3.2?) -->
 <p>Spatial congruence is an important concept related to spatial aggregation. An aggregating object (which we will refer to as <code>y</code>) is congruent with the target object (<code>x</code>) if the two objects have shared borders. Often this is the case for administrative boundary data, whereby larger units—such as Middle Layer Super Output Areas (MSOAs) in the UK, or districts in many other European countries—are composed of many smaller units.</p>
 <p>Incongruent aggregating objects, by contrast, do not share common borders with the target <span class="citation" data-cites="qiu_development_2012">(<a href="#ref-qiu_development_2012" role="doc-biblioref">Qiu, Zhang, and Zhou 2012</a>)</span>. This is problematic for spatial aggregation (and other spatial operations) illustrated in <a href="#fig-nz-and-grid">Figure&nbsp;<span>3.11</span></a>: aggregating the centroid of each sub-zone will not return accurate results. Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as ‘pycnophylactic’ methods <span class="citation" data-cites="tobler_smooth_1979">(<a href="#ref-tobler_smooth_1979" role="doc-biblioref">Tobler 1979</a>)</span>.</p>
-<p>To demonstrate joining incongruent layers, we will create a “synthetic” layer comprising a <a href="https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio">regular grid</a> of rectangles of size <span class="math inline">\(100\times100\)</span> <span class="math inline">\(km\)</span>, covering the extent of the <code>nz</code> layer. <!-- jn: maybe we could show and explain grid creation in the previous chapter? --> <!-- jn: it would be good to add some explanation to this code chunk (either as text or code comments) --></p>
+<p>To demonstrate joining incongruent layers, we will create a “synthetic” layer comprising a <a href="https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio">regular grid</a> of rectangles of size <span class="math inline">\(100\times100\)</span> <span class="math inline">\(km\)</span>, covering the extent of the <code>nz</code> layer. This recipe can be used to create a regular grid covering any given layer (other than <code>nz</code>), at the specified resolution (<code>res</code>). Most of the functions have been explained in previous chapters; we leave it as an exerise for the reader to explore how the code works. <!-- jn: maybe we could show and explain grid creation in the previous chapter? --> <!-- md: The previous chapter is about attributes, so IMHO this chapter is a more appropriate place --> <!-- jn: it would be good to add some explanation to this code chunk (either as text or code comments) --> <!-- md: sure, good idea. I've added comments and refactored the code to make it clearer --></p>
 <div class="cell" data-execution_count="40">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>xmin, ymin, xmax, ymax <span class="op">=</span> nz.total_bounds</span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> <span class="dv">100000</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="bu">int</span>(np.floor(xmin)), <span class="bu">int</span>(np.ceil(xmax<span class="op">+</span>res)), res))</span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="bu">int</span>(np.floor(ymin)), <span class="bu">int</span>(np.ceil(ymax<span class="op">+</span>res)), res))</span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>rows.reverse()</span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>polygons <span class="op">=</span> []</span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> cols:</span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y <span class="kw">in</span> rows:</span>
-<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>        polygons.append(</span>
-<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>            shapely.Polygon([(x,y), (x<span class="op">+</span>res, y), (x<span class="op">+</span>res, y<span class="op">-</span>res), (x, y<span class="op">-</span>res)])</span>
-<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: polygons}, crs<span class="op">=</span>nz.crs)</span>
-<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> grid.intersects(shapely.box(<span class="op">*</span>nz.total_bounds))</span>
-<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> grid[sel]</span>
-<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>grid[<span class="st">'id'</span>] <span class="op">=</span> grid.index</span>
-<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>grid</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Settings: grid extent, resolution, and CRS</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>bounds <span class="op">=</span> nz.total_bounds</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>crs <span class="op">=</span> nz.crs</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> <span class="dv">100000</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating grid dimensions</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>xmin, ymin, xmax, ymax <span class="op">=</span> bounds</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="bu">int</span>(np.floor(xmin)), <span class="bu">int</span>(np.ceil(xmax<span class="op">+</span>res)), res))</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> <span class="bu">list</span>(<span class="bu">range</span>(<span class="bu">int</span>(np.floor(ymin)), <span class="bu">int</span>(np.ceil(ymax<span class="op">+</span>res)), res))</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>rows.reverse()</span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="co"># For each cell, create 'shapely' polygon (rectangle)</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>polygons <span class="op">=</span> []</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> cols:</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y <span class="kw">in</span> rows:</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>        polygons.append(</span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>            shapely.Polygon([(x,y), (x<span class="op">+</span>res, y), (x<span class="op">+</span>res, y<span class="op">-</span>res), (x, y<span class="op">-</span>res)])</span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a><span class="co"># To 'GeoDataFrame'</span></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: polygons}, crs<span class="op">=</span>nz.crs)</span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove rows/columns beyond the extent</span></span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a>sel <span class="op">=</span> grid.intersects(shapely.box(<span class="op">*</span>nz.total_bounds))</span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> grid[sel]</span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Add consecultive IDs</span></span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>grid[<span class="st">'id'</span>] <span class="op">=</span> grid.index</span>
+<span id="cb46-24"><a href="#cb46-24" aria-hidden="true" tabindex="-1"></a>grid</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="39">
 <div>
 
@@ -1639,7 +1647,13 @@ dtype: bool</code></pre>
 <p><a href="#fig-nz-and-grid">Figure&nbsp;<span>3.11</span></a> shows the newly created <code>grid</code> layer, along with the <code>nz</code> layer.</p>
 <div class="cell" data-execution_count="41">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> grid.plot(color<span class="op">=</span><span class="st">'none'</span>, edgecolor<span class="op">=</span><span class="st">'grey'</span>)</span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>nz.plot(ax<span class="op">=</span>base, column<span class="op">=</span><span class="st">'Population'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, legend<span class="op">=</span><span class="va">True</span>, cmap<span class="op">=</span><span class="st">'viridis_r'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>nz.plot(</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    ax<span class="op">=</span>base, </span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    column<span class="op">=</span><span class="st">'Population'</span>, </span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    edgecolor<span class="op">=</span><span class="st">'black'</span>, </span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    legend<span class="op">=</span><span class="va">True</span>, </span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    cmap<span class="op">=</span><span class="st">'viridis_r'</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div id="fig-nz-and-grid" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
@@ -1649,7 +1663,7 @@ dtype: bool</code></pre>
 </div>
 </div>
 </div>
-<p>Our goal, now, is to “transfer” the <code>Population</code> attribute (<a href="#fig-nz-and-grid">Figure&nbsp;<span>3.11</span></a>) to the rectangular grid polygons, which is an example of a join between incongruent layers. To do that, we basically need to calculate–for each <code>grid</code> cell—the weighted sum of the population in <code>nz</code> polygons coinciding with that cell. The weights in the weighted sum calculation are the ratios between the area of the coinciding “part” out of the entire <code>nz</code> polygon. That is, we (inevitably) assume that the population in each <code>nz</code> polygon is equally distributed across space, therefore a partial <code>nz</code> polygon contains the respective partial population size.</p>
+<p>Our goal, now, is to “transfer” the <code>'Population'</code> attribute (<a href="#fig-nz-and-grid">Figure&nbsp;<span>3.11</span></a>) to the rectangular grid polygons, which is an example of a join between incongruent layers. To do that, we basically need to calculate–for each <code>grid</code> cell—the weighted sum of the population in <code>nz</code> polygons coinciding with that cell. The weights in the weighted sum calculation are the ratios between the area of the coinciding “part” out of the entire <code>nz</code> polygon. That is, we (inevitably) assume that the population in each <code>nz</code> polygon is equally distributed across space, therefore a partial <code>nz</code> polygon contains the respective partial population size.</p>
 <p>We start by calculating the entire area of each <code>nz</code> polygon, as follows, using the <code>.area</code> method (<a href="01-spatial-data.html#sec-area-length"><span>Section&nbsp;1.2.7</span></a>).</p>
 <div class="cell" data-execution_count="42">
 <div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>nz[<span class="st">'area'</span>] <span class="op">=</span> nz.area</span>
@@ -2223,7 +2237,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7ff9ae5994e0&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f21f60194e0&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once, we can apply <code>list</code>. Since there was just one point, the result is just one extracted value, in this case <code>16</code>.</p>
