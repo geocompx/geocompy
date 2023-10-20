@@ -302,9 +302,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.plot</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.features</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># import osgeo</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># import osgeo.gdal</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>It also relies on the following data files:</p>
 <div class="cell" data-execution_count="3">
@@ -915,7 +913,7 @@ Length: 154, dtype: geometry</code></pre>
 <h3 data-number="5.4.1" class="anchored" data-anchor-id="sec-rasterizing-points"><span class="header-section-number">5.4.1</span> Rasterizing points</h3>
 <p>Rasterization is the conversion of vector objects into their representation in raster objects. Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling. As we saw in <a href="01-spatial-data.html"><span>Chapter&nbsp;1</span></a>, the raster data model has some characteristics that make it conducive to certain methods. Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.</p>
 <p>The <strong>rasterio</strong> package contains the <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.rasterize"><code>rasterio.features.rasterize</code></a> function for doing this work. To make it happen, we need to have the “template” grid definition, i.e., the “template” raster defining the extent, resolution and CRS of the output, in the <code>out_shape</code> (the output dimensions) and <code>transform</code> (the transformation matrix) arguments of <code>rasterio.features.rasterize</code>. In case we have an existing template raster, we simply need to query its <code>.shape</code> and <code>.transform</code>. On the other hand, if we need to create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).</p>
-<p>Furthermore, the <code>rasterio.features.rasterize</code> function requires the input vector shapes in the form for a generator of <code>(geom,value)</code> tuples, where:</p>
+<p>Furthermore, the <code>rasterio.features.rasterize</code> function requires the input vector shapes in the form of a generator of <code>(geom,value)</code> tuples, where:</p>
 <ul>
 <li><code>geom</code> is the given geometry (<strong>shapely</strong> geometry object)</li>
 <li><code>value</code> is the value to be “burned” into pixels coinciding with the geometry (<code>int</code> or <code>float</code>)</li>
@@ -958,7 +956,7 @@ Length: 154, dtype: geometry</code></pre>
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>g <span class="op">=</span> ((g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry.to_list())</span>
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>g</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="35">
-<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7f25002f0ad0&gt;</code></pre>
+<pre><code>&lt;generator object &lt;genexpr&gt; at 0x7f145e0fda40&gt;</code></pre>
 </div>
 </div>
 <p>Then, the rasterizing expression takes the generator <code>g</code>, the template <code>shape</code> and <code>transform</code> as arguments.</p>
@@ -1210,7 +1208,7 @@ dtype: geometry</code></pre>
 <span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>shapes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="47">
-<pre><code>&lt;generator object shapes at 0x7f2500602bd0&gt;</code></pre>
+<pre><code>&lt;generator object shapes at 0x7f1460d12ce0&gt;</code></pre>
 </div>
 </div>
 <p>We can generate all shapes at once into a <code>list</code> named <code>pol</code> with <code>list(shapes)</code>.</p>
