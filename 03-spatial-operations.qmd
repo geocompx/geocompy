@@ -590,25 +590,37 @@ Incongruent aggregating objects, by contrast, do not share common borders with t
 This is problematic for spatial aggregation (and other spatial operations) illustrated in @fig-nz-and-grid: aggregating the centroid of each sub-zone will not return accurate results.
 Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods [@tobler_smooth_1979].
 
-To demonstrate joining incongruent layers, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer.
+To demonstrate joining incongruent layers, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer. 
+This recipe can be used to create a regular grid covering any given layer (other than `nz`), at the specified resolution (`res`). 
+Most of the functions have been explained in previous chapters; we leave it as an exerise for the reader to explore how the code works.
 <!-- jn: maybe we could show and explain grid creation in the previous chapter? -->
+<!-- md: The previous chapter is about attributes, so IMHO this chapter is a more appropriate place -->
 <!-- jn: it would be good to add some explanation to this code chunk (either as text or code comments) -->
+<!-- md: sure, good idea. I've added comments and refactored the code to make it clearer -->
 
 ```{python}
-xmin, ymin, xmax, ymax = nz.total_bounds
+# Settings: grid extent, resolution, and CRS
+bounds = nz.total_bounds
+crs = nz.crs
 res = 100000
+# Calculating grid dimensions
+xmin, ymin, xmax, ymax = bounds
 cols = list(range(int(np.floor(xmin)), int(np.ceil(xmax+res)), res))
 rows = list(range(int(np.floor(ymin)), int(np.ceil(ymax+res)), res))
 rows.reverse()
+# For each cell, create 'shapely' polygon (rectangle)
 polygons = []
 for x in cols:
     for y in rows:
         polygons.append(
             shapely.Polygon([(x,y), (x+res, y), (x+res, y-res), (x, y-res)])
         )
+# To 'GeoDataFrame'
 grid = gpd.GeoDataFrame({'geometry': polygons}, crs=nz.crs)
+# Remove rows/columns beyond the extent
 sel = grid.intersects(shapely.box(*nz.total_bounds))
 grid = grid[sel]
+# Add consecultive IDs
 grid['id'] = grid.index
 grid
 ```
@@ -619,10 +631,16 @@ grid
 #| label: fig-nz-and-grid
 #| fig-cap: The `nz` layer and a regular `grid` of rectangles
 base = grid.plot(color='none', edgecolor='grey')
-nz.plot(ax=base, column='Population', edgecolor='black', legend=True, cmap='viridis_r');
+nz.plot(
+    ax=base, 
+    column='Population', 
+    edgecolor='black', 
+    legend=True, 
+    cmap='viridis_r'
+);
 ```
 
-Our goal, now, is to "transfer" the `Population` attribute (@fig-nz-and-grid) to the rectangular grid polygons, which is an example of a join between incongruent layers.
+Our goal, now, is to "transfer" the `'Population'` attribute (@fig-nz-and-grid) to the rectangular grid polygons, which is an example of a join between incongruent layers.
 To do that, we basically need to calculate--for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell.
 The weights in the weighted sum calculation are the ratios between the area of the coinciding "part" out of the entire `nz` polygon.
 That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
@@ -648,7 +666,6 @@ nz_grid
 ```{python}
 #| label: fig-nz-and-grid-overlay
 #| fig-cap: The pairwise intersections of `nz` and `grid`, calculated with `.overlay`
-
 nz_grid.plot(color='none', edgecolor='black');
 ```
 
