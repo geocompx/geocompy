@@ -230,12 +230,14 @@ fig.colorbar(i, ax=ax);
 
 ### Labels {#sec-plot-static-labels}
 
-Labels are often useful to annotate maps, to identify the location of specific features. 
-GIS software has specialized algorithms for label placement, e.g., to avoid overlaps between adjacent labels. 
+<!-- start here -->
+
+Labels are often useful to annotate maps and identify the location of specific features. 
+GIS software, as opposed to **matplotlib**, has specialized algorithms for label placement, e.g., to avoid overlaps between adjacent labels.
 Furthermore, editing in graphical editing software is sometimes used for fine tuning of label placement.
 Nevertheless, simple labels added within the Python environment can be a good starting point, both for interactive exploration and sharing analysis results.
 
-To demonstrate, suppose that we have a layer `nz1` of regions comprising the New Zealand southern Island:
+To demonstrate it, suppose that we have a layer `nz1` of regions comprising the New Zealand southern Island.
 
 ```{python}
 nz1 = nz[nz['Island'] == 'South']
@@ -244,15 +246,13 @@ nz1 = nz[nz['Island'] == 'South']
 To add a label in **matplotlib**, we use the [`.annotate`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.annotate.html) method where the important arguments are the label string and the placement (a `tuple` of the form `(x,y)`). 
 When labeling vector layers, we typically want to add numerous labels, based on (one or more) attribute of each feature. 
 To do that, we can run a `for` loop, or use the `.apply` method, to pass the label text and the coordinates of each feature to `.annotate`.
-For example, in the following example we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
-We are also using `ha='center'` (short for `horizontalalignment`).
-
-The result is shown in @fig-labels-polygon.
+In the following example, we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
+We are also using `ha='center'`, short for `horizontalalignment` (@fig-labels-polygon).
+<!-- jn: what are other options for ha? maybe it would be worth mentioning them somewhere in this subsection? -->
 
 ```{python}
 #| label: fig-labels-polygon
 #| fig-cap: Labels at polygon centroids
-
 fig, ax = plt.subplots()
 nz1.plot(ax=ax, color='lightgrey', edgecolor='grey')
 nz1.apply(
@@ -276,14 +276,12 @@ ctr
 
 Then, we again use `.apply`, combined with `.annotate`, to add the text labels. 
 The main difference compared to the previous example (@fig-labels-polygon) is that we are directly passing the geometry coordinates (`.geometry.coords[0]`), since the geometries are points rather than polygons.
-We are also using the `weight='bold'` argument to use bold font.
-
-The result is shown in @fig-labels-points1.
+We are also using the `weight='bold'` argument to use bold font (@fig-labels-points1).
+<!-- jn: what are other weight options? where to find them? -->
 
 ```{python}
 #| label: fig-labels-points1
 #| fig-cap: Labels at points
-
 fig, ax = plt.subplots()
 nz.plot(ax=ax, color='none', edgecolor='lightgrey')
 ctr.apply(
@@ -300,11 +298,11 @@ ctr.apply(
 It should be noted that sometimes we wish to add text labels "manually", one by one, rather than use a loop or `.apply`. 
 For example, we may want to add labels of specific locations not stored in a layer, or to have control over the specific properties of each label. 
 To add text labels manually, we can run the `.annotate` expressions one at a time, as shown in the code section below recreating the last result with the "manual" approach (@fig-labels-points2).
+<!-- jn: maybe for the "manual" approach example it would be better to specify coordinates by hand rather than using the centroid coordinates? -->
 
 ```{python}
 #| label: fig-labels-points2
 #| fig-cap: Labels at points (manual)
-
 fig, ax = plt.subplots()
 nz.plot(ax=ax, color='none', edgecolor='lightgrey')
 ax.annotate(
@@ -323,21 +321,21 @@ ax.annotate(
 
 To display more than one layer in the same static map, we need to:
 
--   store the first plot in a variable (e.g., `base`), and
--   pass it as the `ax` argument of any subsequent plot(s) (e.g., `ax=base`).
+1.   Store the first plot in a variable (e.g., `base`)
+2.   Pass it as the `ax` argument of any subsequent plot(s) (e.g., `ax=base`)
 
-For example, here is how we can plot `nz` and `nz_height` together (@fig-two-layers):
+For example, here is how we can plot `nz` and `nz_height` together (@fig-two-layers).
 
 ```{python}
 #| label: fig-two-layers
 #| fig-cap: Plotting two layers, `nz` (polygons) and `nz_height` (points)
-
 base = nz.plot(color='none')
 nz_height.plot(ax=base, color='red');
 ```
 
 We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).
 The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together.
+<!-- jn: what is fig? what is ax? what is the relation between them? this should be explained somewhere in the book... -->
 
 For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
 
@@ -353,12 +351,10 @@ For example, @fig-plot-raster-and-vector demonstrated plotting a raster with inc
 #| - Raster + computed vector layer
 #| - Raster + two vector layers
 #| layout-ncol: 3
-
 # Raster + vector layer
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
 nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='red');
-
 # Raster + computed vector layer
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
@@ -367,7 +363,6 @@ gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
     .buffer(22200) \
     .boundary \
     .plot(ax=ax, color='red');
-
 # Raster + two vector layers
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
@@ -378,6 +373,8 @@ gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
     .plot(ax=ax, color='red')
 nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
 ```
+<!-- jn: what's facecolor? -->
+<!-- jn: why one example uses .boundary and the other uses .exterior? --> -->
 
 ### Basemaps
 
@@ -387,7 +384,7 @@ However, they are often useful in static maps too.
 
 Basemaps can be added to **geopandas** static plots using the [**contextily**](https://contextily.readthedocs.io/en/latest/index.html) package.
 A preliminary step is to convert our layers to `EPSG:3857` (["Web Mercator"](https://en.wikipedia.org/wiki/Web_Mercator_projection)), to be in agreement with the basemaps, which are typically provided in this CRS.
-For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it to `3857`:
+For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it to `3857`.
 
 ```{python}
 nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)
@@ -395,11 +392,8 @@ nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)
 
 To add a basemap, we use the `contextily.add_basemap` function, similarly to the way we added multiple layers (@sec-plot-static-layers).
 The default basemap is "Stamen Terrain".
-You can specify a different basemap using the `source` parameter.
-The possible values are given in the `cx.providers`.
-Also check out the [gallery](https://xyzservices.readthedocs.io/en/stable/gallery.html).
-Finally, custom basemaps (such as from your own raster tile server) can be specified using a [URL](https://contextily.readthedocs.io/en/latest/providers_deepdive.html#Manually-specifying-a-provider).
-For example (@fig-basemap):
+<!-- jn: correct me if I am wrong, but the default basemap does not seem to be Stamen Terrain... Please check it, and update the text and code -->
+You can specify a different basemap using the `source` parameter, with one of the values in `cx.providers` (@fig-basemap).
 
 ```{python}
 #| label: fig-basemap
@@ -409,24 +403,23 @@ For example (@fig-basemap):
 #|   - "'Stamen Terrain' basemap (the default)"
 #|   - "'OpenStreetMap' basemap"
 #|   - "'CartoDB Positron' basemap"
-
 # Stamen Terrain
 fig, ax = plt.subplots(figsize=(7, 7))
 ax = nzw.plot(color='none', ax=ax)
 cx.add_basemap(ax);
-
 # OpenStreetMap
 fig, ax = plt.subplots(figsize=(7, 7))
 ax = nzw.plot(color='none', ax=ax)
 cx.add_basemap(ax, source=cx.providers.OpenStreetMap.Mapnik);
-
 # CartoDB.Positron
 fig, ax = plt.subplots(figsize=(7, 7))
 ax = nzw.plot(color='none', ax=ax)
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron);
 ```
 
-Check out the [Adding a background map to plots](https://geopandas.org/en/stable/gallery/plotting_basemap_background.html) tutorial for more examples.
+Check out the [gallery](https://xyzservices.readthedocs.io/en/stable/gallery.html) for more possible basemaps.
+Custom basemaps (such as from your own raster tile server) can be  also specified using a [URL](https://contextily.readthedocs.io/en/latest/providers_deepdive.html#Manually-specifying-a-provider).
+Finally, you may read the [Adding a background map to plots](https://geopandas.org/en/stable/gallery/plotting_basemap_background.html) tutorial for more examples.
 
 ### Faceted maps
 
@@ -440,31 +433,25 @@ nz[vars]
 ```
 
 We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables.
-To do that, we initialize the plot with the right number of panels, such as `ncols=len(vars)` if we wish to have one row and four columns, and then go over the variables in a `for` loop, each time plotting `vars[i]` into the `ax[i]` panel (@fig-faceted-map):
+To do that, we initialize the plot with the expected number of panels, such as `ncols=len(vars)` if we wish to have one row and four columns, and then go over the variables in a `for` loop, each time plotting `vars[i]` into the `ax[i]` panel (@fig-faceted-map).
+<!-- jn: you mention ncols=len(vars) in the text but uses ncols=4 in the code... I think it should be unified -->
 
 ```{python}
 #| label: fig-faceted-map
 #| fig-cap: Faceted map, four different variables of `nz`
-
 fig, ax = plt.subplots(ncols=4, figsize=(9, 2))
 for i in range(len(vars)):
     nz.plot(ax=ax[i], column=vars[i], legend=True)
     ax[i].set_title(vars[i])
 ```
 
-In case we prefer a specific layout, rather than one row or one column, we can:
-
--   initialize the required number or rows and columns, as in `plt.subplots(nrows,ncols)`,
--   "flatten" `ax`, so that the facets are still accessible using a single index `ax[i]` (rather than the default `ax[i][j]`), and
--   plot into `ax[i]`
-
+In case we prefer a specific layout, rather than one row or one column, we can initialize the required number or rows and columns, as in `plt.subplots(nrows,ncols)`, "flatten" `ax`, so that the facets are still accessible using a single index `ax[i]` (rather than the default `ax[i][j]`), and plot into `ax[i]`.
 For example, here is how we can reproduce the last plot, this time in a $2 \times 2$ layout, instead of a $1 \times 4$ layout (@fig-faceted-map2).
-One more modification we are doing here is hiding the axis ticks and labels, to make the map less "crowded", using `ax[i].xaxis.set_visible(False)` (and same for `.yaxis`):
+One more modification we are doing here is hiding the axis ticks and labels, to make the map less "crowded", using `ax[i].xaxis.set_visible(False)` (and same for `.yaxis`).
 
 ```{python}
 #| label: fig-faceted-map2
 #| fig-cap: 2D layout in a faceted map, using a `for` loop
-
 fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
 ax = ax.flatten()
 for i in range(len(vars)):
@@ -476,12 +463,11 @@ for i in range(len(vars)):
 
 It is also possible to "manually" specify the properties of each panel, and which row/column it goes in (e.g., @fig-spatial-aggregation-different-functions).
 This can be useful when the various panels have different components, or even completely different types of plots (e.g., @fig-zion-transect), making automation with a `for` loop less applicable.
-For example, here is a plot similar to @fig-faceted-map2, but specifying each panel using a separate expression instead of using a `for` loop (@fig-faceted-map3):
+For example, here is a plot similar to @fig-faceted-map2, but specifying each panel using a separate expression instead of using a `for` loop (@fig-faceted-map3).
 
 ```{python}
 #| label: fig-faceted-map3
 #| fig-cap: 2D layout in a faceted map, using "manual" specification of the panels 
-
 fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
 nz.plot(ax=ax[0][0], column=vars[0], legend=True)
 ax[0][0].set_title(vars[0])
@@ -493,16 +479,16 @@ nz.plot(ax=ax[1][1], column=vars[3], legend=True)
 ax[1][1].set_title(vars[3]);
 ```
 
-See the first code section in @sec-exporting-static-maps for another example of manual panel contents specification.
+See the first code chunk in the next section for another example of manual panel contents specification.
 
 ### Exporting static maps {#sec-exporting-static-maps}
 
 Static maps can be exported to a file using the [`matplotlib.pyplot.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function.
-For example, the following code section recreates @fig-read-shp-query (see previous Chapter), but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`:
+For example, the following code section recreates @fig-read-shp-query (see previous Chapter), but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`.
+<!-- jn: the following code chunk is fairly long... maybe it would be good to replace it with some less complex example? -->
 
 ```{python}
 #| output: false
-
 fig, axes = plt.subplots(ncols=2, figsize=(9,5))
 tanzania.plot(ax=axes[0], color='lightgrey', edgecolor='grey')
 tanzania_neigh.plot(ax=axes[1], color='lightgrey', edgecolor='grey')
@@ -515,11 +501,10 @@ plt.savefig('output/plot_geopandas.jpg')
 ```
 
 Figures with rasters can be exported exactly the same way.
-For example, the following code section (@sec-plot-static-layers) creates an image of a raster and a vector layer, which is then exported to a file named `plot_rasterio.jpg`:
+For example, the following code section (@sec-plot-static-layers) creates an image of a raster and a vector layer, which is then exported to a file named `plot_rasterio.jpg`.
 
 ```{python}
 #| output: false
-
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
 nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
@@ -527,11 +512,10 @@ plt.savefig('output/plot_rasterio.jpg')
 ```
 
 Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters.
-For example, the following code section exports the same raster plot to a file named `plot_rasterio2.svg`, which has different dimensions (width = 5 $in$, height = 7 $in$), a different format (SVG), and different resolution (300 $DPI$:)
+For example, the following code section exports the same raster plot to a file named `plot_rasterio2.svg`, which has different dimensions (width = 5 $in$, height = 7 $in$), a different format (SVG), and different resolution (300 $DPI$).
 
 ```{python}
 #| output: false
-
 fig, ax = plt.subplots(figsize=(5, 7))
 rasterio.plot.show(nz_elev, ax=ax)
 nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
