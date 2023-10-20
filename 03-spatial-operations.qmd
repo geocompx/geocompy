@@ -367,6 +367,7 @@ points.distance(poly.iloc[0]) < 0.2
 ```
 
 <!-- jn: maybe it would be repeath the message about importance of the units/CRS here -->
+<!-- md: sure, now added -->
 Note that although the second point is more than `0.2` units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to `0.2`.
 This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure @fig-spatial-relations.
 We can verify the actual distance between the second point and the polygon is `0.13`, as follows.
@@ -374,6 +375,8 @@ We can verify the actual distance between the second point and the polygon is `0
 ```{python}
 points.iloc[1].distance(poly.iloc[0])
 ```
+
+This is also a good opportunity to repeat that all distance-related calculations in **gopandas** (and **shapely**) assume planar geometry, and only take into account the coordinate values. It is up to the user to make sure that all input layers are in the same projected CRS, so that this type of calculations make sense (see @sec-geometry-operations-on-projected-and-unprojected-data and @sec-when-to-reproject).
 
 ### Spatial joining {#sec-spatial-joining}
 
@@ -383,8 +386,9 @@ As with attribute data, joining adds new columns to the target object (the argum
 
 The following example illustrates the process: imagine you have ten points randomly distributed across the Earth's surface and you ask, for the points that are on land, which countries are they in?
 Implementing this idea in a reproducible example will build your geographic data handling skills and show how spatial joins work.
-The starting point is to create points that are randomly scattered over the Earth's surface (@fig-spatial-join (a)).
+The starting point is to create points that are randomly scattered over the planar surface that represents Earth's geographic coordinates, in decimal degrees (@fig-spatial-join (a)).
 <!-- jn: (you may ignore this comment): the points are not randomly scattered as the data is in GCRS... -->
+<!-- md: they are randomly scattered on the planar surface of [-180,-90,180,90], you're right that on a sphere this doesn't turn out to be random, and the phrasing wasn't correct... good point! now rephrased :-) -->
 
 ```{python}
 np.random.seed(11)       ## set seed for reproducibility
