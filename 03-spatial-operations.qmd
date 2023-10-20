@@ -826,15 +826,26 @@ The previous chapter (and especially @sec-manipulating-raster-objects) demonstra
 Raster values can also be extracted by location (coordinates) and other spatial objects.
 To use coordinates for subsetting, we can use the [`.sample`](https://rasterio.readthedocs.io/en/stable/api/rasterio.io.html#rasterio.io.DatasetReader.sample) method of a `rasterio` file connection object, combined with a list of coordinate tuples.
 The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of `(0.1,0.1)` in `elev`.
-The returned object is a *generator*.
+The returned object is a *generator*. 
+The rationale for returning a generator, rather than a `list`, is memory efficiency. 
+The number of sampled points may be huge, in which case we would want to "generate" the values one at a time rather than all at once.
 <!-- jn: explain what is a generator, and why it is useful here -->
+<!-- md: added -->
 
 ```{python}
 src_elev.sample([(0.1, 0.1)])
 ```
 
-In case we want all values at once, we can apply `list`.
-Since there was just one point, the result is just one extracted value, in this case `16`.
+::: callout-note
+The technical terms *iterable*, *iterator*, and *generator* in Python may be confusing, so here is a short summary, ordered from most general to most specific:
+
+* An *iterable* is any object that we can iterate on, such as using a `for` loop. For example, a `list` is iterable. 
+* An *iterator* is an object that represents a stream of data, which we can go over, each time getting the next element using `next`. Iterators are also iterable, meaning that you can over them in a loop, but they are stateful (e.g., they remember which item was obtained using `next`), meaning that you can go over them just once.
+* A *generator* is a function that returns an iterator. For example, the `.sample` method in the above example is a generator. The `rasterio` packages extensively uses generators, as we will see later on (see @sec-rasterizing-points, @sec-raster-to-polygons).
+:::
+
+In case we nevertheless want all values at once, such as when the number of points is small, we can force the generatrion of all values from a generator at once, using `list`.
+Since there was just one point, the result is one extracted value, in this case `16`.
 
 ```{python}
 list(src_elev.sample([(0.1, 0.1)]))
@@ -860,28 +871,39 @@ gpd.GeoSeries([shapely.Point(1.1, 1.1)]).plot(color='black', ax=ax);
 ```
 
 <!-- jn: the following paragraph should be a block -->
+<!-- md: done -->
+
+::: callout-note
 We elaborate on the plotting technique used to display the points and the raster in @sec-plot-static-layers.
 We will also introduce a more user-friendly and general method to extract raster values to points, using the **rasterstats** package, in @sec-extraction-to-points.
+:::
 
 Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in @fig-raster-subset.
 To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster.
-For example, let us read (@sec-using-rasterio) the `elev.tif` raster values into an array named `elev` (we will also close the connection, to avoid too many open connections in this chapter which may lead to an error) and create a corresponding random boolean mask named `mask`.
+For example, let us read (@sec-using-rasterio) the `elev.tif` raster values into an array named `elev` (@fig-raster-subset (a)), <!--(we will also close the connection, to avoid too many open connections in this chapter which may lead to an error)-->
 <!-- jn: why do we need to create elev here? cannot we just use src_elev to create a mask? -->
+<!-- md: good point! now changed. Also now printing the `elev` array to make things more clear -->
 <!-- jn: why this may lead to an error? maybe it is worth to add a block or a reference? -->
+<!-- md: seems like it's not necessary, perhaps this was a local issue on my computer, so I've removed it for now  -->
 
 ```{python}
 elev = src_elev.read(1)
-src_elev.close()
+elev
+```
+
+and create a corresponding random boolean mask named `mask` (@fig-raster-subset (b)), of the same shape as `elev.tif` with values randomly assigned to `True` and `False`.
+
+```{python}
 np.random.seed(1)
-mask = np.random.choice([True, False], elev.shape)
+mask = np.random.choice([True, False], src_elev.shape)
 mask
 ```
 
-In the code chunk above, we have created a `mask` object with values randomly assigned to `True` and `False`.
-Next, suppose that we want to keep those values of `elev` which are `False` in `mask` (i.e., they are *not* masked).
+Next, suppose that we want to keep only those values of `elev` which are `False` in `mask` (i.e., they are *not* masked).
 In other words, we want to mask `elev` with `mask`.
-The result will be stored in a copy named `masked_elev`.
-To be able to store `np.nan` in the raster, we also need to convert it to `float` (see @sec-summarizing-raster-objects).
+The result will be stored in a copy named `masked_elev` (@fig-raster-subset (c)).
+In the case of `elev.tif`, to be able to store `np.nan` in the array of values, we also need to convert it to `float` (see @sec-summarizing-raster-objects). 
+Afterwards, masking is a matter of assigning `np.nan` into a subset defined by the mask, using the ["boolean array indexing"](https://numpy.org/doc/stable/user/basics.indexing.html#boolean-array-indexing) syntax of **numpy**.
 
 ```{python}
 masked_elev = elev.copy()
@@ -905,7 +927,8 @@ rasterio.plot.show(mask);
 rasterio.plot.show(masked_elev);
 ```
 
-The above approach can be also used to replace some values (e.g., expected to be wrong) with `np.nan` by using a logical operation.
+The "mask" can be create from the array itself, using condition(s). 
+That way, we can replace some values (e.g., values assumed to be wrong) with `np.nan`, such as in the following example.
 
 ```{python}
 elev2 = elev.copy()
@@ -914,7 +937,7 @@ elev2[elev2 < 20] = np.nan
 elev2
 ```
 
-The next subsection explores these and related operations in more detail.
+This technique is also used to reclassify raster values (see @sec-raster-local-operations).
 
 ### Map algebra {#sec-map-algebra}
 
@@ -1030,7 +1053,6 @@ Next, we apply the formula to calculate the NDVI values.
 
 ```{python}
 landsat = src_landsat.read()
-src_landsat.close()
 nir = landsat[3]
 red = landsat[2]
 ndvi = (nir-red)/(nir+red)
