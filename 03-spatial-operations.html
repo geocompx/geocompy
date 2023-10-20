@@ -847,6 +847,7 @@ dtype: bool</code></pre>
 </div>
 </div>
 <!-- jn: maybe it would be repeath the message about importance of the units/CRS here -->
+<!-- md: sure, now added -->
 <p>Note that although the second point is more than <code>0.2</code> units of distance from the nearest vertex of <code>poly</code>, it is still selected when the distance is set to <code>0.2</code>. This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure <a href="#fig-spatial-relations">Figure&nbsp;<span>3.4</span></a>. We can verify the actual distance between the second point and the polygon is <code>0.13</code>, as follows.</p>
 <div class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>points.iloc[<span class="dv">1</span>].distance(poly.iloc[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -854,11 +855,12 @@ dtype: bool</code></pre>
 <pre><code>0.13416407864998736</code></pre>
 </div>
 </div>
+<p>This is also a good opportunity to repeat that all distance-related calculations in <strong>gopandas</strong> (and <strong>shapely</strong>) assume planar geometry, and only take into account the coordinate values. It is up to the user to make sure that all input layers are in the same projected CRS, so that this type of calculations make sense (see <a href="06-reproj.html#sec-geometry-operations-on-projected-and-unprojected-data"><span>Section&nbsp;6.4</span></a> and <a href="06-reproj.html#sec-when-to-reproject"><span>Section&nbsp;6.5</span></a>).</p>
 </section>
 <section id="sec-spatial-joining" class="level3" data-number="3.2.3">
 <h3 data-number="3.2.3" class="anchored" data-anchor-id="sec-spatial-joining"><span class="header-section-number">3.2.3</span> Spatial joining</h3>
 <p>Joining two non-spatial datasets uses a shared ‘key’ variable, as described in <a href="02-attribute-operations.html#sec-vector-attribute-joining"><span>Section&nbsp;2.2.3</span></a>. Spatial data joining applies the same concept, but instead relies on spatial relations, described in the previous section. As with attribute data, joining adds new columns to the target object (the argument <code>x</code> in joining functions), from a source object (<code>y</code>).</p>
-<p>The following example illustrates the process: imagine you have ten points randomly distributed across the Earth’s surface and you ask, for the points that are on land, which countries are they in? Implementing this idea in a reproducible example will build your geographic data handling skills and show how spatial joins work. The starting point is to create points that are randomly scattered over the Earth’s surface (<a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> (a)). <!-- jn: (you may ignore this comment): the points are not randomly scattered as the data is in GCRS... --></p>
+<p>The following example illustrates the process: imagine you have ten points randomly distributed across the Earth’s surface and you ask, for the points that are on land, which countries are they in? Implementing this idea in a reproducible example will build your geographic data handling skills and show how spatial joins work. The starting point is to create points that are randomly scattered over the planar surface that represents Earth’s geographic coordinates, in decimal degrees (<a href="#fig-spatial-join">Figure&nbsp;<span>3.7</span></a> (a)). <!-- jn: (you may ignore this comment): the points are not randomly scattered as the data is in GCRS... --> <!-- md: they are randomly scattered on the planar surface of [-180,-90,180,90], you're right that on a sphere this doesn't turn out to be random, and the phrasing wasn't correct... good point! now rephrased :-) --></p>
 <div class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">11</span>)       <span class="co">## set seed for reproducibility</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>bb <span class="op">=</span> world.total_bounds  <span class="co">## the world's bounds</span></span>
@@ -2220,7 +2222,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7f074b0dd380&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7fef49d7d380&gt;</code></pre>
 </div>
 </div>
 <p>In case we want all values at once, we can apply <code>list</code>. Since there was just one point, the result is just one extracted value, in this case <code>16</code>.</p>
@@ -2607,7 +2609,7 @@ NDVI=\frac{NIR-Red} {NIR+Red}
 <span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_255/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_256/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="79">
