@@ -2261,7 +2261,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7fdff76d14e0&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7fdf458514e0&gt;</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2593,13 +2593,31 @@ NDVI=\frac{NIR-Red} {NIR+Red}
 <span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>red <span class="op">=</span> landsat[<span class="dv">2</span>]</span>
 <span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>ndvi <span class="op">=</span> (nir<span class="op">-</span>red)<span class="op">/</span>(nir<span class="op">+</span>red)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>We also convert values &gt;<code>1</code> to “No Data”. <!-- jn: explain why --></p>
+<p>We also convert values &gt;<code>1</code> to “No Data”. <!-- jn: explain why --> <!-- md: I guess because the 'landsat' dataset has (uncorrected) brightness values, so the NDVI turns out to be beyond the valid range? I suggest adding a box to explain that, but I'm not sure what are the values exactly. this dataset is from 'geocomr' so maybe Jakub/Robin, can you please help with that? --></p>
 <div class="cell" data-execution_count="75">
 <div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>ndvi[ndvi<span class="op">&gt;</span><span class="dv">1</span>] <span class="op">=</span> np.nan</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>When plotting an RGB image using the <code>rasterio.plot.show</code> function, the function assumes that values are in the range <code>[0,1]</code> for floats, or <code>[0,255]</code> for integers (otherwise clipped) and the order of bands is RGB. To “prepare” the multi-band raster for <code>rasterio.plot.show</code>, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the <code>[:3]</code> slice to select the first three bands and then the <code>[::-1]</code> slice to reverse the bands order, and divide by the raster maximum to set the maximum value to <code>1</code>. <!-- jn: maybe explain or reference [::-1]? --></p>
+<p>When plotting an RGB image using the <code>rasterio.plot.show</code> function, the function assumes that values are in the range <code>[0,1]</code> for floats, or <code>[0,255]</code> for integers (otherwise clipped) and the order of bands is RGB. To “prepare” the multi-band raster for <code>rasterio.plot.show</code>, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the <code>[:3]</code> slice to select the first three bands and then the <code>[::-1]</code> slice to reverse the bands order, and divide by the raster maximum to set the maximum value to <code>1</code>. <!-- jn: maybe explain or reference [::-1]? --> <!-- md: good idea, now added a note --></p>
 <div class="cell" data-execution_count="76">
 <div class="sourceCode cell-code" id="cb96"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>landsat_rgb <span class="op">=</span> landsat[:<span class="dv">3</span>][::<span class="op">-</span><span class="dv">1</span>] <span class="op">/</span> landsat.<span class="bu">max</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Python slicing notation, which <strong>numpy</strong>, <strong>pandas</strong> and <strong>geopandas</strong> also follow, is <code>object[start:stop:step]</code>. The default is to start from the beginning, go to the end, and use steps of <code>1</code>. Otherwise, <code>start</code> is inclusive and <code>end</code> is exclusive, whereas negative <code>step</code> values imply going backwards starting from the end. Also, always keep in mind that Python indices start from <code>0</code>. When subsetting two- or three-dimensional objects, indices for each dimension are separated by commas, where either index can be set to <code>:</code> meaning “all values”. The last dimensions can also be omitted implying <code>:</code>, e.g., to subset the first three bands from a three-dimensional array <code>a</code> we can use either <code>a[:3,:,:]</code> or <code>a[:3]</code></p>
+<p>In the above example:</p>
+<ul>
+<li>The slicing expression <code>[:3]</code> therefore means layers <code>0</code>, <code>1</code>, <code>2</code> (up to <code>3</code>, exclusive)</li>
+<li>The slicing expression <code>[::-1]</code> therefore means all (three) bands in reverse order</li>
+</ul>
+</div>
 </div>
 <p><a href="#fig-raster-ndvi">Figure&nbsp;<span>3.20</span></a> shows the RGB image and the NDVI values calculated for the Landsat satellite image of the Zion National Park.</p>
 <div>
@@ -2703,7 +2721,7 @@ NDVI=\frac{NIR-Red} {NIR+Red}
 <span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_257/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_256/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="80">
