@@ -980,22 +980,31 @@ For example `elev + elev` adds the values of `elev` to itself, resulting in a ra
 elev + elev
 ```
 
-Note that some functions and operators automatically change the data type to accommodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as `255` for `int8`).
+Note that some functions and operators automatically change the data type to accommodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as trying to accomodate values above `255` in an `int8` array).
 For example, `elev**2` (`elev` squared) results in overflow.
+Since the `**` operator does not automatically change the data type, leaving it as `int8`, the resulting array has incorrect values for `16**2`, `17**2`, etc., which are above `255` and therefore cannot be accomodated.
 <!-- jn: maybe a block explaining what is overflow and why it is bad? -->
+<!-- md: added further explanation -->
 
 ```{python}
 elev**2
 ```
 
-To accommodate the results, we can, for instance, transform `elev` to the standard `int64` data type using `astype` before applying the operator.
+To avoid this situation, we can, for instance, transform `elev` to the standard `int64` data type, using `.astype` before applying the `**` operator.
+That way all, results up to `36**2` (`1296`) can be easily accomodated, since the `int64` data type supports values up to `9223372036854775807` (@tbl-numpy-data-types).
 <!-- jn: we should explain why int64 in the text and int in the code -->
+<!-- md: good point, now explained in a note -->
 
 ```{python}
 elev.astype(int)**2
 ```
 
 Now we get correct results.
+
+::: callout-note
+**numpy** has the special data types `np.int_` and `np.float_`, which refer to "default" `int` and `float` data types. These are platform dependent, but typically resolve to `np.int64` and `np.float64`. Furthermore, the standard Python types `int` and `float` refer to those two **numpy** types, respectively. Therefore, for example, either of the three objects `np.int64`, `np.int_` and `int` can be passed to `.astype` in the above example, with identical result. Whereas we've used the shortest one, `int`.
+:::
+
 @fig-raster-local-operations demonstrates the result of the last two examples (`elev+elev` and `elev.astype(int)**2`), and two other ones (`np.log(elev)` and `elev>5`).
 
 ```{python}
