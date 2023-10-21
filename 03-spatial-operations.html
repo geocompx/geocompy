@@ -2261,7 +2261,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7f84f15394e0&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f85d87054e0&gt;</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2462,7 +2462,7 @@ Note
        [62, 64, 66, 68, 70, 72]], dtype=uint8)</code></pre>
 </div>
 </div>
-<p>Note that some functions and operators automatically change the data type to accommodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as <code>255</code> for <code>int8</code>). For example, <code>elev**2</code> (<code>elev</code> squared) results in overflow. <!-- jn: maybe a block explaining what is overflow and why it is bad? --></p>
+<p>Note that some functions and operators automatically change the data type to accommodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as trying to accomodate values above <code>255</code> in an <code>int8</code> array). For example, <code>elev**2</code> (<code>elev</code> squared) results in overflow. Since the <code>**</code> operator does not automatically change the data type, leaving it as <code>int8</code>, the resulting array has incorrect values for <code>16**2</code>, <code>17**2</code>, etc., which are above <code>255</code> and therefore cannot be accomodated. <!-- jn: maybe a block explaining what is overflow and why it is bad? --> <!-- md: added further explanation --></p>
 <div class="cell" data-execution_count="69">
 <div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>elev<span class="op">**</span><span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="68">
@@ -2474,7 +2474,7 @@ Note
        [193,   0,  65, 132, 201,  16]], dtype=uint8)</code></pre>
 </div>
 </div>
-<p>To accommodate the results, we can, for instance, transform <code>elev</code> to the standard <code>int64</code> data type using <code>astype</code> before applying the operator. <!-- jn: we should explain why int64 in the text and int in the code --></p>
+<p>To avoid this situation, we can, for instance, transform <code>elev</code> to the standard <code>int64</code> data type, using <code>.astype</code> before applying the <code>**</code> operator. That way all, results up to <code>36**2</code> (<code>1296</code>) can be easily accomodated, since the <code>int64</code> data type supports values up to <code>9223372036854775807</code> (<a href="07-read-write-plot.html#tbl-numpy-data-types">Table&nbsp;<span>7.3</span></a>). <!-- jn: we should explain why int64 in the text and int in the code --> <!-- md: good point, now explained in a note --></p>
 <div class="cell" data-execution_count="70">
 <div class="sourceCode cell-code" id="cb89"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>elev.astype(<span class="bu">int</span>)<span class="op">**</span><span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="69">
@@ -2486,7 +2486,21 @@ Note
        [ 961, 1024, 1089, 1156, 1225, 1296]])</code></pre>
 </div>
 </div>
-<p>Now we get correct results. <a href="#fig-raster-local-operations">Figure&nbsp;<span>3.18</span></a> demonstrates the result of the last two examples (<code>elev+elev</code> and <code>elev.astype(int)**2</code>), and two other ones (<code>np.log(elev)</code> and <code>elev&gt;5</code>).</p>
+<p>Now we get correct results.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>numpy</strong> has the special data types <code>np.int_</code> and <code>np.float_</code>, which refer to “default” <code>int</code> and <code>float</code> data types. These are platform dependent, but typically resolve to <code>np.int64</code> and <code>np.float64</code>. Furthermore, the standard Python types <code>int</code> and <code>float</code> refer to those two <strong>numpy</strong> types, respectively. Therefore, for example, either of the three objects <code>np.int64</code>, <code>np.int_</code> and <code>int</code> can be passed to <code>.astype</code> in the above example, with identical result. Whereas we’ve used the shortest one, <code>int</code>.</p>
+</div>
+</div>
+<p><a href="#fig-raster-local-operations">Figure&nbsp;<span>3.18</span></a> demonstrates the result of the last two examples (<code>elev+elev</code> and <code>elev.astype(int)**2</code>), and two other ones (<code>np.log(elev)</code> and <code>elev&gt;5</code>).</p>
 <div>
 <div class="sourceCode cell-code" id="cb91"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev <span class="op">+</span> elev, cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span>
 <span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(elev.astype(<span class="bu">int</span>)<span class="op">**</span><span class="dv">2</span>, cmap<span class="op">=</span><span class="st">'Oranges'</span>)<span class="op">;</span></span>
@@ -2689,7 +2703,7 @@ NDVI=\frac{NIR-Red} {NIR+Red}
 <span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_256/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_257/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="80">
