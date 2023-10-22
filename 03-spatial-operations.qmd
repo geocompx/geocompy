@@ -1195,6 +1195,7 @@ grain_mode
 Terrain processing is another important application of focal operations.
 Such functions are provided by multiple Python packages, including the general purpose **xarray** package, and more specialized packages such as **richdem** and **pysheds**.
 <!-- jn: maybe it is worth to add that it is possible to write this code by hand (using the above approaches)? (as block?) -->
+<!-- md: good idea, added -->
 Useful terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute) include:
 
 -   Slope, measured in units of percent, degreees, or radians [@horn_1981]
@@ -1203,11 +1204,19 @@ Useful terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.htm
 
 For example, each of these, and other, terrain metrics can be computed with the **richdem** package.
 
+::: callout-note
+Terrain metrics are essentially focal filters with customized functions. Using `scipy.ndimage.generic_filter`, along with such custom functions, is an option for those who would like to calculate terrain metric through coding by hand and/or limiting their code dependencies. For example, the [How Aspect works](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-aspect-works.htm) and [How Slope works](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-slope-works.htm) pages from the ArcGIS Pro documentation provide exlanations and formulas of the required funtions for aspect and slope metrics (@fig-raster-slope), respectively, which can be translated to **numpy**-based functions to be used in `scipy.ndimage.generic_filter` to calculate those metrics.
+:::
+
 Another extremely fast, memory-efficient, and concise, alternative, is to the use the GDAL program called [`gdaldem`](https://gdal.org/programs/gdaldem.html).
 `gdaldem` can be used to calculate slope, aspect, and other terrain metrics through a single command, accepting an input file path and exporting the result to a new file.
 This is our first example in the book where we demonstrate a situation where it may be worthwhile to leave the Python environment, and utilize a GDAL program directly, rather than through their wrappers (such as **rasterio** and other Python packages), whether to access a computational algorithm not easily accessible in a Python package, or for GDAL's memory-efficiency and speed benefits.
-(Another example, of the `gdal_contour` program, will be shown in @sec-raster-to-contours.)
+
+::: callout-note
+GDAL contains a collection of over 40 [programs](https://gdal.org/programs/index.html), mostly aimed at raster processing. These include programs for fundamental operations, such as [`gdal_translate`](https://gdal.org/programs/gdal_translate.html#gdal-translate) (convert between raster file formats), [`gdalwarp`](https://gdal.org/programs/gdalwarp.html#gdalwarp) (raster reprojection), [`gdal_rasterize`](https://gdal.org/programs/gdal_rasterize.html#gdal-rasterize) (rasterize vector features), and [`gdal_merge.py`](https://gdal.org/programs/gdal_merge.html#gdal-merge) (raster mosaic), as well as numerous miscellaneous programs. In this book we demonstrate two GDAL programs: `gdaldem` (this section), and `gdal_contour` (@sec-raster-to-contours).
+:::
 <!-- jn: block? -->
+<!-- md: good idea, done -->
 
 GDAL, along with all of its programs should be available in your Python environment, since GDAL is a dependency of **rasterio**.
 The following example, which should be run from the command line, takes the `srtm_32612.tif` raster (which we are going to create in @sec-reprojecting-raster-geometries, therefore it is in the `'output'` directory), calculates slope (in decimal degrees, between `0` and `90`), and exports the result to a new file `srtm_32612_slope.tif`.
