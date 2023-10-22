@@ -1243,43 +1243,43 @@ os.system('gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif')
 ```
 
 @fig-raster-slope shows the results, using our more familiar plotting methods from **rasterio**.
-The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them.
+The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the [cyclic color scales](https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic) (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
 <!-- jn: is tere any chance to make this code shorter (by a few lines even)? -->
+<!-- md: I made the code shorter by 3 lines by placing two operations on the same line; most of the code is for the workaround to add a color key, we could omit the color keys, but I thought they are useful to emphasize the range of elevation/slope/aspect values -->
 <!-- jn: also the color palette for (a) and (b) should be reversed -->
+<!-- md: done -->
 <!-- jn: I am also unsure what is the best color palette for circular data (aspect)... -->
+<!-- md: good idea! I've added one from https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic -->
 
 ```{python}
 #| label: fig-raster-slope
-#| fig-cap: Slope calculation
+#| fig-cap: Slope and aspect calculation from a DEM
 #| layout-ncol: 3
 #| fig-subcap: 
 #| - Input DEM
 #| - Slope (degrees)
 #| - Aspect (degrees)
-# Input (DEM)
+# Input DEM
 src_srtm = rasterio.open('output/srtm_32612.tif')
 srtm = src_srtm.read(1).astype(float)
 srtm[srtm == src_srtm.nodata] = np.nan
 fig, ax = plt.subplots()
-i = ax.imshow(srtm, cmap='Spectral')
-rasterio.plot.show(src_srtm, cmap='Spectral', ax=ax)
-fig.colorbar(i, ax=ax);
+rasterio.plot.show(src_srtm, cmap='Spectral_r', ax=ax)
+fig.colorbar(ax.imshow(srtm, cmap='Spectral_r'), ax=ax);
 # Slope
 src_srtm_slope = rasterio.open('output/srtm_32612_slope.tif')
 srtm_slope = src_srtm_slope.read(1)
 srtm_slope[srtm_slope == src_srtm_slope.nodata] = np.nan
 fig, ax = plt.subplots()
-i = ax.imshow(srtm_slope, cmap='Spectral')
-rasterio.plot.show(src_srtm_slope, cmap='Spectral', ax=ax)
-fig.colorbar(i, ax=ax);
+rasterio.plot.show(src_srtm_slope, cmap='Spectral_r', ax=ax)
+fig.colorbar(ax.imshow(srtm_slope, cmap='Spectral_r'), ax=ax);
 # Aspect
 src_srtm_aspect = rasterio.open('output/srtm_32612_aspect.tif')
 srtm_aspect = src_srtm_aspect.read(1)
 srtm_aspect[srtm_aspect == src_srtm_aspect.nodata] = np.nan
 fig, ax = plt.subplots()
-i = ax.imshow(srtm_aspect, cmap='Spectral')
-rasterio.plot.show(src_srtm_aspect, cmap='Spectral', ax=ax)
-fig.colorbar(i, ax=ax);
+rasterio.plot.show(src_srtm_aspect, cmap='twilight', ax=ax)
+fig.colorbar(ax.imshow(srtm_aspect, cmap='twilight'), ax=ax);
 ```
 
 ### Zonal operations {#sec-zonal-operations}
