@@ -2261,7 +2261,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7f2da3b21380&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f8a2997d380&gt;</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2721,7 +2721,7 @@ Note
 <span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_254/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_256/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="80">
@@ -2792,39 +2792,36 @@ Note
 <div class="cell" data-execution_count="83">
 <div class="sourceCode cell-code" id="cb109"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><a href="#fig-raster-slope">Figure&nbsp;<span>3.22</span></a> shows the results, using our more familiar plotting methods from <strong>rasterio</strong>. The code section is relatively long due to the workaround to create a color key (see <a href="08-mapping.html#sec-plot-symbology"><span>Section&nbsp;8.2.3</span></a>) and removing “No Data” flag values from the arrays so that the color key does not include them. <!-- jn: is tere any chance to make this code shorter (by a few lines even)? --> <!-- jn: also the color palette for (a) and (b) should be reversed --> <!-- jn: I am also unsure what is the best color palette for circular data (aspect)... --></p>
+<p><a href="#fig-raster-slope">Figure&nbsp;<span>3.22</span></a> shows the results, using our more familiar plotting methods from <strong>rasterio</strong>. The code section is relatively long due to the workaround to create a color key (see <a href="08-mapping.html#sec-plot-symbology"><span>Section&nbsp;8.2.3</span></a>) and removing “No Data” flag values from the arrays so that the color key does not include them. Also note that we are using one of <strong>matplotlib</strong>’s the <a href="https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic">cyclic color scales</a> (<code>'twilight'</code>) when plotting aspect (<a href="#fig-raster-slope">Figure&nbsp;<span>3.22</span></a> (c)). <!-- jn: is tere any chance to make this code shorter (by a few lines even)? --> <!-- md: I made the code shorter by 3 lines by placing two operations on the same line; most of the code is for the workaround to add a color key, we could omit the color keys, but I thought they are useful to emphasize the range of elevation/slope/aspect values --> <!-- jn: also the color palette for (a) and (b) should be reversed --> <!-- md: done --> <!-- jn: I am also unsure what is the best color palette for circular data (aspect)... --> <!-- md: good idea! I've added one from https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic --></p>
 <div>
-<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input (DEM)</span></span>
+<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input DEM</span></span>
 <span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>src_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>)</span>
 <span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>srtm <span class="op">=</span> src_srtm.read(<span class="dv">1</span>).astype(<span class="bu">float</span>)</span>
 <span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>srtm[srtm <span class="op">==</span> src_srtm.nodata] <span class="op">=</span> np.nan</span>
 <span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> ax.imshow(srtm, cmap<span class="op">=</span><span class="st">'Spectral'</span>)</span>
-<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm, cmap<span class="op">=</span><span class="st">'Spectral'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a>fig.colorbar(i, ax<span class="op">=</span>ax)<span class="op">;</span></span>
-<span id="cb110-9"><a href="#cb110-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Slope</span></span>
-<span id="cb110-10"><a href="#cb110-10" aria-hidden="true" tabindex="-1"></a>src_srtm_slope <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_slope.tif'</span>)</span>
-<span id="cb110-11"><a href="#cb110-11" aria-hidden="true" tabindex="-1"></a>srtm_slope <span class="op">=</span> src_srtm_slope.read(<span class="dv">1</span>)</span>
-<span id="cb110-12"><a href="#cb110-12" aria-hidden="true" tabindex="-1"></a>srtm_slope[srtm_slope <span class="op">==</span> src_srtm_slope.nodata] <span class="op">=</span> np.nan</span>
-<span id="cb110-13"><a href="#cb110-13" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb110-14"><a href="#cb110-14" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> ax.imshow(srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral'</span>)</span>
-<span id="cb110-15"><a href="#cb110-15" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb110-16"><a href="#cb110-16" aria-hidden="true" tabindex="-1"></a>fig.colorbar(i, ax<span class="op">=</span>ax)<span class="op">;</span></span>
-<span id="cb110-17"><a href="#cb110-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Aspect</span></span>
-<span id="cb110-18"><a href="#cb110-18" aria-hidden="true" tabindex="-1"></a>src_srtm_aspect <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_aspect.tif'</span>)</span>
-<span id="cb110-19"><a href="#cb110-19" aria-hidden="true" tabindex="-1"></a>srtm_aspect <span class="op">=</span> src_srtm_aspect.read(<span class="dv">1</span>)</span>
-<span id="cb110-20"><a href="#cb110-20" aria-hidden="true" tabindex="-1"></a>srtm_aspect[srtm_aspect <span class="op">==</span> src_srtm_aspect.nodata] <span class="op">=</span> np.nan</span>
-<span id="cb110-21"><a href="#cb110-21" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb110-22"><a href="#cb110-22" aria-hidden="true" tabindex="-1"></a>i <span class="op">=</span> ax.imshow(srtm_aspect, cmap<span class="op">=</span><span class="st">'Spectral'</span>)</span>
-<span id="cb110-23"><a href="#cb110-23" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_aspect, cmap<span class="op">=</span><span class="st">'Spectral'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb110-24"><a href="#cb110-24" aria-hidden="true" tabindex="-1"></a>fig.colorbar(i, ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Slope</span></span>
+<span id="cb110-9"><a href="#cb110-9" aria-hidden="true" tabindex="-1"></a>src_srtm_slope <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_slope.tif'</span>)</span>
+<span id="cb110-10"><a href="#cb110-10" aria-hidden="true" tabindex="-1"></a>srtm_slope <span class="op">=</span> src_srtm_slope.read(<span class="dv">1</span>)</span>
+<span id="cb110-11"><a href="#cb110-11" aria-hidden="true" tabindex="-1"></a>srtm_slope[srtm_slope <span class="op">==</span> src_srtm_slope.nodata] <span class="op">=</span> np.nan</span>
+<span id="cb110-12"><a href="#cb110-12" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb110-13"><a href="#cb110-13" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb110-14"><a href="#cb110-14" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb110-15"><a href="#cb110-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Aspect</span></span>
+<span id="cb110-16"><a href="#cb110-16" aria-hidden="true" tabindex="-1"></a>src_srtm_aspect <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_aspect.tif'</span>)</span>
+<span id="cb110-17"><a href="#cb110-17" aria-hidden="true" tabindex="-1"></a>srtm_aspect <span class="op">=</span> src_srtm_aspect.read(<span class="dv">1</span>)</span>
+<span id="cb110-18"><a href="#cb110-18" aria-hidden="true" tabindex="-1"></a>srtm_aspect[srtm_aspect <span class="op">==</span> src_srtm_aspect.nodata] <span class="op">=</span> np.nan</span>
+<span id="cb110-19"><a href="#cb110-19" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb110-20"><a href="#cb110-20" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_aspect, cmap<span class="op">=</span><span class="st">'twilight'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb110-21"><a href="#cb110-21" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm_aspect, cmap<span class="op">=</span><span class="st">'twilight'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div id="fig-raster-slope" class="cell quarto-layout-panel" data-execution_count="84">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
 <div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 34.0%;justify-content: center;">
 <div id="fig-raster-slope-1" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
-<p><img src="03-spatial-operations_files/figure-html/fig-raster-slope-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-raster-slope" width="445"></p>
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-slope-output-1.png" class="img-fluid figure-img" data-ref-parent="fig-raster-slope" width="432"></p>
 <figcaption class="figure-caption">(a) Input DEM</figcaption>
 </figure>
 </div>
@@ -2832,7 +2829,7 @@ Note
 <div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 32.7%;justify-content: center;">
 <div id="fig-raster-slope-2" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
-<p><img src="03-spatial-operations_files/figure-html/fig-raster-slope-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-raster-slope" width="428"></p>
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-slope-output-2.png" class="img-fluid figure-img" data-ref-parent="fig-raster-slope" width="415"></p>
 <figcaption class="figure-caption">(b) Slope (degrees)</figcaption>
 </figure>
 </div>
@@ -2840,13 +2837,13 @@ Note
 <div class="cell-output cell-output-display quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 33.3%;justify-content: center;">
 <div id="fig-raster-slope-3" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
-<p><img src="03-spatial-operations_files/figure-html/fig-raster-slope-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-raster-slope" width="436"></p>
+<p><img src="03-spatial-operations_files/figure-html/fig-raster-slope-output-3.png" class="img-fluid figure-img" data-ref-parent="fig-raster-slope" width="423"></p>
 <figcaption class="figure-caption">(c) Aspect (degrees)</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p></p><figcaption class="figure-caption">Figure&nbsp;3.22: Slope calculation</figcaption><p></p>
+<p></p><figcaption class="figure-caption">Figure&nbsp;3.22: Slope and aspect calculation from a DEM</figcaption><p></p>
 </figure>
 </div>
 </div>
