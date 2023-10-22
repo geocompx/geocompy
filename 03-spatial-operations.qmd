@@ -1162,6 +1162,7 @@ For example, low-pass or smoothing filters use the mean function to remove extre
 By contrast, high-pass filters accentuate features.
 The line detection Laplace and Sobel filters might serve as an example here.
 <!-- jn: references?? -->
+<!-- md: I'm not familiar with those methods, this sentence is from 'geocompr' (perhaps we can remove it to keep things simple) -->
 
 In the case of categorical data, we can replace the mean with the mode, which is the most common value.
 To demonstrate applying a mode filter, let's read the small sample categorical raster `grain.tif`.
@@ -1171,8 +1172,9 @@ grain = src_grain.read(1)
 grain
 ```
 
-There is no built-in filter function for a mode filter in **scipy.ndimage**, but we can use the `scipy.ndimage.generic_filter` function along with a custom filtering function, internally utilizing `scipy.stats.mode`.
+There is no built-in filter function for a mode filter in **scipy.ndimage**, but we can use the [`scipy.ndimage.generic_filter`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.generic_filter.html) function along with a custom filtering function, internally utilizing [`scipy.stats.mode`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mode.html). 
 <!-- jn: maybe explain what is scipy.stats.mode? -->
+<!-- md: sure, added a note -->
 
 ```{python}
 grain_mode = scipy.ndimage.generic_filter(
@@ -1185,6 +1187,10 @@ grain_mode[:, [0, -1]] = np.nan
 grain_mode[[0, -1], :] = np.nan
 grain_mode
 ```
+
+::: callout-note
+`scipy.stats.mode` is a function to summarize array values, returning the mode (most common value). It is analogous to **numpy** summary functions and methods, such as `.mean` or `.max`. **numpy** itself does not provide the *mode* function, however, which is why we use **scipy** for that.
+:::
 
 Terrain processing is another important application of focal operations.
 Such functions are provided by multiple Python packages, including the general purpose **xarray** package, and more specialized packages such as **richdem** and **pysheds**.
