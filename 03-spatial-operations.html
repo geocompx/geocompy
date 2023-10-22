@@ -2261,7 +2261,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7f5a7546d380&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f2351785380&gt;</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2721,7 +2721,7 @@ Note
 <span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_255/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_256/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="80">
@@ -2746,14 +2746,42 @@ Note
 <p><code>scipy.stats.mode</code> is a function to summarize array values, returning the mode (most common value). It is analogous to <strong>numpy</strong> summary functions and methods, such as <code>.mean</code> or <code>.max</code>. <strong>numpy</strong> itself does not provide the <em>mode</em> function, however, which is why we use <strong>scipy</strong> for that.</p>
 </div>
 </div>
-<p>Terrain processing is another important application of focal operations. Such functions are provided by multiple Python packages, including the general purpose <strong>xarray</strong> package, and more specialized packages such as <strong>richdem</strong> and <strong>pysheds</strong>. <!-- jn: maybe it is worth to add that it is possible to write this code by hand (using the above approaches)? (as block?) --> Useful terrain <a href="https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute">metrics</a> include:</p>
+<p>Terrain processing is another important application of focal operations. Such functions are provided by multiple Python packages, including the general purpose <strong>xarray</strong> package, and more specialized packages such as <strong>richdem</strong> and <strong>pysheds</strong>. <!-- jn: maybe it is worth to add that it is possible to write this code by hand (using the above approaches)? (as block?) --> <!-- md: good idea, added --> Useful terrain <a href="https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute">metrics</a> include:</p>
 <ul>
 <li>Slope, measured in units of percent, degreees, or radians <span class="citation" data-cites="horn_1981">(<a href="#ref-horn_1981" role="doc-biblioref">Horn 1981</a>)</span></li>
 <li>Aspect, meaning each cell’s downward slope direction <span class="citation" data-cites="horn_1981">(<a href="#ref-horn_1981" role="doc-biblioref">Horn 1981</a>)</span></li>
 <li>Slope curvature, including ‘planform’ and ‘profile’ curvature <span class="citation" data-cites="zevenbergen_1987">(<a href="#ref-zevenbergen_1987" role="doc-biblioref">Zevenbergen and Thorne 1987</a>)</span></li>
 </ul>
 <p>For example, each of these, and other, terrain metrics can be computed with the <strong>richdem</strong> package.</p>
-<p>Another extremely fast, memory-efficient, and concise, alternative, is to the use the GDAL program called <a href="https://gdal.org/programs/gdaldem.html"><code>gdaldem</code></a>. <code>gdaldem</code> can be used to calculate slope, aspect, and other terrain metrics through a single command, accepting an input file path and exporting the result to a new file. This is our first example in the book where we demonstrate a situation where it may be worthwhile to leave the Python environment, and utilize a GDAL program directly, rather than through their wrappers (such as <strong>rasterio</strong> and other Python packages), whether to access a computational algorithm not easily accessible in a Python package, or for GDAL’s memory-efficiency and speed benefits. (Another example, of the <code>gdal_contour</code> program, will be shown in <a href="05-raster-vector.html#sec-raster-to-contours"><span>Section&nbsp;5.5.3</span></a>.) <!-- jn: block? --></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Terrain metrics are essentially focal filters with customized functions. Using <code>scipy.ndimage.generic_filter</code>, along with such custom functions, is an option for those who would like to calculate terrain metric through coding by hand and/or limiting their code dependencies. For example, the <a href="https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-aspect-works.htm">How Aspect works</a> and <a href="https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-slope-works.htm">How Slope works</a> pages from the ArcGIS Pro documentation provide exlanations and formulas of the required funtions for aspect and slope metrics (<a href="#fig-raster-slope">Figure&nbsp;<span>3.22</span></a>), respectively, which can be translated to <strong>numpy</strong>-based functions to be used in <code>scipy.ndimage.generic_filter</code> to calculate those metrics.</p>
+</div>
+</div>
+<p>Another extremely fast, memory-efficient, and concise, alternative, is to the use the GDAL program called <a href="https://gdal.org/programs/gdaldem.html"><code>gdaldem</code></a>. <code>gdaldem</code> can be used to calculate slope, aspect, and other terrain metrics through a single command, accepting an input file path and exporting the result to a new file. This is our first example in the book where we demonstrate a situation where it may be worthwhile to leave the Python environment, and utilize a GDAL program directly, rather than through their wrappers (such as <strong>rasterio</strong> and other Python packages), whether to access a computational algorithm not easily accessible in a Python package, or for GDAL’s memory-efficiency and speed benefits.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>GDAL contains a collection of over 40 <a href="https://gdal.org/programs/index.html">programs</a>, mostly aimed at raster processing. These include programs for fundamental operations, such as <a href="https://gdal.org/programs/gdal_translate.html#gdal-translate"><code>gdal_translate</code></a> (convert between raster file formats), <a href="https://gdal.org/programs/gdalwarp.html#gdalwarp"><code>gdalwarp</code></a> (raster reprojection), <a href="https://gdal.org/programs/gdal_rasterize.html#gdal-rasterize"><code>gdal_rasterize</code></a> (rasterize vector features), and <a href="https://gdal.org/programs/gdal_merge.html#gdal-merge"><code>gdal_merge.py</code></a> (raster mosaic), as well as numerous miscellaneous programs. In this book we demonstrate two GDAL programs: <code>gdaldem</code> (this section), and <code>gdal_contour</code> (<a href="05-raster-vector.html#sec-raster-to-contours"><span>Section&nbsp;5.5.3</span></a>).</p>
+</div>
+</div>
+<!-- jn: block? -->
+<!-- md: good idea, done -->
 <p>GDAL, along with all of its programs should be available in your Python environment, since GDAL is a dependency of <strong>rasterio</strong>. The following example, which should be run from the command line, takes the <code>srtm_32612.tif</code> raster (which we are going to create in <a href="06-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.8</span></a>, therefore it is in the <code>'output'</code> directory), calculates slope (in decimal degrees, between <code>0</code> and <code>90</code>), and exports the result to a new file <code>srtm_32612_slope.tif</code>. Note that the arguments of <code>gdaldem</code> are the metric name (<code>slope</code>), then the input file path, and finally the output file path.</p>
 <div class="cell" data-execution_count="82">
 <div class="sourceCode cell-code" id="cb107"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
