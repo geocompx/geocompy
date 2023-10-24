@@ -1300,13 +1300,25 @@ To do that, first we first obtain the unique values defining the zones using [`n
 np.unique(grain)
 ```
 
-Now, we can use [dictionary conprehension](https://stackoverflow.com/questions/14507591/python-dictionary-comprehension) to "split" the `elev` array into separate one-dimensional arrays with values per `grain` group, with keys being the unique `grain` values.
+Now, we can use [dictionary comprehension](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) to "split" the `elev` array into separate one-dimensional arrays with values per `grain` group, with keys being the unique `grain` values.
 <!-- jn: would be worth to add a block explaining what is dictionary comprehension here? -->
+<!-- md: done -->
 
 ```{python}
 z = {i: elev[grain == i] for i in np.unique(grain)}
 z
 ```
+
+::: callout-note
+[List comprehension](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) and dictionary comprehension are concise ways to create a `list` or a `dict`, respectively, from an iterable object.
+Both are, conceptually, a concise syntax to replace `for` loops where we iterate over an object and return a same-length object with the results.
+Here are minimal examples of list and dictionary comprehension, respectively, to demonstrate the idea:
+
+* `[i**2 for i in [2,4,6]]`---Returns `[4,16,36]`
+* `{i: i**2 for i in [2,4,6]}`---Returns `{2:4, 4:16, 6:36}`
+
+List comprehension is more commonly encountered in practice. We use it in @sec-subsetting-vs-clipping, @sec-rasterizing-lines-and-polygons, @sec-raster-to-polygons, @sec-raster-to-points, and @sec-distance-to-nearest-geometry. Dictionary comprehension is only used in one place in the book (this section).
+:::
 
 At this stage, we can expand the dictionary comprehension expression to calculate the mean elevation associated with each grain size class.
 Namely, instead of placing the elevation values (`elev[grain==i]`) into the dictionary values, we place their (rounded) mean (`elev[grain==i].mean().round(1)`).
