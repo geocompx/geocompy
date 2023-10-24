@@ -2261,7 +2261,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7f2362419380&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f0b28341380&gt;</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2721,7 +2721,7 @@ Note
 <span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_254/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
+<pre><code>/tmp/ipykernel_255/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
   lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="80">
@@ -2899,7 +2899,7 @@ Note
 <section id="sec-global-operations-and-distances" class="level3" data-number="3.3.6">
 <h3 data-number="3.3.6" class="anchored" data-anchor-id="sec-global-operations-and-distances"><span class="header-section-number">3.3.6</span> Global operations and distances</h3>
 <p>Global operations are a special case of zonal operations with the entire raster dataset representing a single zone. The most common global operations are descriptive statistics for the entire raster dataset such as the minimum or maximum—we already discussed those in <a href="02-attribute-operations.html#sec-summarizing-raster-objects"><span>Section&nbsp;2.3.2</span></a>.</p>
-<p>Aside from that, global operations are also useful for the computation of distance and weight rasters. In the first case, one can calculate the distance from each cell to specific target cells or vector geometries. For example, one might want to compute the distance to the nearest coast (see <a href="05-raster-vector.html#sec-distance-to-nearest-geometry"><span>Section&nbsp;5.6</span></a>). We might also want to consider topography, that means, we are not only interested in the pure distance but would like also to avoid the crossing of mountain ranges when going to the coast. To do so, we can weight the distance with elevation so that each additional altitudinal meter “prolongs” the Euclidean distance (this is beyond the scope of the book). <!-- jn: external references? --> Visibility and viewshed computations also belong to the family of global operations (also beyond the scope of the book). <!-- jn: external references? --></p>
+<p>Aside from that, global operations are also useful for the computation of distance and weight rasters. In the first case, one can calculate the distance from each cell to specific target cells or vector geometries. For example, one might want to compute the distance to the nearest coast (see <a href="05-raster-vector.html#sec-distance-to-nearest-geometry"><span>Section&nbsp;5.6</span></a>). We might also want to consider topography, that means, we are not only interested in the pure distance but would like also to avoid the crossing of mountain ranges when going to the coast. To do so, we can weight the distance with elevation so that each additional altitudinal meter “prolongs” the Euclidean distance (this is beyond the scope of the book). <!-- jn: external references? --> <!-- md: good idea, however I'm not familiar with those methods so don't have any reference in mind --> Visibility and viewshed computations also belong to the family of global operations (also beyond the scope of the book). <!-- jn: external references? --> <!-- md: same here --></p>
 </section>
 <section id="map-algebra-counterparts-in-vector-processing" class="level3" data-number="3.3.7">
 <h3 data-number="3.3.7" class="anchored" data-anchor-id="map-algebra-counterparts-in-vector-processing"><span class="header-section-number">3.3.7</span> Map algebra counterparts in vector processing</h3>
@@ -2913,6 +2913,20 @@ Note
 <div class="sourceCode cell-code" id="cb117"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>src_1 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/aut.tif'</span>)</span>
 <span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>src_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/ch.tif'</span>)</span>
 <span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.merge.merge([src_1, src_2])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Some Python packages (such as <code>rasterio</code>) are split into several so-called sub-modules. The sub-modules are installed collectively when installing the main package. However, each sub-module needs to be loaded separately to be able to use its functions. For example, the <code>rasterio.merge.merge</code> function (see last code block) comes from the <code>rasterio.merge</code> sub-module of <code>rasterio</code>. Loading <code>rasterio</code> with <code>import rasterio</code> does not expose the <code>rasterio.merge.merge</code> function; instead, we have to load <code>rasterio.merge</code> with <code>import rasterio.merge</code>, and only then use <code>rasterio.merge.merge</code>.</p>
+<p>Also check out the first code block in this chapter, where we load <code>rasterio</code> as well as three sub-modules: <code>rasterio.plot</code>, <code>rasterio.merge</code>, and <code>rasterio.features</code>.</p>
+</div>
 </div>
 <p><a href="#fig-raster-merge">Figure&nbsp;<span>3.23</span></a> shows both inputs and the resulting mosaic.</p>
 <div>
