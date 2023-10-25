@@ -257,8 +257,9 @@ These transformations are an essential part of geocomputation.
 For example, shifting is needed for labels placement, scaling is used in non-contiguous area cartograms, and many affine transformations are applied when reprojecting or improving the geometry that was created based on a distorted or wrongly projected map.
 
 The **geopandas** package implements affine transformation, for objects of classes `GeoSeries` and `GeoDataFrame`.
-In both cases, the method is applied on the `GeoSeries` part, returning a new `GeoSeries` of transformed geometries.
+In both cases, the method is applied on the `GeoSeries` part, returning a just the `GeoSeries` of transformed geometries.
 <!-- jn: and what if the input is a GeoDataFrame? what happens to the other columns? -->
+<!-- md: just the GeoSeries part is returned. to make that more clear, the results are now printed  -->
 
 Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function.
 As [documented](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2)/
@@ -284,6 +285,7 @@ The code below shifts the y-coordinates of `nz` by 100 $km$ to the north, but le
 
 ```{python}
 nz_shift = nz.translate(0, 100000)
+nz_shift
 ```
 
 Scaling enlarges or shrinks objects by a factor, and can be applied either globally or locally.
@@ -298,6 +300,7 @@ To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respe
 
 ```{python}
 nz_scale = nz.scale(0.5, 0.5, origin='centroid')
+nz_scale
 ```
 
 Rotating the geometries can be done using the `.rotate` method.
@@ -306,6 +309,7 @@ For example, the following expression rotates `nz` by 30 degrees counter-clockwi
 
 ```{python}
 nz_rotate = nz.rotate(-30, origin='centroid')
+nz_rotate
 ```
 
 @fig-affine-transformations shows the original layer `nz`, and the shifting, scaling and rotation results.
