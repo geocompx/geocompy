@@ -70,7 +70,7 @@ It is more advanced than the spatial data operations presented in the previous c
 
 Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps.
 Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps.
-The **geopandas** package provides the `.simplify` method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count.
+The **geopandas** package provides the [`.simplify`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html) method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count.
 `.simplify` uses the `tolerance` to control the level of generalization in map units [@douglas_algorithms_1973].
 
 For example, a simplified geometry of a `'LineString'` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the `seine.simplify(2000)` command (@fig-simplify-lines).
@@ -121,7 +121,10 @@ By [default](https://mattijn.github.io/topojson/example/settings-tuning.html#sim
 However, another algorithm, known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm [@visvalingam_line_1993], is also available in `.toposimplify`.
 The main advanatage of `.toposimplify` is that it is topologically "aware": it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained.
 The following code chunk uses `.toposimplify` to simplify `us_states9311`.
+Note that, when using the **topojson** package, we first need to calculate a "topology" object, using function `tp.Topology`, and then apply the sumplification function, such as `.toposimplify`, to obtain a simplified layer.
+We are also using the `.to_gdf` method to return a `GeoDataFrame`. 
 <!-- jn: add a sentence or two explaining the code chunk below -->
+<!-- md: added -->
 
 ```{python}
 topo = tp.Topology(us_states9311, prequantize=False)
