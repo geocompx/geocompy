@@ -261,7 +261,7 @@ In both cases, the method is applied on the `GeoSeries` part, returning a just t
 <!-- jn: and what if the input is a GeoDataFrame? what happens to the other columns? -->
 <!-- md: just the 'GeoSeries' part is returned. to make that more clear, the results are now printed  -->
 
-Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function.
+Affine transformations of `GeoSeries` can be done using the [`.affine_transform`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.affine_transform.html) method, which is a wrapper around the `shapely.affinity.affine_transform` function.
 As [documented](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2)/
 
 $$
@@ -279,7 +279,7 @@ There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/
 -   `.rotate(angle, origin='center', use_radians=False)`
 -   `.skew(angle, origin='center', use_radians=False)`
 
-For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using `.translate`.
+For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using [`.translate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.translate.html).
 <!-- jn: and what with z_off? -->
 <!-- md: right! now added a note, and removed the z parameters to avoid confusion -->
 The code below shifts the y-coordinates of `nz` by 100 $km$ to the north, but leaves the x-coordinates untouched.
@@ -295,20 +295,25 @@ nz_shift
 
 Scaling enlarges or shrinks objects by a factor, and can be applied either globally or locally.
 Global scaling increases or decreases all coordinates values in relation to the origin coordinates, while keeping all geometries topological relations intact.
-**geopandas** implements local scaling using the `.scale` method.
+**geopandas** implements local scaling using the [`.scale`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.scale.html) method.
 <!-- jn: what with global scaling? -->
+<!-- md: I think that global scaling can be acheived when passing a "center" that is the same for all geometries (rather than the centroid of each). I'm not 100% sure that's the definition of "global" scaling - will be happy if you can confirm and then will be happy to add it to the note below. -->
 Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids.
 In the example below, each geometry is shrunk by a factor of two around the centroids (@fig-affine-transformations (b)).
 To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respectively), and the `'centroid'` option for the point of origin.
 <!-- jn: next sentence as a block? -->
-(Other than `'centroid'`, it is possible to use `'center'`, for the bounding box center, or specific point coordinates.)
+<!-- md: done -->
 
 ```{python}
 nz_scale = nz.scale(0.5, 0.5, origin='centroid')
 nz_scale
 ```
 
-Rotating the geometries can be done using the `.rotate` method.
+::: callout-note
+When setting the `origin` in `.scale`, other than `'centroid'` it is possible to use `'center'`, for the bounding box center, or specific point coordinates, such as `(0,0)`.
+:::
+
+Rotating the geometries can be done using the [`.rotate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.rotate.html) method.
 When rotating, we need to specify the rotation angle (positive values imply clockwise rotation) and the `origin` points (using the same options as in `scale`).
 For example, the following expression rotates `nz` by 30 degrees counter-clockwise, around the geometry centroids.
 
@@ -339,6 +344,7 @@ nz_rotate.plot(ax=base, color='red', edgecolor='darkgrey');
 ```
 
 <!-- jn: you also mentioned skew before -- why it is not shown here? -->
+<!-- md: these example follow geocompr (https://r.geocompx.org/geometry-operations#fig:affine-trans), where skew is also not shown. IMHO it's less useful, so maybe we can omit skew from the text? -->
 
 ### Pairwise geometry-generating operations {#sec-clipping}
 
