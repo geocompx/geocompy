@@ -1141,7 +1141,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>The source <code>'MultiPoint'</code> geometry, and the derived <code>'LineString'</code> and <code>'Polygon'</code> geometries are shown in <a href="#fig-casting1">Figure&nbsp;<span>4.21</span></a>. Note that we convert the <code>shapely</code> geometries to <code>GeoSeries</code> to use the <strong>geopandas</strong> plotting method.</p>
+<p>The source <code>'MultiPoint'</code> geometry, and the derived <code>'LineString'</code> and <code>'Polygon'</code> geometries are shown in <a href="#fig-casting1">Figure&nbsp;<span>4.21</span></a>. Note that we convert the <code>shapely</code> geometries to <code>GeoSeries</code> to be able to use the <strong>geopandas</strong> <code>.plot</code> method.</p>
 <div>
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(multipoint).plot()<span class="op">;</span></span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>gpd.GeoSeries(linestring).plot()<span class="op">;</span></span>
@@ -1178,7 +1178,7 @@ dtype: geometry</code></pre>
 </figure>
 </div>
 </div>
-<p>Conversion from <code>'MultiPoint'</code> to <code>'LineString'</code> (<a href="#fig-type-transform-linestring">Figure&nbsp;<span>4.19</span></a>) is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from <code>'MultiPoint'</code> or <code>'LineString'</code> to <code>'Polygon'</code> (fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.</p>
+<p>Conversion from <code>'MultiPoint'</code> to <code>'LineString'</code> (<a href="#fig-type-transform-linestring">Figure&nbsp;<span>4.19</span></a>) is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media. This allows spatial operations such as the length of the path traveled. Conversion from <code>'MultiPoint'</code> or <code>'LineString'</code> to <code>'Polygon'</code> (<a href="#fig-type-transform-polygon">Figure&nbsp;<span>4.20</span></a>) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.</p>
 <p>Our <code>'LineString'</code> geometry can be converted back to a <code>'MultiPoint'</code> geometry by passing its coordinates directly to <code>shapely.MultiPoint</code> (<a href="#fig-type-transform-multipoint2">Figure&nbsp;<span>4.22</span></a>).</p>
 <div class="cell" data-execution_count="49">
 <div class="sourceCode cell-code" id="cb61"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>shapely.MultiPoint(linestring.coords)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1224,7 +1224,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>and here is how we can get back the <code>'Polygon'</code> parts:</p>
+<p>Now, here is how we can get back the <code>'Polygon'</code> part 1 (<a href="#fig-type-transform-multipolygon1">Figure&nbsp;<span>4.25</span></a>):</p>
 <div class="cell" data-execution_count="52">
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>multipolygon.geoms[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="52">
@@ -1236,6 +1236,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
+<p>and part 2 (<a href="#fig-type-transform-multipolygon2">Figure&nbsp;<span>4.26</span></a>):</p>
 <div class="cell" data-execution_count="53">
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>multipolygon.geoms[<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="53">
@@ -1247,8 +1248,8 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>However, dealing with multi-part geometries is easier with <strong>geopandas</strong>, since that way we can keep track of the associated attributes: duplicating them when going from multi-part to single-part (using <code>.explode</code>, see below), or collapsing them through aggregation when going from single-part to multi-part (using <code>.dissolve</code>, see <a href="#sec-geometry-unions"><span>Section&nbsp;4.2.7</span></a>). <!-- jn: the above paragraph is dense and hard to read --></p>
-<p>Let’s apply another commonly used type transformation to demonstrate. <!-- jn: demonstrate what? --> As input, we will create a <code>'MultiLineString'</code> geometry composed of three lines (<a href="#fig-type-transform-multilinestring3">Figure&nbsp;<span>4.27</span></a>).</p>
+<p>However, dealing with multi-part geometries can be easier with <strong>geopandas</strong>. Thanks to the fact that geometries in a <code>GeoDataFrame</code> are associated with attributes, we can keep track of the origin of each geometry: duplicating the attributes when going from multi-part to single-part (using <code>.explode</code>, see below), or “collapsing” the attributes through aggregation when going from single-part to multi-part (using <code>.dissolve</code>, see <a href="#sec-geometry-unions"><span>Section&nbsp;4.2.7</span></a>). <!-- jn: the above paragraph is dense and hard to read --> <!-- md: agree, now rephrased --></p>
+<p>Let’s apply demonstrate going from multi-part to single-part (<a href="#fig-multilinestring-to-linestring">Figure&nbsp;<span>4.28</span></a>) and then back to multi-part (<a href="#sec-geometry-unions"><span>Section&nbsp;4.2.7</span></a>), using a small line layer. <!-- jn: demonstrate what? --> <!-- md: right, now added references --> As input, we will create a <code>'MultiLineString'</code> geometry composed of three lines (<a href="#fig-type-transform-multilinestring3">Figure&nbsp;<span>4.27</span></a>).</p>
 <div class="cell" data-execution_count="54">
 <div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>l1 <span class="op">=</span> shapely.LineString([(<span class="dv">1</span>, <span class="dv">5</span>), (<span class="dv">4</span>, <span class="dv">3</span>)])</span>
 <span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>l2 <span class="op">=</span> shapely.LineString([(<span class="dv">4</span>, <span class="dv">4</span>), (<span class="dv">4</span>, <span class="dv">1</span>)])</span>
