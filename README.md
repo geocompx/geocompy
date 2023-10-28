@@ -91,11 +91,13 @@ python -m venv geocompy
 source geocompy/bin/activate
 ```
 
-Then install the dependencies:
+Then install the dependencies (with the optional
+[`python -m`](https://fosstodon.org/deck/@hugovk@mastodon.social/111311327842154267)
+prefix specifying the Python version):
 
 ``` sh
 # Install dependencies from the requirements.txt file
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 You can also install packages individually, e.g.:
