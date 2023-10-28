@@ -595,6 +595,7 @@ texas_union
 ### Type transformations {#sec-type-transformations}
 
 <!-- jn: I do not fully understand the story(ies) in this section. Please think about it -- maybe it can be reordered or some connecting sentences could be added... -->
+<!-- md: now added a roadmap, and also another example -->
 
 Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis.
 Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation, and the way that the input is organized (whether and individual geometry, or a vector layer).
@@ -632,13 +633,15 @@ multipoint
 ```
 
 A `'LineString'` can be created using `shapely.LineString` from a `list` of points.
-Thus, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring).
+Thus, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring). 
+The `.geoms` property, mentioned in @sec-geometries, give access to the indivudual parts that comprise a multi-part geometry; it is one of the **shapely** access methods to internal parts of a geometry.
 <!--jn: maybe it would be worth reexplaing .geoms here? -->
+<!--md: now added a reference to the place where '.geoms' is mentioned, but it's not really explained; there is no comprehensive overview of 'shapely' access methods in the book at the moment. we could add a section about that (e.g., https://geobgu.xyz/py/07-shapely.html#geometry-coordinates), will be happy to hear what you think -->
 
 ```{python}
 #| label: fig-type-transform-linestring
 #| fig-cap: A `'LineString'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
-linestring = shapely.LineString(list(multipoint.geoms))
+linestring = shapely.LineString(multipoint.geoms)
 linestring
 ```
 
@@ -869,6 +872,24 @@ It is also worthwhile to note the `.boundary` and `.exterior` properties of `Geo
 ## Geometric operations on raster data {#sec-geo-ras}
 
 <!-- jn: raster intro is missing (vector has an intro) -->
+<!-- md: right, I missed that! now added -->
+
+ Geometric raster operations include the shift, flipping, mirroring, scaling, rotation or warping of images. 
+ These operations are necessary for a variety of applications including georeferencing, used to allow images to be overlaid on an accurate map with a known CRS [@liu_essential_2009]. 
+ A variety of georeferencing techniques exist, including:
+
+* Georectification based on known ground control points
+* Orthorectification, which also accounts for local topography
+* Image registration is used to combine images of the same thing but shot from different sensors, by aligning one image with another (in terms of coordinate system and resolution)
+
+Python is rather unsuitable for the first two points since these often require manual intervention which is why they are usually done with the help of dedicated GIS software. 
+On the other hand, aligning several images is possible in Python and this section shows among others how to do so. 
+This often includes changing the extent, the resolution and the origin of an image. 
+A matching projection is of course also required but is already covered @sec-reprojecting-raster-geometries.
+
+In any case, there are other reasons to perform a geometric operation on a single raster image. 
+For instance, a common reason for aggregating a raster is to decrease run-time or save disk space. 
+Of course, this approach is only recommended if the task at hand allows a coarser resolution of raster data.
 
 ### Geometric intersections {#sec-raster-geometric-intersections}
 
