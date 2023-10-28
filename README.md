@@ -106,6 +106,12 @@ You can also install packages individually, e.g.:
 pip install jupyter-book
 ```
 
+Deactivate the virtual environment when you’re done:
+
+``` sh
+deactivate
+```
+
 </details>
 
 ## Install dependencies with a package manager
@@ -221,6 +227,26 @@ the following commands from your system shell:
 python code/chapters/02-spatial-data.py # currently requires manual intervention to complete, see #71
 ipython ipynb/02-spatial-data.ipynb # currently requires manual intervention to complete, see #71
 bash ./run-code.sh # run all .python files
+```
+
+## Updating packages
+
+We pin package versions in the [environment.yml](environment.yml) and
+[requirements.txt](requirements.txt) files to ensure reproducibility.
+
+To update the `requirements.txt` run the following:
+
+``` bash
+python -m pip install pur
+pur -r requirements.txt
+python -m pip install -r requirements.txt
+```
+
+To update the `environment.yml` file in the same way based on your newly
+installed packages, run the following:
+
+``` bash
+micromamba env export > environment.yml
 ```
 
 </details>
