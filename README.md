@@ -246,7 +246,7 @@ To update the `environment.yml` file in the same way based on your newly
 installed packages, run the following:
 
 ``` bash
-micromamba env export > environment.yml
+micromamba list export > environment.yml
 ```
 
 </details>
