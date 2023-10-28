@@ -10,7 +10,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.15.2
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -18,7 +18,6 @@
 # ---
 
 # ::: {.content-visible when-format="html"}
-#
 # ## Welcome {.unnumbered}
 #
 # This is the online home of *Geocomputation with Python*, a book on reproducible geographic data analysis with open source software.
@@ -38,6 +37,7 @@
 #
 # For details on reproducing the book, see the README in the project's GitHub repo: <https://github.com/geocompx/geocompy>.
 #
+# ````{=html}
 # <!-- 
 # Note: we don't need this here but commenting out the content rather than deleting because some of it could be ported into the README.
 # Reasonable? 
@@ -79,6 +79,5 @@
 # * The `data` sub-directory with the sample data used in the code sections
 #
 # Assuming that all required packages are installed (see beginning of each chapter), you can execute the `ipynb` files through your chosen working environment (VScode, Jupyter Notebook, etc.).  -->
-#
+# ````
 # :::
-#
