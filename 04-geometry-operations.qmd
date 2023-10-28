@@ -897,6 +897,7 @@ Of course, this approach is only recommended if the task at hand allows a coarse
 <!-- In geocompr, the difference is clean -- the first section is about cliping a raster with another raster; the second section is about cropping a raster with a vector. -->
 <!-- Here, the difference is not clear to me. -->
 <!-- If there is no difference, maybe we should either rewrite this section or remove it. -->
+<!-- md: that's correct, the only difference is that here the cropping geometry comes from another raster, however in 'rasterio' there is no distinct way to crop using a raster, so indeed most of the workflow is the same. I agree this section mostly repeats the same material, it's fine with me to remove it -->
 
 In @sec-spatial-subsetting-raster we have shown how to extract values from a raster overlaid by coordinates or by a matching boolean mask.
 A different case is when the area of interest is defined by any general (possibly non-matching) raster B, to retrieve a spatial output of a (smaller) subset of raster A we can:
@@ -1004,20 +1005,21 @@ r = src_elev.read(1)
 r
 ```
 
-To pad an `ndarray`, we can use the `np.pad` function.
+To pad an `ndarray`, we can use the [`np.pad`](https://numpy.org/doc/stable/reference/generated/numpy.pad.html) function.
 The function accepts an array, and a tuple of the form `((rows_top,rows_bottom),(columns_left, columns_right))`.
 Also, we can specify the value that's being used for padding with `constant_values` (e.g., `18`).
-For example, here we pad `r` with one extra row and two extra columns, on both sides:
+For example, here we pad `r` with one extra row and two extra columns, on both sides, resulting in the array `r_pad`:
 
 ```{python}
 rows = 1
 cols = 2
-s = np.pad(r, ((rows,rows),(cols,cols)), constant_values=18)
-s
+r_pad = np.pad(r, ((rows,rows),(cols,cols)), constant_values=18)
+r_pad
 ```
 
 <!-- jn: why the object is named 's'? cannot we use a better name here? -->
-However, for `s` to be used in spatial operations, we also have to update its transformation matrix.
+<!-- md: good idea, now renamed to 'r_pad' -->
+However, for `r_pad` to be used in any spatial operation, we also have to update its transformation matrix.
 Whenever we add extra columns on the left, or extra rows on top, the raster *origin* changes.
 To reflect this fact, we have to take to "original" origin and add the required multiple of pixel widths or heights (i.e., raster resolution steps).
 The transformation matrix of a raster is accessible from the raster file metadata (@sec-raster-from-scratch) or, as a shortcut, through the `.transform` property of the raster file connection.
@@ -1068,7 +1070,7 @@ new_transform
 #| label: fig-raster-shift-origin
 #| fig-cap: The padded `elev.tif` raster, and the extent of the original `elev.tif` raster (in red)
 fig, ax = plt.subplots()
-rasterio.plot.show(s, transform=new_transform, cmap='Greys', ax=ax)
+rasterio.plot.show(r_pad, transform=new_transform, cmap='Greys', ax=ax)
 elev_bbox = gpd.GeoSeries(shapely.box(*src_elev.bounds))
 elev_bbox.plot(color='none', edgecolor='red', ax=ax);
 ```
@@ -1087,6 +1089,7 @@ xmin_new, ymax_new
 
 To shift the origin in other directions we should change the two operators (`-`, `+`) accordingly.
 <!-- jn: the above sentence as a block? -->
+<!-- md: I'm not sure this should be in a block because the sentence doesn't make sense without the entire example, it's more like a detail to be aware of in the workflow. perhaps we can rewrite it and add more details, does it makes sense? -->
 
 Then, same as when padding (see above), we create an updated transformation matrix.
 
@@ -1117,9 +1120,12 @@ Raster datasets can be transformed to either decrease (aggregate) or increase (d
 For example, aggregation can be used to reduce computational resource requirements of raster storage and subsequent steps, while disaggregation can be used to match other datasets, or to add detail.
 As an example, we here change the spatial resolution of `dem.tif` by a factor of `5` (@fig-raster-aggregate).
 
+::: callout-note
 Raster aggregation is, in fact, a special case of raster resampling (see @sec-raster-resampling), where the target raster grid is aligned with the original raster, only with coarser pixels.
 Conversely, raster resampling is the general case where the new grid is not necessarily an aggregation of the original one, but any other type of grid (such as a rotated and/or shifted one, etc.).
+:::
 <!-- jn: the above paragraph as a block? -->
+<!-- md: good idea, done -->
 
 To aggregate a raster using **rasterio**, we go through [two steps](https://rasterio.readthedocs.io/en/stable/topics/resampling.html):
 
