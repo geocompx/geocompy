@@ -1101,6 +1101,7 @@ dtype: geometry</code></pre>
 <section id="sec-type-transformations" class="level3" data-number="4.2.8">
 <h3 data-number="4.2.8" class="anchored" data-anchor-id="sec-type-transformations"><span class="header-section-number">4.2.8</span> Type transformations</h3>
 <!-- jn: I do not fully understand the story(ies) in this section. Please think about it -- maybe it can be reordered or some connecting sentences could be added... -->
+<!-- md: now added a roadmap, and also another example -->
 <p>Transformation of geometries, from one type to another, also known as “geometry casting”, is often required to facilitate spatial analysis. Either the <strong>geopandas</strong> or the <strong>shapely</strong> packages can be used for geometry casting, depending on the type of transformation, and the way that the input is organized (whether and individual geometry, or a vector layer). Therefore, the exact expression(s) depend on the specific transformation we are interested in.</p>
 <p>In general, you need to figure out the required input of the respective construstor function according to the “destination” geometry (e.g., <code>shapely.LineString</code>, etc.), then reshape the input of the “source” geometry into the right form to be passed to that function. Or, when available, you can use a wrapper from <strong>geopandas</strong>.</p>
 <p>In this section we demonstrate several common scenarios. We start with transformations of individual geometries from one type to another, using <strong>shapely</strong> methods:</p>
@@ -1133,9 +1134,9 @@ dtype: geometry</code></pre>
 </div>
 </div>
 </div>
-<p>A <code>'LineString'</code> can be created using <code>shapely.LineString</code> from a <code>list</code> of points. Thus, a <code>'MultiPoint'</code> can be converted to a <code>'LineString'</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.LineString</code> (<a href="#fig-type-transform-linestring">Figure&nbsp;<span>4.19</span></a>). <!--jn: maybe it would be worth reexplaing .geoms here? --></p>
+<p>A <code>'LineString'</code> can be created using <code>shapely.LineString</code> from a <code>list</code> of points. Thus, a <code>'MultiPoint'</code> can be converted to a <code>'LineString'</code> by extracting the individual points into a <code>list</code>, then passing them to <code>shapely.LineString</code> (<a href="#fig-type-transform-linestring">Figure&nbsp;<span>4.19</span></a>). The <code>.geoms</code> property, mentioned in <a href="01-spatial-data.html#sec-geometries"><span>Section&nbsp;1.2.5</span></a>, give access to the indivudual parts that comprise a multi-part geometry; it is one of the <strong>shapely</strong> access methods to internal parts of a geometry. <!--jn: maybe it would be worth reexplaing .geoms here? --> <!--md: now added a reference to the place where '.geoms' is mentioned, but it's not really explained; there is no comprehensive overview of 'shapely' access methods in the book at the moment. we could add a section about that (e.g., https://geobgu.xyz/py/07-shapely.html#geometry-coordinates), will be happy to hear what you think --></p>
 <div class="cell" data-execution_count="46">
-<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.LineString(<span class="bu">list</span>(multipoint.geoms))</span>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>linestring <span class="op">=</span> shapely.LineString(multipoint.geoms)</span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>linestring</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="46">
 <div id="fig-type-transform-linestring" class="quarto-figure quarto-figure-center anchored">
@@ -1622,6 +1623,15 @@ dtype: geometry</code></pre>
 <section id="sec-geo-ras" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="sec-geo-ras"><span class="header-section-number">4.3</span> Geometric operations on raster data</h2>
 <!-- jn: raster intro is missing (vector has an intro) -->
+<!-- md: right, I missed that! now added -->
+<p>Geometric raster operations include the shift, flipping, mirroring, scaling, rotation or warping of images. These operations are necessary for a variety of applications including georeferencing, used to allow images to be overlaid on an accurate map with a known CRS <span class="citation" data-cites="liu_essential_2009">(<a href="#ref-liu_essential_2009" role="doc-biblioref">Liu and Mason 2009</a>)</span>. A variety of georeferencing techniques exist, including:</p>
+<ul>
+<li>Georectification based on known ground control points</li>
+<li>Orthorectification, which also accounts for local topography</li>
+<li>Image registration is used to combine images of the same thing but shot from different sensors, by aligning one image with another (in terms of coordinate system and resolution)</li>
+</ul>
+<p>Python is rather unsuitable for the first two points since these often require manual intervention which is why they are usually done with the help of dedicated GIS software. On the other hand, aligning several images is possible in Python and this section shows among others how to do so. This often includes changing the extent, the resolution and the origin of an image. A matching projection is of course also required but is already covered <a href="06-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.8</span></a>.</p>
+<p>In any case, there are other reasons to perform a geometric operation on a single raster image. For instance, a common reason for aggregating a raster is to decrease run-time or save disk space. Of course, this approach is only recommended if the task at hand allows a coarser resolution of raster data.</p>
 <section id="sec-raster-geometric-intersections" class="level3" data-number="4.3.1">
 <h3 data-number="4.3.1" class="anchored" data-anchor-id="sec-raster-geometric-intersections"><span class="header-section-number">4.3.1</span> Geometric intersections</h3>
 <!-- jn: Michael, what is the difference between this section and the section about cropping and masking in the next chapter?  -->
@@ -2206,6 +2216,9 @@ dtype: geometry</code></pre>
 <div id="refs" class="references csl-bib-body hanging-indent" role="list">
 <div id="ref-douglas_algorithms_1973" class="csl-entry" role="listitem">
 Douglas, David H, and Thomas K Peucker. 1973. <span>“Algorithms for the Reduction of the Number of Points Required to Represent a Digitized Line or Its Caricature.”</span> <em>Cartographica: The International Journal for Geographic Information and Geovisualization</em> 10 (2): 112–22. <a href="https://doi.org/bjwv52">https://doi.org/bjwv52</a>.
+</div>
+<div id="ref-liu_essential_2009" class="csl-entry" role="listitem">
+Liu, Jian-Guo, and Philippa J. Mason. 2009. <em>Essential Image Processing and <span>GIS</span> for Remote Sensing</em>. <span>Chichester, West Sussex, UK, Hoboken, NJ</span>: <span>Wiley-Blackwell</span>.
 </div>
 <div id="ref-visvalingam_line_1993" class="csl-entry" role="listitem">
 Visvalingam, M., and J. D. Whyatt. 1993. <span>“Line Generalisation by Repeated Elimination of Points.”</span> <em>The Cartographic Journal</em> 30 (1): 46–51. <a href="https://doi.org/fx74gh">https://doi.org/fx74gh</a>.
