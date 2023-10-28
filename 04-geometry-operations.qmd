@@ -597,12 +597,32 @@ texas_union
 <!-- jn: I do not fully understand the story(ies) in this section. Please think about it -- maybe it can be reordered or some connecting sentences could be added... -->
 
 Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis.
-Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation.
-The exact expression(s) depend on the specific transformation we are interested in.
+Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation, and the way that the input is organized (whether and individual geometry, or a vector layer).
+Therefore, the exact expression(s) depend on the specific transformation we are interested in.
+
 In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
 Or, when available, you can use a wrapper from **geopandas**.
 
-Let's create a `'MultiPoint'` to illustrate how geometry casting works on **shapely** geometry objects (@fig-type-transform-multipoint).
+In this section we demonstrate several common scenarios. 
+We start with transformations of individual geometries from one type to another, using **shapely** methods:
+
+* `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring)
+* `'MultiPoint'` to `'Polygon'` (@fig-type-transform-polygon)
+* `'LineString'` to `'MultiPoint'` (@fig-type-transform-multipoint2)
+* `'LineString'` to `'Polygon'` (@fig-type-transform-polygon2)
+* `'Polygon'`s to `'MultiPolygon'` (@fig-type-transform-multipolygon)
+* `'MultiPolygon'`s to `'Polygon'`s (@fig-type-transform-multipolygon1, @fig-type-transform-multipolygon2)
+
+Then, we move on and demonstrate casting workflows on `GeoDataFrame`s, where we have further considerations, such as keeping track of geometry attributes, and the possibility of dissolving, rather than just combining, geometries. As we will see, these are done either by "manually" applying **shapely** methods on all geometries in the given layer, or using **geopandas** wrapper methods which do it automatically:
+
+* `'MultiLineString'` to `'LineString'`s (using `.explode`) (@fig-multilinestring-to-linestring)
+* `'LineString'` to `'MultiPoint'`s (using `.apply`) (@fig-linestring-to-multipoint)
+* `'LineString'`s to `'MultiLineString'` (using `.dissolve`)
+* `'Polygon'`s to `'MultiPolygon'` (using `.dissolve` or `.agg`) (@fig-combine-geoms)
+* `'Polygon'` to `'(Multi)LineString'` (using `.boundary` or `.exterior`) (demonstrated in a subsequent chapter, see @sec-rasterizing-lines-and-polygons)
+
+Let's start with the simple individual-geometry casting examples, to illustrate how geometry casting works on **shapely** geometry objects. 
+First, let's create a `'MultiPoint'` (@fig-type-transform-multipoint).
 
 ```{python}
 #| label: fig-type-transform-multipoint
@@ -710,7 +730,7 @@ However, dealing with multi-part geometries can be easier with **geopandas**. Th
 <!-- jn: the above paragraph is dense and hard to read -->
 <!-- md: agree, now rephrased -->
 
-Let's apply demonstrate going from multi-part to single-part (@fig-multilinestring-to-linestring) and then back to multi-part (@sec-geometry-unions), using a small line layer.
+Let's demonstrate going from multi-part to single-part (@fig-multilinestring-to-linestring) and then back to multi-part (@sec-geometry-unions), using a small line layer.
 <!-- jn: demonstrate what? -->
 <!-- md: right, now added references -->
 As input, we will create a `'MultiLineString'` geometry composed of three lines (@fig-type-transform-multilinestring3).
@@ -771,6 +791,30 @@ dat.plot(column='id');
 dat1.plot(column='level_1');
 ```
 
+As a side-note, let's demonstrate how the above **shapely** casting methods can be translated to **geopandas**. 
+Suppose that we want to transform `dat1`, which is a layer of type `'LineString'` with three features, to a layer of type `'MultiPoint'` (also with three features). 
+Recall that for a single geometry, we use the expression `shapely.MultiPoint(x.coords)`, where `x` is a `'LineString'` (@fig-type-transform-multipoint2). 
+When dealing with a `GeoDataFrame`, we wrap the conversion into `.apply`, to apply it on all geometries:
+
+```{python}
+dat2 = dat1.copy()
+dat2.geometry = dat2.geometry.apply(lambda x: shapely.MultiPoint(x.coords))
+dat2
+```
+
+The result is illustrated in @fig-linestring-to-multipoint.
+
+```{python}
+#| label: fig-linestring-to-multipoint
+#| fig-cap: Transformation a `'LineString'` layer with three features, into a `'MultiPoint'` layer (also with three features), using `.apply` and **shapely** methods
+#| layout-ncol: 2
+#| fig-subcap: 
+#| - LineString layer
+#| - MultiPoint layer
+dat1.plot(column='level_1');
+dat2.plot(column='level_1');
+```
+
 The opposite transformation, i.e., "single-part to multi-part", is achieved using the `.dissolve` method (which we are already familiar with, see @sec-geometry-unions).
 For example, here is how we can get back to the `'MultiLineString'` geometry:
 
@@ -819,6 +863,8 @@ This is illustrated in @fig-combine-geoms:
 nz_dis1.plot(color='lightgrey', edgecolor='black');
 nz_dis2.plot(color='lightgrey', edgecolor='black');
 ```
+
+It is also worthwhile to note the `.boundary` and `.exterior` properties of `GeoSeries`, which are used to cast polygons to lines, with or without interior rings, respectively (see @sec-rasterizing-lines-and-polygons). 
 
 ## Geometric operations on raster data {#sec-geo-ras}
 
