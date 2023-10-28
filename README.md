@@ -80,7 +80,18 @@ the book.
 <details>
 
 Use `pip` to install the dependencies as follows, after cloning the repo
-and opening a terminal in the root folder of the repo:
+and opening a terminal in the root folder of the repo.
+
+First we’ll set-up a virtual environment to install the dependencies in:
+
+``` sh
+# Create a virtual environment called geocompy
+python -m venv geocompy
+# Activate the virtual environment
+source geocompy/bin/activate
+```
+
+Then install the dependencies:
 
 ``` sh
 # Install dependencies from the requirements.txt file
