@@ -1,0 +1,28 @@
+name: Latest Versions
+on:
+  push:
+    branches:
+      - main
+      # And on PRs:
+      - pull_request
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: ghcr.io/geocompx/docker:python
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Dependencies
+        run: |
+          conda env update --file environment.yml --prune
+      - name: Render
+        run: |
+          # test code:
+          quarto render
+          ls docs
