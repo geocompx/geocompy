@@ -634,7 +634,7 @@ polygon
 ```
 
 The source `'MultiPoint'` geometry, and the derived `'LineString'` and `'Polygon'` geometries are shown in @fig-casting1.
-Note that we convert the `shapely` geometries to `GeoSeries` to use the **geopandas** plotting method.
+Note that we convert the `shapely` geometries to `GeoSeries` to be able to use the **geopandas** `.plot` method.
 
 ```{python}
 #| label: fig-casting1
@@ -651,7 +651,7 @@ gpd.GeoSeries(polygon).plot();
 
 Conversion from `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring) is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media.
 This allows spatial operations such as the length of the path traveled.
-Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
+Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (@fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
 Our `'LineString'` geometry can be converted back to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2).
 
@@ -688,7 +688,7 @@ multipolygon = shapely.MultiPolygon([
 multipolygon
 ```
 
-and here is how we can get back the `'Polygon'` parts:
+Now, here is how we can get back the `'Polygon'` part 1 (@fig-type-transform-multipolygon1):
 
 ```{python}
 #| label: fig-type-transform-multipolygon1
@@ -697,6 +697,8 @@ and here is how we can get back the `'Polygon'` parts:
 multipolygon.geoms[0]
 ```
 
+and part 2 (@fig-type-transform-multipolygon2):
+
 ```{python}
 #| label: fig-type-transform-multipolygon2
 #| fig-cap: The 2^nd^ "part" extracted from the `'MultiPolygon'` in @fig-type-transform-multipolygon
@@ -704,11 +706,13 @@ multipolygon.geoms[0]
 multipolygon.geoms[1]
 ```
 
-However, dealing with multi-part geometries is easier with **geopandas**, since that way we can keep track of the associated attributes: duplicating them when going from multi-part to single-part (using `.explode`, see below), or collapsing them through aggregation when going from single-part to multi-part (using `.dissolve`, see @sec-geometry-unions).
+However, dealing with multi-part geometries can be easier with **geopandas**. Thanks to the fact that geometries in a `GeoDataFrame` are associated with attributes, we can keep track of the origin of each geometry: duplicating the attributes when going from multi-part to single-part (using `.explode`, see below), or "collapsing" the attributes through aggregation when going from single-part to multi-part (using `.dissolve`, see @sec-geometry-unions).
 <!-- jn: the above paragraph is dense and hard to read -->
+<!-- md: agree, now rephrased -->
 
-Let's apply another commonly used type transformation to demonstrate.
+Let's apply demonstrate going from multi-part to single-part (@fig-multilinestring-to-linestring) and then back to multi-part (@sec-geometry-unions), using a small line layer.
 <!-- jn: demonstrate what? -->
+<!-- md: right, now added references -->
 As input, we will create a `'MultiLineString'` geometry composed of three lines (@fig-type-transform-multilinestring3).
 
 ```{python}
