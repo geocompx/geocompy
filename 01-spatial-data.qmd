@@ -97,15 +97,15 @@ There are several approaches for working with vector layers in Python, ranging f
 Before writing and running code for creating and working with geographic vector objects, we need to import **geopandas** (by convention as `gpd` for more concise code) and **shapely**.
 
 ```{python}
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 import shapely
 ```
 
 We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**.
 
 ```{python}
-pd.set_option('display.max_rows', 6)
+pd.set_option("display.max_rows", 6)
 ```
 
 Projects often start by importing an existing vector layer saved as a GeoPackage (`.gpkg`) file, an ESRI Shapefile (`.shp`), or other geographic file format.
@@ -114,45 +114,60 @@ The function `read_file()` imports a GeoPackage file named `world.gpkg` located 
 ```{python}
 #| echo: false
 #| label: getdata
-from pathlib import Path
-import os
 import shutil
-data_path = Path('data')
+from pathlib import Path
+
+data_path = Path("data")
 
 if data_path.is_dir():
-  pass
-  # print('path exists') # directory exists
+    pass
+# print("path exists") # directory exists
 else:
-  print('Attempting to get and unzip the data')
-  import requests, zipfile, io
-  r = requests.get('https://github.com/geocompx/geocompy/releases/download/0.1/data.zip')
-  z = zipfile.ZipFile(io.BytesIO(r.content))
-  z.extractall('.')
+    print("Attempting to get and unzip the data")
+    import io
+    import zipfile
 
-data_path = Path('data/cycle_hire_osm.gpkg')
+    import requests
+
+    r = requests.get(
+        "https://github.com/geocompx/geocompy/releases/download/0.1/data.zip",
+        timeout=10,
+    )
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zip_buffer:
+        zip_buffer.extractall(".")
+
+data_path = Path("data/cycle_hire_osm.gpkg")
 
 if data_path.is_file():
-  pass
-  # print('path exists') # directory exists
+    pass
+# print("path exists") # directory exists
 else:
-  print('Attempting to move data')
-  r = requests.get('https://github.com/geocompx/geocompy/archive/refs/heads/main.zip')
-  z = zipfile.ZipFile(io.BytesIO(r.content))
-  z.extractall('.')
-  shutil.copytree('py-main/data', 'data', dirs_exist_ok=True) 
+    import io
+    import zipfile
 
-data_path = Path('output')
+    import requests
+
+    print("Attempting to move data")
+    r = requests.get(
+        "https://github.com/geocompx/geocompy/archive/refs/heads/main.zip",
+        timeout=10,
+    )
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zip_buffer:
+        zip_buffer.extractall(".")
+    shutil.copytree("geocompy-main/data", "data", dirs_exist_ok=True)
+
+data_path = Path("output")
 
 if data_path.is_dir():
-  pass
-  # print('path exists') # directory exists
+    pass
+# print("path exists") # directory exists
 else:
-  print('Attempting to move data')
-  shutil.copytree('py-main/output', 'output', dirs_exist_ok=True) 
+    print("Attempting to move data")
+    shutil.copytree("py-main/output", "output", dirs_exist_ok=True)
 ```
 
 ```{python}
-gdf = gpd.read_file('data/world.gpkg')
+gdf = gpd.read_file("data/world.gpkg")
 ```
 
 The result is an object of type (class) `GeoDataFrame` with 177 rows (features) and 11 columns, as shown in the output of the following code:
@@ -172,14 +187,14 @@ For example, standard data frame subsetting methods can be used.
 The code below creates a subset of the `gdf` dataset containing only the country name and the geometry.
 
 ```{python}
-gdf = gdf[['name_long', 'geometry']]
+gdf = gdf[["name_long", "geometry"]]
 gdf
 ```
 
 The following expression creates a subdataset based on a condition, such as equality of the value in the `'name_long'` column to the string `'Egypt'`.
 
 ```{python}
-gdf[gdf['name_long'] == 'Egypt']
+gdf[gdf["name_long"] == "Egypt"]
 ```
 
 Finally, to get a sense of the spatial component of the vector layer, it can be plotted using the `.plot` method (@fig-gdf-plot).
@@ -187,7 +202,7 @@ Finally, to get a sense of the spatial component of the vector layer, it can be 
 ```{python}
 #| label: fig-gdf-plot
 #| fig-cap: Basic plot of a `GeoDataFrame`
-gdf.plot();
+gdf.plot()
 ```
 
 Interactive maps of `GeoDataFrame` objects can be created with the `.explore` method, as illustrated in @fig-gdf-explore which was created with the following command:
@@ -203,23 +218,31 @@ A subset of the data can be also plotted in a similar fashion.
 ```{python}
 #| label: fig-gdf-explore2
 #| fig-cap: Interactive map of a `GeoDataFrame` subset
-gdf[gdf['name_long'] == 'Egypt'].explore()
+gdf[gdf["name_long"] == "Egypt"].explore()
 ```
 
 ```{python}
 #| echo: false
 # (Alternative)
 # import hvplot.pandas
-# gdf.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
-#This way, we can also add background tiles:
-# gdf.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
+# gdf.hvplot(
+# title="Hello world", geo=True, hover_cols=["name_long"], legend=False
+# ).opts(
+# bgcolor="lightgray", active_tools=["wheel_zoom"]
+# )
+# This way, we can also add background tiles:
+# gdf.hvplot(
+# tiles="OSM", alpha=0.5, geo=True, title="Hello world", hover_cols=["name_long"], legend=False
+# ).opts(
+# active_tools=["wheel_zoom"]
+# )
 ```
 
 ### Geometry columns {#sec-geometry-columns}
 
 The geometry column of class `GeoSeries` is an essential column in a `GeoDataFrame`.
 It contains the geometric part of the vector layer, and is the basis for all spatial operations.
-This column can be accessed by name, which typically (e.g., when reading from a file) is `'geometry'`, as in `gdf['geometry']`.
+This column can be accessed by name, which typically (e.g., when reading from a file) is `'geometry'`, as in `gdf["geometry"]`.
 However, the recommendation is to use the fixed `.geometry` property, which refers to the geometry column regardless whether its name is `'geometry'` or not.
 In the case of the `gdf` object, the geometry column contains `'MultiPolygon'`s associated with each country.
 
@@ -274,9 +297,9 @@ However, in this case, we see that the `gdf` layer contains only `'MultiPolygon'
 A `GeoDataFrame` can also have multiple `GeoSeries`.
 
 ```{python}
-#| output: false 
-gdf['bbox'] = gdf.envelope
-gdf['polygon'] = gdf.geometry
+#| output: false
+gdf["bbox"] = gdf.envelope
+gdf["polygon"] = gdf.geometry
 gdf
 ```
 
@@ -286,15 +309,15 @@ To switch the active geometry column from one `GeoSeries` column to another, we 
 
 ```{python}
 #| label: fig-switch-to-centroids
-#| fig-cap: Switching to the `'bbox'` geometry column in the `world` layer, and plotting it
-gdf = gdf.set_geometry('bbox')
+#| fig-cap: Switch to the `'bbox'` geometry column in the `world` layer, and plot it
+gdf = gdf.set_geometry("bbox")
 gdf.explore()
 ```
 
 ```{python}
 #| label: fig-switch-to-polygons
-#| fig-cap: Switching to the `'polygons'` geometry column in the `world` layer, and plotting it
-gdf = gdf.set_geometry('polygon')
+#| fig-cap: Switch to the `"polygons"` geometry column in the `world` layer, and plot it
+gdf = gdf.set_geometry("polygon")
 gdf.explore()
 ```
 
@@ -358,7 +381,7 @@ gdf.geometry.iloc[3]
 We can also select a specific geometry based on the `'name_long'` attribute (i.e., the 1^st^ and only element in the subset of `gdf` where the country name is equal to `Egypt`):
 
 ```{python}
-gdf[gdf['name_long'] == 'Egypt'].geometry.iloc[0]
+gdf[gdf["name_long"] == "Egypt"].geometry.iloc[0]
 ```
 
 The **shapely** package is compatible with the Simple Features standard (@sec-simple-features).
@@ -382,7 +405,7 @@ Here is an example of creating the same `'Point'` geometry from WKT (@fig-point2
 ```{python}
 #| label: fig-point2
 #| fig-cap: A `Point` geometry (created from a WKT string)
-point = shapely.from_wkt('POINT (5 2)')
+point = shapely.from_wkt("POINT (5 2)")
 point
 ```
 
@@ -391,7 +414,9 @@ A `'LineString'` geometry can be created based on a list of coordinate tuples or
 ```{python}
 #| label: fig-linestring
 #| fig-cap: A `LineString` geometry
-linestring = shapely.LineString([(1,5), (4,4), (4,1), (2,2), (3,2)])
+linestring = shapely.LineString(
+    [(1,5), (4,4), (4,1), (2,2), (3,2)]
+)
 linestring
 ```
 
@@ -402,7 +427,7 @@ Note that in the following example, there is one list of coordinates that define
 #| label: fig-polygon
 #| fig-cap: A `Polygon` geometry
 polygon = shapely.Polygon(
-    [(1,5), (2,2), (4,1), (4,4), (1,5)],  ## Exterior
+    [(1,5), (2,2), (4,1), (4,4), (1,5)],  ##Exterior
     [[(2,4), (3,4), (3,3), (2,3), (2,4)]]  ## Holes
 )
 polygon
@@ -435,7 +460,7 @@ A `'MultiPolygon'` geometry (@fig-multipolygon1) is created from a `list` of `Po
 #| label: fig-multipolygon1
 #| fig-cap: A `MultiPolygon` geometry
 multipolygon = shapely.MultiPolygon([
-    [[(1,5), (2,2), (4,1), (4,4), (1,5)], []],  ## Polygon 1 
+    [[(1,5), (2,2), (4,1), (4,4), (1,5)], []],  ## Polygon 1
     [[(0,2), (1,2), (1,3), (0,3), (0,2)], []]  ## Polygon 2, etc.
 ])
 multipolygon
@@ -447,7 +472,7 @@ Since the required input has four hierarchical levels, it may be more clear to c
 #| label: fig-multipolygon2
 #| fig-cap: A `MultiPolygon` geometry
 multipolygon = shapely.MultiPolygon([
-    shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]),  ## Polygon 1 
+    shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]),  ## Polygon 1
     shapely.Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])  ## Polygon 2, etc.
 ])
 multipolygon
@@ -531,10 +556,10 @@ Again, note that the `list` can be of length \>1, in case we are creating a laye
 
 ```{python}
 lnd_data = {
-  'name': ['London'],
-  'temperature': [25],
-  'date': ['2023-06-21'],
-  'geometry': lnd_geom
+  "name": ["London"],
+  "temperature": [25],
+  "date": ["2023-06-21"],
+  "geometry": lnd_geom
 }
 ```
 
@@ -558,10 +583,10 @@ lnd_point = shapely.Point(0.1, 51.5)
 paris_point = shapely.Point(2.3, 48.9)
 towns_geom = gpd.GeoSeries([lnd_point, paris_point], crs=4326)
 towns_data = {
-  'name': ['London', 'Paris'],
-  'temperature': [25, 27],
-  'date': ['2013-06-21', '2013-06-21'],
-  'geometry': towns_geom
+  "name": ["London", "Paris"],
+  "temperature": [25, 27],
+  "date": ["2013-06-21", "2013-06-21"],
+  "geometry": towns_geom
 }
 towns_layer = gpd.GeoDataFrame(towns_data)
 towns_layer
@@ -572,8 +597,8 @@ To make the points easier to see, we are customizing a fill color and size (we e
 
 ```{python}
 #| label: fig-layer-from-scratch-explore
-#| fig-cap: '`towns_layer`, created from scratch, visualized using `.explore`'
-towns_layer.explore(color='red', marker_kwds={'radius': 10})
+#| fig-cap: "`towns_layer`, created from scratch, visualized using `.explore`"
+towns_layer.explore(color="red", marker_kwds={"radius": 10})
 ```
 
 Spatial object can be also created from a `pandas.DataFrame` object that contains columns with coordinates.
@@ -581,13 +606,13 @@ For that, we need to first create a `GeoSeries` object from the coordinates, and
 
 ```{python}
 towns_table = pd.DataFrame({
-  'name': ['London', 'Paris'],
-  'temperature': [25, 27],
-  'date': ['2017-06-21', '2017-06-21'],
-  'x': [0.1, 2.3],
-  'y': [51.5, 48.9]
+    "name": ["London", "Paris"],
+    "temperature": [25, 27],
+    "date": ["2017-06-21", "2017-06-21"],
+    "x": [0.1, 2.3],
+    "y": [51.5, 48.9],
 })
-towns_geom = gpd.points_from_xy(towns_table['x'], towns_table['y'])
+towns_geom = gpd.points_from_xy(towns_table["x"], towns_table["y"])
 towns_layer = gpd.GeoDataFrame(towns_table, geometry=towns_geom, crs=4326)
 ```
 
@@ -619,7 +644,7 @@ For example, the area of Slovenia can be calculated in the UTM zone 33N CRS (`cr
 The result is in $m^2$, the units of the CRS of this dataset.
 
 ```{python}
-gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
+gdf[gdf["name_long"] == "Slovenia"].to_crs(32633).area
 ```
 
 ## Raster data {#sec-raster-data}
@@ -694,7 +719,7 @@ In the first step, we pass a file path to the `rasterio.open` function to create
 For this example, we use a single-band raster representing elevation in Zion National Park.
 
 ```{python}
-src = rasterio.open('data/srtm.tif')
+src = rasterio.open("data/srtm.tif")
 src
 ```
 
@@ -703,7 +728,7 @@ To get a first impression of the raster values, we can plot the raster using the
 ```{python}
 #| label: fig-rasterio-plot
 #| fig-cap: Basic plot of a raster, the data are coming from a **rasterio** file connection
-rasterio.plot.show(src);
+rasterio.plot.show(src)
 ```
 
 The `DatasetReader` contains the raster metadata, that is, all of the information other than the raster values.
@@ -794,11 +819,11 @@ We will create it from a specific arrangement of pixel values using the **numpy*
 
 ```{python}
 v = [
-  1, 0, 1, 2, 2, 2, 
-  0, 2, 0, 0, 2, 1, 
-  0, 2, 2, 0, 0, 2, 
-  0, 0, 1, 1, 1, 1, 
-  1, 1, 1, 2, 1, 1, 
+  1, 0, 1, 2, 2, 2,
+  0, 2, 0, 0, 2, 1,
+  0, 2, 2, 0, 0, 2,
+  0, 0, 1, 1, 1, 1,
+  1, 1, 1, 2, 1, 1,
   2, 1, 2, 2, 0, 2
 ]
 grain = np.array(v, dtype=np.uint8).reshape(6, 6)
@@ -820,9 +845,9 @@ We can add this information using [`rasterio.transform.from_origin`](rasterio.tr
 
 ```{python}
 new_transform = rasterio.transform.from_origin(
-    west=-1.5, 
-    north=1.5, 
-    xsize=0.5, 
+    west=-1.5,
+    north=1.5,
+    xsize=0.5,
     ysize=0.5
 )
 new_transform
@@ -834,16 +859,16 @@ The raster can now be plotted in its coordinate system, passing the array `elev`
 
 ```{python}
 #| label: fig-rasterio-plot-elev
-#| fig-cap: Plot of the `elev` raster, a minimal example of a continuous raster, created from scratch
-rasterio.plot.show(elev, transform=new_transform);
+#| fig-cap: Example `elev` raster plot, a minimal continuous raster created from scratch
+rasterio.plot.show(elev, transform=new_transform)
 ```
 
 The `grain` raster can be plotted the same way, as we are going to use the same transformation matrix for it as well (@fig-rasterio-plot-grain).
 
 ```{python}
 #| label: fig-rasterio-plot-grain
-#| fig-cap: Plot of the `grain` raster, a minimal example of a categorical raster, created from scratch
-rasterio.plot.show(grain, transform=new_transform);
+#| fig-cap: Example `grain` raster plot, a minimal categorical example created from scratch
+rasterio.plot.show(grain, transform=new_transform)
 ```
 
 At this point, we have two rasters, each composed of an array and related transformation matrix.
@@ -867,8 +892,9 @@ In the case of `elev`, we do it as follows with the `open`, `write`, and `close`
 ```{python}
 #| eval: false
 new_dataset = rasterio.open(
-    'output/elev.tif', 'w', 
-    driver='GTiff',
+    "output/elev.tif",
+    "w",
+    driver="GTiff",
     height=elev.shape[0],
     width=elev.shape[1],
     count=1,
@@ -887,8 +913,9 @@ Exporting the `grain` raster is done in the same way, with the only difference b
 ```{python}
 #| eval: false
 new_dataset = rasterio.open(
-    'output/grain.tif', 'w', 
-    driver='GTiff',
+    "output/grain.tif",
+    "w",
+    driver="GTiff",
     height=grain.shape[0],
     width=grain.shape[1],
     count=1,
@@ -999,15 +1026,15 @@ We can also illustrate the difference between a geographic and a projected CRS b
 
 ```{python}
 #| label: fig-zion-crs
-#| fig-cap: Examples of Coordinate Refrence Systems (CRS) for a vector layer 
-#| fig-subcap: 
+#| fig-cap: Examples of Coordinate Refrence Systems (CRS) for a vector layer
+#| fig-subcap:
 #| - Geographic (WGS84)
 #| - Projected (NAD83 / UTM zone 12N)
 #| layout-ncol: 2
 # WGS84
-zion.to_crs(4326).plot(edgecolor='black', color='lightgrey').grid()
+zion.to_crs(4326).plot(edgecolor="black", color="lightgrey").grid()
 # NAD83 / UTM zone 12N
-zion.plot(edgecolor='black', color='lightgrey').grid();
+zion.plot(edgecolor="black", color="lightgrey").grid()
 ```
 
 We are going to elaborate on reprojection from one CRS to another (`.to_crs` in the above code section) in @sec-reproj-geo-data.
