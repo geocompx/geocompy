@@ -1325,6 +1325,7 @@ The main resampling methods include:
 The above explanation highlights that only nearest neighbor resampling is suitable for categorical rasters, while all remaining methods can be used (with different outcomes) for continuous rasters.
 
 <!-- jn: you explain here the "reproject" part of the name; maybe it would be also introduce the "warp" part of the name as well? -->
+<!-- md: 'rasterio.warp' is the name of the sub-module where the `.reproject' function is, I added an explanation of this in a note in @sec-merging-rasters -->
 With **rasterio**, resampling can be done using the [`rasterio.warp.reproject`](https://rasterio.readthedocs.io/en/stable/api/rasterio.warp.html#rasterio.warp.reproject) function .
 To clarify this naming convention, note that raster *reprojection* is not fundamentally different from *resampling*---the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection).
 In other words, reprojection is *resampling* into a grid that is in a different CRS.
@@ -1339,6 +1340,7 @@ The information required for `rasterio.warp.reproject`, whether we are resamplin
 Importantly, `rasterio.warp.reproject` can work with file connections, such as a connection to an output file in write (`'w'`) mode.
 This makes the function efficient for large rasters.
 <!-- jn: maybe the above sentence could be a block? -->
+<!-- md: this is an important functionality of 'rasterio.warp.reproject' which we use throughout the book, so IMHO this should be in the main text. maybe we can rewrite it in another way? -->
 
 The target and destination CRS are straightforward to specify, depending on our choice.
 The source transform is also available, e.g., through the `.transform` property of the source file connection.
@@ -1426,16 +1428,18 @@ rasterio.warp.reproject(
 )
 ```
 
-In the end, we close the file and create a new file `output/dem_resample_nearest.tif` with the resampling result (@fig-raster-resample).
+In the end, we close the file connection and create a new file `output/dem_resample_nearest.tif` with the resampling result (@fig-raster-resample).
 <!-- jn: close the file or the file connection? -->
+<!-- md: right, now corrected -->
 
 ```{python}
 dst.close()
 ```
 
-Here is another code section just to demonstrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with.
-Note that the transform is identical (@fig-raster-resample), all arguments other than the resampling method are identical.
+Here is another code section just to demonstrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with (@fig-raster-resample).
+Note that all arguments in the `rasterio.warp.reproject` function call are identical to the previous example, except for the `resampling` method.
 <!-- jn: something is wrong with the above sentence... -->
+<!-- md: thanks, this was a mistake, now corrected -->
 
 ```{python}
 #| eval: false
