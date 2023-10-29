@@ -2261,7 +2261,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
-<pre><code>&lt;generator object sample_gen at 0x7f86ca82d380&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7fa472f7f290&gt;</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -2720,10 +2720,6 @@ Note
 <span id="cb104-7"><a href="#cb104-7" aria-hidden="true" tabindex="-1"></a>grain_mode[:, [<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>]] <span class="op">=</span> np.nan</span>
 <span id="cb104-8"><a href="#cb104-8" aria-hidden="true" tabindex="-1"></a>grain_mode[[<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], :] <span class="op">=</span> np.nan</span>
 <span id="cb104-9"><a href="#cb104-9" aria-hidden="true" tabindex="-1"></a>grain_mode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_256/45878578.py:3: FutureWarning: Unlike other reduction functions (e.g. `skew`, `kurtosis`), the default behavior of `mode` typically preserves the axis it acts along. In SciPy 1.11.0, this behavior will change: the default value of `keepdims` will become False, the `axis` over which the statistic is taken will be eliminated, and the value None will no longer be accepted. Set `keepdims` to True or False to avoid this warning.
-  lambda x: scipy.stats.mode(x.flatten())[0],</code></pre>
-</div>
 <div class="cell-output cell-output-display" data-execution_count="80">
 <pre><code>array([[nan, nan, nan, nan, nan, nan],
        [nan,  0.,  0.,  0.,  2., nan],
@@ -2784,37 +2780,37 @@ Note
 <!-- md: good idea, done -->
 <p>GDAL, along with all of its programs should be available in your Python environment, since GDAL is a dependency of <strong>rasterio</strong>. The following example, which should be run from the command line, takes the <code>srtm_32612.tif</code> raster (which we are going to create in <a href="06-reproj.html#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.8</span></a>, therefore it is in the <code>'output'</code> directory), calculates slope (in decimal degrees, between <code>0</code> and <code>90</code>), and exports the result to a new file <code>srtm_32612_slope.tif</code>. Note that the arguments of <code>gdaldem</code> are the metric name (<code>slope</code>), then the input file path, and finally the output file path.</p>
 <div class="cell" data-execution_count="82">
-<div class="sourceCode cell-code" id="cb107"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here we ran the <code>gdaldem</code> command through <code>os.system</code>, in order to remain in the Python environment, even though we are calling an external program. You can also run the standalone command in the command line interface you are using, such as the Anaconda Prompt:</p>
 <pre class="{sh}"><code>gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif</code></pre>
 <p>Replacing the metric name, we can calculate other terrain properties. For example, here is how we can calculate an aspect raster <code>srtm_32612_aspect.tif</code>, also in degrees (between <code>0</code> and <code>360</code>).</p>
 <div class="cell" data-execution_count="83">
-<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><a href="#fig-raster-slope">Figure&nbsp;<span>3.22</span></a> shows the results, using our more familiar plotting methods from <strong>rasterio</strong>. The code section is relatively long due to the workaround to create a color key (see <a href="08-mapping.html#sec-plot-symbology"><span>Section&nbsp;8.2.3</span></a>) and removing “No Data” flag values from the arrays so that the color key does not include them. Also note that we are using one of <strong>matplotlib</strong>’s the <a href="https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic">cyclic color scales</a> (<code>'twilight'</code>) when plotting aspect (<a href="#fig-raster-slope">Figure&nbsp;<span>3.22</span></a> (c)). <!-- jn: is tere any chance to make this code shorter (by a few lines even)? --> <!-- md: I made the code shorter by 3 lines by placing two operations on the same line; most of the code is for the workaround to add a color key, we could omit the color keys, but I thought they are useful to emphasize the range of elevation/slope/aspect values --> <!-- jn: also the color palette for (a) and (b) should be reversed --> <!-- md: done --> <!-- jn: I am also unsure what is the best color palette for circular data (aspect)... --> <!-- md: good idea! I've added one from https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic --></p>
 <div>
-<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input DEM</span></span>
-<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>src_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>)</span>
-<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>srtm <span class="op">=</span> src_srtm.read(<span class="dv">1</span>).astype(<span class="bu">float</span>)</span>
-<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>srtm[srtm <span class="op">==</span> src_srtm.nodata] <span class="op">=</span> np.nan</span>
-<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
-<span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Slope</span></span>
-<span id="cb110-9"><a href="#cb110-9" aria-hidden="true" tabindex="-1"></a>src_srtm_slope <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_slope.tif'</span>)</span>
-<span id="cb110-10"><a href="#cb110-10" aria-hidden="true" tabindex="-1"></a>srtm_slope <span class="op">=</span> src_srtm_slope.read(<span class="dv">1</span>)</span>
-<span id="cb110-11"><a href="#cb110-11" aria-hidden="true" tabindex="-1"></a>srtm_slope[srtm_slope <span class="op">==</span> src_srtm_slope.nodata] <span class="op">=</span> np.nan</span>
-<span id="cb110-12"><a href="#cb110-12" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb110-13"><a href="#cb110-13" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb110-14"><a href="#cb110-14" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
-<span id="cb110-15"><a href="#cb110-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Aspect</span></span>
-<span id="cb110-16"><a href="#cb110-16" aria-hidden="true" tabindex="-1"></a>src_srtm_aspect <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_aspect.tif'</span>)</span>
-<span id="cb110-17"><a href="#cb110-17" aria-hidden="true" tabindex="-1"></a>srtm_aspect <span class="op">=</span> src_srtm_aspect.read(<span class="dv">1</span>)</span>
-<span id="cb110-18"><a href="#cb110-18" aria-hidden="true" tabindex="-1"></a>srtm_aspect[srtm_aspect <span class="op">==</span> src_srtm_aspect.nodata] <span class="op">=</span> np.nan</span>
-<span id="cb110-19"><a href="#cb110-19" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
-<span id="cb110-20"><a href="#cb110-20" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_aspect, cmap<span class="op">=</span><span class="st">'twilight'</span>, ax<span class="op">=</span>ax)</span>
-<span id="cb110-21"><a href="#cb110-21" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm_aspect, cmap<span class="op">=</span><span class="st">'twilight'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Input DEM</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>src_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612.tif'</span>)</span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>srtm <span class="op">=</span> src_srtm.read(<span class="dv">1</span>).astype(<span class="bu">float</span>)</span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a>srtm[srtm <span class="op">==</span> src_srtm.nodata] <span class="op">=</span> np.nan</span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Slope</span></span>
+<span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a>src_srtm_slope <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_slope.tif'</span>)</span>
+<span id="cb109-10"><a href="#cb109-10" aria-hidden="true" tabindex="-1"></a>srtm_slope <span class="op">=</span> src_srtm_slope.read(<span class="dv">1</span>)</span>
+<span id="cb109-11"><a href="#cb109-11" aria-hidden="true" tabindex="-1"></a>srtm_slope[srtm_slope <span class="op">==</span> src_srtm_slope.nodata] <span class="op">=</span> np.nan</span>
+<span id="cb109-12"><a href="#cb109-12" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb109-13"><a href="#cb109-13" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb109-14"><a href="#cb109-14" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm_slope, cmap<span class="op">=</span><span class="st">'Spectral_r'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span>
+<span id="cb109-15"><a href="#cb109-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Aspect</span></span>
+<span id="cb109-16"><a href="#cb109-16" aria-hidden="true" tabindex="-1"></a>src_srtm_aspect <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_32612_aspect.tif'</span>)</span>
+<span id="cb109-17"><a href="#cb109-17" aria-hidden="true" tabindex="-1"></a>srtm_aspect <span class="op">=</span> src_srtm_aspect.read(<span class="dv">1</span>)</span>
+<span id="cb109-18"><a href="#cb109-18" aria-hidden="true" tabindex="-1"></a>srtm_aspect[srtm_aspect <span class="op">==</span> src_srtm_aspect.nodata] <span class="op">=</span> np.nan</span>
+<span id="cb109-19"><a href="#cb109-19" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb109-20"><a href="#cb109-20" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_srtm_aspect, cmap<span class="op">=</span><span class="st">'twilight'</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb109-21"><a href="#cb109-21" aria-hidden="true" tabindex="-1"></a>fig.colorbar(ax.imshow(srtm_aspect, cmap<span class="op">=</span><span class="st">'twilight'</span>), ax<span class="op">=</span>ax)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div id="fig-raster-slope" class="cell quarto-layout-panel" data-execution_count="84">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
@@ -2853,15 +2849,15 @@ Note
 <p>Just like focal operations, zonal operations apply an aggregation function to multiple raster cells. However, a second raster, usually with categorical values, defines the zonal filters (or ‘zones’) in the case of zonal operations, as opposed to a predefined neighborhood window in the case of focal operation presented in the previous section. Consequently, raster cells defining the zonal filter do not necessarily have to be neighbors. Our <code>grain.tif</code> raster is a good example, as illustrated in <a href="01-spatial-data.html#fig-rasterio-plot-elev">Figure&nbsp;<span>1.25</span></a>: different grain sizes are spread irregularly throughout the raster. Finally, the result of a zonal operation is a summary table grouped by zone, which is why this operation is also known as zonal statistics in the GIS world. This is in contrast to focal operations (<a href="#sec-focal-operations"><span>Section&nbsp;3.3.4</span></a>) which return a raster object.</p>
 <p>To demonstrate, let’s get back to the <code>grain.tif</code> and <code>elev.tif</code> rasters. To calculate zonal statistics, we use the arrays with raster values, which we already imported earlier. Our intention is to calculate the average (or any other summary function, for that matter) of <em>elevation</em> in each zone defined by <em>grain</em> values. To do that, first we first obtain the unique values defining the zones using <a href="https://numpy.org/doc/stable/reference/generated/numpy.unique.html"><code>np.unique</code></a>.</p>
 <div class="cell" data-execution_count="85">
-<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>np.unique(grain)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>np.unique(grain)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="82">
 <pre><code>array([0, 1, 2], dtype=uint8)</code></pre>
 </div>
 </div>
 <p>Now, we can use <a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries">dictionary comprehension</a> to “split” the <code>elev</code> array into separate one-dimensional arrays with values per <code>grain</code> group, with keys being the unique <code>grain</code> values. <!-- jn: would be worth to add a block explaining what is dictionary comprehension here? --> <!-- md: done --></p>
 <div class="cell" data-execution_count="86">
-<div class="sourceCode cell-code" id="cb113"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> {i: elev[grain <span class="op">==</span> i] <span class="cf">for</span> i <span class="kw">in</span> np.unique(grain)}</span>
-<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> {i: elev[grain <span class="op">==</span> i] <span class="cf">for</span> i <span class="kw">in</span> np.unique(grain)}</span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="83">
 <pre><code>{0: array([ 2,  7,  9, 10, 13, 16, 17, 19, 20, 35], dtype=uint8),
  1: array([ 1,  3, 12, 21, 22, 23, 24, 25, 26, 27, 29, 30, 32], dtype=uint8),
@@ -2888,8 +2884,8 @@ Note
 </div>
 <p>At this stage, we can expand the dictionary comprehension expression to calculate the mean elevation associated with each grain size class. Namely, instead of placing the elevation values (<code>elev[grain==i]</code>) into the dictionary values, we place their (rounded) mean (<code>elev[grain==i].mean().round(1)</code>).</p>
 <div class="cell" data-execution_count="87">
-<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> {i: elev[grain <span class="op">==</span> i].mean().<span class="bu">round</span>(<span class="dv">1</span>) <span class="cf">for</span> i <span class="kw">in</span> np.unique(grain)}</span>
-<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> {i: elev[grain <span class="op">==</span> i].mean().<span class="bu">round</span>(<span class="dv">1</span>) <span class="cf">for</span> i <span class="kw">in</span> np.unique(grain)}</span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="84">
 <pre><code>{0: 14.8, 1: 21.2, 2: 18.7}</code></pre>
 </div>
@@ -2910,9 +2906,9 @@ Note
 <p>Suppose we would like to compute the NDVI (see <a href="#sec-raster-local-operations"><span>Section&nbsp;3.3.3</span></a>), and additionally want to compute terrain attributes from elevation data for observations within a study area. Such computations rely on remotely sensed information. The corresponding source imagery is often divided into scenes covering a specific spatial extent (i.e., “tiles”), and frequently, a study area covers more than one scene. Then, we would need to merge (also known as “mosaic”) the scenes covered by our study area. In case when all scenes are “aligned” (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes should be resampled (see <a href="04-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.3.4</span></a>) to the grid defined by the first scene.</p>
 <p>For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (<code>'aut.tif'</code>) and Switzerland (<code>'ch.tif'</code>). Merging can be done using function <code>rasterio.merge.merge</code>, which accepts a <code>list</code> of raster file connections, and returns the new <code>ndarray</code> and a “transform”, representing the resulting mosaic. <!-- jn: maybe a block why rasterio.merge.merge and not rasterio.merge? --></p>
 <div class="cell" data-execution_count="88">
-<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>src_1 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/aut.tif'</span>)</span>
-<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>src_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/ch.tif'</span>)</span>
-<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.merge.merge([src_1, src_2])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>src_1 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/aut.tif'</span>)</span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a>src_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/ch.tif'</span>)</span>
+<span id="cb116-3"><a href="#cb116-3" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.merge.merge([src_1, src_2])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -2930,9 +2926,9 @@ Note
 </div>
 <p><a href="#fig-raster-merge">Figure&nbsp;<span>3.23</span></a> shows both inputs and the resulting mosaic.</p>
 <div>
-<div class="sourceCode cell-code" id="cb118"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_1)<span class="op">;</span></span>
-<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_2)<span class="op">;</span></span>
-<span id="cb118-3"><a href="#cb118-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(out_image, transform<span class="op">=</span>out_transform)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_1)<span class="op">;</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(src_2)<span class="op">;</span></span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>rasterio.plot.show(out_image, transform<span class="op">=</span>out_transform)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div id="fig-raster-merge" class="cell quarto-layout-panel" data-execution_count="89">
 <figure class="figure">
 <div class="quarto-layout-row quarto-layout-valign-top">
