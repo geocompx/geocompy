@@ -1210,8 +1210,9 @@ dst_kwargs.update({
 dst_kwargs
 ```
 
-Then we can create a new file (`dem_agg5.tif`) in writing mode, and write the values from the aggregated array `r` into that file (see @sec-data-output-raster).
+Then we can create a new file (`dem_agg5.tif`) in writing mode, and write the values from the aggregated array `r` into the 1^st^ band of the file (see @sec-data-output-raster for a detailed explanation of writing raster files with **rasterio**).
 <!-- jn: some explanation is needed here: (a) what are **? (b) what is the meaning of 1 here? -->
+<!-- md: sure, the complete explanation of raster writing are in ch07, but I've now added a note here too -->
 
 ```{python}
 dst = rasterio.open('output/dem_agg5.tif', 'w', **dst_kwargs)
@@ -1219,9 +1220,39 @@ dst.write(r, 1)
 dst.close()
 ```
 
+::: callout-note
+The `**` syntax in Python is known as variable-length ["keyword arguments"](https://docs.python.org/3/glossary.html#term-argument).
+It is used to pass a dictionary of numerous `parameter:argument` pairs to a function.
+In `rasterio.open` writing mode, the "keyword arguments" syntax often comes in handy, because, instead of specifying each and every property of a new file, we pass a (modified) `.meta` dictionary based on another, template, raster. 
+
+Technically, keep in mind that the expression:
+```
+rasterio.open('out.tif', 'w', **dst_kwargs)
+```
+where `dst_kwargs` is a `dict` of the following form (typically coming from a template raster, possibly with few "updated" properties using `.update`, see above):
+```
+{'driver': 'GTiff',
+ 'dtype': 'float32',
+ 'nodata': nan,
+ ...
+}
+```
+is a shortcut of:
+```
+rasterio.open(
+    'out.tif', 'w', 
+    driver=dst_kwargs['driver'], 
+    dtype=dst_kwargs['dtype'], 
+    nodata=dst_kwargs['nodata'], 
+    ...
+)
+```
+:::
+
 The opposite operation, namely disaggregation, is when we increase the resolution of raster objects.
-Either of the supported resampling methods (see above) can be used.
+Either of the supported resampling methods (see @sec-raster-resampling) can be used.
 <!-- jn: update the above sentence after moving the resampling methods list to the next section -->
+<!-- md: right, done -->
 However, since we are not actually summarizing information but transferring the value of a large pixel into multiple small pixels, it makes sense to use either:
 
 -   Nearest neighbor resampling (`rasterio.enums.Resampling.nearest`), when want to keep the original values as-is, since modifying them would be incorrect (such as in categorical rasters)
