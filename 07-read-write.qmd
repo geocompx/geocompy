@@ -652,7 +652,8 @@ As opposed to reading mode (`'r'`, the default) mode, the `rasterio.open` functi
 -   `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [does not work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters
 
 Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection.
-If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is the array with band values and `n` is the band index (starting from `1`, see below).
+If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is a two-dimensional array representing a single band, and `n` is the band index (starting from `1`, see below).
+Alternatively, we can write all bands at once, as in `.write(a)`, where `a` is a three-dimensional array.
 When done, we close the file connection using the `.close` method.
 Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting (@sec-raster-resampling and @sec-reprojecting-raster-geometries) directly accept a file connection in `'w'` mode, thus handling the writing (of a resampled or reprojected raster) for us.
 
@@ -785,7 +786,7 @@ Since most of the metadata is going to be the same, this is also a good opportun
 First, let's make a copy of the metadata we already have in `r.tif`.
 
 ```{python}
-dst_kwds = rasterio.open('output/r.tif').meta.copy()
+dst_kwds = rasterio.open('output/r.tif').meta
 dst_kwds
 ```
 

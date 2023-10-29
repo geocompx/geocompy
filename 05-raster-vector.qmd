@@ -96,8 +96,9 @@ out_image_mask, out_transform_mask = rasterio.mask.mask(
 
 Note that we need to choose and specify a "No Data" value, within the valid range according to the data type.
 Since `srtm.tif` is of type `uint16` (how can we check?), we choose `9999` (a positive integer that is guaranteed not to occur in the raster).
-Also note that **rasterio** does not directly support **geopandas** data structures, so we need to pass a "collection" of **shapely** geometries: a `GeoSeries` (see below) or a `list` of **shapely** geometries (see next example) both work.
+Also note that **rasterio** does not directly support **geopandas** data structures, so we need to pass a "collection" of **shapely** geometries: a `GeoSeries` (see above) or a `list` of **shapely** geometries (see next example) both work.
 <!-- jn: (see below) or (see above) -->
+<!-- md: thanks, this was a mistake - now corrected -->
 The output consists of two objects.
 The first one is the `out_image` array with the masked values.
 
@@ -139,7 +140,7 @@ src_srtm_mask = rasterio.open('output/srtm_masked.tif')
 ```
 
 The `.meta` property contains the `nodata` entry.
-Now, any relevant operation (such as plotting) will take "No Data" into account.
+Now, any relevant operation (such as plotting, see @fig-raster-crop (b)) will take "No Data" into account.
 
 ```{python}
 src_srtm_mask.meta
@@ -172,12 +173,20 @@ out_image_crop, out_transform_crop = rasterio.mask.mask(
 )
 ```
 
+In the case of cropping, there is no particular reason to write the result to file for easier plotting, such as in the other two examples, since there are no "No Data" values (@fig-raster-crop (c)).
+
+::: callout-note
+As mentioned above, **rasterio** functions typically accept vector geometries in the form of `lists` of `shapely` objects. `GeoSeries` are conceptually very similar, and also accepted. However, even an individual geometry has to be in a `list`, which is why we pass `[bb]`, and not `bb`, in the above `rasterio.mask.mask` function call (the latter would raise an error).
+:::
+
 <!-- jn: why [bb] and not bb? -->
-Finally, we can perform crop and mask operations, using `rasterio.mask.mask` with `crop=True`.
-When writing to file, it is now crucial to update the transform and dimensions, since they were modified as a result of cropping.
-Also note that `out_image_mask_crop` is a three-dimensional array (even tough it has one band in this case), so the number of rows and columns are in `.shape[1]` and `.shape[2]` (rather than `.shape[0]` and `.shape[1]`), respectively.
+<!-- md: thanks, now added an explanation -->
+Finally, the third example is where we perform crop both and mask operations, using `rasterio.mask.mask` with `crop=True`.
+
 <!-- jn: why? -->
+<!-- md: this is not documented as much as I can tell: https://rasterio.readthedocs.io/en/latest/api/rasterio.mask.html, subjectively I'd say it's because the input is a file connection, which can be either single- or multi-band, therefore to make the function behavior uniform the output is always multi-band. I'm not sure we should write that though, will be happy to hear what you think -->
 <!-- jn: maybe split the code below into two chunks and describe them separately...? -->
+<!-- md: good idea, done -->
 
 ```{python}
 out_image_mask_crop, out_transform_mask_crop = rasterio.mask.mask(
@@ -186,6 +195,12 @@ out_image_mask_crop, out_transform_mask_crop = rasterio.mask.mask(
     crop=True, 
     nodata=9999
 )
+```
+
+When writing the result to file, it is here crucial to update the transform and dimensions, since they were modified as a result of cropping.
+Also note that `out_image_mask_crop` is a three-dimensional array (even though it has one band in this case), so the number of rows and columns are in `.shape[1]` and `.shape[2]` (rather than `.shape[0]` and `.shape[1]`), respectively.
+
+```{python}
 dst_kwargs = src_srtm.meta
 dst_kwargs.update({
     'nodata': 9999,
@@ -193,13 +208,19 @@ dst_kwargs.update({
     'width': out_image_mask_crop.shape[2],
     'height': out_image_mask_crop.shape[1]
 })
-new_dataset = rasterio.open('output/srtm_masked_cropped.tif', 'w', **dst_kwargs)
+new_dataset = rasterio.open(
+    'output/srtm_masked_cropped.tif', 
+    'w', 
+    **dst_kwargs
+)
 new_dataset.write(out_image_mask_crop)
 new_dataset.close()
-src_srtm_mask_crop = rasterio.open('output/srtm_masked_cropped.tif')
 ```
 
+Let's also create a file connection to the newly created file `srtm_masked_cropped.tif` in order to plot it (@fig-raster-crop (d)).
+
 ```{python}
+src_srtm_mask_crop = rasterio.open('output/srtm_masked_cropped.tif')
 out_image_mask_crop.shape
 ```
 
