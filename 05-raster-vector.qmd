@@ -438,6 +438,10 @@ result = rasterstats.zonal_stats(
 result
 ```
 
+::: callout-note
+`rasterstats.zonal_stats`, just like `rasterstats.point_query` (@sec-extraction-to-points), supports raster input as file paths, rather than arrays plus `nodata` and `affine` arguments.
+:::
+
 Transformation of the `list` to a `DataFrame` (e.g., to attach the derived attributes to the original polygon layer), is straightforward with the `pd.DataFrame` constructor.
 
 ```{python}
@@ -494,12 +498,12 @@ zion.to_crs(src_nlcd.crs).plot(ax=ax, color='none', edgecolor='black');
 ```
 
 <!-- jn: what is the state of plotting categorical rasters? can it read the color palette from a file? -->
+<!-- md: admittedly I've never used this functionality in either R or Python... If you have a sample data file I'll be happy to experiment with it. -->
 
 ## Rasterization {#sec-rasterization}
 
 <!-- jn: intro is missing -->
-
-### Rasterizing points {#sec-rasterizing-points}
+<!-- md: the first parts of the section are the intro, now reorganized -->
 
 Rasterization is the conversion of vector objects into their representation in raster objects.
 Usually, the output raster is used for quantitative analysis (e.g., analysis of terrain) or modeling.
@@ -522,7 +526,14 @@ The geographic resolution of the "template" raster has a major impact on the res
 There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results.
 Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to the existing raster.
 
-To demonstrate rasterization in action, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London, illustrated in @fig-rasterize-points (a)) and a spatial resolution of 1000 $m$.
+Depending on the input data, rasterization typically takes one of two forms which we demonstrate next:
+
+-   in *point* rasterization (@sec-rasterizing-points), we typically choose how to treat multiple points: either to summarize presence/absence, point count, or summed attribute values (@fig-rasterize-points)
+-   in *line* and *polygon* rasterization (@sec-rasterizing-lines-and-polygons), there are typically no such "overlaps" and we simply "burn" attribute values, or fixed values, into pixels coinciding with the given geometries (@fig-rasterize-lines-polygons)
+
+### Rasterizing points {#sec-rasterizing-points}
+
+To demonstrate point rasterization, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London, illustrated in @fig-rasterize-points (a)) and a spatial resolution of 1000 $m$.
 First, we take the vector layer and transform it to a projected CRS:
 
 ```{python}
