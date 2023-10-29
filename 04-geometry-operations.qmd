@@ -1149,8 +1149,9 @@ To aggregate, instead of reading the raster values the usual way, as in `src.rea
 Here, we calculate a new shape which is downscaled by a factor of `5`, i.e., the number of rows and columns is multiplied by `0.2`.
 We must truncate any "partial" rows and columns, e.g., using `int`.
 Each new pixel is now obtained, or "resampled", from $\sim 5 \times 5 = \sim 25$ "old" raster values.
-We can choose the resampling method through the `resampling` parameter.
-Here we use [`rasterio.enums.Resampling.average`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling), i.e., the new "large" pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in `dem.tif`.
+It is crucial to choose an appropriate *resampling method* through the `resampling` parameter.
+Here we use [`rasterio.enums.Resampling.average`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling), i.e., the new "large" pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in `dem.tif`. 
+See @sec-raster-resampling for a list of other available methods.
 
 ```{python}
 factor = 0.2
@@ -1170,19 +1171,7 @@ r.shape
 ```
 
 <!-- jn: maybe it is worth moving this list to the next section and connect them to some explanations? here you can just mention that more options are mentioned in the next section -->
-Other useful options for [`resampling`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling) include:
-
--   `rasterio.enums.Resampling.nearest`---Nearest neighbor resampling
--   `rasterio.enums.Resampling.bilinear`---Bilinear resampling
--   `rasterio.enums.Resampling.cubic`---Cubic resampling
--   `rasterio.enums.Resampling.lanczos`---Lanczos windowed resampling
--   `rasterio.enums.Resampling.mode`---Mode resampling (most common value)
--   `rasterio.enums.Resampling.min`---Minimum resampling
--   `rasterio.enums.Resampling.max`---Maximum resampling
--   `rasterio.enums.Resampling.med`---Median resampling
--   `rasterio.enums.Resampling.sum`---Median resampling
-
-See below (@sec-raster-resampling) for an explanation of these methods.
+<!-- md: I agree, readers will probably look in the "resampling" section when referring to methods. Now moved the list there -->
 
 What's left to be done is the second step, to update the transform, taking into account the change in raster shape.
 This can be done as follows, using `.transform.scale`.
@@ -1326,6 +1315,21 @@ The only complicated part is to figure out the *destination transform*.
 When resampling, the transform is typically derived either from a *template* raster, such as an existing raster file that we would like our origin raster to match, or from a numeric specification of our target grid (see below).
 Otherwise, when the exact grid is not of importance, we can simply aggregate or disaggregate our raster as shown above (@sec-raster-agg-disagg).
 (Note that when *reprojecting*, the target transform is not as straightforward to figure out, therefore we further use the `rasterio.warp.calculate_default_transform` function to compute it, as will be shown in @sec-reprojecting-raster-geometries.)
+
+Finally, the resampling method is specified through the `resampling` parameter of `rasterio.warp.reproject`. 
+The default is nearest neighbor resampling. 
+However, as mentioned above, you should be aware of the distiction between resampling methods, and choose the appropriate one according to the data type (continuous/categorical), the input and output resolution, and resampling purposes.
+Possible arguments for [`resampling`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling) include:
+
+-   `rasterio.enums.Resampling.nearest`---Nearest neighbor
+-   `rasterio.enums.Resampling.bilinear`---Bilinear
+-   `rasterio.enums.Resampling.cubic`---Cubic
+-   `rasterio.enums.Resampling.lanczos`---Lanczos windowed
+-   `rasterio.enums.Resampling.mode`---Mode. i.e., most common value
+-   `rasterio.enums.Resampling.min`---Minimum
+-   `rasterio.enums.Resampling.max`---Maximum
+-   `rasterio.enums.Resampling.med`---Median
+-   `rasterio.enums.Resampling.sum`---Median
 
 Let's demonstrate resampling into a destination grid which is specified through numeric constraints, such as the extent and resolution.
 These could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match.
