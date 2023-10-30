@@ -794,17 +794,16 @@ Let us demonstrate all three in the given order.
 
 ### Raster to polygons {#sec-raster-to-polygons}
 
-The [`rasterio.features.shapes`](https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.shapes) function can be used to access to the raster pixel as polygon geometries, as well as raster values.
-The returned object is a generator, which yields `geometry,value` pairs.
-The additional `transform` argument is used to yield true spatial coordinates of the polygons, which is usually what we want.
+The [`rasterio.features.shapes`](https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.shapes) gives access to raster pixels as polygon geometries, along with the associated raster values.
+The returned object is a generator (see note in @sec-spatial-subsetting-raster), yielding `geometry,value` pairs.
 <!-- jn: the above paragraph is not easy to read, maybe rephrase? -->
+<!-- md: right, now rephrased -->
 
 For example, the following expression returns a generator named `shapes`, referring to the pixel polygons.
 
 ```{python}
 shapes = rasterio.features.shapes(
-    rasterio.band(src_grain, 1), 
-    transform=src_grain.transform
+    rasterio.band(src_grain, 1) 
 )
 shapes
 ```
@@ -816,36 +815,57 @@ pol = list(shapes)
 ```
 
 Each element in `pol` is a `tuple` of length 2, containing the GeoJSON-like `dict`---representing the polygon geometry and the value of the pixel(s)---which comprise the polygon.
-For example, check the first element of `pol` with `pol[0]`.
-
-<!-- jn: maybe the next sentence as a block -->
-Note that each raster cell is converted into a polygon consisting of five coordinates, all of which are stored in memory (explaining why rasters are often fast compared with vectors!).
-
-To transform this `list` into a `GeoDataFrame`, we need few more steps of data reshaping.
-<!-- jn: add a sentence or two here... -->
+For example, here is the first element of `pol`.
 
 ```{python}
-# 'GeoSeries' with the polygons
+pol[0]
+```
+
+<!-- jn: maybe the next sentence as a block -->
+<!-- md: sure, done -->
+
+::: callout-note
+Note that, when transforming a raster cell into a polygon, five coordinate pairs need to be kept in memory to represent  its geometry (explaining why rasters are often fast compared with vectors!).
+:::
+
+To transform the `list` coming out of `rasterio.features.shapes` into the familiar `GeoDataFrame`, we need few more steps of data reshaping.
+First, we apply the [`shapely.geometry.shape`](https://shapely.readthedocs.io/en/stable/manual.html#shapely.geometry.shape) function to go from a `list` of GeoJSON-like `dict`s to a `list` of `shapely` geometry objects.
+The `list` can then be converted to a `GeoSeries` (see @sec-vector-layer-from-scratch).
+<!-- jn: add a sentence or two here... -->
+<!-- md: right, now split the code to several blocks and added explanations -->
+
+```{python}
 geom = [shapely.geometry.shape(i[0]) for i in pol]
 geom = gpd.GeoSeries(geom, crs=src_grain.crs)
-# 'Series' with the values
+geom
+```
+
+The values can also be extracted from the `rasterio.features.shapes` and turned into a corresponding `Series`.
+
+```{python}
 values = [i[1] for i in pol]
 values = pd.Series(values)
-# Combine into a 'GeoDataFrame'
+values
+```
+
+Finally, the two can be combined into a `GeoDataFrame`, hereby named `result`.
+
+```{python}
 result = gpd.GeoDataFrame({'value': values, 'geometry': geom})
 result
 ```
 
-The resulting polygon layer is shown in @fig-raster-to-polygons.
-As shown using the `edgecolor='black'` option, neighboring pixels sharing the same raster value are dissolved into larger polygons.
-The `rasterio.features.shapes` function does not offer a way to avoid this type of dissolving.
-One way to work around that is to convert an array with consecutive IDs, instead of the real values, to polygons, then extract the real values from the raster (see the example in @sec-raster-to-points).
+The polygon layer `result` is shown in @fig-raster-to-polygons.
 
 ```{python}
 #| label: fig-raster-to-polygons
 #| fig-cap: '`grain.tif` converted to a polygon layer'
 result.plot(column='value', edgecolor='black', legend=True);
 ```
+
+As highlighted using `edgecolor='black'`, neighboring pixels sharing the same raster value are dissolved into larger polygons.
+The `rasterio.features.shapes` function unfortunately does not offer a way to avoid this type of dissolving.
+One [suggestion](https://gis.stackexchange.com/questions/455980/vectorizing-all-pixels-as-separate-polygons-using-rasterio#answer-456251) is to add unique values between `0` and `0.9999` to all pixels, convert to polygons, and then get back to the original values using [`np.floor`](https://numpy.org/doc/stable/reference/generated/numpy.floor.html).
 
 ### Raster to points {#sec-raster-to-points}
 
@@ -862,6 +882,8 @@ ids
 ```
 
 Next, we use the `rasterio.features.shapes` function to create a point layer with the raster cell IDs.
+
+<!-- md: note to self, this should be replaced with more efficient code following Anita's suggestion -->
 
 ```{python}
 shapes = rasterio.features.shapes(ids, transform=src_elev.transform)
@@ -980,6 +1002,7 @@ For a "template" raster, we will aggregate the New Zealand DEM, in the `nz_elev.
 The code section below follows the aggeregation example in @sec-raster-agg-disagg, then replaces the original (aggregated) values with unique IDs, which is a preliminary step when converting to points, as explained in @sec-raster-to-points.
 Finally, we also replace "erase" (i.e., replace with `np.nan`) IDs which were `np.nan` in the aggregated elevation raster, i.e., beyond the land area of New Zealand.
 <!-- jn: the last sentence could be rephrased... -->
+<!-- md: the following example should be relaced to more efficient code following Anita's suggestion, afterwards will rephrase the text too -->
 
 ```{python}
 factor = 0.2
@@ -1046,6 +1069,7 @@ image = rasterio.features.rasterize(
 image
 ```
 <!-- jn: there is a file path in the code output... can we remove it? -->
+<!-- md: interesting, I don't see it locally, but the warning appears in the online version - perhaps it's an incompatibilty between 'rasterio' and Python 3.11? -->
 
 The final result, a raster of distances to the nearest coastline, is shown in @fig-raster-distances2.
 
