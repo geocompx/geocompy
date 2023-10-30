@@ -515,12 +515,16 @@ To make it happen, we need to have the "template" grid definition, i.e., the "te
 In case we have an existing template raster, we simply need to query its `.shape` and `.transform`.
 On the other hand, if we need to create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).
 
-Furthermore, the `rasterio.features.rasterize` function requires the input vector shapes in the form of a generator of `(geom,value)` tuples, where:
+Furthermore, the `rasterio.features.rasterize` function requires the input vector shapes in the form of an iterable object of `geometry,value` pairs, where:
 
--   `geom` is the given geometry (**shapely** geometry object)
+-   `geometry` is the given geometry (**shapely** geometry object)
 -   `value` is the value to be "burned" into pixels coinciding with the geometry (`int` or `float`)
 
-Again, this will be made clear in the next example.
+Furthermore, we define how to deat with multiple values burned into the same pixel, using the `merge_alg` parameter.
+The default `merge_alg=rasterio.enums.MergeAlg.replace` means that "later" values replace "earlier" ones, i.e., the pixel gets the "last" burned value.
+The other option `merge_alg=rasterio.enums.MergeAlg.add` means that burned values are summed, i.e., the pixel gets the sum of all burned values.
+
+How the `rasterio.features.rasterize` function works will be made clear in the next examples.
 
 The geographic resolution of the "template" raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive.
 There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results.
@@ -533,15 +537,15 @@ Depending on the input data, rasterization typically takes one of two forms whic
 
 ### Rasterizing points {#sec-rasterizing-points}
 
-To demonstrate point rasterization, we will use a template raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London, illustrated in @fig-rasterize-points (a)) and a spatial resolution of 1000 $m$.
-First, we take the vector layer and transform it to a projected CRS:
+To demonstrate point rasterization, we will prepare a "template" raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London, illustrated in @fig-rasterize-points (a)) and a spatial resolution of 1000 $m$.
+To do that, we first take our point layer and transform it to a projected CRS.
 
 ```{python}
 cycle_hire_osm_projected = cycle_hire_osm.to_crs(27700)
 ```
 
-Next, we need to calculate the `out_shape` and `transform` of our template raster.
-To calculate the transform, we combine the top-left corner of the `cycle_hire_osm_projected` bounding box with the required resolution (e.g., 1000 $m$):
+Next, we calculate the `out_shape` and `transform` of the template raster.
+To calculate the transform, we combine the top-left corner of the `cycle_hire_osm_projected` bounding box with the required resolution (e.g., 1000 $m$).
 
 ```{python}
 bounds = cycle_hire_osm_projected.total_bounds
@@ -555,7 +559,7 @@ transform = rasterio.transform.from_origin(
 transform
 ```
 
-To calculate the `out_shape`, we divide the x-axis and y-axis extent by the resolution, and take the ceiling of the results:
+To calculate the `out_shape`, we divide the x-axis and y-axis extent by the resolution, taking the ceiling of the results.
 
 ```{python}
 rows = math.ceil((bounds[3] - bounds[1]) / res)
@@ -564,41 +568,50 @@ shape = (rows, cols)
 shape
 ```
 
-Now, we can rasterize.
-Rasterization is a very flexible operation: the results depend not only on the nature of the template raster, but also on the type of input vector (e.g., points, polygons), the pixel "activation" method, and the function applied when there is more than one match.
+Finally, we are ready to rasterize.
+As mentioned abover, point rasterization can be a very flexible operation: the results depend not only on the nature of the template raster, but also on the the pixel "activation" method, namely the way we deal with multiple points matching the same pixel.
 
-To illustrate this flexibility, we will try three different approaches to rasterization (@fig-rasterize-points (b)-(d)).
+To illustrate this flexibility, we will try three different approaches to point rasterization (@fig-rasterize-points (b)-(d)).
 First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters).
 In this case, we transfer the value of `1` to all pixels where at least one point falls in.
-To transform the point `GeoDataFrame` into a generator of `shapely` geometries and the (fixed) values, we use the following expression.
+In the **rasterio** framework, we use the `rasterio.features.rasterize` function, which requires an iterable object of `geometry,value` pairs. 
+In this first example, we transform the point `GeoDataFrame` into a `list` of `shapely` geometries and the (fixed) value of `1`, using list comprehension as follows.
+The first five elements of the `list` are hereby printed to illustrate its structure.
 <!-- jn: maybe explain the code below in more detail? -->
+<!-- md: the code is now simplified and hopefully better explained -->
 <!-- jn: also maybe use a different name than g? -->
+<!-- md: I though 'g' for 'geometries' is OK here. 'shapes' can be confusing because there is also 'shape' in the second parameter. will be happy to hear other ideas -->
 
 ```{python}
-g = ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
-g
+g = [(g, 1) for g in cycle_hire_osm_projected.geometry]
+g[:5]
 ```
 
-Then, the rasterizing expression takes the generator `g`, the template `shape` and `transform` as arguments.
+The list of `geometry,value` pairs is passed to `rasterio.features.rasterize`, along with the `shape` and `transform` which define the raster template.
+The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in "unaffected" pixels.
+Note that `merge_alg=rasterio.enums.MergeAlg.replace` (the default) is used here, which means that a pixel get `1` when one or more point fall in it, or keeps the original `0` value otherwise.
+
+<!-- md: IMHO printing is important here to illustrate what we get in 'ch_raster1', so I've removed the 'eval:false' part -->
 
 ```{python}
-#| output: false
 ch_raster1 = rasterio.features.rasterize(
-    shapes=g, 
+    shapes=g,
     out_shape=shape, 
     transform=transform
 )
 ch_raster1
 ```
 
-The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in "unaffected" pixels.
-
-To count the number of bike hire stations, we can use the fixed value of `1` combined with the `merge_alg=rasterio.enums.MergeAlg.add`, which means that multiple values burned into the same pixel are *summed*, rather than replaced keeping last (the default).
+In our second variant of point rasterization, we count the number of bike hire stations. 
+To do that, we use the fixed value of `1` (same as in the last example), but this time combined with the `merge_alg=rasterio.enums.MergeAlg.add` argument. 
+That way, multiple values burned into the same pixel are *summed*, rather than replaced keeping last (which is the default).
+The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell.
 <!--jn: rasterio.enums.MergeAlg.add definetely needs more explanation (maybe as a block)...-->
+<!-- md: agree this required more information, the 'merge_alg' argument is now exaplained in the intro where the function is introduced -->
+<!-- md: same here, I think the array should be printed like in similar cases in the book, to show what the function returns -->
 
 ```{python}
-#| output: false
-g = ((g, 1) for g in cycle_hire_osm_projected.geometry.to_list())
+g = [(g, 1) for g in cycle_hire_osm_projected.geometry]
 ch_raster2 = rasterio.features.rasterize(
     shapes=g,
     out_shape=shape,
@@ -608,18 +621,24 @@ ch_raster2 = rasterio.features.rasterize(
 ch_raster2
 ```
 
-The new output, `ch_raster2`, shows the number of cycle hire points in each grid cell.
 The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what is the capacity in each grid cell?
-To calculate that, we must sum the field (`'capacity'`) rather than the fixed values of `1`.
-This requires using an expanded generator of geometries and values, where we (1) extract both geometries and attribute values, and (2) filter out "No Data" values, which can be done as follows.
+To calculate that, in our third point rasterization variant we sum the field (`'capacity'`) rather than the fixed values of `1`.
+This requires using a more complex list comprehension expression, where we also (1) extract both geometries and the attribute of interest, and (2) filter out "No Data" values, which can be done as follows.
+You are invited to run the separate parts to see how this works; the important point is that, in the end, we get the list `g` with the `geometry,value` pairs to be burned, only that the `value` is now variable, rather than fixed, among points.
 <!-- jn: I think the code below should be explained in more detail... -->
+<!-- md: I agree, now split into two code blocks and explained -->
 
 ```{python}
-#| output: false
-g = ((g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']] \
+g = [(g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']] \
         .dropna(subset='capacity')
         .to_numpy() \
-        .tolist())
+        .tolist()]
+g[:5]
+```
+
+Now we rasterize the points, again using `merge_alg=rasterio.enums.MergeAlg.add` to sum the capacity values per pixel.
+
+```{python}
 ch_raster3 = rasterio.features.rasterize(
     shapes=g,
     out_shape=shape,
