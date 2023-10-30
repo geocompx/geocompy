@@ -515,16 +515,22 @@ To make it happen, we need to have the "template" grid definition, i.e., the "te
 In case we have an existing template raster, we simply need to query its `.shape` and `.transform`.
 On the other hand, if we need to create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).
 
-Furthermore, the `rasterio.features.rasterize` function requires the input vector shapes in the form of an iterable object of `geometry,value` pairs, where:
+As for the vector geometries and their associated values, the `rasterio.features.rasterize` function requires the input vector shapes in the form of an iterable object of `geometry,value` pairs, where:
 
 -   `geometry` is the given geometry (**shapely** geometry object)
 -   `value` is the value to be "burned" into pixels coinciding with the geometry (`int` or `float`)
 
-Furthermore, we define how to deat with multiple values burned into the same pixel, using the `merge_alg` parameter.
+Furthermore, we define how to deal with multiple values burned into the same pixel, using the `merge_alg` parameter.
 The default `merge_alg=rasterio.enums.MergeAlg.replace` means that "later" values replace "earlier" ones, i.e., the pixel gets the "last" burned value.
 The other option `merge_alg=rasterio.enums.MergeAlg.add` means that burned values are summed, i.e., the pixel gets the sum of all burned values.
 
-How the `rasterio.features.rasterize` function works will be made clear in the next examples.
+When rasterizing lines and polygons, we also have the choice between two pixel-matching algorithms. 
+The default, `all_touched=False`, implies pixels that are selected by [Bresenham's line algorithm](https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm) (for lines) or pixels whose center is within the polygon (for polygons).
+The other option `all_touched=True`, as the name suggests, implies that all pixels intersecting with the geometry are matched.
+
+Finally, we can set the `fill` value, which is the value that "unaffected" pixels get, with `fill=0` being the default.
+
+How the `rasterio.features.rasterize` function works with all of these various parameters will be made clear in the next examples.
 
 The geographic resolution of the "template" raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive.
 There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results.
@@ -693,7 +699,7 @@ california_borders = california.geometry.boundary
 california_borders
 ```
 
-Third, we create a template raster with a resolution of a `0.5` degree, using the same approach as in @sec-rasterizing-points.
+Third, we create the `transform` and `shape` describing our template raster, with a resolution of a `0.5` degree, using the same approach as in @sec-rasterizing-points.
 
 ```{python}
 bounds = california_borders.total_bounds
@@ -739,6 +745,8 @@ california_raster2 = rasterio.features.rasterize(
 
 To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points.
 This also requires the following code section to calculate the points, which we explain in @sec-spatial-vectorization.
+
+<!-- md: note to self that if we switch to a more efficient raster-to-points method (following Anita's suggestion), then this code block needs to be changed as well -->
 
 ```{python}
 ids = california_raster1.copy()
