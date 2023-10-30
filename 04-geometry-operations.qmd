@@ -6,38 +6,39 @@ jupyter: python3
 
 ## Prerequisites {.unnumbered}
 
-```{python}
-#| echo: false
-import pandas as pd
-import matplotlib.pyplot as plt
-pd.options.display.max_rows = 6
-pd.options.display.max_columns = 6
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
-```
-
 This chapter requires importing the following packages:
 
 ```{python}
+import sys
+
+import geopandas as gpd
 import numpy as np
 import shapely
-import geopandas as gpd
-import topojson as tp
 import rasterio
 import rasterio.warp
 import rasterio.plot
 import rasterio.mask
-import sys
+import topojson as tp
+```
+
+```{python}
+#| echo: false
+import matplotlib.pyplot as plt
+import pandas as pd
+pd.options.display.max_rows = 6
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
 It also relies on the following data files:
 
 ```{python}
-seine = gpd.read_file('data/seine.gpkg')
-us_states = gpd.read_file('data/us_states.gpkg')
-nz = gpd.read_file('data/nz.gpkg')
-src = rasterio.open('data/dem.tif')
-src_elev = rasterio.open('output/elev.tif')
+seine = gpd.read_file("data/seine.gpkg")
+us_states = gpd.read_file("data/us_states.gpkg")
+nz = gpd.read_file("data/nz.gpkg")
+src = rasterio.open("data/dem.tif")
+src_elev = rasterio.open("output/elev.tif")
 ```
 
 ## Introduction
@@ -73,7 +74,7 @@ Another reason for simplifying objects is to reduce the amount of memory, disk s
 The **geopandas** package provides the [`.simplify`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html) method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count.
 `.simplify` uses the `tolerance` to control the level of generalization in map units [@douglas_algorithms_1973].
 
-For example, a simplified geometry of a `'LineString'` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the `seine.simplify(2000)` command (@fig-simplify-lines).
+For example, a simplified geometry of a `"LineString"` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the `seine.simplify(2000)` command (@fig-simplify-lines).
 
 ```{python}
 #| label: fig-simplify-lines
@@ -91,8 +92,8 @@ The resulting `seine_simp` object is a copy of the original `seine` but with few
 This is apparent, with the result being visually simpler (@fig-simplify-lines, right) and consuming about twice less memory than the original object, as shown in the comparison below.
 
 ```{python}
-print(f'Original: {sys.getsizeof(seine)} bytes')
-print(f'Simplified: {sys.getsizeof(seine_simp)} bytes')
+print(f"Original: {sys.getsizeof(seine)} bytes")
+print(f"Simplified: {sys.getsizeof(seine_simp)} bytes")
 ```
 
 Simplification is also applicable for polygons.
@@ -141,9 +142,9 @@ us_states_simp2 = topo.toposimplify(100000).to_gdf()
 #| - Original
 #| - Simplified using **geopandas**
 #| - Simplified using **topojson**
-us_states9311.plot(color='lightgrey', edgecolor='black');
-us_states_simp1.plot(color='lightgrey', edgecolor='black');
-us_states_simp2.plot(color='lightgrey', edgecolor='black');
+us_states9311.plot(color="lightgrey", edgecolor="black");
+us_states_simp1.plot(color="lightgrey", edgecolor="black");
+us_states_simp2.plot(color="lightgrey", edgecolor="black");
 ```
 
 ### Centroids {#sec-centroids}
@@ -181,13 +182,13 @@ The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surf
 #| - New Zealand
 #| - Seine
 # New Zealand
-base = nz.plot(color='white', edgecolor='lightgrey')
-nz_centroid.plot(ax=base, color='None', edgecolor='black')
-nz_pos.plot(ax=base, color='None', edgecolor='red');
+base = nz.plot(color="white", edgecolor="lightgrey")
+nz_centroid.plot(ax=base, color="None", edgecolor="black")
+nz_pos.plot(ax=base, color="None", edgecolor="red");
 # Seine
-base = seine.plot(color='grey')
-seine_pos.plot(ax=base, color='None', edgecolor='red')
-seine_centroid.plot(ax=base, color='None', edgecolor='black');
+base = seine.plot(color="grey")
+seine_pos.plot(ax=base, color="None", edgecolor="red")
+seine_centroid.plot(ax=base, color="None", edgecolor="black");
 ```
 
 ### Buffers {#sec-buffers}
@@ -211,8 +212,8 @@ The `.buffer` method requires one important argument: the buffer distance, provi
 #| - 50 $km$ buffer
 seine_buff_5km = seine.buffer(5000)
 seine_buff_50km = seine.buffer(50000)
-seine_buff_5km.plot(color='none', edgecolor=['c', 'm', 'y']);
-seine_buff_50km.plot(color='none', edgecolor=['c', 'm', 'y']);
+seine_buff_5km.plot(color="none", edgecolor=["c", "m", "y"]);
+seine_buff_50km.plot(color="none", edgecolor=["c", "m", "y"]);
 ```
 
 Note that both `.centroid` and `.buffer` return a `GeoSeries` object, even when the input is a `GeoDataFrame`.
@@ -232,21 +233,21 @@ seine_buff_5km
 Alternative option is to add a secondary geometry column directly to the original `GeoDataFrame`.
 
 ```{python}
-seine['geometry_5km'] = seine.buffer(5000)
+seine["geometry_5km"] = seine.buffer(5000)
 seine
 ```
 
 You can then switch to either geometry column (i.e., make it the "active" geometry column) using `.set_geometry`, as in:
 
 ```{python}
-seine = seine.set_geometry('geometry_5km')
+seine = seine.set_geometry("geometry_5km")
 ```
 
 Let's revert to the original state of `seine` before moving on to the next section.
 
 ```{python}
-seine = seine.set_geometry('geometry')
-seine = seine.drop('geometry_5km', axis=1)
+seine = seine.set_geometry("geometry")
+seine = seine.drop("geometry_5km", axis=1)
 ```
 
 ### Affine transformations {#sec-affine-transformations}
@@ -275,9 +276,9 @@ $$ {#eq-affine2}
 There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations) for specific scenarios, such as:
 
 -   `.translate(xoff=0.0, yoff=0.0)`
--   `.scale(xfact=1.0, yfact=1.0, origin='center')`
--   `.rotate(angle, origin='center', use_radians=False)`
--   `.skew(angle, origin='center', use_radians=False)`
+-   `.scale(xfact=1.0, yfact=1.0, origin="center")`
+-   `.rotate(angle, origin="center", use_radians=False)`
+-   `.skew(angle, origin="center", use_radians=False)`
 
 For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using [`.translate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.translate.html).
 <!-- jn: and what with z_off? -->
@@ -300,17 +301,17 @@ Global scaling increases or decreases all coordinates values in relation to the 
 <!-- md: I think that global scaling can be acheived when passing a "center" that is the same for all geometries (rather than the centroid of each). I'm not 100% sure that's the definition of "global" scaling - will be happy if you can confirm and then will be happy to add it to the note below. -->
 Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids.
 In the example below, each geometry is shrunk by a factor of two around the centroids (@fig-affine-transformations (b)).
-To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respectively), and the `'centroid'` option for the point of origin.
+To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respectively), and the `"centroid"` option for the point of origin.
 <!-- jn: next sentence as a block? -->
 <!-- md: done -->
 
 ```{python}
-nz_scale = nz.scale(0.5, 0.5, origin='centroid')
+nz_scale = nz.scale(0.5, 0.5, origin="centroid")
 nz_scale
 ```
 
 ::: callout-note
-When setting the `origin` in `.scale`, other than `'centroid'` it is possible to use `'center'`, for the bounding box center, or specific point coordinates, such as `(0,0)`.
+When setting the `origin` in `.scale`, other than `"centroid"` it is possible to use `"center"`, for the bounding box center, or specific point coordinates, such as `(0,0)`.
 :::
 
 Rotating the geometries can be done using the [`.rotate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.rotate.html) method.
@@ -318,7 +319,7 @@ When rotating, we need to specify the rotation angle (positive values imply cloc
 For example, the following expression rotates `nz` by 30 degrees counter-clockwise, around the geometry centroids.
 
 ```{python}
-nz_rotate = nz.rotate(-30, origin='centroid')
+nz_rotate = nz.rotate(-30, origin="centroid")
 nz_rotate
 ```
 
@@ -326,21 +327,21 @@ nz_rotate
 
 ```{python}
 #| label: fig-affine-transformations
-#| fig-cap: 'Illustrations of affine transformations: shift, scale and rotate'
+#| fig-cap: "Illustrations of affine transformations: shift, scale and rotate"
 #| layout-ncol: 3
 #| fig-subcap: 
 #| - Shift
 #| - Scale
 #| - Rotate
 # Shift
-base = nz.plot(color='lightgrey', edgecolor='darkgrey')
-nz_shift.plot(ax=base, color='red', edgecolor='darkgrey');
+base = nz.plot(color="lightgrey", edgecolor="darkgrey")
+nz_shift.plot(ax=base, color="red", edgecolor="darkgrey");
 # Scale
-base = nz.plot(color='lightgrey', edgecolor='darkgrey')
-nz_scale.plot(ax=base, color='red', edgecolor='darkgrey');
+base = nz.plot(color="lightgrey", edgecolor="darkgrey")
+nz_scale.plot(ax=base, color="red", edgecolor="darkgrey");
 # Rotate
-base = nz.plot(color='lightgrey', edgecolor='darkgrey')
-nz_rotate.plot(ax=base, color='red', edgecolor='darkgrey');
+base = nz.plot(color="lightgrey", edgecolor="darkgrey")
+nz_rotate.plot(ax=base, color="red", edgecolor="darkgrey");
 ```
 
 <!-- jn: you also mentioned skew before -- why it is not shown here? -->
@@ -413,8 +414,8 @@ geom
 #| label: fig-geom-intersection
 #| fig-cap: A `GeoSeries` with three circles, and a `shapely` geometry that we will "subtract" from it (in red)
 fig, ax = plt.subplots()
-geom.plot(color='lightgrey', edgecolor='black', ax=ax)
-gpd.GeoSeries(y).plot(color='#FF000040', edgecolor='black', ax=ax);
+geom.plot(color="lightgrey", edgecolor="black", ax=ax)
+gpd.GeoSeries(y).plot(color="#FF000040", edgecolor="black", ax=ax);
 ```
 
 Now, using `.intersection` automatically applies the **shapely** method of the same name on each geometry in `geom`, returning a new `GeoSeries`, which we name `geom_inter_y`, with the pairwise "intersections".
@@ -431,7 +432,7 @@ geom_inter_y
 #| label: fig-geom-intersection2
 #| fig-cap: The output `GeoSeries`, after subtracting a `shapely` geometry using `.intersection`
 
-geom_inter_y.plot(color='lightgrey', edgecolor='black');
+geom_inter_y.plot(color="lightgrey", edgecolor="black");
 ```
 
 The `.overlay` method (see @sec-joining-incongruent-layers) further extends this technique, making it possible to apply "many-to-many" pairwise geometry generations between all pairs of two `GeoDataFrame`s.
@@ -479,9 +480,9 @@ The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-
 ```{python}
 #| label: fig-random-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
-base = pnt.plot(color='none', edgecolor='black')
-gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
-gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
+base = pnt.plot(color="none", edgecolor="black")
+gpd.GeoSeries([x]).plot(ax=base, color="none", edgecolor="darkgrey");
+gpd.GeoSeries([y]).plot(ax=base, color="none", edgecolor="darkgrey");
 ```
 
 Now, we can get back to our question: how to subset the points to only return the point that intersects with both `x` and `y`?
@@ -507,10 +508,10 @@ The subset `pnt2` is shown in @fig-intersection-points.
 ```{python}
 #| label: fig-intersection-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
-base = pnt.plot(color='none', edgecolor='black')
-gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
-gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
-pnt2.plot(ax=base, color='red');
+base = pnt.plot(color="none", edgecolor="black")
+gpd.GeoSeries([x]).plot(ax=base, color="none", edgecolor="darkgrey");
+gpd.GeoSeries([y]).plot(ax=base, color="none", edgecolor="darkgrey");
+pnt2.plot(ax=base, color="red");
 ```
 
 The only difference between the two approaches is that `.intersection` returns all "intersections", even if they are empty.
@@ -536,8 +537,8 @@ Spatial aggregation can silently dissolve the geometries of touching polygons in
 This is demonstrated in the code chunk below, in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method.
 
 ```{python}
-regions = us_states[['REGION', 'geometry', 'total_pop_15']] \
-    .dissolve(by='REGION', aggfunc='sum').reset_index()
+regions = us_states[["REGION", "geometry", "total_pop_15"]] \
+    .dissolve(by="REGION", aggfunc="sum").reset_index()
 regions
 ```
 
@@ -552,10 +553,10 @@ regions
 #| - 4 Regions
 # States
 fig, ax = plt.subplots(figsize=(9, 2.5))
-us_states.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
+us_states.plot(ax=ax, edgecolor="black", column="total_pop_15", legend=True);
 # Regions
 fig, ax = plt.subplots(figsize=(9, 2.5))
-regions.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
+regions.plot(ax=ax, edgecolor="black", column="total_pop_15", legend=True);
 ```
 
 What is happening with the geometries here?
@@ -566,7 +567,7 @@ Note that the result is a `shapely` geometry, as the individual attributes are "
 ```{python}
 #| label: fig-dissolve2
 #| fig-cap: Western US
-us_west = us_states[us_states['REGION'] == 'West']
+us_west = us_states[us_states["REGION"] == "West"]
 us_west_union = us_west.geometry.unary_union
 us_west_union
 ```
@@ -575,12 +576,12 @@ To dissolve two (or more) groups of a `GeoDataFrame` into one geometry, we can e
 
 ```{python}
 # Approach 1
-sel = (us_states['REGION'] == 'West') | (us_states['NAME'] == 'Texas')
+sel = (us_states["REGION"] == "West") | (us_states["NAME"] == "Texas")
 texas_union = us_states[sel]
 texas_union = texas_union.geometry.unary_union
 # Approach 2
-us_west = us_states[us_states['REGION'] == 'West']
-texas = us_states[us_states['NAME'] == 'Texas']
+us_west = us_states[us_states["REGION"] == "West"]
+texas = us_states[us_states["NAME"] == "Texas"]
 texas_union = pd.concat([us_west, texas]).unary_union
 ```
 
@@ -758,7 +759,7 @@ geom
 Then, put it into a `GeoDataFrame` with an attribute called `'id'`:
 
 ```{python}
-dat = gpd.GeoDataFrame(geometry=geom, data=pd.DataFrame({'id': [1]}))
+dat = gpd.GeoDataFrame(geometry=geom, data=pd.DataFrame({"id": [1]}))
 dat
 ```
 
@@ -790,8 +791,8 @@ For example, here we see that all `'LineString'` geometries came from the same m
 #| fig-subcap: 
 #| - MultiLineString layer
 #| - LineString layer, after applying `.explode`
-dat.plot(column='id');
-dat1.plot(column='level_1');
+dat.plot(column="id");
+dat1.plot(column="level_1");
 ```
 
 As a side-note, let's demonstrate how the above **shapely** casting methods can be translated to **geopandas**. 
@@ -814,22 +815,22 @@ The result is illustrated in @fig-linestring-to-multipoint.
 #| fig-subcap: 
 #| - LineString layer
 #| - MultiPoint layer
-dat1.plot(column='level_1');
-dat2.plot(column='level_1');
+dat1.plot(column="level_1");
+dat2.plot(column="level_1");
 ```
 
 The opposite transformation, i.e., "single-part to multi-part", is achieved using the `.dissolve` method (which we are already familiar with, see @sec-geometry-unions).
 For example, here is how we can get back to the `'MultiLineString'` geometry:
 
 ```{python}
-dat1.dissolve(by='id').reset_index()
+dat1.dissolve(by="id").reset_index()
 ```
 
 The next code chunk is another example, dissolving the `nz` north and south parts into `'MultiPolygon'` geometries.
 
 ```{python}
-nz_dis1 = nz[['Island', 'Population', 'geometry']] \
-    .dissolve(by='Island', aggfunc='sum') \
+nz_dis1 = nz[["Island", "Population", "geometry"]] \
+    .dissolve(by="Island", aggfunc="sum") \
     .reset_index()
 nz_dis1
 ```
@@ -842,13 +843,13 @@ In the following example, for instance, we collect all `'Polygon'` and `'MultiPo
 ```{python}
 #| warning: false
 nz_dis2 = nz \
-    .groupby('Island') \
+    .groupby("Island") \
     .agg({
-        'Population': 'sum',
-        'geometry': lambda x: shapely.MultiPolygon(x.explode().to_list())
+        "Population": "sum",
+        "geometry": lambda x: shapely.MultiPolygon(x.explode().to_list())
     }) \
     .reset_index()
-nz_dis2 = gpd.GeoDataFrame(nz_dis2).set_geometry('geometry').set_crs(nz.crs)
+nz_dis2 = gpd.GeoDataFrame(nz_dis2).set_geometry("geometry").set_crs(nz.crs)
 nz_dis2
 ```
 
@@ -863,8 +864,8 @@ This is illustrated in @fig-combine-geoms:
 #| fig-subcap: 
 #| - Dissolving (using the **geopandas** `.dissolve` method)
 #| - Combining into multi-part without dissolving (using `.agg` and a custom **shapely**-based function)
-nz_dis1.plot(color='lightgrey', edgecolor='black');
-nz_dis2.plot(color='lightgrey', edgecolor='black');
+nz_dis1.plot(color="lightgrey", edgecolor="black");
+nz_dis2.plot(color="lightgrey", edgecolor="black");
 ```
 
 It is also worthwhile to note the `.boundary` and `.exterior` properties of `GeoSeries`, which are used to cast polygons to lines, with or without interior rings, respectively (see @sec-rasterizing-lines-and-polygons). 
@@ -953,7 +954,7 @@ bbox
 #| fig-cap: The `elev.tif` raster, and the extent of another (smaller) raster `clip` which we use to subset it
 fig, ax = plt.subplots()
 rasterio.plot.show(src_elev, ax=ax)
-gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
+gpd.GeoSeries([bbox]).plot(color="none", ax=ax);
 ```
 
 From here on, subsetting can be done using masking and cropping, just like with any vector layer other than `bbox`, regardless whether it is rectangular or not.
@@ -983,7 +984,7 @@ Therefore, in our case, subset `out_image` dimensions are $2 \times 2$ (@fig-ras
 #| fig-cap: The resulting subset of the `elev.tif` raster
 fig, ax = plt.subplots()
 rasterio.plot.show(out_image, transform=out_transform, ax=ax)
-gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
+gpd.GeoSeries([bbox]).plot(color="none", ax=ax);
 ```
 
 ### Extent and origin {#sec-extent-and-origin}
@@ -1011,9 +1012,9 @@ Also, we can specify the value that's being used for padding with `constant_valu
 For example, here we pad `r` with one extra row and two extra columns, on both sides, resulting in the array `r_pad`:
 
 ```{python}
-rows = 1
-cols = 2
-r_pad = np.pad(r, ((rows,rows),(cols,cols)), constant_values=18)
+ROWS = 1
+COLS = 2
+r_pad = np.pad(r, ((ROWS, ROWS), (COLS, COLS)), constant_values=18)
 r_pad
 ```
 
@@ -1032,8 +1033,8 @@ src_elev.transform
 From the transformation matrix, we are able to extract the origin.
 
 ```{python}
-xmin, ymax = src_elev.transform[2], src_elev.transform[5]
-xmin, ymax
+XMIN, YMAX = src_elev.transform[2], src_elev.transform[5]
+XMIN, YMAX
 ```
 
 We can also get the resolution of the data, which is the distance between two adjacent pixels.
@@ -1046,8 +1047,8 @@ dx, dy
 These two parts of information are enough to calculate the new origin (`xmin_new,ymax_new`) of the padded raster.
 
 ```{python}
-xmin_new = xmin - dx * cols
-ymax_new = ymax - dy * rows
+xmin_new = XMIN - dx * COLS
+ymax_new = YMAX - dy * ROWS
 xmin_new, ymax_new
 ```
 
@@ -1070,9 +1071,9 @@ new_transform
 #| label: fig-raster-shift-origin
 #| fig-cap: The padded `elev.tif` raster, and the extent of the original `elev.tif` raster (in red)
 fig, ax = plt.subplots()
-rasterio.plot.show(r_pad, transform=new_transform, cmap='Greys', ax=ax)
+rasterio.plot.show(r_pad, transform=new_transform, cmap="Greys", ax=ax)
 elev_bbox = gpd.GeoSeries(shapely.box(*src_elev.bounds))
-elev_bbox.plot(color='none', edgecolor='red', ax=ax);
+elev_bbox.plot(color="none", edgecolor="red", ax=ax);
 ```
 
 We can shift a raster origin not just when padding, but in any other use case, just by changing its transformation matrix.
@@ -1082,8 +1083,8 @@ As an example, let's shift the origin of `elev.tif` by `(-0.25,0.25)`.
 First, we need to calculate the new origin.
 
 ```{python}
-xmin_new = xmin - 0.25  # shift xmin to the left
-ymax_new = ymax + 0.25  # shift ymax upwards
+xmin_new = XMIN - 0.25  # shift xmin to the left
+ymax_new = YMAX + 0.25  # shift ymax upwards
 xmin_new, ymax_new
 ```
 
@@ -1109,8 +1110,8 @@ new_transform
 #| label: fig-raster-shift-origin2
 #| fig-cap: The padded `elev.tif` raster (@fig-raster-shift-origin) further shifted by `(0.25,0.25)`, and the extent of the original `elev.tif` raster (in red)
 fig, ax = plt.subplots()
-rasterio.plot.show(r, transform=new_transform, cmap='Greys', ax=ax)
-elev_bbox.plot(color='none', edgecolor='red', ax=ax);
+rasterio.plot.show(r, transform=new_transform, cmap="Greys", ax=ax)
+elev_bbox.plot(color="none", edgecolor="red", ax=ax);
 ```
 
 ### Aggregation and disaggregation {#sec-raster-agg-disagg}
@@ -1154,12 +1155,9 @@ Here we use [`rasterio.enums.Resampling.average`](https://rasterio.readthedocs.i
 See @sec-raster-resampling for a list of other available methods.
 
 ```{python}
-factor = 0.2
+FACTOR = 0.2
 r = src.read(1,
-    out_shape=(
-        int(src.height * factor),
-        int(src.width * factor)
-        ),
+    out_shape=(int(src.height * FACTOR), int(src.width * FACTOR)),
     resampling=rasterio.enums.Resampling.average
 )
 ```
@@ -1203,9 +1201,9 @@ We can update the raster metadata required for writing with the `update` method.
 ```{python}
 dst_kwargs = src.meta.copy()
 dst_kwargs.update({
-    'transform': new_transform,
-    'width': r.shape[1],
-    'height': r.shape[0],
+    "transform": new_transform,
+    "width": r.shape[1],
+    "height": r.shape[0],
 })
 dst_kwargs
 ```
@@ -1215,7 +1213,7 @@ Then we can create a new file (`dem_agg5.tif`) in writing mode, and write the va
 <!-- md: sure, the complete explanation of raster writing are in ch07, but I've now added a note here too -->
 
 ```{python}
-dst = rasterio.open('output/dem_agg5.tif', 'w', **dst_kwargs)
+dst = rasterio.open("output/dem_agg5.tif", "w", **dst_kwargs)
 dst.write(r, 1)
 dst.close()
 ```
@@ -1227,23 +1225,23 @@ In `rasterio.open` writing mode, the "keyword arguments" syntax often comes in h
 
 Technically, keep in mind that the expression:
 ```
-rasterio.open('out.tif', 'w', **dst_kwargs)
+rasterio.open("out.tif", "w", **dst_kwargs)
 ```
 where `dst_kwargs` is a `dict` of the following form (typically coming from a template raster, possibly with few "updated" properties using `.update`, see above):
 ```
-{'driver': 'GTiff',
- 'dtype': 'float32',
- 'nodata': nan,
+{"driver": "GTiff",
+ "dtype": "float32",
+ "nodata": nan,
  ...
 }
 ```
 is a shortcut of:
 ```
 rasterio.open(
-    'out.tif', 'w', 
-    driver=dst_kwargs['driver'], 
-    dtype=dst_kwargs['dtype'], 
-    nodata=dst_kwargs['nodata'], 
+    "out.tif", "w", 
+    driver=dst_kwargs["driver"], 
+    dtype=dst_kwargs["dtype"], 
+    nodata=dst_kwargs["nodata"], 
     ...
 )
 ```
@@ -1262,12 +1260,9 @@ To disaggregate a raster, we go through exactly the same workflow as for aggrega
 In the example below, we disaggregate using bilinear interpolation, to get a smoothed high-resolution raster.
 
 ```{python}
-factor = 5
+FACTOR = 5
 r2 = src.read(1,
-    out_shape=(
-        int(src.height * factor),
-        int(src.width * factor)
-        ),
+    out_shape=(int(src.height * FACTOR), int(src.width * FACTOR)),
     resampling=rasterio.enums.Resampling.bilinear
 )
 ```
@@ -1282,8 +1277,7 @@ To calculate the new transform, we use the same expression as for aggregation, o
 
 ```{python}
 new_transform2 = src.transform * src.transform.scale(
-    (src.width / r2.shape[1]),
-    (src.height / r2.shape[0])
+    (src.width / r2.shape[1]), (src.height / r2.shape[0])
 )
 new_transform2
 ```
@@ -1337,7 +1331,7 @@ The information required for `rasterio.warp.reproject`, whether we are resamplin
 -   The source and target *CRS*. These may be identical, when resampling, or different, when reprojecting
 -   The source and target *transform*
 
-Importantly, `rasterio.warp.reproject` can work with file connections, such as a connection to an output file in write (`'w'`) mode.
+Importantly, `rasterio.warp.reproject` can work with file connections, such as a connection to an output file in write (`"w"`) mode.
 This makes the function efficient for large rasters.
 <!-- jn: maybe the above sentence could be a block? -->
 <!-- md: this is an important functionality of 'rasterio.warp.reproject' which we use throughout the book, so IMHO this should be in the main text. maybe we can rewrite it in another way? -->
@@ -1369,34 +1363,34 @@ These could have been specified manually (such as here), or obtained from a temp
 Note that the resolution of the destination grid is \~10 times more coarse (300 $m$) than the original resolution of `dem.tif` (\~30 $m$) (@fig-raster-resample).
 
 ```{python}
-xmin = 794650
-xmax = 798250
-ymin = 8931750 
-ymax = 8935350
-res = 300
+XMIN = 794650
+XMAX = 798250
+YMIN = 8931750 
+YMAX = 8935350
+RES = 300
 ```
 
 The corresponding transform based on these constraints can be created using the `rasterio.transform.from_origin` function, as follows:
 
 ```{python}
 dst_transform = rasterio.transform.from_origin(
-    west=xmin, 
-    north=ymax, 
-    xsize=res, 
-    ysize=res
+    west=XMIN, 
+    north=YMAX, 
+    xsize=RES, 
+    ysize=RES,
 )
 dst_transform
 ```
 
-Again, note that in case we needed to resample into a grid specified by an existing "template" raster, we could skip this step and simply read the transform from the template file, as in `rasterio.open('template.tif').transform`.
+Again, note that in case we needed to resample into a grid specified by an existing "template" raster, we could skip this step and simply read the transform from the template file, as in `rasterio.open("template.tif").transform`.
 
 Now, we can move on to creating the destination file connection.
 For that, we also have to know the raster dimensions that can be derived from the extent and the resolution.
 
 ```{python}
-width = int((xmax - xmin) / res)
-height = int((ymax - ymin) / res)
-width, height
+WIDTH = int((XMAX - XMIN) / RES)
+HEIGHT = int((YMAX - YMIN) / RES)
+WIDTH, HEIGHT
 ```
 
 Now we can create the destination file connection.
@@ -1405,11 +1399,11 @@ We are using the same metadata as the source file, except for the dimensions and
 ```{python}
 dst_kwargs = src.meta.copy()
 dst_kwargs.update({
-    'transform': dst_transform,
-    'width': width,
-    'height': height
+    "transform": dst_transform,
+    "width": WIDTH,
+    "height": HEIGHT
 })
-dst = rasterio.open('output/dem_resample_nearest.tif', 'w', **dst_kwargs)
+dst = rasterio.open("output/dem_resample_nearest.tif", "w", **dst_kwargs)
 ```
 
 Finally, we reproject using function `rasterio.warp.reproject`.
@@ -1443,7 +1437,7 @@ Note that all arguments in the `rasterio.warp.reproject` function call are ident
 
 ```{python}
 #| eval: false
-dst = rasterio.open('output/dem_resample_maximum.tif', 'w', **dst_kwargs)
+dst = rasterio.open("output/dem_resample_maximum.tif", "w", **dst_kwargs)
 rasterio.warp.reproject(
     source=rasterio.band(src, 1),
     destination=rasterio.band(dst, 1),
@@ -1471,10 +1465,10 @@ fig, ax = plt.subplots(figsize=(4,4))
 rasterio.plot.show(src, ax=ax);
 # Nearest neighbor
 fig, ax = plt.subplots(figsize=(4,4))
-rasterio.plot.show(rasterio.open('output/dem_resample_nearest.tif'), ax=ax);
+rasterio.plot.show(rasterio.open("output/dem_resample_nearest.tif"), ax=ax);
 # Maximum
 fig, ax = plt.subplots(figsize=(4,4))
-rasterio.plot.show(rasterio.open('output/dem_resample_maximum.tif'), ax=ax);
+rasterio.plot.show(rasterio.open("output/dem_resample_maximum.tif"), ax=ax);
 ```
 
 ## Exercises

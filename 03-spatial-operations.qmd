@@ -6,29 +6,30 @@ jupyter: python3
 
 ## Prerequisites {.unnumbered}
 
-```{python}
-#| echo: false
-import pandas as pd
-import matplotlib.pyplot as plt
-pd.set_option('display.max_rows', 4)
-pd.set_option('display.max_columns', 6)
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
-```
-
 This chapter requires importing the following packages:
 
 ```{python}
-import shapely
+import os
+
 import geopandas as gpd
 import numpy as np
-import os
 import rasterio
 import rasterio.plot
 import rasterio.merge
 import rasterio.features
+import shapely
 import scipy.ndimage
 import scipy.stats
+```
+
+```{python}
+#| echo: false
+import matplotlib.pyplot as plt
+import pandas as pd
+pd.set_option("display.max_rows", 4)
+pd.set_option("display.max_columns", 6)
+pd.options.display.max_colwidth = 35
+plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
 It also relies on the following data files:
@@ -36,27 +37,30 @@ It also relies on the following data files:
 ```{python}
 #| echo: false
 from pathlib import Path
-data_path = Path('data')
-file_path = Path('data/landsat.tif')
+data_path = Path("data")
+file_path = Path("data/landsat.tif")
 if not file_path.exists():
+  import requests
   if not data_path.is_dir():
      os.mkdir(data_path)
-  print('Attempting to get the data')
-  import requests
-  r = requests.get('https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif')  
-  with open(file_path, 'wb') as f:
+  print("Attempting to get the data")
+  r = requests.get(
+    "https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif",
+    timeout=10,
+  )
+  with open(file_path, "wb") as f:
     f.write(r.content)
 ```
 
 ```{python}
-nz = gpd.read_file('data/nz.gpkg')
-nz_height = gpd.read_file('data/nz_height.gpkg')
-world = gpd.read_file('data/world.gpkg')
-cycle_hire = gpd.read_file('data/cycle_hire.gpkg')
-cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
-src_elev = rasterio.open('output/elev.tif')
-src_landsat = rasterio.open('data/landsat.tif')
-src_grain = rasterio.open('output/grain.tif')
+nz = gpd.read_file("data/nz.gpkg")
+nz_height = gpd.read_file("data/nz_height.gpkg")
+world = gpd.read_file("data/world.gpkg")
+cycle_hire = gpd.read_file("data/cycle_hire.gpkg")
+cycle_hire_osm = gpd.read_file("data/cycle_hire_osm.gpkg")
+src_elev = rasterio.open("output/elev.tif")
+src_landsat = rasterio.open("data/landsat.tif")
+src_grain = rasterio.open("output/grain.tif")
 ```
 
 ## Introduction
@@ -97,7 +101,7 @@ To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, 
 The following expression creates a new object, `canterbury`, representing only one region --- Canterbury.
 
 ```{python}
-canterbury = nz[nz['Name'] == 'Canterbury']
+canterbury = nz[nz["Name"] == "Canterbury"]
 canterbury
 ```
 
@@ -117,8 +121,8 @@ canterbury_height
 ```
 
 @fig-spatial-subset compares the original `nz_height` layer (left) with the subset `canterbury_height` (right).
-<!-- jn: do we need to repeat the `base = nz.plot(color='white', edgecolor='lightgrey')` code here? -->
-<!-- md: The expression to create 'base' has to be repeated. can't say I completely understand the mechanism, but I think that once a 'matplotlib' plot is drawn, the plot objects are emptied, so we have to re-create them when making a new plot. maybe there is a solution to it that I missed, but currently we're creating each plot intependently like in the code below. -->
+<!-- jn: do we need to repeat the `base = nz.plot(color="white", edgecolor="lightgrey")` code here? -->
+<!-- md: The expression to create "base" has to be repeated. can't say I completely understand the mechanism, but I think that once a 'matplotlib' plot is drawn, the plot objects are emptied, so we have to re-create them when making a new plot. maybe there is a solution to it that I missed, but currently we're creating each plot intependently like in the code below. -->
 
 ```{python}
 #| label: fig-spatial-subset
@@ -261,13 +265,13 @@ The last expression is a `for` loop used to add text labels (`1`, `2`, and `3`) 
 ```{python}
 #| label: fig-spatial-relations-geoms
 #| fig-cap: Points, line and polygon objects arranged to illustrate topological relations
-base = poly.plot(color='lightgrey', edgecolor='red')
-line.plot(ax=base, color='black', linewidth=7)
-points.plot(ax=base, color='none', edgecolor='black')
+base = poly.plot(color="lightgrey", edgecolor="red")
+line.plot(ax=base, color="black", linewidth=7)
+points.plot(ax=base, color="none", edgecolor="black")
 for i in enumerate(points):
     base.annotate(
         i[0], xy=(i[1].x, i[1].y), 
-        xytext=(3, 3), textcoords='offset points', weight='bold'
+        xytext=(3, 3), textcoords="offset points", weight="bold"
     )
 ```
 
@@ -305,12 +309,12 @@ Our two input objects, `points` and `poly2`, are illustrated in @fig-spatial-rel
 ```{python}
 #| label: fig-spatial-relations-geoms2
 #| fig-cap: Inputs for demonstrating the evaluation of all pairwise intersection relations between three points (`points`) and two polygons (`poly2`)
-base = poly2.plot(color='lightgrey', edgecolor='red')
-points.plot(ax=base, color='none', edgecolor='black')
+base = poly2.plot(color="lightgrey", edgecolor="red")
+points.plot(ax=base, color="none", edgecolor="black")
 for i in enumerate(points):
     base.annotate(
         i[0], xy=(i[1].x, i[1].y), 
-        xytext=(3, 3), textcoords='offset points', weight='bold'
+        xytext=(3, 3), textcoords="offset points", weight="bold"
     )
 ```
 
@@ -321,7 +325,8 @@ The result is a `DataFrame`, where each row represents a `points` geometry and e
 We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each.
 
 ```{python}
-points.apply(lambda x: poly2.intersects(x))
+#points.apply(lambda x: poly2.intersects(x))
+points.apply(poly2.intersects)
 ```
 
 ::: callout-note
@@ -334,11 +339,11 @@ Since the above result, like any pairwise matrix, (1) is composed of values of t
 <!-- md: agree, now moved to a block -->
 
 ```{python}
-points.apply(lambda x: poly2.intersects(x)).to_numpy()
+points.apply(poly2.intersects).to_numpy()
 ```
 :::
 
-The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in @fig-spatial-relations.
+The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'batch-all' topological operation which identifies many types of spatial relation, as illustrated in @fig-spatial-relations.
 More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it?
 The first question can be answered with `.within`, and the second with `.touches`.
 
@@ -396,7 +401,7 @@ bb = world.total_bounds  ## the world's bounds
 x = np.random.uniform(low=bb[0], high=bb[2], size=10)
 y = np.random.uniform(low=bb[1], high=bb[3], size=10)
 random_points = gpd.points_from_xy(x, y, crs=4326)
-random_points = gpd.GeoDataFrame({'geometry': random_points})
+random_points = gpd.GeoDataFrame({"geometry": random_points})
 random_points
 ```
 
@@ -412,7 +417,7 @@ Spatial joins are implemented with `x.sjoin(y)`, as illustrated in the code chun
 The output is the `random_joined` object which is illustrated in @fig-spatial-join (c).
 
 ```{python}
-random_joined = random_points.sjoin(world, how='left')
+random_joined = random_points.sjoin(world, how="left")
 random_joined
 ```
 
@@ -427,15 +432,15 @@ random_joined
 #| - resulting in points associated with country names
 #| layout-ncol: 2
 # Random points
-base = world.plot(color='white', edgecolor='lightgrey')
-random_points.plot(ax=base, color='None', edgecolor='red');
+base = world.plot(color="white", edgecolor="lightgrey")
+random_points.plot(ax=base, color="None", edgecolor="red");
 # World countries intersecting with the points
-base = world.plot(color='white', edgecolor='lightgrey')
-world_random.plot(ax=base, column='name_long');
+base = world.plot(color="white", edgecolor="lightgrey")
+world_random.plot(ax=base, column="name_long");
 # Points with joined country names
-base = world.plot(color='white', edgecolor='lightgrey')
-random_joined.geometry.plot(ax=base, color='grey')
-random_joined.plot(ax=base, column='name_long', legend=True);
+base = world.plot(color="white", edgecolor="lightgrey")
+random_joined.geometry.plot(ax=base, color="grey")
+random_joined.plot(ax=base, column="name_long", legend=True);
 ```
 
 ### Non-overlapping joins
@@ -447,8 +452,8 @@ Plotting them reeveals that they are often closely related but they do not seem 
 ```{python}
 #| label: fig-cycle-hire
 #| fig-cap: The spatial distribution of cycle hire points in London based on official data (blue) and OpenStreetMap data (red). 
-base = cycle_hire.plot(edgecolor='blue', color='none')
-cycle_hire_osm.plot(ax=base, edgecolor='red', color='none');
+base = cycle_hire.plot(edgecolor="blue", color="none")
+cycle_hire_osm.plot(ax=base, edgecolor="red", color="none");
 ```
 
 We can check if any of the points are the same by creating a pairwise boolean matrix of `.intersects` relations, then evaluating whether any of the values in it is `True`.
@@ -456,13 +461,11 @@ Note that the `.to_numpy` method is applied to go from a `DataFrame` to an `ndar
 This is what we want in this case, because we are interested in whether any of the points intersect, not whether any of the points in each row intersect.
 
 ```{python}
-m = cycle_hire.geometry.apply(
-  lambda x: cycle_hire_osm.geometry.intersects(x)
-)
+m = cycle_hire.geometry.apply(cycle_hire_osm.geometry.intersects)
 m.to_numpy().any()
 ```
 
-Imagine that we need to join the capacity variable in `cycle_hire_osm` (`'capacity'`) onto the official 'target' data contained in `cycle_hire`, which looks as follows.
+Imagine that we need to join the capacity variable in `cycle_hire_osm` (`"capacity"`) onto the official "target" data contained in `cycle_hire`, which looks as follows.
 
 ```{python}
 cycle_hire
@@ -477,10 +480,10 @@ Note that we transform the data to a projected CRS (`27700`) to use real buffer 
 <!-- md: added -->
 
 ```{python}
-crs = 27700
-cycle_hire_buffers = cycle_hire.copy().to_crs(crs)
+CRS = 27700
+cycle_hire_buffers = cycle_hire.copy().to_crs(CRS)
 cycle_hire_buffers.geometry = cycle_hire_buffers.buffer(20)
-cycle_hire_buffers = gpd.sjoin(cycle_hire_buffers, cycle_hire_osm.to_crs(crs))
+cycle_hire_buffers = gpd.sjoin(cycle_hire_buffers, cycle_hire_osm.to_crs(CRS))
 cycle_hire_buffers
 ```
 
@@ -494,8 +497,8 @@ We also go back from buffers to points using `.centroid` method.
 <!-- md: right, now changed -->
 
 ```{python}
-cycle_hire_buffers = cycle_hire_buffers[['id', 'capacity', 'geometry']] \
-    .dissolve(by='id', aggfunc='mean') \
+cycle_hire_buffers = cycle_hire_buffers[["id", "capacity", "geometry"]] \
+    .dissolve(by="id", aggfunc="mean") \
     .reset_index()
 cycle_hire_buffers.geometry = cycle_hire_buffers.centroid
 cycle_hire_buffers
@@ -512,10 +515,10 @@ The capacity of nearby stations can be verified by comparing a plot of the capac
 #| layout-ncol: 2
 # Input
 fig, ax = plt.subplots(1, 1, figsize=(6, 3))
-cycle_hire_osm.plot(column='capacity', legend=True, ax=ax);
+cycle_hire_osm.plot(column="capacity", legend=True, ax=ax);
 # Join result
 fig, ax = plt.subplots(1, 1, figsize=(6, 3))
-cycle_hire_buffers.plot(column='capacity', legend=True, ax=ax);
+cycle_hire_buffers.plot(column="capacity", legend=True, ax=ax);
 ```
 
 ### Spatial aggregation {#sec-vector-spatial-aggregation}
@@ -539,9 +542,9 @@ The result tells us which `nz` region each elevation point falls in.
 
 ```{python}
 nz_height2 = gpd.sjoin(
-  nz_height[['elevation', 'geometry']], 
-  nz[['Name', 'geometry']], 
-  how='left'
+  nz_height[["elevation", "geometry"]], 
+  nz[["Name", "geometry"]], 
+  how="left"
 )
 nz_height2
 ```
@@ -550,30 +553,30 @@ Second, we calculate the average elevation, using ordinary (non-spatial) aggrega
 This result tells us the average elevation of all `nz_height` points located within each `nz` region.
 
 ```{python}
-nz_height2 = nz_height2.groupby('Name')[['elevation']].mean()
+nz_height2 = nz_height2.groupby("Name")[["elevation"]].mean()
 nz_height2
 ```
 
 The third and final step is joining the averages back to the `nz` layer.
 
 ```{python}
-nz2 = pd.merge(nz[['Name', 'geometry']], nz_height2, on='Name', how='left')
+nz2 = pd.merge(nz[["Name", "geometry"]], nz_height2, on="Name", how="left")
 nz2
 ```
 
 We now have create the `nz_height4` layer, which gives the average `nz_height` elevation value per polygon.
 The result is shown in @fig-nz-avg-nz-height.
 Note that the `missing_kwds` part determines the style of geometries where the symbology attribute (`elevation`) is missing, because there were no `nz_height` points overlapping with them.
-The default is to omit them, which is usually not what we want, but with `{'color':'none','edgecolor':'black'}`, those polygons are shown with black outline and no fill.
+The default is to omit them, which is usually not what we want, but with `{"color":"none","edgecolor":"black"}`, those polygons are shown with black outline and no fill.
 
 ```{python}
 #| label: fig-nz-avg-nz-height
 #| fig-cap: Average height of the top 101 high points across the regions of New Zealand
 nz2.plot(
-  column='elevation', 
+  column="elevation", 
   legend=True,
-  cmap='Blues', edgecolor='black',
-  missing_kwds={'color': 'none', 'edgecolor': 'black'}
+  cmap="Blues", edgecolor="black",
+  missing_kwds={"color": "none", "edgecolor": "black"}
 );
 ```
 
@@ -601,27 +604,27 @@ Most of the functions have been explained in previous chapters; we leave it as a
 ```{python}
 # Settings: grid extent, resolution, and CRS
 bounds = nz.total_bounds
-crs = nz.crs
-res = 100000
+CRS = nz.crs
+RES = 100000
 # Calculating grid dimensions
 xmin, ymin, xmax, ymax = bounds
-cols = list(range(int(np.floor(xmin)), int(np.ceil(xmax+res)), res))
-rows = list(range(int(np.floor(ymin)), int(np.ceil(ymax+res)), res))
+cols = list(range(int(np.floor(xmin)), int(np.ceil(xmax+RES)), RES))
+rows = list(range(int(np.floor(ymin)), int(np.ceil(ymax+RES)), RES))
 rows.reverse()
-# For each cell, create 'shapely' polygon (rectangle)
+# For each cell, create "shapely" polygon (rectangle)
 polygons = []
 for x in cols:
     for y in rows:
         polygons.append(
-            shapely.Polygon([(x,y), (x+res, y), (x+res, y-res), (x, y-res)])
+            shapely.Polygon([(x,y), (x+RES, y), (x+RES, y-RES), (x, y-RES)])
         )
-# To 'GeoDataFrame'
-grid = gpd.GeoDataFrame({'geometry': polygons}, crs=nz.crs)
+# To "GeoDataFrame"
+grid = gpd.GeoDataFrame({"geometry": polygons}, crs=nz.crs)
 # Remove rows/columns beyond the extent
-sel = grid.intersects(shapely.box(*nz.total_bounds))
-grid = grid[sel]
+selection = grid.intersects(shapely.box(*nz.total_bounds))
+grid = grid[selection]
 # Add consecultive IDs
-grid['id'] = grid.index
+grid["id"] = grid.index
 grid
 ```
 
@@ -630,17 +633,17 @@ grid
 ```{python}
 #| label: fig-nz-and-grid
 #| fig-cap: The `nz` layer, with population size in each region, overlaid with a regular `grid` of rectangles
-base = grid.plot(color='none', edgecolor='grey')
+base = grid.plot(color="none", edgecolor="grey")
 nz.plot(
     ax=base, 
-    column='Population', 
-    edgecolor='black', 
+    column="Population", 
+    edgecolor="black", 
     legend=True, 
-    cmap='viridis_r'
+    cmap="viridis_r"
 );
 ```
 
-Our goal, now, is to "transfer" the `'Population'` attribute (@fig-nz-and-grid) to the rectangular grid polygons, which is an example of a join between incongruent layers.
+Our goal, now, is to "transfer" the `"Population"` attribute (@fig-nz-and-grid) to the rectangular grid polygons, which is an example of a join between incongruent layers.
 To do that, we basically need to calculate--for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell.
 The weights in the weighted sum calculation are the ratios between the area of the coinciding "part" out of the entire `nz` polygon.
 That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
@@ -648,7 +651,7 @@ That is, we (inevitably) assume that the population in each `nz` polygon is equa
 We start by calculating the entire area of each `nz` polygon, as follows, using the `.area` method (@sec-area-length).
 
 ```{python}
-nz['area'] = nz.area
+nz["area"] = nz.area
 nz
 ```
 
@@ -657,7 +660,7 @@ As a result, we now have a layer where each `nz` polygon is "split" according to
 
 ```{python}
 nz_grid = nz.overlay(grid)
-nz_grid = nz_grid[['id', 'area', 'Population', 'geometry']]
+nz_grid = nz_grid[["id", "area", "Population", "geometry"]]
 nz_grid
 ```
 
@@ -666,14 +669,14 @@ nz_grid
 ```{python}
 #| label: fig-nz-and-grid-overlay
 #| fig-cap: The pairwise intersections of `nz` and `grid`, calculated with `.overlay`
-nz_grid.plot(color='none', edgecolor='black');
+nz_grid.plot(color="none", edgecolor="black");
 ```
 
-We also need to calculate the areas of the intersections, here into a new attribute `'area_sub'`.
+We also need to calculate the areas of the intersections, here into a new attribute `"area_sub"`.
 If an `nz` polygon was completely within a single `grid` polygon, then `area_sub` is going to be equal to `area`; otherwise, it is going to be smaller.
 
 ```{python}
-nz_grid['area_sub'] = nz_grid.area
+nz_grid["area_sub"] = nz_grid.area
 nz_grid
 ```
 
@@ -682,8 +685,8 @@ The resulting layer `nz_grid`, which the `area_sub` attribute, is shown in @fig-
 ```{python}
 #| label: fig-nz-and-grid2
 #| fig-cap: The areas of pairwise intersections in the `nz_grid` layer
-base = grid.plot(color='none', edgecolor='grey')
-nz_grid.plot(ax=base, column='area_sub', edgecolor='black', legend=True, cmap='viridis_r');
+base = grid.plot(color="none", edgecolor="grey")
+nz_grid.plot(ax=base, column="area_sub", edgecolor="black", legend=True, cmap="viridis_r");
 ```
 
 Note that each of the "intersections" still holds the `Population` attribute of its "origin" feature of `nz`, i.e., each portion of the `nz` area is associated with the original complete population count for that area.
@@ -692,8 +695,8 @@ To make the "correction", we first calculate the ratio (`area_prop`) and then mu
 The new (lowercase) attribute `population` now has the correct estimate of population sizes in `nz_grid`:
 
 ```{python}
-nz_grid['area_prop'] = nz_grid['area_sub'] / nz_grid['area']
-nz_grid['population'] = nz_grid['Population'] * nz_grid['area_prop']
+nz_grid["area_prop"] = nz_grid["area_sub"] / nz_grid["area"]
+nz_grid["population"] = nz_grid["Population"] * nz_grid["area_prop"]
 nz_grid
 ```
 
@@ -701,8 +704,8 @@ What is left to be done is to sum (see @sec-vector-attribute-aggregation) the po
 Note that many of the grid cells have "No Data" for population, because they have no intersection with `nz` at all (@fig-nz-and-grid).
 
 ```{python}
-nz_grid = nz_grid.groupby('id')['population'].sum().reset_index()
-grid = pd.merge(grid, nz_grid[['id', 'population']], on='id', how='left')
+nz_grid = nz_grid.groupby("id")["population"].sum().reset_index()
+grid = pd.merge(grid, nz_grid[["id", "population"]], on="id", how="left")
 grid
 ```
 
@@ -711,18 +714,18 @@ grid
 ```{python}
 #| label: fig-nz-and-grid3
 #| fig-cap: 'The `nz` layer and a regular grid of rectangles: final result'
-base = grid.plot(column='population', edgecolor='black', legend=True, cmap='viridis_r');
-nz.plot(ax=base, color='none', edgecolor='grey', legend=True);
+base = grid.plot(column="population", edgecolor="black", legend=True, cmap="viridis_r");
+nz.plot(ax=base, color="none", edgecolor="grey", legend=True);
 ```
 
 We can demonstrate that, expectedly, the summed population in `nz` and `grid` is identical, even though the geometry is different (since we created `grid` to completely cover `nz`), by comparing the `.sum` of the `population` attribute in both layers.
 
 ```{python}
-nz['Population'].sum()
+nz["Population"].sum()
 ```
 
 ```{python}
-grid['population'].sum()
+grid["population"].sum()
 ```
 
 The procedure in this section is known as an area-weighted interpolation of a spatially *extensive* (e.g., population) variable.
@@ -763,11 +766,11 @@ All of the above-mentioned methods also have a pairwise mode, perhaps less usefu
 <!-- jn: the above sentence should be a block -->
 <!-- md: agree, now placed in a block (and expanded) -->
 
-To illustrate the `.distance` method, let's take the three highest point in New Zealand with `.sort_values` and `.iloc`.
+To illustrate the `.distance` method, let"s take the three highest point in New Zealand with `.sort_values` and `.iloc`.
 
 ```{python}
 nz_highest = nz_height \
-  .sort_values(by='elevation', ascending=False) \
+  .sort_values(by="elevation", ascending=False) \
   .iloc[:3, :]
 nz_highest
 ```
@@ -785,10 +788,10 @@ nz_highest.distance(canterbury_centroid)
 ```
 
 To obtain a distance matrix, i.e., a pairwise set of distances between all combinations of features in objects `x` and `y`, we need to use the  method (analogous to the way we created the `.intersects` boolean matrix in @sec-topological-relations).
-To illustrate this, let's now take two regions in `nz`, Otago and Canterbury, represented by the object `co`.
+To illustrate this, let"s now take two regions in `nz`, Otago and Canterbury, represented by the object `co`.
 
 ```{python}
-sel = nz['Name'].str.contains('Canter|Otag')
+sel = nz["Name"].str.contains("Canter|Otag")
 co = nz[sel]
 co
 ```
@@ -807,8 +810,8 @@ This demonstrates the fact that distances between points and polygons refer to t
 ```{python}
 #| label: fig-nz-height-and-otago
 #| fig-cap: The first three `nz_height` points, and the Otago and Canterbury regions from `nz`
-base = co.plot(color='lightgrey', edgecolor='black')
-nz_height.iloc[:3, :].plot(ax=base, color='none', edgecolor='black');
+base = co.plot(color="lightgrey", edgecolor="black")
+nz_height.iloc[:3, :].plot(ax=base, color="none", edgecolor="black");
 ```
 
 ## Spatial operations on raster data {#sec-spatial-ras}
@@ -866,8 +869,8 @@ The location of the two sample points on top of the `elev.tif` raster is illustr
 #| fig-cap: The `elev.tif` raster, and two points where we extract its values
 fig, ax = plt.subplots()
 rasterio.plot.show(src_elev, ax=ax)
-gpd.GeoSeries([shapely.Point(0.1, 0.1)]).plot(color='black', ax=ax)
-gpd.GeoSeries([shapely.Point(1.1, 1.1)]).plot(color='black', ax=ax);
+gpd.GeoSeries([shapely.Point(0.1, 0.1)]).plot(color="black", ax=ax)
+gpd.GeoSeries([shapely.Point(1.1, 1.1)]).plot(color="black", ax=ax);
 ```
 
 <!-- jn: the following paragraph should be a block -->
@@ -907,7 +910,7 @@ Afterwards, masking is a matter of assigning `np.nan` into a subset defined by t
 
 ```{python}
 masked_elev = elev.copy()
-masked_elev = masked_elev.astype('float64')
+masked_elev = masked_elev.astype("float64")
 masked_elev[mask] = np.nan
 masked_elev
 ```
@@ -932,7 +935,7 @@ That way, we can replace some values (e.g., values assumed to be wrong) with `np
 
 ```{python}
 elev2 = elev.copy()
-elev2 = elev2.astype('float64')
+elev2 = elev2.astype("float64")
 elev2[elev2 < 20] = np.nan
 elev2
 ```
@@ -1016,10 +1019,10 @@ Now we get correct results.
 #| - '`elev.astype(int)**2`'
 #| - '`np.log(elev)`'
 #| - '`elev>5`'
-rasterio.plot.show(elev + elev, cmap='Oranges');
-rasterio.plot.show(elev.astype(int)**2, cmap='Oranges');
-rasterio.plot.show(np.log(elev), cmap='Oranges');
-rasterio.plot.show(elev > 5, cmap='Oranges');
+rasterio.plot.show(elev + elev, cmap="Oranges");
+rasterio.plot.show(elev.astype(int)**2, cmap="Oranges");
+rasterio.plot.show(np.log(elev), cmap="Oranges");
+rasterio.plot.show(elev > 5, cmap="Oranges");
 ```
 
 Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class `1`), middle (class `2`) and high elevations (class `3`).
@@ -1041,8 +1044,8 @@ recl[(elev > 24) & (elev <= 36)] = 3
 #| fig-subcap: 
 #| - Original
 #| - Reclassified
-rasterio.plot.show(elev, cmap='Oranges');
-rasterio.plot.show(recl, cmap='Oranges');
+rasterio.plot.show(elev, cmap="Oranges");
+rasterio.plot.show(recl, cmap="Oranges");
 ```
 
 The calculation of the [Normalized Difference Vegetation Index (NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) is a well-known local (pixel-by-pixel) raster operation.
@@ -1107,8 +1110,8 @@ In the above example:
 #| fig-subcap: 
 #| - RGB image
 #| - NDVI
-rasterio.plot.show(landsat_rgb, cmap='RdYlGn');
-rasterio.plot.show(ndvi, cmap='Greens');
+rasterio.plot.show(landsat_rgb, cmap="RdYlGn");
+rasterio.plot.show(ndvi, cmap="Greens");
 ```
 
 ### Focal operations {#sec-focal-operations}
@@ -1224,7 +1227,7 @@ Note that the arguments of `gdaldem` are the metric name (`slope`), then the inp
 
 ```{python}
 #| eval: false
-os.system('gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif')
+os.system("gdaldem slope output/srtm_32612.tif output/srtm_32612_slope.tif")
 ```
 
 Here we ran the `gdaldem` command through `os.system`, in order to remain in the Python environment, even though we are calling an external program.
@@ -1239,11 +1242,11 @@ For example, here is how we can calculate an aspect raster `srtm_32612_aspect.ti
 
 ```{python}
 #| eval: false
-os.system('gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif')
+os.system("gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif")
 ```
 
 @fig-raster-slope shows the results, using our more familiar plotting methods from **rasterio**.
-The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the [cyclic color scales](https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic) (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
+The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the [cyclic color scales](https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic) (`"twilight"`) when plotting aspect (@fig-raster-slope (c)).
 <!-- jn: is tere any chance to make this code shorter (by a few lines even)? -->
 <!-- md: I made the code shorter by 3 lines by placing two operations on the same line; most of the code is for the workaround to add a color key, we could omit the color keys, but I thought they are useful to emphasize the range of elevation/slope/aspect values -->
 <!-- jn: also the color palette for (a) and (b) should be reversed -->
@@ -1260,26 +1263,26 @@ The code section is relatively long due to the workaround to create a color key 
 #| - Slope (degrees)
 #| - Aspect (degrees)
 # Input DEM
-src_srtm = rasterio.open('output/srtm_32612.tif')
+src_srtm = rasterio.open("output/srtm_32612.tif")
 srtm = src_srtm.read(1).astype(float)
 srtm[srtm == src_srtm.nodata] = np.nan
 fig, ax = plt.subplots()
-rasterio.plot.show(src_srtm, cmap='Spectral_r', ax=ax)
-fig.colorbar(ax.imshow(srtm, cmap='Spectral_r'), ax=ax);
+rasterio.plot.show(src_srtm, cmap="Spectral_r", ax=ax)
+fig.colorbar(ax.imshow(srtm, cmap="Spectral_r"), ax=ax);
 # Slope
-src_srtm_slope = rasterio.open('output/srtm_32612_slope.tif')
+src_srtm_slope = rasterio.open("output/srtm_32612_slope.tif")
 srtm_slope = src_srtm_slope.read(1)
 srtm_slope[srtm_slope == src_srtm_slope.nodata] = np.nan
 fig, ax = plt.subplots()
-rasterio.plot.show(src_srtm_slope, cmap='Spectral_r', ax=ax)
-fig.colorbar(ax.imshow(srtm_slope, cmap='Spectral_r'), ax=ax);
+rasterio.plot.show(src_srtm_slope, cmap="Spectral_r", ax=ax)
+fig.colorbar(ax.imshow(srtm_slope, cmap="Spectral_r"), ax=ax);
 # Aspect
-src_srtm_aspect = rasterio.open('output/srtm_32612_aspect.tif')
+src_srtm_aspect = rasterio.open("output/srtm_32612_aspect.tif")
 srtm_aspect = src_srtm_aspect.read(1)
 srtm_aspect[srtm_aspect == src_srtm_aspect.nodata] = np.nan
 fig, ax = plt.subplots()
-rasterio.plot.show(src_srtm_aspect, cmap='twilight', ax=ax)
-fig.colorbar(ax.imshow(srtm_aspect, cmap='twilight'), ax=ax);
+rasterio.plot.show(src_srtm_aspect, cmap="twilight", ax=ax)
+fig.colorbar(ax.imshow(srtm_aspect, cmap="twilight"), ax=ax);
 ```
 
 ### Zonal operations {#sec-zonal-operations}
@@ -1368,13 +1371,13 @@ The corresponding source imagery is often divided into scenes covering a specifi
 Then, we would need to merge (also known as "mosaic") the scenes covered by our study area.
 In case when all scenes are "aligned" (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes should be resampled (see @sec-raster-resampling) to the grid defined by the first scene.
 
-For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (`'aut.tif'`) and Switzerland (`'ch.tif'`).
+For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (`"aut.tif"`) and Switzerland (`"ch.tif"`).
 Merging can be done using function `rasterio.merge.merge`, which accepts a `list` of raster file connections, and returns the new `ndarray` and a "transform", representing the resulting mosaic.
 <!-- jn: maybe a block why rasterio.merge.merge and not rasterio.merge? -->
 
 ```{python}
-src_1 = rasterio.open('data/aut.tif')
-src_2 = rasterio.open('data/ch.tif')
+src_1 = rasterio.open("data/aut.tif")
+src_2 = rasterio.open("data/ch.tif")
 out_image, out_transform = rasterio.merge.merge([src_1, src_2])
 ```
 
@@ -1403,12 +1406,12 @@ rasterio.plot.show(src_2);
 rasterio.plot.show(out_image, transform=out_transform);
 ```
 
-By default in `rasterio.merge.merge` (`method='first'`), areas of overlap retain the value of the *first* raster.
+By default in `rasterio.merge.merge` (`method="first"`), areas of overlap retain the value of the *first* raster.
 Other possible methods are:
 
--   `'last'`---Value of the last raster
--   `'min'`---Minimum value
--   `'max'`---Maximum value
+-   `"last"`---Value of the last raster
+-   `"min"`---Minimum value
+-   `"max" ---Maximum value
 
 When dealing with non-overlapping tiles, such as `aut.tif` and `ch.tif` (above), the `method` argument has no practical effect.
 However, it becomes relevant when we want to combine spectral imagery from scenes that were taken on different dates.

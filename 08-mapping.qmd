@@ -8,46 +8,50 @@
 from pathlib import Path
 data_path = Path("data")
 if data_path.is_dir():
-  pass
-  # print("path exists") # directory exists
+    pass
+# print("path exists") # directory exists
 else:
-  print("Attempting to get and unzip the data")
-  import requests, zipfile, io
-  r = requests.get("https://github.com/geocompx/geocompy/releases/download/0.1/data.zip")
-  z = zipfile.ZipFile(io.BytesIO(r.content))
-  z.extractall(".")
+    print("Attempting to get and unzip the data")
+    import io
+    import requests
+    import zipfile
+    r = requests.get(
+      "https://github.com/geocompx/geocompy/releases/download/0.1/data.zip",
+      timeout=10,
+    )
+    with zipfile.ZipFile(io.BytesIO(r.content)) as zip_buffer:
+        zip_buffer.extractall(".")
 ```
 
 This chapter requires importing the following packages:
 
 ```{python}
-import matplotlib.pyplot as plt
-import geopandas as gpd
-import rasterio
-import rasterio.plot
 import contextily as cx
 import folium
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import rasterio
+import rasterio.plot
 ```
 
 ```{python}
 #| echo: false
 import pandas as pd
-import matplotlib.pyplot as plt
 pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
 It also relies on the following data files:
 
 ```{python}
-nz = gpd.read_file('data/nz.gpkg')
-nz_height = gpd.read_file('data/nz_height.gpkg')
-nz_elev = rasterio.open('data/nz_elev.tif')
-tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
+nz = gpd.read_file("data/nz.gpkg")
+nz_height = gpd.read_file("data/nz_height.gpkg")
+nz_elev = rasterio.open("data/nz_elev.tif")
+tanzania = gpd.read_file("data/world.gpkg", where="name_long='Tanzania'")
 tanzania_buf = tanzania.to_crs(32736).buffer(50000).to_crs(4326)
-tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
+tanzania_neigh = gpd.read_file("data/world.gpkg", mask=tanzania_buf)
 ```
 
 ## Introduction
@@ -127,9 +131,9 @@ The most useful visual properties of the geometries, that can be specified in `.
 #| - No fill, blue edge
 #| - Light grey fill, blue edge
 #| layout-ncol: 3
-nz.plot(color='lightgrey');
-nz.plot(color='none', edgecolor='blue');
-nz.plot(color='lightgrey', edgecolor='blue');
+nz.plot(color="lightgrey");
+nz.plot(color="none", edgecolor="blue");
+nz.plot(color="lightgrey", edgecolor="blue");
 ```
 
 The next example uses `markersize` to get larger points (@fig-basic-plot-markersize).
@@ -157,10 +161,10 @@ For example, @fig-plot-symbology shows the `nz` polygons colored according to th
 ```{python}
 #| label: fig-plot-symbology
 #| fig-cap: Symbology in a static map created with `.plot`
-nz.plot(column='Median_income', legend=True);
+nz.plot(column="Median_income", legend=True);
 ```
 
-The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`.
+The default color scale which you see in @fig-plot-symbology is `cmap="viridis"`.
 The `cmap` ("color map") argument can be used to specify one of countless color scales.
 A first safe choice is often the [ColorBrewer](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) collection of color scales, specifically designed for mapping.
 Any color scale can be reversed, using the `_r` suffix.
@@ -175,21 +179,21 @@ The following code sections demonstrates three color scale specifications other 
 #| - Reversed `'Reds'` color scale
 #| - The `'spring'` color scale from **matplotlib**
 #| layout-ncol: 3
-nz.plot(column='Median_income', legend=True, cmap='Reds');
-nz.plot(column='Median_income', legend=True, cmap='Reds_r');
-nz.plot(column='Median_income', legend=True, cmap='spring');
+nz.plot(column="Median_income", legend=True, cmap="Reds");
+nz.plot(column="Median_income", legend=True, cmap="Reds_r");
+nz.plot(column="Median_income", legend=True, cmap="spring");
 ```
 
 <!-- jn: spring does not look like a color blind friendly color scale... I would suggest to use a different one. (I would suggest avoiding giving bad examples, even if they are just examples...) -->
 
 Categorical symbology is also supported, such as when `column` points to an `str` attribute.
-For categorical variables, it makes sense to use a qualitative color scale, such as `'Set1'` from ColorBrewer.
-For example, the following expression sets symbology according to the `'Island'` column (@fig-plot-symbology-categorical).
+For categorical variables, it makes sense to use a qualitative color scale, such as `"Set1"` from ColorBrewer.
+For example, the following expression sets symbology according to the `"Island"` column (@fig-plot-symbology-categorical).
 
 ```{python}
 #| label: fig-plot-symbology-categorical
 #| fig-cap: Symbology for a categorical variable
-nz.plot(column='Island', legend=True, cmap='Set1');
+nz.plot(column="Island", legend=True, cmap="Set1");
 ```
 
 In case the legend interferes with the contents (such as in @fig-plot-symbology-categorical), we can modify the legend position using the `legend_kwds` argument (@fig-plot-legend-pos).
@@ -197,7 +201,7 @@ In case the legend interferes with the contents (such as in @fig-plot-symbology-
 ```{python}
 #| label: fig-plot-legend-pos
 #| fig-cap: Setting legend position in `.plot`
-nz.plot(column='Island', legend=True, cmap='Set1', legend_kwds={'loc': 4});
+nz.plot(column="Island", legend=True, cmap="Set1", legend_kwds={"loc": 4});
 ```
 
 The `rasterio.plot.show` function is also based on **matplotlib**, and thus supports the same kinds of `cmap` arguments (@fig-plot-symbology-colors-r).
@@ -207,12 +211,12 @@ The `rasterio.plot.show` function is also based on **matplotlib**, and thus supp
 #| fig-cap: Symbology in a static map of a raster, with `rasterio.plot.show`
 #| layout-ncol: 3
 #| fig-subcap: 
-#| - The `'BrBG'` color scale from ColorBrewer
-#| - Reversed `'BrBG_r'` color scale
-#| - The `'nipy_spectral'` color scale from **matplotlib**
-rasterio.plot.show(nz_elev, cmap='BrBG');
-rasterio.plot.show(nz_elev, cmap='BrBG_r');
-rasterio.plot.show(nz_elev, cmap='nipy_spectral');
+#| - The `"BrBG"` color scale from ColorBrewer
+#| - Reversed `"BrBG_r"` color scale
+#| - The `"nipy_spectral"` color scale from **matplotlib**
+rasterio.plot.show(nz_elev, cmap="BrBG");
+rasterio.plot.show(nz_elev, cmap="BrBG_r");
+rasterio.plot.show(nz_elev, cmap="nipy_spectral");
 ```
 
 Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`.
@@ -223,8 +227,8 @@ The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot
 #| label: fig-plot-symbology-colors-r-scale
 #| fig-cap: Adding a legend in `rasterio.plot.show`
 fig, ax = plt.subplots()
-i = ax.imshow(nz_elev.read(1), cmap='BrBG')
-rasterio.plot.show(nz_elev, cmap='BrBG', ax=ax);
+i = ax.imshow(nz_elev.read(1), cmap="BrBG")
+rasterio.plot.show(nz_elev, cmap="BrBG", ax=ax);
 fig.colorbar(i, ax=ax);
 ```
 
@@ -240,26 +244,26 @@ Nevertheless, simple labels added within the Python environment can be a good st
 To demonstrate it, suppose that we have a layer `nz1` of regions comprising the New Zealand southern Island.
 
 ```{python}
-nz1 = nz[nz['Island'] == 'South']
+nz1 = nz[nz["Island"] == "South"]
 ```
 
 To add a label in **matplotlib**, we use the [`.annotate`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.annotate.html) method where the important arguments are the label string and the placement (a `tuple` of the form `(x,y)`). 
 When labeling vector layers, we typically want to add numerous labels, based on (one or more) attribute of each feature. 
 To do that, we can run a `for` loop, or use the `.apply` method, to pass the label text and the coordinates of each feature to `.annotate`.
-In the following example, we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
-We are also using `ha='center'`, short for `horizontalalignment` (@fig-labels-polygon).
+In the following example, we use the `.apply` method the pass the region name (`"Name"` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
+We are also using `ha="center"`, short for `horizontalalignment` (@fig-labels-polygon).
 <!-- jn: what are other options for ha? maybe it would be worth mentioning them somewhere in this subsection? -->
 
 ```{python}
 #| label: fig-labels-polygon
 #| fig-cap: Labels at polygon centroids
 fig, ax = plt.subplots()
-nz1.plot(ax=ax, color='lightgrey', edgecolor='grey')
+nz1.plot(ax=ax, color="lightgrey", edgecolor="grey")
 nz1.apply(
     lambda x: ax.annotate(
-        text=x['Name'], 
+        text=x["Name"], 
         xy=x.geometry.centroid.coords[0], 
-        ha='center'
+        ha="center"
     ), 
     axis=1
 );
@@ -269,30 +273,30 @@ As another example, let's create a map of all regions of New Zealand, with label
 First, we will calculate the island centroids, which will be the label placement positions.
 
 ```{python}
-ctr = nz[['Island', 'geometry']].dissolve(by='Island').reset_index()
-ctr['geometry'] = ctr.centroid
+ctr = nz[["Island", "geometry"]].dissolve(by="Island").reset_index()
+ctr["geometry"] = ctr.centroid
 ctr
 ```
 
 Then, we again use `.apply`, combined with `.annotate`, to add the text labels. 
 The main difference compared to the previous example (@fig-labels-polygon) is that we are directly passing the geometry coordinates (`.geometry.coords[0]`), since the geometries are points rather than polygons.
-We are also using the `weight='bold'` argument to use bold font (@fig-labels-points1).
+We are also using the `weight="bold"` argument to use bold font (@fig-labels-points1).
 <!-- jn: what are other weight options? where to find them? -->
 
 ```{python}
 #| label: fig-labels-points1
 #| fig-cap: Labels at points
 fig, ax = plt.subplots()
-nz.plot(ax=ax, color='none', edgecolor='lightgrey')
+nz.plot(ax=ax, color="none", edgecolor="lightgrey")
 ctr.apply(
     lambda x: ax.annotate(
-        text=x['Island'], 
+        text=x["Island"], 
         xy=x.geometry.coords[0], 
-        ha='center',
-        weight='bold'
+        ha="center",
+        weight="bold"
     ), 
     axis=1
-);
+)
 ```
 
 It should be noted that sometimes we wish to add text labels "manually", one by one, rather than use a loop or `.apply`. 
@@ -304,17 +308,17 @@ To add text labels manually, we can run the `.annotate` expressions one at a tim
 #| label: fig-labels-points2
 #| fig-cap: Labels at points (manual)
 fig, ax = plt.subplots()
-nz.plot(ax=ax, color='none', edgecolor='lightgrey')
+nz.plot(ax=ax, color="none", edgecolor="lightgrey")
 ax.annotate(
-    ctr['Island'].iloc[0], 
+    ctr["Island"].iloc[0], 
     xy=(ctr.geometry.iloc[0].x, ctr.geometry.iloc[0].y),
-    ha='center', weight='bold'
+    ha="center", weight="bold"
 )
 ax.annotate(
-    ctr['Island'].iloc[1], 
+    ctr["Island"].iloc[1], 
     xy=(ctr.geometry.iloc[1].x, ctr.geometry.iloc[1].y),
-    ha='center', weight='bold'
-);
+    ha="center", weight="bold"
+)
 ```
 
 ### Layers {#sec-plot-static-layers}
@@ -329,8 +333,8 @@ For example, here is how we can plot `nz` and `nz_height` together (@fig-two-lay
 ```{python}
 #| label: fig-two-layers
 #| fig-cap: Plotting two layers, `nz` (polygons) and `nz_height` (points)
-base = nz.plot(color='none')
-nz_height.plot(ax=base, color='red');
+base = nz.plot(color="none")
+nz_height.plot(ax=base, color="red");
 ```
 
 We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).
@@ -354,7 +358,7 @@ For example, @fig-plot-raster-and-vector demonstrated plotting a raster with inc
 # Raster + vector layer
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
-nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='red');
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor="none", edgecolor="red");
 # Raster + computed vector layer
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
@@ -362,7 +366,7 @@ gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
     .to_crs(nz_elev.crs) \
     .buffer(22200) \
     .boundary \
-    .plot(ax=ax, color='red');
+    .plot(ax=ax, color="red");
 # Raster + two vector layers
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
@@ -370,8 +374,8 @@ gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
     .to_crs(nz_elev.crs) \
     .buffer(22200) \
     .exterior \
-    .plot(ax=ax, color='red')
-nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
+    .plot(ax=ax, color="red")
+nz_height.to_crs(nz_elev.crs).plot(ax=ax, color="yellow");
 ```
 <!-- jn: what's facecolor? -->
 <!-- jn: why one example uses .boundary and the other uses .exterior? --> -->
@@ -387,7 +391,7 @@ A preliminary step is to convert our layers to `EPSG:3857` (["Web Mercator"](htt
 For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it to `3857`.
 
 ```{python}
-nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)
+nzw = nz[nz["Name"] == "Nelson"].to_crs(epsg=3857)
 ```
 
 To add a basemap, we use the `contextily.add_basemap` function, similarly to the way we added multiple layers (@sec-plot-static-layers).
@@ -403,11 +407,11 @@ You can specify a different basemap using the `source` parameter, with one of th
 #|   - "'CartoDB Positron' basemap"
 # OpenStreetMap
 fig, ax = plt.subplots(figsize=(7, 7))
-ax = nzw.plot(color='none', ax=ax)
+ax = nzw.plot(color="none", ax=ax)
 cx.add_basemap(ax, source=cx.providers.OpenStreetMap.Mapnik);
 # CartoDB.Positron
 fig, ax = plt.subplots(figsize=(7, 7))
-ax = nzw.plot(color='none', ax=ax)
+ax = nzw.plot(color="none", ax=ax)
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron);
 ```
 
@@ -422,8 +426,8 @@ The data displayed in the different panels typically refer to different properti
 For example, the `nz` layer has several different properties for each polygon, stored as separate attributes:
 
 ```{python}
-vars = ['Land_area', 'Population', 'Median_income', 'Sex_ratio']
-nz[vars]
+map_vars = ["Land_area", "Population", "Median_income", "Sex_ratio"]
+nz[map_vars]
 ```
 
 We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables.
@@ -434,9 +438,9 @@ To do that, we initialize the plot with the expected number of panels, such as `
 #| label: fig-faceted-map
 #| fig-cap: Faceted map, four different variables of `nz`
 fig, ax = plt.subplots(ncols=4, figsize=(9, 2))
-for i in range(len(vars)):
-    nz.plot(ax=ax[i], column=vars[i], legend=True)
-    ax[i].set_title(vars[i])
+for i, name in enumerate(map_vars):
+    nz.plot(ax=ax[i], column=name, legend=True)
+    ax[i].set_title(name)
 ```
 
 In case we prefer a specific layout, rather than one row or one column, we can initialize the required number or rows and columns, as in `plt.subplots(nrows,ncols)`, "flatten" `ax`, so that the facets are still accessible using a single index `ax[i]` (rather than the default `ax[i][j]`), and plot into `ax[i]`.
@@ -446,11 +450,11 @@ One more modification we are doing here is hiding the axis ticks and labels, to 
 ```{python}
 #| label: fig-faceted-map2
 #| fig-cap: 2D layout in a faceted map, using a `for` loop
-fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
+fig, ax = plt.subplots(ncols=2, nrows=int(len(map_vars)/2), figsize=(6, 6))
 ax = ax.flatten()
-for i in range(len(vars)):
-    nz.plot(ax=ax[i], column=vars[i], legend=True)
-    ax[i].set_title(vars[i])
+for i, name in enumerate(map_vars):
+    nz.plot(ax=ax[i], column=name, legend=True)
+    ax[i].set_title(name)
     ax[i].xaxis.set_visible(False)
     ax[i].yaxis.set_visible(False)
 ```
@@ -462,15 +466,15 @@ For example, here is a plot similar to @fig-faceted-map2, but specifying each pa
 ```{python}
 #| label: fig-faceted-map3
 #| fig-cap: 2D layout in a faceted map, using "manual" specification of the panels 
-fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
-nz.plot(ax=ax[0][0], column=vars[0], legend=True)
-ax[0][0].set_title(vars[0])
-nz.plot(ax=ax[0][1], column=vars[1], legend=True)
-ax[0][1].set_title(vars[1])
-nz.plot(ax=ax[1][0], column=vars[2], legend=True)
-ax[1][0].set_title(vars[2])
-nz.plot(ax=ax[1][1], column=vars[3], legend=True)
-ax[1][1].set_title(vars[3]);
+fig, ax = plt.subplots(ncols=2, nrows=int(len(map_vars)/2), figsize=(6, 6))
+nz.plot(ax=ax[0][0], column=map_vars[0], legend=True)
+ax[0][0].set_title(map_vars[0])
+nz.plot(ax=ax[0][1], column=map_vars[1], legend=True)
+ax[0][1].set_title(map_vars[1])
+nz.plot(ax=ax[1][0], column=map_vars[2], legend=True)
+ax[1][0].set_title(map_vars[2])
+nz.plot(ax=ax[1][1], column=map_vars[3], legend=True)
+ax[1][1].set_title(map_vars[3]);
 ```
 
 See the first code chunk in the next section for another example of manual panel contents specification.
@@ -484,14 +488,14 @@ For example, the following code section recreates @fig-read-shp-query (see previ
 ```{python}
 #| output: false
 fig, axes = plt.subplots(ncols=2, figsize=(9,5))
-tanzania.plot(ax=axes[0], color='lightgrey', edgecolor='grey')
-tanzania_neigh.plot(ax=axes[1], color='lightgrey', edgecolor='grey')
-tanzania_buf.plot(ax=axes[1], color='none', edgecolor='red')
-axes[0].set_title('where')
-axes[1].set_title('mask')
-tanzania.apply(lambda x: axes[0].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1)
-tanzania_neigh.apply(lambda x: axes[1].annotate(text=x['name_long'], xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
-plt.savefig('output/plot_geopandas.jpg')
+tanzania.plot(ax=axes[0], color="lightgrey", edgecolor="grey")
+tanzania_neigh.plot(ax=axes[1], color="lightgrey", edgecolor="grey")
+tanzania_buf.plot(ax=axes[1], color="none", edgecolor="red")
+axes[0].set_title("where")
+axes[1].set_title("mask")
+tanzania.apply(lambda x: axes[0].annotate(text=x["name_long"], xy=x.geometry.centroid.coords[0], ha="center"), axis=1)
+tanzania_neigh.apply(lambda x: axes[1].annotate(text=x["name_long"], xy=x.geometry.centroid.coords[0], ha="center"), axis=1);
+plt.savefig("output/plot_geopandas.jpg")
 ```
 
 Figures with rasters can be exported exactly the same way.
@@ -501,8 +505,8 @@ For example, the following code section (@sec-plot-static-layers) creates an ima
 #| output: false
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
-nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
-plt.savefig('output/plot_rasterio.jpg')
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor="none", edgecolor="r");
+plt.savefig("output/plot_rasterio.jpg")
 ```
 
 Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters.
@@ -512,8 +516,8 @@ For example, the following code section exports the same raster plot to a file n
 #| output: false
 fig, ax = plt.subplots(figsize=(5, 7))
 rasterio.plot.show(nz_elev, ax=ax)
-nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');
-plt.savefig('output/plot_rasterio2.svg', dpi=300)
+nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor="none", edgecolor="r");
+plt.savefig("output/plot_rasterio2.svg", dpi=300)
 ```
 
 <!-- ## Animated maps -->
@@ -552,7 +556,7 @@ For example, here is how we can set green fill color and 30% opaque black outlin
 ```{python}
 #| label: fig-explore-styling-polygons
 #| fig-cap: Styling of polygons in `.explore`
-nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})
+nz.explore(color="green", style_kwds={"color":"black", "opacity":0.3})
 ```
 
 The `dict` passed to `marker_kwds` controls the way that points are displayed:
@@ -562,29 +566,29 @@ The `dict` passed to `marker_kwds` controls the way that points are displayed:
 
 Additionally, for points, we can set the `marker_type`, to one of:
 
--   `'marker'`---A PNG image of a marker
--   `'circle'`---A vector circle with radius specified in $m$
--   `'circle_marker'`---A vector circle with radius specified in pixels (the default)
+-   `"marker"`---A PNG image of a marker
+-   `"circle"`---A vector circle with radius specified in $m$
+-   `"circle_marker"`---A vector circle with radius specified in pixels (the default)
 
-For example, the following expression draws `'circe_marker`' points with 20 pixel radius, green fill, and black outline (@fig-explore-styling-points).
+For example, the following expression draws `"circe_marker`" points with 20 pixel radius, green fill, and black outline (@fig-explore-styling-points).
 
 ```{python}
 #| label: fig-explore-styling-points
 #| fig-cap: Styling of points in `.explore` (using `circle_marker`)
 nz_height.explore(
-    color='green', 
-    style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, 
-    marker_kwds={'color':'black', 'radius':20}
+    color="green", 
+    style_kwds={"color":"black", "opacity":0.5, "fillOpacity":0.1}, 
+    marker_kwds={"color":"black", "radius":20}
 )
 ```
 
-@fig-explore-styling-points2 demonstrates the `'marker_type'` option.
-Note that the above-mentioned styling properties (other then `opacity`) are not applicable when using `marker_type='marker'`, because the markers are fixed PNG images.
+@fig-explore-styling-points2 demonstrates the `"marker_type"` option.
+Note that the above-mentioned styling properties (other then `opacity`) are not applicable when using `marker_type="marker"`, because the markers are fixed PNG images.
 
 ```{python}
 #| label: fig-explore-styling-points2
 #| fig-cap: Styling of points in `.explore` (using `marker`)
-nz_height.explore(marker_type='marker')
+nz_height.explore(marker_type="marker")
 ```
 
 <!-- jn: can we use our own png images as well? -->
@@ -597,7 +601,7 @@ To display multiple layers, one on top of another, with `.explore`, we use the `
 #| label: fig-explore-layers
 #| fig-cap: Displaying multiple layers in an interactive map with `.explore`
 map1 = nz.explore()
-nz_height.explore(m=map1, color='red')
+nz_height.explore(m=map1, color="red")
 ```
 
 One of the advantages of interactive maps is the ability to turn layers "on" and "off".
@@ -608,8 +612,8 @@ Note the `name` properties, used to specify layer names in the control, and the 
 ```{python}
 #| label: fig-explore-layers-controls
 #| fig-cap: Displaying multiple layers in an interactive map with `.explore`
-m = nz.explore(name='Polygons (adm. areas)')
-nz_height.explore(m=m, color='red', name='Points (elevation)')
+m = nz.explore(name="Polygons (adm. areas)")
+nz_height.explore(m=m, color="red", name="Points (elevation)")
 folium.LayerControl(collapsed=False).add_to(m)
 m
 ```
@@ -621,18 +625,18 @@ For example, @fig-explore-symbology is an interactive version of @fig-plot-symbo
 
 ```{python}
 #| label: fig-explore-symbology
-#| fig-cap: 'Symbology in an interactive map of a vector layer, created with `.explore`'
-nz.explore(column='Median_income', legend=True, cmap='Reds')
+#| fig-cap: "Symbology in an interactive map of a vector layer, created with `.explore`"
+nz.explore(column="Median_income", legend=True, cmap="Reds")
 ```
 
 Fixed styling (@sec-explore-symbology) can be combined with symbology settings.
-For example, polygon outline colors in @fig-explore-symbology are styled according to `'Median_income'`, however, this layer has overlapping outlines and their color is arbitrarily set according to the order of features (top-most features), which may be misleading and confusing.
+For example, polygon outline colors in @fig-explore-symbology are styled according to `"Median_income"`, however, this layer has overlapping outlines and their color is arbitrarily set according to the order of features (top-most features), which may be misleading and confusing.
 To specify fixed outline colors (e.g., black), we can use the `color` and `weight` properties of `style_kwds` (@fig-explore-symbology2):
 
 ```{python}
 #| label: fig-explore-symbology2
-#| fig-cap: 'Symbology combined with fixed styling in `.explore`'
-nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color':'black', 'weight': 0.5})
+#| fig-cap: "Symbology combined with fixed styling in `.explore`"
+nz.explore(column="Median_income", legend=True, cmap="Reds", style_kwds={"color":"black", "weight": 0.5})
 ```
 
 ### Basemaps
@@ -640,17 +644,17 @@ nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color'
 The basemap in `.explore` can be specified using the `tiles` argument.
 Several popular built-in basemaps can be specified using a string:
 
--   `'OpenStreetMap'`
--   `'CartoDB positron'`
--   `'CartoDB dark_matter'`
+-   `"OpenStreetMap"`
+-   `"CartoDB positron"`
+-   `"CartoDB dark_matter"`
 
 Other basemaps are available through the **xyzservices** package, which needs to be installed (see `xyzservices.providers` for a list), or using a custom tile server URL.
-For example, the following expression displays the `'CartoDB positron'` tiles in an `.explore` map (@fig-explore-basemaps).
+For example, the following expression displays the `"CartoDB positron"` tiles in an `.explore` map (@fig-explore-basemaps).
 
 ```{python}
 #| label: fig-explore-basemaps
 #| fig-cap: Specifying the basemap in `.explore`
-nz.explore(tiles='CartoDB positron')
+nz.explore(tiles="CartoDB positron")
 ```
 
 ### Exporting interactive maps
@@ -663,10 +667,10 @@ For example, here is how we can export the map shown in @fig-explore-layers-cont
 
 ```{python}
 #| output: false
-m = nz.explore(name='Polygons (adm. areas)')
-nz_height.explore(m=m, color='red', name='Points (elevation)')
+m = nz.explore(name="Polygons (adm. areas)")
+nz_height.explore(m=m, color="red", name="Points (elevation)")
 folium.LayerControl(collapsed=False).add_to(m)
-m.save('output/map.html')
+m.save("output/map.html")
 ```
 
 <!-- ### Linking geographic and non-geographic visualizations -->

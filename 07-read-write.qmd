@@ -7,14 +7,15 @@ This chapter requires importing the following packages:
 ```{python}
 import urllib.request
 import zipfile
-import numpy as np
+
+import cartopy
 import fiona
 import geopandas as gpd
-import shapely
+import osmnx as ox
+import numpy as np
 import rasterio
 import rasterio.plot
-import cartopy
-import osmnx as ox
+import shapely
 ```
 
 ```{python}
@@ -24,14 +25,14 @@ import matplotlib.pyplot as plt
 pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
 It also relies on the following data files:
 
 ```{python}
-nz = gpd.read_file('data/nz.gpkg')
-nz_elev = rasterio.open('data/nz_elev.tif')
+nz = gpd.read_file("data/nz.gpkg")
+nz_elev = rasterio.open("data/nz_elev.tif")
 ```
 
 ## Introduction
@@ -76,22 +77,24 @@ To overcome this, we add a header corresponding to a request coming from a brows
 ```{python}
 #| eval: false
 # Set URL+filename
-url = 'https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/ne_10m_airports.zip'
-filename = 'output/ne_10m_airports.zip'
+URL = (
+    "https://www.naturalearthdata.com/"
+    "http//www.naturalearthdata.com/download/10m/cultural/ne_10m_airports.zip"
+)
+FILENAME = "output/ne_10m_airports.zip"
 # Download
 opener = urllib.request.build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0')]
+opener.addheaders = [("User-agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/116.0")]
 urllib.request.install_opener(opener)
-urllib.request.urlretrieve(url, filename)
+urllib.request.urlretrieve(URL, FILENAME)
 # Extract
-f = zipfile.ZipFile(filename, 'r')
-f.extractall('output')
-f.close()
+with zipfile.ZipFile(FILENAME, "r") as zip_buffer:
+    zip_buffer.extractall("output")
 ```
 
 ```{python}
 #| echo: false
-filename = 'output/ne_10m_airports.zip'
+FILENAME = "output/ne_10m_airports.zip"
 ```
 
 The ESRI Shapefile that has been created in the `output` directory can then be imported and plotted (@fig-ne-airports) as follows using **geopandas**.
@@ -99,7 +102,7 @@ The ESRI Shapefile that has been created in the `output` directory can then be i
 ```{python}
 #| label: fig-ne-airports
 #| fig-cap: World airports layer, downloaded from the Natural Earth Data website using Python
-ne = gpd.read_file(filename.replace('.zip', '.shp'))
+ne = gpd.read_file(FILENAME.replace(".zip", ".shp"))
 ne.plot();
 ```
 
@@ -121,17 +124,17 @@ This diversity is demonstrated in the subsequent code chunks, which show how to 
 
 Administrative borders are often useful in spatial analysis.
 These can be accessed with the `cartopy.io.shapereader.natural_earth` function from the **cartopy** package.
-For example, the following code loads the `'admin_2_counties'` dataset of US counties into a `GeoDataFrame` (@fig-ne-counties).
+For example, the following code loads the `"admin_2_counties"` dataset of US counties into a `GeoDataFrame` (@fig-ne-counties).
 
 ```{python}
 #| label: fig-ne-counties
 #| fig-cap: US counties, downloaded from the Natural Earth Data website using package **cartopy**
-filename = cartopy.io.shapereader.natural_earth(
-    resolution='10m',
-    category='cultural',
-    name='admin_2_counties'
+FILENAME = cartopy.io.shapereader.natural_earth(
+    resolution="10m",
+    category="cultural",
+    name="admin_2_counties"
 )
-counties = gpd.read_file(filename)
+counties = gpd.read_file(FILENAME)
 counties.plot();
 ```
 
@@ -149,8 +152,8 @@ The second argument specifies the OSM tag(s), selecting which OSM elements we're
 
 ```{python}
 parks = ox.features.features_from_place(
-    query='leeds uk', 
-    tags={'leisure': 'park'}
+    query="leeds uk", 
+    tags={"leisure": "park"}
 )
 ```
 
@@ -160,7 +163,7 @@ Now, we can plots the geometries with the `name` property in the tooltips using 
 ```{python}
 #| label: fig-ox-features
 #| fig-cap: Parks in Leeds, based on OpenStreetMap data, downloaded using package **osmnx**
-parks[['name', 'geometry']].explore()
+parks[["name", "geometry"]].explore()
 ```
 
 It should be noted that the **osmnx** package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas.
@@ -175,11 +178,11 @@ Sometimes, packages come with built-in datasets.
 These can be accessed just like any other object (e.g., function) that is imported as part of the package, or in other ways as specified in the package documentation.
 For example, package **geopandas** comes with few built-in datasets (see `gpd.datasets.available` for a list of names).
 Using the `gpd.datasets.get_path` function and the dataset name, we can obtain the path to the location of the dataset file on our computer.
-For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we have already seen before):
+For example, `"naturalearth_lowres"` is a vector layer of world countries (from Natural Earth Data, which we have already seen before):
 
 ```{python}
-ne_filename = gpd.datasets.get_path('naturalearth_lowres')
-ne_filename
+NE_FILENAME = gpd.datasets.get_path("naturalearth_lowres")
+NE_FILENAME
 ```
 
 <!-- jn: the above code returns a warning -- please update the example -->
@@ -187,7 +190,7 @@ ne_filename
 Then, we can import the dataset, just like from any other file with `gpd.read_file`.
 
 ```{python}
-ne = gpd.read_file(ne_filename)
+ne = gpd.read_file(NE_FILENAME)
 ```
 
 Another way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into a set of coordinates.
@@ -201,7 +204,7 @@ The example below searches for John Snow blue plaque coordinates located on a bu
 <!-- jn: maybe we should add a website about the John Snow blue plaque? not everyone is probably familiar with it... -->
 
 ```{python}
-ox.geocoder.geocode('54 Frith St, London W1D 4SJ, UK')
+ox.geocoder.geocode("54 Frith St, London W1D 4SJ, UK")
 ```
 
 If the query returns no results, an `InsufficientResponseError` is raised, a scenario that the user can deal with using [`try`/`except`](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
@@ -213,7 +216,7 @@ This function also returns `'Polygon'` geometries.
 <!-- jn: why Polygon geometries? what is the logic behind it? -->
 
 ```{python}
-result = ox.geocoder.geocode_to_gdf(['54 Frith St, London W1D 4SJ, UK'])
+result = ox.geocoder.geocode_to_gdf(["54 Frith St, London W1D 4SJ, UK"])
 result
 ```
 
@@ -222,7 +225,7 @@ The result is visualized in @fig-ox-geocode using the `.explore` function.
 ```{python}
 #| label: fig-ox-geocode
 #| fig-cap: Specific address in London, geocoded into a `GeoDataFrame` using package **osmnx**
-result[['display_name', 'geometry']].explore(color='red')
+result[["display_name", "geometry"]].explore(color="red")
 ```
 
 ```{=html}
@@ -308,7 +311,7 @@ Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can b
 **geopandas** uses GDAL to read and write data, via **fiona** (the [default](https://github.com/geopandas/geopandas/issues/2217)) or **pyogrio** packages (a recently developed alternative to **fiona**).
 <!-- jn: as far as I understand, pyogrio will be the default in the future, right? if so, we should mention it here -->
 <!-- jn: also, given the above, which one should be present? -->
-After **fiona** is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
+After **fiona** is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`"r"`), append (`"a"`), or write (`"w"`) data, or all three.
 
 ```{python}
 #| eval: false
@@ -331,14 +334,14 @@ In most cases, as with the ESRI Shapefile (`.shp`) or the GeoPackage format (`.g
 The driver is automatically selected based on the file extension, as demonstrated for a `.gpkg` file below.
 
 ```{python}
-world = gpd.read_file('data/world.gpkg')
+world = gpd.read_file("data/world.gpkg")
 ```
 
 For some drivers, such as a File Geodatabase (`OpenFileGDB`), `filename` could be provided as a folder name.
 GeoJSON, a plain text format, on the other hand, can be read from a `.geojson` file, but also from a string.
 
 ```{python}
-gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
+gpd.read_file('{"type": "Point", "coordinates":[34.838848,31.296301]}')
 ```
 
 Some vector formats, such as GeoPackage, can store multiple data layers.
@@ -348,17 +351,17 @@ However, using the `layer` argument you can specify any other layer.
 The `gpd.read_file` function also allows for reading just parts of the file into RAM with two possible mechanisms.
 The first one is related to the `where` argument, which allows specifying what part of the data to read using an SQL `WHERE` expression.
 An example below extracts data for Tanzania only from the `world.gpkg` file (@fig-read-shp-query (a)).
-It is done by specifying that we want to get all rows for which `name_long` equals to `'Tanzania'`.
+It is done by specifying that we want to get all rows for which `name_long` equals to `"Tanzania"`.
 
 ```{python}
-tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
+tanzania = gpd.read_file("data/world.gpkg", where="name_long='Tanzania'")
 tanzania
 ```
 
 If you do not know the names of the available columns, a good approach is to just read one row of the data using the `rows` argument, which can be used to read the first N rows, then use the `.columns` property to examine the column names:
 
 ```{python}
-gpd.read_file('data/world.gpkg', rows=1).columns
+gpd.read_file("data/world.gpkg", rows=1).columns
 ```
 
 The second mechanism uses the `mask` argument to filter data based on intersection with an existing geometry.
@@ -373,7 +376,7 @@ tanzania_buf = tanzania.to_crs(32736).buffer(50000).to_crs(4326)
 Now, we can pass the "filter" geometry `tanzania_buf` to the `mask` argument of `gpd.read_file`.
 
 ```{python}
-tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
+tanzania_neigh = gpd.read_file("data/world.gpkg", mask=tanzania_buf)
 ```
 
 Our result, shown in @fig-read-shp-query (b), contains Tanzania and every country intersecting with its 50,000 $m$ buffer.
@@ -384,19 +387,19 @@ Note that the last two expressions are used to add text labels with the `name_lo
 #| fig-cap: Reading a subset of the vector layer file `world.gpkg`
 #| layout-ncol: 2
 #| fig-subcap: 
-#| - Using a `where` query (matching `'Tanzania'`)
+#| - Using a `where` query (matching `"Tanzania"`)
 #| - Using a `mask` (a geometry shown in red)
 # Using 'where'
 fig, ax = plt.subplots()
-tanzania.plot(ax=ax, color='lightgrey', edgecolor='grey')
-tanzania.apply(lambda x: ax.annotate(text=x['name_long'], 
-               xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
-# Using 'mask'
+tanzania.plot(ax=ax, color="lightgrey", edgecolor="grey")
+tanzania.apply(lambda x: ax.annotate(text=x["name_long"], 
+               xy=x.geometry.centroid.coords[0], ha="center"), axis=1);
+# Using "mask"
 fig, ax = plt.subplots()
-tanzania_neigh.plot(ax=ax, color='lightgrey', edgecolor='grey')
-tanzania_buf.plot(ax=ax, color='none', edgecolor='red')
-tanzania_neigh.apply(lambda x: ax.annotate(text=x['name_long'],
-                     xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+tanzania_neigh.plot(ax=ax, color="lightgrey", edgecolor="grey")
+tanzania_buf.plot(ax=ax, color="none", edgecolor="red")
+tanzania_neigh.apply(lambda x: ax.annotate(text=x["name_long"],
+                     xy=x.geometry.centroid.coords[0], ha="center"), axis=1);
 ```
 
 A different, `gpd.read_postgis`, function can be used to read a vector layer from a PostGIS database.
@@ -408,8 +411,8 @@ For example, the table `cycle_hire_xy.csv`, where the coordinates are stored in 
 ```{python}
 #| label: fig-cycle_hire_xy-layer
 #| fig-cap: The `cycle_hire_xy.csv` table transformed to a point layer
-cycle_hire = pd.read_csv('data/cycle_hire_xy.csv')
-geom = gpd.points_from_xy(cycle_hire['X'], cycle_hire['Y'], crs=4326)
+cycle_hire = pd.read_csv("data/cycle_hire_xy.csv")
+geom = gpd.points_from_xy(cycle_hire["X"], cycle_hire["Y"], crs=4326)
 geom = gpd.GeoSeries(geom)
 cycle_hire_xy = gpd.GeoDataFrame(data=cycle_hire, geometry=geom)
 cycle_hire_xy.plot();
@@ -424,8 +427,8 @@ To import and convert it to a `GeoDataFrame`, we can apply the `shapely.from_wkt
 ```{python}
 #| label: fig-world_wkt-layer
 #| fig-cap: The `world_wkt.csv` table transformed to a polygon layer
-world_wkt = pd.read_csv('data/world_wkt.csv')
-world_wkt['geometry'] = world_wkt['WKT'].apply(shapely.from_wkt)
+world_wkt = pd.read_csv("data/world_wkt.csv")
+world_wkt["geometry"] = world_wkt["WKT"].apply(shapely.from_wkt)
 world_wkt = gpd.GeoDataFrame(world_wkt)
 world_wkt.plot();
 ```
@@ -443,8 +446,8 @@ Here, we access a KML file from the web.
 First, if necessary, we may need to "activate" the `KML` driver, which is not always available by default (just one of these expressions should be sufficient, depending on your system).
 
 ```{python}
-fiona.supported_drivers['KML'] = 'r'
-fiona.supported_drivers['LIBKML'] = 'r'
+fiona.supported_drivers["KML"] = "r"
+fiona.supported_drivers["LIBKML"] = "r"
 ```
 
 The sample KML file `KML_Samples.kml` contains more than one layer.
@@ -452,14 +455,14 @@ To list the available layers, we can use the `fiona.listlayers` function.
 <!-- jn: maybe we could introduce this function earlier, for example around this sentence: "However, using the `layer` argument you can specify any other layer." -->
 
 ```{python}
-u = 'https://developers.google.com/kml/documentation/KML_Samples.kml'
-fiona.listlayers(u)
+URL = "https://developers.google.com/kml/documentation/KML_Samples.kml"
+fiona.listlayers(URL)
 ```
 
-We can choose, for instance, the first layer `'Placemarks'` and read it, using `gpd.read_file` with an additional `layer` argument.
+We can choose, for instance, the first layer `"Placemarks"` and read it, using `gpd.read_file` with an additional `layer` argument.
 
 ```{python}
-placemarks = gpd.read_file(u, layer='Placemarks')
+placemarks = gpd.read_file(URL, layer="Placemarks")
 placemarks
 ```
 
@@ -469,7 +472,7 @@ Similar to vector data, raster data comes in many file formats, some of which su
 `rasterio.open` is used to create a file connection to a raster file, which can be subsequently used to read the metadata and/or the values, as shown previously (@sec-using-rasterio).
 
 ```{python}
-src = rasterio.open('data/srtm.tif')
+src = rasterio.open("data/srtm.tif")
 src
 ```
 
@@ -482,7 +485,10 @@ To read an online file, we need to provide its URL together with the `/vsicurl_s
 
 ```{python}
 #| eval: false
-src = rasterio.open('/vsicurl_streaming/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif')
+src = rasterio.open(
+    "/vsicurl_streaming/https://zenodo.org/record/5774954/files/"
+    "clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif"
+)
 src
 ```
 
@@ -502,10 +508,10 @@ For example, here we use a $10 \times 10$ degrees extent coinciding with Reykjav
 
 ```{python}
 #| eval: false
-xmin=-30
-xmax=-20
-ymin=60
-ymax=70
+XMIN = -30
+XMAX = -20
+YMIN = 60
+YMAX = 70
 ```
 
 Using the extent coordinates along with the raster transformation matrix, we create a window object, using the [`rasterio.windows.from_bounds`](https://rasterio.readthedocs.io/en/stable/api/rasterio.windows.html#rasterio.windows.from_bounds) function.
@@ -513,34 +519,30 @@ This function basically "translates" the extent from coordinates, to row/column 
 
 ```{python}
 #| eval: false
-w = rasterio.windows.from_bounds(
-    left=xmin, 
-    bottom=ymin,
-    right=xmax,
-    top=ymax, 
-    transform=src.transform
+this_window = rasterio.windows.from_bounds(
+    left=XMIN, bottom=YMIN, right=XMAX, top=YMAX, transform=src.transform
 )
-w
+this_window
 ```
 
 <!-- jn: why eval:false for these examples? the output is not shown... -->
 
-Now we can read the partial array, according to the specified window `w`, by passing it to the `.read` method.
+Now we can read the partial array, according to the specified window `this_window`, by passing it to the `.read` method.
 
 ```{python}
 #| eval: false
-r = src.read(1, window=w)
+r = src.read(1, window=this_window)
 r
 ```
 
 Note that the transformation matrix of the window is not the same as that of the original raster (unless it incidentally starts from the top-left corner)!
-Therefore, we must re-create the transformation matrix, with the modified origin (`xmin`,`ymax`), yet the same resolution, as follows.
+Therefore, we must re-create the transformation matrix, with the modified origin (`XMIN`,`YMAX`), yet the same resolution, as follows.
 
 ```{python}
 #| eval: false
 w_transform = rasterio.transform.from_origin(
-    west=xmin, 
-    north=ymax, 
+    west=XMIN, 
+    north=YMAX, 
     xsize=src.transform[0],
     ysize=abs(src.transform[4])
 )
@@ -556,7 +558,7 @@ The array `r` along with the updated transformation matrix `w_transform` compris
 #| eval: false
 fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=w_transform, ax=ax)
-gpd.GeoSeries(shapely.Point(-21.94, 64.15)).plot(ax=ax, color='red');
+gpd.GeoSeries(shapely.Point(-21.94, 64.15)).plot(ax=ax, color="red");
 ```
 
 Another option is to extract raster values at particular points, directly from the file connection, using the `.sample` method (see @sec-spatial-subsetting-raster).
@@ -591,35 +593,35 @@ The speed of the writing process depends also on the driver.
 For example, to export the `world` layer to a GeoPackage file, we can use `.to_file` and specify the output file name.
 
 ```{python}
-world.to_file('output/world.gpkg')
+world.to_file("output/world.gpkg")
 ```
 
 Note, that if you try to write to the same data source again, the function will overwrite the file.
 
 ```{python}
-world.to_file('output/world.gpkg')
+world.to_file("output/world.gpkg")
 ```
 
-Instead of overwriting the file, we could add a new layer to the file with `mode='a'` ("append" mode, as opposed to the default `mode='w'` for the "write" mode).
+Instead of overwriting the file, we could add a new layer to the file with `mode="a"` ("append" mode, as opposed to the default `mode="w"` for the "write" mode).
 <!-- jn: "a new layer"? or add new rows? -->
 Appending is supported by several spatial formats, including GeoPackage.
 
 ```{python}
-world.to_file('output/world_many_features.gpkg')
-world.to_file('output/world_many_features.gpkg', mode='a')
+world.to_file("output/world_many_features.gpkg")
+world.to_file("output/world_many_features.gpkg", mode="a")
 ```
 
 Now, `world_many_features.gpkg` contains a polygonal layer named `world` with two "copies" of each country (that is 177×2=354 features, whereas the `world` layer has 177 features).
 
 ```{python}
-gpd.read_file('output/world_many_features.gpkg').shape
+gpd.read_file("output/world_many_features.gpkg").shape
 ```
 
 Alternatively, you can create another, separate, layer, within the same file, which is supported by some formats, including GeoPackage.
 
 ```{python}
-world.to_file('output/world_many_layers.gpkg')
-world.to_file('output/world_many_layers.gpkg', layer='world2')
+world.to_file("output/world_many_layers.gpkg")
+world.to_file("output/world_many_layers.gpkg", layer="world2")
 ```
 
 In this case, `world_many_layers.gpkg` has two "layers": `world_many_layers` (same as the file name, when `layer` is unspecified) and `world2`.
@@ -628,20 +630,20 @@ Each layer from such a file can be imported separately using the `layer` argumen
 
 ```{python}
 #| eval: false
-layer1 = gpd.read_file('output/world_many_layers.gpkg', layer='world_many_layers')
-layer2 = gpd.read_file('output/world_many_layers.gpkg', layer='world2')
+layer1 = gpd.read_file("output/world_many_layers.gpkg", layer="world_many_layers")
+layer2 = gpd.read_file("output/world_many_layers.gpkg", layer="world2")
 ```
 
 ### Raster data {#sec-data-output-raster}
 
-To write a raster file using **rasterio**, we need to pass a raster file path to `rasterio.open` in writing (`'w'`) mode.
+To write a raster file using **rasterio**, we need to pass a raster file path to `rasterio.open` in writing (`"w"`) mode.
 This implies creating a new empty file (or overwriting an existing one).
 Next, we need to write the raster values to the file using the `.write` method of the file connection.
 Finally, we should close the file connection using the `.close` method.
 
-As opposed to reading mode (`'r'`, the default) mode, the `rasterio.open` function in writing mode needs quite a lot of information, in addition to the file path and mode:
+As opposed to reading mode (`"r"`, the default) mode, the `rasterio.open` function in writing mode needs quite a lot of information, in addition to the file path and mode:
 
--   `driver`---The file format. The general recommendation is `'GTiff'` for GeoTIFF, but other formats are also supported (see @tbl-file-formats)
+-   `driver`---The file format. The general recommendation is `"GTiff"` for GeoTIFF, but other formats are also supported (see @tbl-file-formats)
 -   `height`---Number of rows
 -   `width`---Number of columns
 -   `count`---Number of bands
@@ -649,13 +651,13 @@ As opposed to reading mode (`'r'`, the default) mode, the `rasterio.open` functi
 -   `dtype`---The raster data type, one of **numpy** types (e.g., `np.int64`) (see @tbl-numpy-data-types)
 -   `crs`---The CRS, e.g., using an EPSG code (such as `4326`)
 -   `transform`---The transform matrix
--   `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [does not work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters
+-   `compress`---A compression method to apply, such as `"lzw"`. This is optional and most useful for large rasters. Note that, at the time of writing, this [does not work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters
 
 Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection.
 If there are several bands we may execute the `.write` method several times, as in `.write(a,n)`, where `a` is a two-dimensional array representing a single band, and `n` is the band index (starting from `1`, see below).
 Alternatively, we can write all bands at once, as in `.write(a)`, where `a` is a three-dimensional array.
 When done, we close the file connection using the `.close` method.
-Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting (@sec-raster-resampling and @sec-reprojecting-raster-geometries) directly accept a file connection in `'w'` mode, thus handling the writing (of a resampled or reprojected raster) for us.
+Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting (@sec-raster-resampling and @sec-reprojecting-raster-geometries) directly accept a file connection in `"w"` mode, thus handling the writing (of a resampled or reprojected raster) for us.
 
 Most of the properties are either straightforward to choose, based on our aims, (e.g., `driver`, `crs`, `compress`, `nodata`), or directly derived from the array with the raster values itself (e.g., `height`, `width`, `count`, `dtype`).
 The most complicated property is the `transform`, which specifies the raster origin and resolution.
@@ -704,8 +706,9 @@ Then, we establish the writing-mode file connection to `r.tif`, which will be ei
 
 ```{python}
 dst = rasterio.open(
-    'output/r.tif', 'w', 
-    driver = 'GTiff',
+    "output/r.tif",
+    "w", 
+    driver = "GTiff",
     height = r.shape[0],
     width = r.shape[1],
     count = 1,
@@ -755,10 +758,10 @@ The most useful types for raster data are summarized in @tbl-numpy-data-types.
 : Commonly used **numpy** data types for rasters {#tbl-numpy-data-types}
 
 The raster data type needs to be specified when writing a raster, typically using the same type as that of the array to be written (see last example).
-For an existing raster file, the data type can be access through the `.dtype` property of the metadata (`.meta['dtype']`).
+For an existing raster file, the data type can be access through the `.dtype` property of the metadata (`.meta["dtype"]`).
 
 ```{python}
-rasterio.open('output/r.tif').meta['dtype']
+rasterio.open("output/r.tif").meta["dtype"]
 ```
 
 The file `r.tif` has the data type `np.int8`, which we specified when creating it according to the data type of the original array.
@@ -770,7 +773,7 @@ r.dtype
 When reading the data back into the Python session, the array with the same data type is recreated.
 
 ```{python}
-rasterio.open('output/r.tif').read().dtype
+rasterio.open("output/r.tif").read().dtype
 ```
 
 <!-- jn: I do not fully understand the story told by the last three code chunks... -->
@@ -786,7 +789,7 @@ Since most of the metadata is going to be the same, this is also a good opportun
 First, let's make a copy of the metadata we already have in `r.tif`.
 
 ```{python}
-dst_kwds = rasterio.open('output/r.tif').meta
+dst_kwds = rasterio.open("output/r.tif").meta.copy()
 dst_kwds
 ```
 
@@ -800,7 +803,7 @@ dst_kwds
 Finally, we can create a file connection using the updated metadata, write the values of the three bands, and close the connection (note that we are switching to the "keyword argument" syntax of Python function calls here; see note in @sec-raster-agg-disagg).
 
 ```{python}
-dst = rasterio.open('output/r3.tif', 'w', **dst_kwds)
+dst = rasterio.open("output/r3.tif", "w", **dst_kwds)
 dst.write(r*1, 1)
 dst.write(r*2, 2)
 dst.write(r*3, 3)
@@ -834,8 +837,9 @@ When writing this type of array to a raster file, we do not need to specify any 
 
 ```{python}
 dst = rasterio.open(
-    'output/r_nodata_float.tif', 'w', 
-    driver = 'GTiff',
+    "output/r_nodata_float.tif",
+    "w", 
+    driver = "GTiff",
     height = r.shape[0],
     width = r.shape[1],
     count = 1,
@@ -851,13 +855,13 @@ This is equivalent to `nodata=None` (not shown).
 
 ```{python}
 #| eval: false
-rasterio.open('output/r_nodata_float.tif').meta
+rasterio.open("output/r_nodata_float.tif").meta
 ```
 
 Reading from the raster back into the Python session reproduces the same exact array, including `np.nan`.
 
 ```{python}
-rasterio.open('output/r_nodata_float.tif').read()
+rasterio.open("output/r_nodata_float.tif").read()
 ```
 
 Now, conversely, suppose that we have an `int` array with missing data, where the "missing" value must inevitably be marked using a specific `int` "flag" value, such as `-9999` (remember that we can't store `np.nan` in an `int` array!).
@@ -875,8 +879,9 @@ When writing the array to file, we must specify `nodata=-9999` to keep track of 
 
 ```{python}
 dst = rasterio.open(
-    'output/r_nodata_int.tif', 'w', 
-    driver = 'GTiff',
+    "output/r_nodata_int.tif",
+    "w", 
+    driver = "GTiff",
     height = r.shape[0],
     width = r.shape[1],
     count = 1,
@@ -892,14 +897,14 @@ dst.close()
 Examining the metadata of the file we've just created confirms that the `nodata=-9999` setting was stored in the file `r_nodata_int.tif`.
 
 ```{python}
-rasterio.open('output/r_nodata_int.tif').meta
+rasterio.open("output/r_nodata_int.tif").meta
 ```
 
 If you try to open the file in GIS software, such as QGIS, you will see the missing data interpreted (e.g., the pixel shown as blank), meaning that the software is aware of the flag.
 However, reading the data back into Python reproduces an `int` array with `-9999`, due to the limitation of `int` arrays stated before/
 
 ```{python}
-src = rasterio.open('output/r_nodata_int.tif')
+src = rasterio.open("output/r_nodata_int.tif")
 r = src.read()
 r
 ```

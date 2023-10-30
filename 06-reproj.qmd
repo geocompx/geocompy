@@ -9,16 +9,17 @@ jupyter: python3
 This chapter requires importing the following packages:
 
 ```{python}
+import math
+import shutil
+
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
-import shapely
-import geopandas as gpd
+import pyproj
 import rasterio
 import rasterio.warp
 import rasterio.plot
-import pyproj
-import shutil
-import math
+import shapely
 ```
 
 <!-- jn: question -- cannot we just somehow set all of these pandas options globally (for the whole book), instead of repeating them in every chapter? -->
@@ -28,17 +29,17 @@ import pandas as pd
 pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
 It also relies on the following data files:
 
 ```{python}
-src_srtm = rasterio.open('data/srtm.tif')
-src_nlcd = rasterio.open('data/nlcd.tif')
-zion = gpd.read_file('data/zion.gpkg')
-world = gpd.read_file('data/world.gpkg')
-cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
+src_srtm = rasterio.open("data/srtm.tif")
+src_nlcd = rasterio.open("data/nlcd.tif")
+zion = gpd.read_file("data/zion.gpkg")
+world = gpd.read_file("data/world.gpkg")
+cycle_hire_osm = gpd.read_file("data/cycle_hire_osm.gpkg")
 ```
 
 ## Introduction
@@ -88,7 +89,7 @@ The WKT representation of the WGS84 CRS, which has the identifier `EPSG:4326` is
 
 
 ```{python}
-crs = pyproj.CRS.from_string('EPSG:4326') # or '.from_epsg(4326)'
+crs = pyproj.CRS.from_string("EPSG:4326") # or ".from_epsg(4326)"
 print(crs.to_wkt(pretty=True))
 ```
 
@@ -105,7 +106,7 @@ Other authorities can be used in CRS identifiers.
 `ESRI:54030`, for example, refers to ESRI's implementation of the Robinson projection, which has the following WKT string.
 
 ```{python}
-crs = pyproj.CRS.from_string('ESRI:54030')
+crs = pyproj.CRS.from_string("ESRI:54030")
 print(crs.to_wkt(pretty=True))
 ```
 
@@ -181,10 +182,10 @@ world3 = world.set_crs(3857, allow_override=True)
 ```
 
 The provided number is interpreted as an `EPSG` code.
-We can also use strings, as in `'EPSG:4326'`, which is useful to make the code more clear and when using other authorities than `EPSG`.
+We can also use strings, as in `"EPSG:4326"`, which is useful to make the code more clear and when using other authorities than `EPSG`.
 
 ```{python}
-world4 = world.set_crs('ESRI:54009', allow_override=True)
+world4 = world.set_crs("ESRI:54009", allow_override=True)
 ```
 
 In **rasterio**, the CRS information is stored as part of a raster file connection metadata (@sec-using-rasterio).
@@ -195,8 +196,8 @@ However, if we, for some reason, need to change the CRS definition in the file c
 To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`, and examine its existing CRS.
 
 ```{python}
-shutil.copy('data/nlcd.tif', 'output/nlcd_modified_crs.tif')
-src_nlcd2 = rasterio.open('output/nlcd_modified_crs.tif', 'r+')
+shutil.copy("data/nlcd.tif", "output/nlcd_modified_crs.tif")
+src_nlcd2 = rasterio.open("output/nlcd_modified_crs.tif", "r+")
 src_nlcd2.crs
 ```
 
@@ -210,7 +211,7 @@ src_nlcd2.close()
 Next, examining the file connection demonstrates that the CRS was indeed changed.
 
 ```{python}
-rasterio.open('output/nlcd_modified_crs.tif').crs
+rasterio.open("output/nlcd_modified_crs.tif").crs
 ```
 
 Importantly, the `.set_crs` (for vector layers) or the assignment to `.crs` (for rasters), as shown above, do not alter coordinates' values or geometries.
@@ -222,7 +223,7 @@ In some cases, the CRS of a geographic object is unknown, as is the case in the 
 ```{python}
 lnd_point = shapely.Point(-0.1, 51.5)
 lnd_geom = gpd.GeoSeries([lnd_point])
-lnd_layer = gpd.GeoDataFrame({'geometry': lnd_geom})
+lnd_layer = gpd.GeoDataFrame({"geometry": lnd_geom})
 lnd_layer
 ```
 
@@ -267,7 +268,7 @@ In the following code chunk we create, from scratch, a point layer `lnd_layer_pr
 ```{python}
 lnd_point_proj = shapely.Point(530000, 180000)
 lnd_geom_proj = gpd.GeoSeries([lnd_point_proj], crs=27700)
-lnd_layer_proj = gpd.GeoDataFrame({'geometry': lnd_geom_proj})
+lnd_layer_proj = gpd.GeoDataFrame({"geometry": lnd_geom_proj})
 lnd_layer_proj
 ```
 
@@ -298,16 +299,16 @@ The association between degrees and true distance varies over the surface of the
 #| fig-subcap:
 #| - Around a projected point and distance of 100 $km$
 #| - Around a point in lon/lat using distance of 1 degree (incorrectly approximating 100 $km$)
-uk = world[world['name_long'] == 'United Kingdom']
+uk = world[world["name_long"] == "United Kingdom"]
 uk_proj = uk.to_crs(27700)
 # Around projected point
-base = uk_proj.plot(color='none', edgecolor='darkgrey')
-lnd_layer_proj_buff.plot(color='lightgrey', edgecolor='black', ax=base)
-lnd_layer_proj.plot(color='red', ax=base);
+base = uk_proj.plot(color="none", edgecolor="darkgrey")
+lnd_layer_proj_buff.plot(color="lightgrey", edgecolor="black", ax=base)
+lnd_layer_proj.plot(color="red", ax=base);
 # Around point in lon/lat
-base = uk.plot(color='none', edgecolor='darkgrey')
-lnd_layer_buff.plot(color='lightgrey', edgecolor='black', ax=base)
-lnd_layer.plot(color='red', ax=base);
+base = uk.plot(color="none", edgecolor="darkgrey")
+lnd_layer_buff.plot(color="lightgrey", edgecolor="black", ax=base)
+lnd_layer.plot(color="red", ax=base);
 ```
 
 ::: callout-note
@@ -370,15 +371,15 @@ The transverse Mercator projection used by UTM CRSs is conformal but distorts ar
 Documentation from the GIS software Manifold therefore suggests restricting the longitudinal extent of projects using UTM zones to 6 degrees from the central meridian (source: [manifold.net](http://www.manifold.net/doc/mfd9/universal_transverse_mercator_projection.htm)).
 Therefore, we recommend using UTM only when your focus is on preserving angles for a relatively small area!
 
-Almost every place on Earth has a UTM code, such as `'60H'` which refers, amoung others, to northern New Zealand.
+Almost every place on Earth has a UTM code, such as `"60H"` which refers, amoung others, to northern New Zealand.
 UTM EPSG codes run sequentially from `32601` to `32660` for northern hemisphere locations and from `32701` to `32760` for southern hemisphere locations.
 
-To show how the system works, let's create a function, `lonlat2UTM` to calculate the EPSG code associated with any point on the planet.
+To show how the system works, let's create a function, `lonlat2utm` to calculate the EPSG code associated with any point on the planet.
 
 ```{python}
-def lonlat2UTM(lon, lat):
-    utm = (math.floor((lon + 180) / 6) % 60) + 1
-    if lat > 0:
+def lonlat2utm(longitude, latitude):
+    utm = (math.floor((longitude + 180) / 6) % 60) + 1
+    if latitude > 0:
         utm += 32600
     else:
         utm += 32700
@@ -388,13 +389,13 @@ def lonlat2UTM(lon, lat):
 The following command uses this function to identify the UTM zone and associated EPSG code for Auckland.
 
 ```{python}
-lonlat2UTM(174.7, -36.9)
+lonlat2utm(174.7, -36.9)
 ```
 
 Here is another example for London (where we "unpack" the coordinates of the 1^st^ geometry in `lnd_layer` into the `lonlat2UTM` function arguments).
 
 ```{python}
-lonlat2UTM(*lnd_layer.geometry.iloc[0].coords[0])
+lonlat2utm(*lnd_layer.geometry.iloc[0].coords[0])
 ```
 
 Currently, we also have tools helping us to select a proper CRS.
@@ -537,7 +538,7 @@ First, let's define the destination CRS.
 In this case, we choose WGS84 (EPSG code `4326`).
 
 ```{python}
-dst_crs = 'EPSG:4326'
+DST_CRS = "EPSG:4326"
 ```
 
 Now, we are ready to calculate the destination raster transformation matrix (`dst_transform`), and the destination dimensions (`dst_width`, `dst_height`), using `rasterio.warp.calculate_default_transform`, as follows:
@@ -545,7 +546,7 @@ Now, we are ready to calculate the destination raster transformation matrix (`ds
 ```{python}
 dst_transform, dst_width, dst_height = rasterio.warp.calculate_default_transform(
     src_nlcd.crs,
-    dst_crs,
+    DST_CRS,
     src_nlcd.width,
     src_nlcd.height,
     *src_nlcd.bounds
@@ -566,10 +567,10 @@ We need to specify a "No Data" value of our choice, if there is no existing defi
 ```{python}
 dst_kwargs = src_nlcd.meta.copy()
 dst_kwargs.update({
-    'crs': dst_crs,
-    'transform': dst_transform,
-    'width': dst_width,
-    'height': dst_height
+    "crs": DST_CRS,
+    "transform": dst_transform,
+    "width": dst_width,
+    "height": dst_height
 })
 dst_kwargs
 ```
@@ -578,10 +579,10 @@ Now, we are ready to create the reprojected raster.
 Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once.
 It is also possible to reproject into an in-memory `ndarray` object, see the [documentation](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject).
 
-To write the reprojected raster, we first create a destination file connection `dst_nlcd`, pointing at the output file path of our choice (`'output/nlcd_4326.tif'`), using the updated metadata object created earlier (`dst_kwargs`):
+To write the reprojected raster, we first create a destination file connection `dst_nlcd`, pointing at the output file path of our choice (`"output/nlcd_4326.tif"`), using the updated metadata object created earlier (`dst_kwargs`):
 
 ```{python}
-dst_nlcd = rasterio.open('output/nlcd_4326.tif', 'w', **dst_kwargs)
+dst_nlcd = rasterio.open("output/nlcd_4326.tif", "w", **dst_kwargs)
 ```
 
 Then, we use the `rasterio.warp.reproject` function to calculate and write the reprojection result into the `dst_nlcd` file connection.
@@ -594,7 +595,7 @@ rasterio.warp.reproject(
     src_transform=src_nlcd.transform,
     src_crs=src_nlcd.crs,
     dst_transform=dst_transform,
-    dst_crs=dst_crs,
+    dst_crs=DST_CRS,
     resampling=rasterio.enums.Resampling.nearest
 )
 ```
@@ -615,7 +616,7 @@ src_nlcd.meta
 ```
 
 ```{python}
-src_nlcd_4326 = rasterio.open('output/nlcd_4326.tif')
+src_nlcd_4326 = rasterio.open("output/nlcd_4326.tif")
 src_nlcd_4326.meta
 ```
 
@@ -638,8 +639,8 @@ np.unique(src_nlcd_4326.read(1))
 #| fig-subcap: 
 #| - Original (`EPSG:26912`)
 #| - Reprojected (`EPSG:4326`)
-rasterio.plot.show(src_nlcd, cmap='Set3');
-rasterio.plot.show(src_nlcd_4326, cmap='Set3');
+rasterio.plot.show(src_nlcd, cmap="Set3");
+rasterio.plot.show(src_nlcd_4326, cmap="Set3");
 ```
 
 In the above example, we automatically calculated an optimal (i.e., most information preserving) destination grid using `rasterio.warp.calculate_default_transform`.
@@ -652,15 +653,15 @@ In the following code examples, we reproject the `nlcd.tif` raster, again, but t
 First, we create a connection to our "template" raster to read its metadata.
 
 ```{python}
-template = rasterio.open('output/nlcd_4326.tif')
+template = rasterio.open("output/nlcd_4326.tif")
 template.meta
 ```
 
 Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the "template".
-<!-- jn: why 'w' and not 'rw' or 'r+'? -->
+<!-- jn: why "w" and not "rw" or "r+"? -->
 
 ```{python}
-dst_nlcd_2 = rasterio.open('output/nlcd_4326_2.tif', 'w', **template.meta)
+dst_nlcd_2 = rasterio.open("output/nlcd_4326_2.tif", "w", **template.meta)
 ```
 
 Now, we can resample and write the result with `rasterio.warp.reproject`.
@@ -682,8 +683,8 @@ Naturally, the outputs of the last two examples---`nlcd_4326.tif` and `nlcd_4326
 We can check it with `np.all`.
 
 ```{python}
-d = rasterio.open('output/nlcd_4326.tif').read(1) == \
-    rasterio.open('output/nlcd_4326_2.tif').read(1)
+d = rasterio.open("output/nlcd_4326.tif").read(1) == \
+    rasterio.open("output/nlcd_4326_2.tif").read(1)
 np.all(d)
 ```
 
@@ -702,29 +703,29 @@ The following code section create a text string representing WGS 84 / UTM zone 1
 The code is practically the same, except for changing the source and destination file names, and replacing `rasterio.enums.Resampling.nearest` with `rasterio.enums.Resampling.bilinear`.
 
 ```{python}
-dst_crs = 'EPSG:32612'
+DST_CRS = "EPSG:32612"
 dst_transform, dst_width, dst_height = rasterio.warp.calculate_default_transform(
     src_srtm.crs,
-    dst_crs,
+    DST_CRS,
     src_srtm.width,
     src_srtm.height,
     *src_srtm.bounds
 )
 dst_kwargs = src_srtm.meta.copy()
 dst_kwargs.update({
-    'crs': dst_crs,
-    'transform': dst_transform,
-    'width': dst_width,
-    'height': dst_height
+    "crs": DST_CRS,
+    "transform": dst_transform,
+    "width": dst_width,
+    "height": dst_height
 })
-dst_srtm = rasterio.open('output/srtm_32612.tif', 'w', **dst_kwargs)
+dst_srtm = rasterio.open("output/srtm_32612.tif", "w", **dst_kwargs)
 rasterio.warp.reproject(
     source=rasterio.band(src_srtm, 1),
     destination=rasterio.band(dst_srtm, 1),
     src_transform=src_srtm.transform,
     src_crs=src_srtm.crs,
     dst_transform=dst_transform,
-    dst_crs=dst_crs,
+    dst_crs=DST_CRS,
     resampling=rasterio.enums.Resampling.bilinear
 )
 dst_srtm.close()
@@ -740,7 +741,7 @@ dst_srtm.close()
 #| - Original (`EPSG:4326`)
 #| - Reprojected (`EPSG:32612`)
 rasterio.plot.show(src_srtm);
-rasterio.plot.show(rasterio.open('output/srtm_32612.tif'));
+rasterio.plot.show(rasterio.open("output/srtm_32612.tif"));
 ```
 
 ## Custom map projections {#sec-custom-map-projections}
@@ -798,16 +799,16 @@ To use this projection, we need to specify it using the proj-string element, `'+
 ```{python}
 #| label: fig-mollweide
 #| fig-cap: Mollweide projection of the world
-world.to_crs('+proj=moll').plot(color='none', edgecolor='black');
+world.to_crs("+proj=moll").plot(color="none", edgecolor="black");
 ```
 
 It is often desirable to minimize distortion for all spatial properties (area, direction, distance) when mapping the world.
-One of the most popular projections to achieve this is [Winkel tripel](http://www.winkel.org/other/Winkel%20Tripel%20Projections.htm) (`'+proj=wintri'`), illustrated in @fig-wintri.
+One of the most popular projections to achieve this is [Winkel tripel](http://www.winkel.org/other/Winkel%20Tripel%20Projections.htm) (`"+proj=wintri"`), illustrated in @fig-wintri.
 
 ```{python}
 #| label: fig-wintri
 #| fig-cap: Winkel tripel projection of the world
-world.to_crs('+proj=wintri').plot(color='none', edgecolor='black');
+world.to_crs("+proj=wintri").plot(color="none", edgecolor="black");
 ```
 
 Moreover, proj-string parameters can be modified in most CRS definitions, for example the center of the projection can be adjusted using the `+lon_0` and `+lat_0` parameters.
@@ -816,8 +817,8 @@ The below code transforms the coordinates to the Lambert azimuthal equal-area pr
 ```{python}
 #| label: fig-azimuthal-equal-area
 #| fig-cap: Lambert azimuthal equal-area projection of the world centered on New York City
-world.to_crs('+proj=laea +x_0=0 +y_0=0 +lon_0=-74 +lat_0=40') \
-    .plot(color='none', edgecolor='black');
+world.to_crs("+proj=laea +x_0=0 +y_0=0 +lon_0=-74 +lat_0=40") \
+    .plot(color="none", edgecolor="black");
 ```
 
 More information on CRS modifications can be found in the [Using PROJ](https://proj.org/usage/index.html) documentation.
