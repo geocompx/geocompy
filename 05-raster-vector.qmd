@@ -6,48 +6,48 @@ jupyter: python3
 
 ## Prerequisites {.unnumbered}
 
-```{python}
-#| echo: false
-import pandas as pd
-import matplotlib.pyplot as plt
-pd.options.display.max_rows = 6
-pd.options.display.max_columns = 6
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
-```
-
 This chapter requires importing the following packages:
 <!--jn:two packages are commented out -- should these lines be removed?-->
 <!--md: yes, done-->
 
 ```{python}
-import numpy as np
-import shapely
-import matplotlib.pyplot as plt
-import geopandas as gpd
-import rasterio
-import rasterio.mask
-import rasterstats
-import rasterio.plot
-import rasterio.features
-import math
 import os
+import math
+
+import geopandas as gpd
+import numpy as np
+import matplotlib.pyplot as plt
+import rasterio
+import rasterio.features
+import rasterio.mask
+import rasterio.plot
+import rasterstats
+import shapely
+```
+
+```{python}
+#| echo: false
+import pandas as pd
+pd.options.display.max_rows = 6
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
 It also relies on the following data files:
 
 ```{python}
-src_srtm = rasterio.open('data/srtm.tif')
-src_nlcd = rasterio.open('data/nlcd.tif')
-src_grain = rasterio.open('output/grain.tif')
-src_elev = rasterio.open('output/elev.tif')
-src_dem = rasterio.open('data/dem.tif')
-zion = gpd.read_file('data/zion.gpkg')
-zion_points = gpd.read_file('data/zion_points.gpkg')
-cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
-us_states = gpd.read_file('data/us_states.gpkg')
-nz = gpd.read_file('data/nz.gpkg')
-src_nz_elev = rasterio.open('data/nz_elev.tif')
+src_srtm = rasterio.open("data/srtm.tif")
+src_nlcd = rasterio.open("data/nlcd.tif")
+src_grain = rasterio.open("output/grain.tif")
+src_elev = rasterio.open("output/elev.tif")
+src_dem = rasterio.open("data/dem.tif")
+zion = gpd.read_file("data/zion.gpkg")
+zion_points = gpd.read_file("data/zion_points.gpkg")
+cycle_hire_osm = gpd.read_file("data/cycle_hire_osm.gpkg")
+us_states = gpd.read_file("data/us_states.gpkg")
+nz = gpd.read_file("data/nz.gpkg")
+src_nz_elev = rasterio.open("data/nz_elev.tif")
 ```
 
 ## Introduction
@@ -128,7 +128,7 @@ dst_kwargs
 Then we can write the masked raster to file with the updated metadata object.
 
 ```{python}
-new_dataset = rasterio.open('output/srtm_masked.tif', 'w', **dst_kwargs)
+new_dataset = rasterio.open("output/srtm_masked.tif", "w", **dst_kwargs)
 new_dataset.write(out_image_mask)
 new_dataset.close()
 ```
@@ -136,7 +136,7 @@ new_dataset.close()
 Now we can re-import the raster and check that the "No Data" value is correctly set.
 
 ```{python}
-src_srtm_mask = rasterio.open('output/srtm_masked.tif')
+src_srtm_mask = rasterio.open("output/srtm_masked.tif")
 ```
 
 The `.meta` property contains the `nodata` entry.
@@ -155,7 +155,7 @@ For the example of cropping only, the extent polygon of `zion` can be obtained a
 
 ```{python}
 #| label: fig-zion-bbox
-#| fig-cap: Bounding box `'Polygon'` geometry of the `zion` layer
+#| fig-cap: Bounding box `"Polygon"` geometry of the `zion` layer
 bb = zion.unary_union.envelope
 bb
 ```
@@ -203,18 +203,15 @@ Also note that `out_image_mask_crop` is a three-dimensional array (even though i
 ```{python}
 dst_kwargs = src_srtm.meta
 dst_kwargs.update({
-    'nodata': 9999,
-    'transform': out_transform_mask_crop,
-    'width': out_image_mask_crop.shape[2],
-    'height': out_image_mask_crop.shape[1]
+    "nodata": 9999,
+    "transform": out_transform_mask_crop,
+    "width": out_image_mask_crop.shape[2],
+    "height": out_image_mask_crop.shape[1]
 })
-new_dataset = rasterio.open(
-    'output/srtm_masked_cropped.tif', 
-    'w', 
-    **dst_kwargs
-)
+new_dataset = rasterio.open("output/srtm_masked_cropped.tif", "w", **dst_kwargs)
 new_dataset.write(out_image_mask_crop)
 new_dataset.close()
+src_srtm_mask_crop = rasterio.open("output/srtm_masked_cropped.tif")
 ```
 
 Let's also create a file connection to the newly created file `srtm_masked_cropped.tif` in order to plot it (@fig-raster-crop (d)).
@@ -238,19 +235,19 @@ out_image_mask_crop.shape
 # Original
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(src_srtm, ax=ax)
-zion.plot(ax=ax, color='none', edgecolor='black');
+zion.plot(ax=ax, color="none", edgecolor="black");
 # Masked
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(src_srtm_mask, ax=ax)
-zion.plot(ax=ax, color='none', edgecolor='black');
+zion.plot(ax=ax, color="none", edgecolor="black");
 # Cropped
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(out_image_crop, transform=out_transform_crop, ax=ax)
-zion.plot(ax=ax, color='none', edgecolor='black');
+zion.plot(ax=ax, color="none", edgecolor="black");
 # Masked+Cropped
 fig, ax = plt.subplots(figsize=(3.5, 3.5))
 rasterio.plot.show(src_srtm_mask_crop, ax=ax)
-zion.plot(ax=ax, color='none', edgecolor='black');
+zion.plot(ax=ax, color="none", edgecolor="black");
 ```
 
 ## Raster extraction {#sec-raster-extraction}
@@ -273,7 +270,7 @@ To demonstrate extraction to points, we will use `zion_points`, which contains a
 #| fig-cap: 30 point locations within the Zion National Park, with elevation in the background
 fig, ax = plt.subplots()
 rasterio.plot.show(src_srtm, ax=ax)
-zion_points.plot(ax=ax, color='black');
+zion_points.plot(ax=ax, color="black");
 ```
 
 The following expression extracts elevation values from `srtm.tif` according to `zion_points`, using `rasterstats.point_query`.
@@ -284,7 +281,7 @@ result1 = rasterstats.point_query(
     src_srtm.read(1), 
     nodata = src_srtm.nodata, 
     affine = src_srtm.transform,
-    interpolate='nearest'
+    interpolate="nearest"
 )
 ```
 
@@ -320,8 +317,8 @@ To get a `GeoDataFrame` with the original points geometries (and other attribute
 As you can see, both approaches give the same result.
 
 ```{python}
-zion_points['elev1'] = result1
-zion_points['elev2'] = result2
+zion_points["elev1"] = result1
+zion_points["elev2"] = result2
 zion_points
 ```
 
@@ -391,11 +388,11 @@ result = rasterstats.point_query(
     src_srtm.read(1), 
     nodata = src_srtm.nodata, 
     affine = src_srtm.transform,
-    interpolate='nearest'
+    interpolate="nearest"
 )
 zion_transect_pnt = gpd.GeoDataFrame(geometry=zion_transect_pnt)
-zion_transect_pnt['dist'] = distances
-zion_transect_pnt['elev'] = result
+zion_transect_pnt["dist"] = distances
+zion_transect_pnt["elev"] = result
 zion_transect_pnt
 ```
 
@@ -411,13 +408,13 @@ The information in `zion_transect_pnt`, namely the `'dist'` and `'elev'` attribu
 # Raster and a line transect
 fig, ax = plt.subplots()
 rasterio.plot.show(src_srtm, ax=ax)
-gpd.GeoSeries(zion_transect).plot(ax=ax, color='black')
-zion.plot(ax=ax, color='none', edgecolor='white');
+gpd.GeoSeries(zion_transect).plot(ax=ax, color="black")
+zion.plot(ax=ax, color="none", edgecolor="white");
 # Elevation profile
 fig, ax = plt.subplots()
-zion_transect_pnt.set_index('dist')['elev'].plot(ax=ax)
-ax.set_xlabel('Distance (m)')
-ax.set_ylabel('Elevation (m)');
+zion_transect_pnt.set_index("dist")["elev"].plot(ax=ax)
+ax.set_xlabel("Distance (m)")
+ax.set_ylabel("Elevation (m)");
 ```
 
 ### Extraction to polygons {#sec-extraction-to-polygons}
@@ -433,7 +430,7 @@ result = rasterstats.zonal_stats(
     src_srtm.read(1), 
     nodata = src_srtm.nodata, 
     affine = src_srtm.transform, 
-    stats = ['mean', 'min', 'max']
+    stats = ["mean", "min", "max"]
 )
 result
 ```
@@ -490,11 +487,11 @@ According to the result, for example, pixel value `2` ("Developed" class) appear
 # Continuous raster
 fig, ax = plt.subplots()
 rasterio.plot.show(src_srtm, ax=ax)
-zion.plot(ax=ax, color='none', edgecolor='black');
+zion.plot(ax=ax, color="none", edgecolor="black");
 # Categorical raster
 fig, ax = plt.subplots()
-rasterio.plot.show(src_nlcd, ax=ax, cmap='Set3')
-zion.to_crs(src_nlcd.crs).plot(ax=ax, color='none', edgecolor='black');
+rasterio.plot.show(src_nlcd, ax=ax, cmap="Set3")
+zion.to_crs(src_nlcd.crs).plot(ax=ax, color="none", edgecolor="black");
 ```
 
 <!-- jn: what is the state of plotting categorical rasters? can it read the color palette from a file? -->
@@ -555,12 +552,12 @@ To calculate the transform, we combine the top-left corner of the `cycle_hire_os
 
 ```{python}
 bounds = cycle_hire_osm_projected.total_bounds
-res = 1000
+RES = 1000
 transform = rasterio.transform.from_origin(
     west=bounds[0], 
     north=bounds[3], 
-    xsize=res, 
-    ysize=res
+    xsize=RES, 
+    ysize=RES
 )
 transform
 ```
@@ -568,10 +565,10 @@ transform
 To calculate the `out_shape`, we divide the x-axis and y-axis extent by the resolution, taking the ceiling of the results.
 
 ```{python}
-rows = math.ceil((bounds[3] - bounds[1]) / res)
-cols = math.ceil((bounds[2] - bounds[0]) / res)
-shape = (rows, cols)
-shape
+ROWS = math.ceil((bounds[3] - bounds[1]) / RES)
+COLS = math.ceil((bounds[2] - bounds[0]) / RES)
+SHAPE = (ROWS, COLS)
+SHAPE
 ```
 
 Finally, we are ready to rasterize.
@@ -601,8 +598,8 @@ Note that `merge_alg=rasterio.enums.MergeAlg.replace` (the default) is used here
 
 ```{python}
 ch_raster1 = rasterio.features.rasterize(
-    shapes=g,
-    out_shape=shape, 
+    shapes=g, 
+    out_shape=SHAPE,
     transform=transform
 )
 ch_raster1
@@ -620,7 +617,7 @@ The new output, `ch_raster2`, shows the number of cycle hire points in each grid
 g = [(g, 1) for g in cycle_hire_osm_projected.geometry]
 ch_raster2 = rasterio.features.rasterize(
     shapes=g,
-    out_shape=shape,
+    out_shape=SHAPE,
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
 )
@@ -635,10 +632,7 @@ You are invited to run the separate parts to see how this works; the important p
 <!-- md: I agree, now split into two code blocks and explained -->
 
 ```{python}
-g = [(g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']] \
-        .dropna(subset='capacity')
-        .to_numpy() \
-        .tolist()]
+g = [(g, v) for g, v in cycle_hire_osm_projected[['geometry', 'capacity']].dropna(subset='capacity').to_numpy().tolist()]
 g[:5]
 ```
 
@@ -647,7 +641,7 @@ Now we rasterize the points, again using `merge_alg=rasterio.enums.MergeAlg.add`
 ```{python}
 ch_raster3 = rasterio.features.rasterize(
     shapes=g,
-    out_shape=shape,
+    out_shape=SHAPE,
     transform=transform,
     merge_alg=rasterio.enums.MergeAlg.add
 )
@@ -669,7 +663,7 @@ The input point layer `cycle_hire_osm_projected` and the three variants of raste
 #| - Summed attribute values
 # Input points
 fig, ax = plt.subplots()
-cycle_hire_osm_projected.plot(column='capacity', ax=ax);
+cycle_hire_osm_projected.plot(column="capacity", ax=ax);
 # Presence/Absence
 fig, ax = plt.subplots()
 rasterio.plot.show(ch_raster1, transform=transform, ax=ax);
@@ -688,7 +682,7 @@ There are three preliminary steps.
 First, we subset the California polygon.
 
 ```{python}
-california = us_states[us_states['NAME'] == 'California']
+california = us_states[us_states["NAME"] == "California"]
 california
 ```
 
@@ -703,17 +697,17 @@ Third, we create the `transform` and `shape` describing our template raster, wit
 
 ```{python}
 bounds = california_borders.total_bounds
-res = 0.5
+RES = 0.5
 transform = rasterio.transform.from_origin(
     west=bounds[0], 
     north=bounds[3], 
-    xsize=res, 
-    ysize=res
+    xsize=RES, 
+    ysize=RES
 )
-rows = math.ceil((bounds[3] - bounds[1]) / res)
-cols = math.ceil((bounds[2] - bounds[0]) / res)
-shape = (rows, cols)
-shape
+ROWS = math.ceil((bounds[3] - bounds[1]) / RES)
+COLS = math.ceil((bounds[2] - bounds[0]) / RES)
+SHAPE = (ROWS, COLS)
+SHAPE
 ```
 
 Finally, we rasterize `california_borders` based on the calculated template's `shape` and `transform`.
@@ -725,7 +719,7 @@ We are also using `fill=np.nan` to set "background" values as "No Data".
 ```{python}
 california_raster1 = rasterio.features.rasterize(
     [(g, 1) for g in california_borders],
-    out_shape=shape,
+    out_shape=SHAPE,
     transform=transform,
     all_touched=True,
     fill=np.nan
@@ -737,7 +731,7 @@ Compare it to a polygon rasterization, with `all_touched=False` (the default), w
 ```{python}
 california_raster2 = rasterio.features.rasterize(
     [(g, 1) for g in california.geometry],
-    out_shape=shape,
+    out_shape=SHAPE,
     transform=transform,
     fill=np.nan
 )
@@ -770,14 +764,14 @@ pnt = gpd.GeoSeries(pnt)
 #| - Polygon rasterization w/ `all_touched=False`
 # Line rasterization
 fig, ax = plt.subplots()
-rasterio.plot.show(california_raster1, transform=transform, ax=ax, cmap='Set3')
-gpd.GeoSeries(california_borders).plot(ax=ax, edgecolor='darkgrey', linewidth=1)
-pnt.plot(ax=ax, color='black', markersize=1);
+rasterio.plot.show(california_raster1, transform=transform, ax=ax, cmap="Set3")
+gpd.GeoSeries(california_borders).plot(ax=ax, edgecolor="darkgrey", linewidth=1)
+pnt.plot(ax=ax, color="black", markersize=1);
 # Polygon rasterization
 fig, ax = plt.subplots()
-rasterio.plot.show(california_raster2, transform=transform, ax=ax, cmap='Set3')
-california.plot(ax=ax, color='none', edgecolor='darkgrey', linewidth=1)
-pnt.plot(ax=ax, color='black', markersize=1);
+rasterio.plot.show(california_raster2, transform=transform, ax=ax, cmap="Set3")
+california.plot(ax=ax, color="none", edgecolor="darkgrey", linewidth=1)
+pnt.plot(ax=ax, color="black", markersize=1);
 ```
 
 ## Spatial vectorization {#sec-spatial-vectorization}
@@ -856,14 +850,23 @@ result
 ```
 
 The polygon layer `result` is shown in @fig-raster-to-polygons.
+=======
+# Combine into a 'GeoDataFrame'
+result = gpd.GeoDataFrame({"value": values, "geometry": geom})
+result
+```
 
+The resulting polygon layer is shown in @fig-raster-to-polygons.
+As shown using the `edgecolor="black"` option, neighboring pixels sharing the same raster value are dissolved into larger polygons.
+The `rasterio.features.shapes` function does not offer a way to avoid this type of dissolving.
+One way to work around that is to convert an array with consecutive IDs, instead of the real values, to polygons, then extract the real values from the raster (see the example in @sec-raster-to-points).
 ```{python}
 #| label: fig-raster-to-polygons
 #| fig-cap: '`grain.tif` converted to a polygon layer'
-result.plot(column='value', edgecolor='black', legend=True);
+result.plot(column="value", edgecolor="black", legend=True);
 ```
 
-As highlighted using `edgecolor='black'`, neighboring pixels sharing the same raster value are dissolved into larger polygons.
+As highlighted using `edgecolor="black"`, neighboring pixels sharing the same raster value are dissolved into larger polygons.
 The `rasterio.features.shapes` function unfortunately does not offer a way to avoid this type of dissolving.
 One [suggestion](https://gis.stackexchange.com/questions/455980/vectorizing-all-pixels-as-separate-polygons-using-rasterio#answer-456251) is to add unique values between `0` and `0.9999` to all pixels, convert to polygons, and then get back to the original values using [`np.floor`](https://numpy.org/doc/stable/reference/generated/numpy.floor.html).
 
@@ -897,12 +900,12 @@ result
 Finally, we extract (@sec-extraction-to-points) the `elev.tif` raster values to points, technically finalizing the raster-to-points conversion.
 
 ```{python}
-result['value'] = rasterstats.point_query(
+result["value"] = rasterstats.point_query(
     result, 
     r, 
     nodata = src_elev.nodata, 
     affine = src_elev.transform,
-    interpolate='nearest'
+    interpolate="nearest"
 )
 ```
 
@@ -917,12 +920,12 @@ result['value'] = rasterstats.point_query(
 #| - Points
 # Input raster
 fig, ax = plt.subplots()
-result.plot(column='value', legend=True, ax=ax)
+result.plot(column="value", legend=True, ax=ax)
 rasterio.plot.show(src_elev, ax=ax);
 # Points
 fig, ax = plt.subplots()
-result.plot(column='value', legend=True, ax=ax)
-rasterio.plot.show(src_elev, cmap='Greys', ax=ax);
+result.plot(column="value", legend=True, ax=ax)
+rasterio.plot.show(src_elev, cmap="Greys", ax=ax);
 ```
 
 ### Raster to contours {#sec-raster-to-contours}
@@ -941,7 +944,7 @@ rasterio.plot.show(
     ax=ax, 
     contour=True, 
     levels=np.arange(0,1200,50), 
-    colors='black'
+    colors="black"
 );
 ```
 
@@ -959,17 +962,17 @@ Using the command line pathway, generating 50 $m$ contours of the `dem.tif` file
 
 ```{python}
 #| eval: false
-os.system('gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0')
+os.system("gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0")
 ```
 
 Like all GDAL programs (also see `gdaldem` example in @sec-focal-operations), `gdal_contour` works with files.
 Here, the input is the `data/dem.tif` file and the result is exported to the `output/dem_contour.gpkg` file.
 
 To illustrate the result, let's read the resulting `dem_contour.gpkg` layer back into the Python environment.
-Note that the layer contains an attribute named `'elev'` (as specified using `-a elev`) with the contour elevation values.
+Note that the layer contains an attribute named `"elev"` (as specified using `-a elev`) with the contour elevation values.
 
 ```{python}
-contours1 = gpd.read_file('output/dem_contour.gpkg')
+contours1 = gpd.read_file("output/dem_contour.gpkg")
 contours1
 ```
 
@@ -980,7 +983,7 @@ contours1
 #| fig-cap: Contours of the `dem.tif` raster, calculated using the `gdal_contour` program
 fig, ax = plt.subplots()
 rasterio.plot.show(src_dem, ax=ax)
-contours1.plot(ax=ax, edgecolor='black');
+contours1.plot(ax=ax, edgecolor="black");
 ```
 
 ## Distance to nearest geometry {#sec-distance-to-nearest-geometry}
@@ -1005,13 +1008,13 @@ Finally, we also replace "erase" (i.e., replace with `np.nan`) IDs which were `n
 <!-- md: the following example should be relaced to more efficient code following Anita's suggestion, afterwards will rephrase the text too -->
 
 ```{python}
-factor = 0.2
+FACTOR = 0.2
 # Reading aggregated array
 r = src_nz_elev.read(1,
     out_shape=(
-        int(src_nz_elev.height * factor),
-        int(src_nz_elev.width * factor)
-        ),
+        int(src_nz_elev.height * FACTOR),
+        int(src_nz_elev.width * FACTOR)
+    ),
     resampling=rasterio.enums.Resampling.average
 )
 # Updating the transform
@@ -1035,7 +1038,7 @@ The result is an array named `ids` with the IDs, and the corresponding `new_tran
 
 fig, ax = plt.subplots()
 rasterio.plot.show(ids, transform=new_transform, ax=ax)
-gpd.GeoSeries(coastline).plot(ax=ax, edgecolor='black');
+gpd.GeoSeries(coastline).plot(ax=ax, edgecolor="black");
 ```
 
 To calculate distances, we must convert each pixel to a vector (point) geometry.
@@ -1078,7 +1081,7 @@ The final result, a raster of distances to the nearest coastline, is shown in @f
 #| fig-cap: Distance to nearest coastline in New Zealand
 fig, ax = plt.subplots()
 rasterio.plot.show(image, transform=new_transform, ax=ax)
-gpd.GeoSeries(coastline).plot(ax=ax, edgecolor='black');
+gpd.GeoSeries(coastline).plot(ax=ax, edgecolor="black");
 ```
 
 ## Exercises

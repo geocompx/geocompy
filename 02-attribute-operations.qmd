@@ -1,32 +1,25 @@
 ---
 jupyter: python3
 ---
-
 # Attribute data operations {#sec-attr}
-
 ## Prerequisites {.unnumbered}
-
 <!--jn: why pd.options.display.max_rows = 6 and not 4 as in the previous chapter?-->
 <!--md: not sure what was the reason... in general we used 6, now also changed to 6 in ch01 -->
-
-```{python}
-#| echo: false
-import pandas as pd
-import matplotlib.pyplot as plt
-pd.options.display.max_rows = 6
-pd.options.display.max_columns = 6
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
-```
-
 This chapter requires importing the following packages:
 
 ```{python}
+import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import geopandas as gpd
 import rasterio
+```
+```{python}
+#| echo: false
+pd.options.display.max_rows = 6
+pd.options.display.max_columns = 6
+pd.options.display.max_colwidth = 35
+plt.rcParams["figure.figsize"] = (5, 5)
 ```
 
 It also relies on the following data files:
@@ -36,22 +29,22 @@ It also relies on the following data files:
 import os
 from urllib.request import urlretrieve
 
-data_path = 'data'
-if not os.path.exists(data_path):
-  os.mkdir(data_path)
-  
-file_path = 'data/landsat.tif'
-url = 'https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif'
-if not os.path.exists(file_path):
-  print('Attempting to get the data')
-  urlretrieve(url, file_path)
-```
+DATA_PATH = "data"
+if not os.path.exists(DATA_PATH):
+    os.mkdir(DATA_PATH)
 
+FILE_PATH = "data/landsat.tif"
+TIF_URL = "https://github.com/geocompx/geocompy/releases/download/0.1/landsat.tif"
+if not os.path.exists(FILE_PATH):
+    print("Attempting to get the data")
+    urlretrieve(TIF_URL, FILE_PATH)
+```
+<!--wd: Using the UPPER_CASE constant naming convention.-->
 ```{python}
-world = gpd.read_file('data/world.gpkg')
-src_elev = rasterio.open('output/elev.tif')
-src_grain = rasterio.open('output/grain.tif')
-src_multi_rast = rasterio.open('data/landsat.tif')
+world = gpd.read_file("data/world.gpkg")
+src_elev = rasterio.open("output/elev.tif")
+src_grain = rasterio.open("output/grain.tif")
+src_multi_rast = rasterio.open("data/landsat.tif")
 ```
 
 ## Introduction
@@ -95,7 +88,7 @@ Each index can be:
 -   A slice, as in `0:3`
 -   `:`---indicating "all" indices, as in `[:]`<!--jn: a short example is missing for this case--> <!--md: now added--> 
 
-An exception to this rule is selecting columns using a list, which we do using shorter notation, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
+An exception to this rule is selecting columns using a list, which we do using shorter notation, as in `df[["a","b"]]`, instead of `df.loc[:, ["a","b"]]`, to select columns `"a"` and `"b"` from `df`.
 
 Here are few examples of subsetting the `GeoDataFrame` of world countries (@fig-gdf-plot).
 First, we are subsetting rows by position.
@@ -132,13 +125,13 @@ world.iloc[0:3, 0:3]
 
 Subsetting columns by name is not done with the `.iloc` method, but requires specifying the column names directly in a double square bracket `[[` notation.
 ```{python}
-world[['name_long', 'geometry']]
+world[["name_long", "geometry"]]
 ```
 
-To select many successive columns, we can use the `:` notation, as in `world.loc[:, 'name_long':'pop']`, which selects all columns from `name_long` to `pop` (inclusive).
+To select many successive columns, we can use the `:` notation, as in `world.loc[:, "name_long":"pop"]`, which selects all columns from `name_long` to `pop` (inclusive).
 
 ```{python}
-world.loc[:, 'name_long':'pop']
+world.loc[:, "name_long":"pop"]
 ```
 
 <!--jn: is this example actually used in practice? if not, maybe we should remove it?-->
@@ -154,13 +147,13 @@ world.drop([2, 3, 5])
 To remove specific columns we need to add an extra argument, `axis=1` (i.e., columns).
 
 ```{python}
-world.drop(['name_long', 'continent'], axis=1)
+world.drop(["name_long", "continent"], axis=1)
 ```
 
 We can also rename columns using the [`.rename`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.rename.html) method, in which we pass a dictionary of the form `old_name:new_name` to the `columns` argument.
 
 ```{python}
-world[['name_long', 'pop']].rename(columns={'pop': 'population'})
+world[["name_long", "pop"]].rename(columns={"pop": "population"})
 ```
 
 The standard **numpy** comparison operators (@tbl-comparison-operators) can be used in boolean subsetting with **pandas**/**geopandas**.
@@ -180,7 +173,7 @@ The first step is to create a logical vector (a `Series` object) that is `True` 
 Then, we use this vector to subset the `world` dataset, which returns a new `GeoDataFrame` object containing only the small countries.
 
 ```{python}
-idx_small = world['area_km2'] < 10000  ## a logical 'Series'
+idx_small = world["area_km2"] < 10000  ## a logical 'Series'
 small_countries = world[idx_small]
 small_countries
 ```
@@ -188,25 +181,23 @@ small_countries
 A more concise command, which omits the intermediary object by combining the two steps into one, generates the same result.
 
 ```{python}
-small_countries = world[world['area_km2'] < 10000]
+small_countries = world[world["area_km2"] < 10000]
 small_countries
 ```
 
 We can also combine indexes using logical operators, such as `&` (and), `|` (or), and `~` (not).
 
 ```{python}
-idx_small = world['area_km2'] < 10000
-idx_asia = world['continent'] == 'Asia'
-world.loc[idx_small & idx_asia, ['name_long', 'continent', 'area_km2']]
+idx_small = world["area_km2"] < 10000
+idx_asia = world["continent"] == "Asia"
+world.loc[idx_small & idx_asia, ["name_long", "continent", "area_km2"]]
 ```
 
 The various methods shown above can be chained for any combination with several subsetting steps.
 For example, the following code selects only countries from Asia, keeps only the `name_long` and `continent` columns, and then selects the first five rows.
 
 ```{python}
-world[world['continent'] == 'Asia']  \
-    .loc[:, ['name_long', 'continent']]  \
-    .iloc[0:5, :]
+world[world["continent"] == "Asia"].loc[:, ["name_long", "continent"]].iloc[0:5]
 ```
 
 Logical operators `&`, `|`, and `~` (@tbl-comparison-operators) can be used to combine multiple conditions.
@@ -214,11 +205,9 @@ For example, here are all countries in North America or South America.
 Keep in mind that the parentheses around each condition (here, and in analogous cases using other operators) are crucial; otherwise, due to Python's [precedence rules](https://docs.python.org/3/reference/expressions.html#operator-precedence), the `|` operator is executed before `==` and we get an error.
 
 ```{python}
-world[
-        (world['continent'] == 'North America') | 
-        (world['continent'] ==  'South America')
-    ]  \
-    .loc[:, ['name_long', 'continent']]
+
+idx_continent = (world["continent"] == "North America") | (world["continent"] == "South America")
+world[idx_continent].loc[:, ["name_long", "continent"]]
 ```
 
 However, specifically, expressions combining multiple comparisons with `==` combined with `|` can be replaced with the [`.isin`](https://pandas.pydata.org/docs/reference/api/pandas.Series.isin.html) method and a `list` of values to compare with.
@@ -226,8 +215,8 @@ The advantage of `.isin` is more concise and easy to manage code, especially whe
 For example, the following expression gives the same result as above.
 
 ```{python}
-world[world['continent'].isin(['North America', 'South America'])]  \
-    .loc[:, ['name_long', 'continent']]
+list_continent = ["North America", "South America"]
+world[world["continent"].isin(list_continent)].loc[:, ["name_long", "continent"]]
 ```
 
 ### Vector attribute aggregation {#sec-vector-attribute-aggregation}
@@ -241,7 +230,7 @@ Since aggregation is a form of data reduction, it can be a useful early step whe
 Attribute-based aggregation can be achieved using a combination of `.groupby` and `.sum`, where the former groups the data by the grouping variable(s) and the latter calculates the sum of the remaining columns.
 
 ```{python}
-world_agg1 = world[['continent', 'pop']].groupby('continent').sum()
+world_agg1 = world[["continent", "pop"]].groupby("continent").sum()
 world_agg1
 ```
 
@@ -255,8 +244,8 @@ Note that the `.reset_index` method is used (here, and elsewhere in the book) to
 <!-- md: right, now explained -->
 
 ```{python}
-world_agg2 = world[['continent', 'pop', 'geometry']] \
-    .dissolve(by='continent', aggfunc='sum') \
+world_agg2 = world[["continent", "pop", "geometry"]] \
+    .dissolve(by="continent", aggfunc="sum") \
     .reset_index()
 world_agg2
 ```
@@ -269,7 +258,7 @@ In this case, the resulting `world_agg2` object is a `GeoDataFrame` containing 8
 #| label: fig-spatial-aggregation
 #| fig-cap: Continents with summed population
 fig, ax = plt.subplots(figsize=(6, 3))
-world_agg2.plot(column='pop', edgecolor='black', legend=True, ax=ax);
+world_agg2.plot(column="pop", edgecolor="black", legend=True, ax=ax)
 ```
 
 Other options for the `aggfunc` parameter in `.dissolve` [include](https://geopandas.org/en/stable/docs/user_guide/aggregation_with_dissolve.html)`'first'`, `'last'`, `'min'`, `'max'`, `'sum'`, `'mean'`, `'median'`.
@@ -284,12 +273,12 @@ The `rename` method is used to rename the `'name_long'` column into `'n'`, as it
 
 ```{python}
 world_agg3 = world.dissolve(
-    by='continent', 
+    by="continent",
     aggfunc={
-        'name_long': 'count',
-        'pop': 'sum',
-        'area_km2': 'sum'
-    }).rename(columns={'name_long': 'n'})
+        "name_long": "count",
+        "pop": "sum",
+        "area_km2": "sum"
+    }).rename(columns={"name_long": "n"})
 world_agg3
 ```
 
@@ -297,7 +286,7 @@ Figure @fig-spatial-aggregation-different-functions visualizes the three aggrega
 
 ```{python}
 #| label: fig-spatial-aggregation-different-functions
-#| fig-cap: "Continent's properties, calculated using spatial aggregation using different functions"
+#| fig-cap: "Continent's properties calculated using different spatial aggregation functions"
 #| fig-subcap: 
 #| - Summed population
 #| - Summed area
@@ -305,13 +294,13 @@ Figure @fig-spatial-aggregation-different-functions visualizes the three aggrega
 #| layout-ncol: 3
 # Summed population
 fig, ax = plt.subplots(figsize=(5, 2.5))
-world_agg3.plot(column='pop', edgecolor='black', legend=True, ax=ax);
+world_agg3.plot(column="pop", edgecolor="black", legend=True, ax=ax)
 # Summed area
 fig, ax = plt.subplots(figsize=(5, 2.5))
-world_agg3.plot(column='area_km2', edgecolor='black', legend=True, ax=ax);
+world_agg3.plot(column="area_km2", edgecolor="black", legend=True, ax=ax)
 # Count of countries
 fig, ax = plt.subplots(figsize=(5, 2.5))
-world_agg3.plot(column='n', edgecolor='black', legend=True, ax=ax);
+world_agg3.plot(column="n", edgecolor="black", legend=True, ax=ax)
 ```
 
 There are several other table-related operations that are possible, such as creating new columns or sorting the values.
@@ -323,9 +312,9 @@ In the following code example, given the `world_agg3` continent summary (@fig-sp
 -   keep only the 3 most populous continents.
 
 ```{python}
-world_agg4 = world_agg3.drop(columns=['geometry'])
-world_agg4['density'] = world_agg4['pop'] / world_agg4['area_km2']
-world_agg4 = world_agg4.sort_values(by='n', ascending=False)
+world_agg4 = world_agg3.drop(columns=["geometry"])
+world_agg4["density"] = world_agg4["pop"] / world_agg4["area_km2"]
+world_agg4 = world_agg4.sort_values(by="n", ascending=False)
 world_agg4 = world_agg4.head(3)
 world_agg4
 ```
@@ -343,7 +332,7 @@ In the following example, we combine data on coffee production with the `world` 
 The coffee data is in a `DataFrame` called `coffee_data` imported from a CSV file of major coffee-producing nations.
 
 ```{python}
-coffee_data = pd.read_csv('data/coffee_data.csv')
+coffee_data = pd.read_csv("data/coffee_data.csv")
 coffee_data
 ```
 
@@ -352,7 +341,7 @@ Its columns are `name_long`---country name, and `coffee_production_2016` and `co
 A left join, which preserves the first dataset, merges `world` with `coffee_data`, based on the common `'name_long'` column:
 
 ```{python}
-world_coffee = pd.merge(world, coffee_data, on='name_long', how='left')
+world_coffee = pd.merge(world, coffee_data, on="name_long", how="left")
 world_coffee
 ```
 
@@ -364,9 +353,9 @@ Note that, here and in many other examples in later chapters, we are using a tec
 
 ```{python}
 #| label: fig-join-coffee-production
-#| fig-cap: 'World coffee production, thousand 60-kg bags by country, in 2017 (source: International Coffee Organization).'
-base = world_coffee.plot(color='white', edgecolor='lightgrey')
-coffee_map = world_coffee.plot(ax=base, column='coffee_production_2017');
+#| fig-cap: "World coffee production, thousand 60-kg bags by country, in 2017 (source: International Coffee Organization)."
+base = world_coffee.plot(color="white", edgecolor="lightgrey")
+coffee_map = world_coffee.plot(ax=base, column="coffee_production_2017")
 ```
 
 To work, attribute-based joins need a "key variable" in both datasets (`on` parameter of `pd.merge`).
@@ -383,14 +372,14 @@ In case where column names are not the same, you can use `left_on` and `right_on
 Note that the result `world_coffee` has the same number of rows as the original dataset `world`.
 Although there are only 47 rows in `coffee_data`, all 177 country records are kept intact in `world_coffee`.
 Rows in the original dataset with no match are assigned `np.nan` values for the new coffee production variables.
-This is a characteristic of a left join (specified with `how='left'`) and is what we typically want to do.
+This is a characteristic of a left join (specified with `how="left"`) and is what we typically want to do.
 
 What if we only want to keep countries that have a match in the key variable?
 In that case an inner join can be used, which keeps only rows with a match in both datasets.
-We can use it with the `how='inner'` argument.
+We can use it with the `how="inner"` argument.
 
 ```{python}
-pd.merge(world, coffee_data, on='name_long', how='inner')
+pd.merge(world, coffee_data, on="name_long", how="inner")
 ```
 
 <!-- An alternative way to join two `(Geo)DataFrame`s is the aptly called `join` function. -->
@@ -401,7 +390,7 @@ pd.merge(world, coffee_data, on='name_long', how='inner')
 
 <!--
 ```{python}
-world.join(coffee_data.set_index('name_long'), on='name_long', how='inner')
+world.join(coffee_data.set_index("name_long"), on="name_long", how="inner")
 ```
 
 Note that in this case, we need to set the index of `coffee_data` to the `name_long` values.
@@ -416,7 +405,7 @@ Note that we are working on a copy of `world` named `world2` so that we do not m
 
 ```{python}
 world2 = world.copy()
-world2['pop_dens'] = world2['pop'] / world2['area_km2']
+world2["pop_dens"] = world2["pop"] / world2["area_km2"]
 world2
 ```
 
@@ -425,8 +414,8 @@ For example, we want to combine the `continent` and `region_un` columns into a n
 Subsequently, we remove the original columns using `.drop`:
 
 ```{python}
-world2['con_reg'] = world['continent'] + ':' + world2['region_un']
-world2 = world2.drop(['continent', 'region_un'], axis=1)
+world2["con_reg"] = world["continent"] + ":" + world2["region_un"]
+world2 = world2.drop(["continent", "region_un"], axis=1)
 world2
 ```
 
@@ -438,8 +427,7 @@ The `str.split` method returns a column of `list`s by default; to place the stri
 <!-- md: agree, now added -->
 
 ```{python}
-world2[['continent', 'region_un']] = world2['con_reg'] \
-    .str.split(':', expand=True)
+world2[["continent", "region_un"]] = world2["con_reg"].str.split(":", expand=True)
 world2
 ```
 
@@ -447,7 +435,7 @@ Renaming one or more columns can be done using the `.rename` method combined wit
 The following command, for example, renames the lengthy `name_long` column to simply `name`.
 
 ```{python}
-world2.rename(columns={'name_long': 'name'})
+world2.rename(columns={"name_long": "name"})
 ```
 
 To change all column names at once, we assign a `list` of the "new" column names into the `.columns` property.
@@ -455,7 +443,7 @@ The `list` must be of the same length as the number of columns (i.e., `world.sha
 This is illustrated below, which outputs the same `world2` object, but with very short names.
 
 ```{python}
-new_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'geom', 'i', 'j', 'k', 'l']
+new_names = "a,b,c,d,e,f,g,h,geom,i,j,k,l".split(",")
 world2.columns = new_names
 world2
 ```
@@ -479,7 +467,7 @@ To go from `GeoDataFrame` to `DataFrame` we need to.
 For example, by the end of the following code section `world2` becomes a regular `DataFrame`.
 
 ```{python}
-world2 = world2.drop('geom', axis=1)
+world2 = world2.drop("geom", axis=1)
 world2 = pd.DataFrame(world2)
 world2
 ```
@@ -560,7 +548,7 @@ Before we can demonstrate that, we must convert the array from `int` to `float`,
 
 ```{python}
 elev1 = elev.copy()
-elev1 = elev1.astype('float64')
+elev1 = elev1.astype("float64")
 elev1
 ```
 
@@ -593,7 +581,7 @@ For example, the following code section shows the distribution of values in `ele
 ```{python}
 #| label: fig-raster-hist
 #| fig-cap: Distribution of cell values in continuous raster (`elev.tif`)
-plt.hist(elev.flatten());
+plt.hist(elev.flatten())
 ```
 
 <!-- jn: how to deal with categorical rasters? -->
@@ -620,7 +608,7 @@ These two arrays can be passed to the [`plt.bar`](https://matplotlib.org/stable/
 ```{python}
 #| label: fig-raster-bar
 #| fig-cap: Distribution of cell values in categorical raster (`grain.tif`)
-plt.bar(*freq);
+plt.bar(*freq)
 ```
 
 ## Exercises
