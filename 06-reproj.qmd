@@ -22,6 +22,8 @@ import math
 ```
 
 <!-- jn: question -- cannot we just somehow set all of these pandas options globally (for the whole book), instead of repeating them in every chapter? -->
+<!-- md: good idea, will try to check how -->
+
 ```{python}
 #| echo: false
 import pandas as pd
@@ -47,8 +49,9 @@ cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
 This chapter builds on that knowledge and goes further.
 It demonstrates how to set and transform geographic data from one CRS to another and, furthermore, highlights specific issues that can arise due to ignoring CRSs that you should be aware of, especially if your data is stored with lon/lat coordinates.
 
-In many projects there is no need to worry about, let alone convert between, different CRSs.
+<!-- In many projects there is no need to worry about, let alone convert between, different CRSs. -->
 <!-- jn: these two sentences do not "glue" well -->
+<!-- md: I suggest keeping just the 2nd sentence -->
 It is important to know if your data is in a projected or geographic coordinate system, and the consequences of this for geometry operations.
 However, if you know the CRS of your data and the consequences for geometry operations (covered in the next section), CRSs should just work behind the scenes: people often suddenly need to learn about CRSs when things go wrong.
 Having a clearly defined project CRS that all project data is in, plus understanding how and why to use different CRSs, can ensure that things do not go wrong.
@@ -77,10 +80,12 @@ The short answer is that the third way to identify CRSs is correct: `EPSG:4326` 
 Furthermore, although it is machine readable, unlike the proj-string representation `EPSG:4326` is short, easy to remember and highly 'findable' online (searching for `EPSG:4326` yields a dedicated page on the website [epsg.io](https://epsg.io/4326), for example).
 The more concise identifier `4326` is also understood by **geopandas** and **rasterio**, but we recommend the more explicit `AUTHORITY:CODE` representation to prevent ambiguity and to provide context.
 <!-- jn: if we recommend the more explicit representation, why do we use the shorter one in the book? I prefer the longer one, but it is open for the discussion. We need to be consistent. -->
+<!-- md: I'm not sure I see why we recommend 'AUTHORITY:CODE'. Perhaps we can simply say that it is more clear, but since EPSG is the "default" and most common authority the shorter version also works and therefore we use it in the book? -->
 
 The longer answer is that none of the three descriptions are sufficient, and more detail is needed for unambiguous CRS handling and transformations: due to the complexity of CRSs, it is not possible to capture all relevant information about them in such short text strings.
-For this reason, the Open Geospatial Consortium (OGC, which also developed the simple features specification that the **geopandas** package implements) developed an open standard format for describing CRSs that is called WKT (Well Known Text).
+For this reason, the Open Geospatial Consortium (OGC, which also developed the Simple Features specification that the **geopandas** package implements) developed an open standard format for describing CRSs that is called WKT (Well Known Text).
 <!-- jn: simple features or Simple Features? We need to be consistent -- please also take a look at previous chapters... -->
+<!-- md: right. IMHO "Simple Features" is more correct, now changed in other places too -->
 This is detailed in a [100+ page document](file:///home/michael/Downloads/18-010r7_Geographic_information__Well-known_text_representation_of_coordinate_reference_systems.pdf) that "defines the structure and content of a text string implementation of the abstract model for coordinate reference systems described in ISO 19111:2019" [@opengeospatialconsortium_wellknown_2019].
 <!-- jn: the document link is broken... -->
 The WKT representation of the WGS84 CRS, which has the identifier `EPSG:4326` is as follows.
