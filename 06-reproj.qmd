@@ -176,12 +176,11 @@ world.crs.axis_info[1].unit_name
 world.crs.to_authority()
 ```
 
-The `to_proj4()` method returns the proj-string representation of the CRS.
-```{python}
-world.crs.to_proj4()
-```
+<!-- The `to_proj4()` method returns the proj-string representation of the CRS. -->
+<!-- world.crs.to_proj4() -->
 
-<!--jn: the last code example leaves the following message (I think we should either remove the whole code example, or just remove the message but explaining it in the text..): '/home/jn/micromamba/envs/geocompy/lib/python3.11/site-packages/pyproj/crs/crs.py:1293: UserWarning: You will likely lose important projection information when converting to a PROJ string from another format. See: https://proj.org/faq.html#what-is-the-best-format-for-describing-coordinate-reference-systems proj = self._crs.to_proj4(version=version)' -->
+<!-- jn: the last code example leaves the following message (I think we should either remove the whole code example, or just remove the message but explaining it in the text..): '/home/jn/micromamba/envs/geocompy/lib/python3.11/site-packages/pyproj/crs/crs.py:1293: UserWarning: You will likely lose important projection information when converting to a PROJ string from another format. See: https://proj.org/faq.html#what-is-the-best-format-for-describing-coordinate-reference-systems proj = self._crs.to_proj4(version=version)' -->
+<!-- md: I suggest in general we keep the warning messages (if any), so the reader is not surprised when they run the code. in this case, since we also mention that proj-strings are outdated, I agree we can just remove the code example -->
 
 In cases when a coordinate reference system (CRS) is missing or the wrong CRS is set, the `.set_crs` method can be used on a `GeoSeries` or a `GeoDataFrame` to set it.
 The CRS can be specified using an EPSG code as the first argument.
@@ -458,30 +457,21 @@ It may come as a surprise that `lnd_layer` and `lnd_layer2` are just over 2 $km$
 The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually-created coordinates that created `lnd_layer` and `lnd_layer_proj`.
 
 <!-- jn: maybe we can remove the text from here to my next comment, as it is already explained in the previous section..? -->
-The CRS of `GeoSeries` and `GeoDataFrame` objects can be queried and set---as we learned in @sec-querying-and-setting-coordinate-systems---using the `.crs` property and the `.set_crs` method, respectively.
-The output is printed as multiple lines of text containing information about the coordinate system:
+<!-- md: agree, now removed -->
+<!-- The CRS of `GeoSeries` and `GeoDataFrame` objects can be queried and set---as we learned in @sec-querying-and-setting-coordinate-systems---using the `.crs` property and the `.set_crs` method, respectively. -->
+<!-- The output is printed as multiple lines of text containing information about the coordinate system: -->
 
-```{python}
-crs_lnd = lnd_layer.crs
-crs_lnd
-```
+<!-- crs_lnd = lnd_layer.crs -->
+<!-- crs_lnd -->
 
-As mentioned in @sec-coordinate-reference-systems, a CRS object has many useful properties to examing the CRS characteristics and details, including `.name`, `.to_proj4()` and `.to_epsg()`:
+<!-- As mentioned in @sec-coordinate-reference-systems, a CRS object has many useful properties to examing the CRS characteristics and details, including `.name` and `.to_epsg()`: -->
 
-```{python}
-crs_lnd.name
-```
+<!-- crs_lnd.name -->
+<!-- crs_lnd.to_proj4() -->
+<!-- crs_lnd.to_epsg() -->
 
-```{python}
-crs_lnd.to_proj4()
-```
-
-```{python}
-crs_lnd.to_epsg()
-```
-
-As mentioned in @sec-coordinate-reference-systems, WKT representation, accessible through `.to_wkt()` of the `crs_lnd` object is the ultimate source of truth.
-This means that the outputs of the previous code chunk are queries from the WKT representation provided by PROJ, rather than inherent attributes of the object and its CRS.
+<!-- As mentioned in @sec-coordinate-reference-systems, WKT representation, accessible through `.to_wkt()` of the `crs_lnd` object is the ultimate source of truth. -->
+<!-- This means that the outputs of the previous code chunk are queries from the WKT representation provided by PROJ, rather than inherent attributes of the object and its CRS. -->
 <!-- jn: end -->
 
 Reprojecting to a different CRS is also demonstrated below using `cycle_hire_osm`, a point layer that represents 'docking stations' where you can hire bicycles in London.
@@ -496,14 +486,15 @@ cycle_hire_osm_projected.crs
 The resulting object has a new CRS with an EPSG code `27700`.
 But how to find out more details about this EPSG code, or any code?
 One option is to search for it online.
-Another option is to create a standalone CRS object within the Python environment (using `pyproj.CRS.from_string` or `pyproj.CRS.from_epsg`, see @sec-coordinate-reference-systems), and then query its properties, such as `.name`, `.to_proj4()`, and `.to_wkt()`.
+Another option is to create a standalone CRS object within the Python environment (using `pyproj.CRS.from_string` or `pyproj.CRS.from_epsg`, see @sec-coordinate-reference-systems), and then query its properties, such as `.name` and `.to_wkt()`.
 
 ```{python}
 crs_lnd_new = pyproj.CRS.from_epsg(27700)
-crs_lnd_new.name, crs_lnd_new.to_proj4(), crs_lnd_new.to_wkt()
+crs_lnd_new.name, crs_lnd_new.to_wkt()
 ```
 
 <!-- jn: what to do with the long message: '/home/jn/micromamba/envs/geocompy/lib/python3.11/site-packages/pyproj/crs/crs.py:1293: UserWarning: You will likely lose important projection information when converting to a PROJ string from another format. See: https://proj.org/faq.html#what-is-the-best-format-for-describing-coordinate-reference-systems proj = self._crs.to_proj4(version=version)' ? -->
+<!-- md: same as above, removed the code example -->
   
 The result shows that the EPSG code `27700` represents the British National Grid, a result that could have been found by searching online for "[EPSG 27700](https://www.google.com/search?q=CRS+27700)".
 
