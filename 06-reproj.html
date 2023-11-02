@@ -572,13 +572,15 @@ Note
 <div class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>lnd_layer.crs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This implies that <strong>geopandas</strong> does not know what the CRS is and is unwilling to guess. Unless a CRS is manually specified or is loaded from a source that has CRS metadata, <strong>geopandas</strong> does not make any explicit assumptions about which coordinate systems, other than to say “I don’t know”. This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying assumption that all coordinates have a lon/lat CRS: <code>EPSG:4326</code>. <!-- jn: Michael, please check if the above statement is still correct (I vaguely recall some recent discussion about this...)  --></p>
+<p>This implies that <strong>geopandas</strong> does not know what the CRS is and is unwilling to guess. Unless a CRS is manually specified or is loaded from a source that has CRS metadata, <strong>geopandas</strong> does not make any explicit assumptions about which coordinate systems, other than to say “I don’t know”. This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying <a href="https://datatracker.ietf.org/doc/html/rfc7946#section-4">assumption</a> that all coordinates have a lon/lat CRS: <code>EPSG:4326</code>. <!-- jn: Michael, please check if the above statement is still correct (I vaguely recall some recent discussion about this...)  --> <!-- md: as far as I can tell it's correct, now added a reference; e.g., reading a GeoJSON in 'geopandas' automatically sets CRS to 4326 --></p>
 <p>A CRS can be added to <code>GeoSeries</code> or <code>GeoDataFrame</code> objects using the <code>.set_crs</code> method, as mentioned above.</p>
 <div class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>lnd_layer <span class="op">=</span> lnd_layer.set_crs(<span class="dv">4326</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <!-- jn: "all geographic coordinates have a coordinate system" what does it mean? -->
-<p>In general, all geographic coordinates have a coordinate system and software can only make good decisions about plotting and geometry operations if it knows what type of CRS it is working with. When working with <strong>geopandas</strong> and <strong>rasterio</strong>, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered. It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not). When exporting the results, though, it is important to keep the CRS definition in place, because other software typically <em>do</em> use, and require, the CRS definition in calculation. It should also be mentioned that, in some cases the CRS specification is left unspecified on purpose, for example when working with layers in arbitrary or non-geographic space (simulations, internal building plans, analysis of plot-scale ecological patterns, etc.).</p>
+<!-- md: I'm not sure either, suggest removing the sentence -->
+<!-- In general, all geographic coordinates have a coordinate system and software can only make good decisions about plotting and geometry operations if it knows what type of CRS it is working with. -->
+<p>When working with <strong>geopandas</strong> and <strong>rasterio</strong>, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered. It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not). When exporting the results, though, it is important to keep the CRS definition in place, because other software typically <em>do</em> use, and require, the CRS definition in calculation. It should also be mentioned that, in some cases the CRS specification is left unspecified on purpose, for example when working with layers in arbitrary or non-geographic space (simulations, internal building plans, analysis of plot-scale ecological patterns, etc.).</p>
 </section>
 <section id="sec-geometry-operations-on-projected-and-unprojected-data" class="level2" data-number="6.4">
 <h2 data-number="6.4" class="anchored" data-anchor-id="sec-geometry-operations-on-projected-and-unprojected-data"><span class="header-section-number">6.4</span> Geometry operations on projected and unprojected data</h2>
@@ -632,7 +634,7 @@ dtype: geometry</code></pre>
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff <span class="op">=</span> lnd_layer.<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_367/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_369/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer_buff = lnd_layer.buffer(1)</code></pre>
 </div>
@@ -711,10 +713,10 @@ Note
 <div class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>lnd_layer.distance(lnd_layer_proj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_367/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_369/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer.distance(lnd_layer_proj)
-/tmp/ipykernel_367/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
+/tmp/ipykernel_369/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
 Use `to_crs()` to reproject one of the input geometries to match the CRS of the other.
 
 Left CRS: EPSG:4326
@@ -1025,7 +1027,7 @@ Note
         0.0, -0.00031506316853514724, 37.51912722777022)}</code></pre>
 </div>
 </div>
-<p>Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the “template”. <!-- jn: why 'w' and not 'rw' or 'r+'? --></p>
+<p>Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the “template”. <!-- jn: why 'w' and not 'rw' or 'r+'? --> <!-- md: almost always we need either 'r' (read existing file) or 'w' (create new file); 'r+' is an exception, when we change (e.g. the crs) an existing file. I've added a note about that following another comment above --></p>
 <div class="cell" data-execution_count="44">
 <div class="sourceCode cell-code" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>template.meta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
