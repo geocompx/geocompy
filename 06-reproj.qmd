@@ -204,13 +204,23 @@ Replacing the CRS definition for a **rasterio** file connection is typically not
 One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch).
 However, if we, for some reason, need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode.
 <!-- jn: what's the difference between `r+` and `rw`? -->
-To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`, and examine its existing CRS.
+<!-- md: good point, I've added a note about file connection modes -->
+To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`, 
 
 ```{python}
 shutil.copy('data/nlcd.tif', 'output/nlcd_modified_crs.tif')
+```
+
+and examine its existing CRS.
+
+```{python}
 src_nlcd2 = rasterio.open('output/nlcd_modified_crs.tif', 'r+')
 src_nlcd2.crs
 ```
+
+::: callout-note
+The `rasterio.open` function `mode`s generally follows Python's standard [file connection](https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files) modes, with possible arguments being `'r'` (read), `'w'` (write), `'r+'` (read/write), and `'w+'` (write/read) (the `'a'` "append" mode is irrelevant for raster files). In the book, and in general, the most commonly used modes are `'r'` (read) and `'w'` (write). `'r+'`, used in the last example, means 'read/write'. Unlike with `'w'`, `'r+'` does not delete the existing content on open, making `'r+'` suitable for making changes in an existing file (such as in the last example, where we replaced the CRS).
+:::
 
 To replace the definition with a new one, such as `EPSG:3857`, we can use the `.crs` method, as shown below.
 
