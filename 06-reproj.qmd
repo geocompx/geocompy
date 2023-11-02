@@ -369,8 +369,9 @@ To make the `lnd_layer` and `lnd_layer_proj` objects geographically comparable, 
 But which CRS to use?
 The answer depends on context: many projects, especially those involving web mapping, require outputs in `EPSG:4326`, in which case it is worth transforming the projected object.
 If, however, the project requires geometric calculations, implying planar geometry, e.g., calculating buffers (@sec-geometry-operations-on-projected-and-unprojected-data), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (`EPSG:27700`).
-That is the subject of @sec-reprojecting-raster-geometries.
+That is the subject of @sec-which-crs-to-use.
 <!-- jn: is the above cross-reference correct? does not seem to be... -->
+<!-- md: right, this was a mistake. now corrected -->
 
 ## Which CRS to use? {#sec-which-crs-to-use}
 
@@ -484,7 +485,6 @@ The difference in location between the two points is not due to imperfections in
 
 <!-- As mentioned in @sec-coordinate-reference-systems, WKT representation, accessible through `.to_wkt()` of the `crs_lnd` object is the ultimate source of truth. -->
 <!-- This means that the outputs of the previous code chunk are queries from the WKT representation provided by PROJ, rather than inherent attributes of the object and its CRS. -->
-<!-- jn: end -->
 
 Reprojecting to a different CRS is also demonstrated below using `cycle_hire_osm`, a point layer that represents 'docking stations' where you can hire bicycles in London.
 The contents of the CRS object associated with a given geometry column is changed when the object's CRS is transformed.
@@ -526,8 +526,10 @@ Additionally, there is a second similar operation called "transformation".
 Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry.
 For example, it could convert the input raster (a regular grid) into a curvilinear grid.
 The **rasterio**, like common raster file formats (such as GeoTIFF), does not support curvilinear grids.
+The **xarray** package, for instance, can be used to [work with](https://docs.xarray.dev/en/stable/examples/multidimensional-coords.html) curvilinear grids.
 :::
 <!-- jn: regarding above note: is there any Python package supporting curvilinear grids? if yes, maybe mention it there... -->
+<!-- md: good point, added -->
 
 The raster reprojection process is done using two functions from the `rasterio.warp` sub-package:
 
