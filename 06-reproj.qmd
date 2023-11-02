@@ -256,8 +256,9 @@ lnd_layer.crs
 
 This implies that **geopandas** does not know what the CRS is and is unwilling to guess.
 Unless a CRS is manually specified or is loaded from a source that has CRS metadata, **geopandas** does not make any explicit assumptions about which coordinate systems, other than to say "I don't know".
-This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying assumption that all coordinates have a lon/lat CRS: `EPSG:4326`.
+This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying [assumption](https://datatracker.ietf.org/doc/html/rfc7946#section-4) that all coordinates have a lon/lat CRS: `EPSG:4326`.
 <!-- jn: Michael, please check if the above statement is still correct (I vaguely recall some recent discussion about this...)  -->
+<!-- md: as far as I can tell it's correct, now added a reference; e.g., reading a GeoJSON in 'geopandas' automatically sets CRS to 4326 -->
 
 A CRS can be added to `GeoSeries` or `GeoDataFrame` objects using the `.set_crs` method, as mentioned above.
 
@@ -266,7 +267,8 @@ lnd_layer = lnd_layer.set_crs(4326)
 ```
 
 <!-- jn: "all geographic coordinates have a coordinate system" what does it mean? -->
-In general, all geographic coordinates have a coordinate system and software can only make good decisions about plotting and geometry operations if it knows what type of CRS it is working with.
+<!-- md: I'm not sure either, suggest removing the sentence -->
+<!-- In general, all geographic coordinates have a coordinate system and software can only make good decisions about plotting and geometry operations if it knows what type of CRS it is working with. -->
 When working with **geopandas** and **rasterio**, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered.
 It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not).
 When exporting the results, though, it is important to keep the CRS definition in place, because other software typically *do* use, and require, the CRS definition in calculation.
@@ -672,6 +674,7 @@ template.meta
 
 Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the "template".
 <!-- jn: why 'w' and not 'rw' or 'r+'? -->
+<!-- md: almost always we need either 'r' (read existing file) or 'w' (create new file); 'r+' is an exception, when we change (e.g. the crs) an existing file. I've added a note about that following another comment above -->
 
 ```{python}
 dst_nlcd_2 = rasterio.open('output/nlcd_4326_2.tif', 'w', **template.meta)
