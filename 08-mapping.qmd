@@ -354,14 +354,14 @@ For example, @fig-plot-raster-and-vector demonstrated plotting a raster with inc
 # Raster + vector layer
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
-nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='red');
+nz.to_crs(nz_elev.crs).plot(ax=ax, color='none', edgecolor='red');
 # Raster + computed vector layer
 fig, ax = plt.subplots(figsize=(5, 5))
 rasterio.plot.show(nz_elev, ax=ax)
 gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
     .to_crs(nz_elev.crs) \
     .buffer(22200) \
-    .boundary \
+    .exterior \
     .plot(ax=ax, color='red');
 # Raster + two vector layers
 fig, ax = plt.subplots(figsize=(5, 5))
@@ -374,7 +374,9 @@ gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
 nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
 ```
 <!-- jn: what's facecolor? -->
-<!-- jn: why one example uses .boundary and the other uses .exterior? --> -->
+<!-- md: it should be 'color', now corrected -->
+<!-- jn: why one example uses .boundary and the other uses .exterior? -->
+<!-- md: right, now corrected -->
 
 ### Basemaps
 
@@ -429,11 +431,12 @@ nz[vars]
 We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables.
 To do that, we initialize the plot with the expected number of panels, such as `ncols=len(vars)` if we wish to have one row and four columns, and then go over the variables in a `for` loop, each time plotting `vars[i]` into the `ax[i]` panel (@fig-faceted-map).
 <!-- jn: you mention ncols=len(vars) in the text but uses ncols=4 in the code... I think it should be unified -->
+<!-- md: right, now corrected -->
 
 ```{python}
 #| label: fig-faceted-map
 #| fig-cap: Faceted map, four different variables of `nz`
-fig, ax = plt.subplots(ncols=4, figsize=(9, 2))
+fig, ax = plt.subplots(ncols=len(vars), figsize=(9, 2))
 for i in range(len(vars)):
     nz.plot(ax=ax[i], column=vars[i], legend=True)
     ax[i].set_title(vars[i])
