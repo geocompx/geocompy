@@ -634,7 +634,7 @@ dtype: geometry</code></pre>
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff <span class="op">=</span> lnd_layer.<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_369/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_371/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer_buff = lnd_layer.buffer(1)</code></pre>
 </div>
@@ -713,10 +713,10 @@ Note
 <div class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>lnd_layer.distance(lnd_layer_proj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_369/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_371/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer.distance(lnd_layer_proj)
-/tmp/ipykernel_369/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
+/tmp/ipykernel_371/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
 Use `to_crs()` to reproject one of the input geometries to match the CRS of the other.
 
 Left CRS: EPSG:4326
@@ -730,7 +730,7 @@ dtype: float64</code></pre>
 </div>
 </div>
 <p>Here, we got a meaningless result, and a warning.</p>
-<p>To make the <code>lnd_layer</code> and <code>lnd_layer_proj</code> objects geographically comparable, one of them must be transformed into the CRS of the other. But which CRS to use? The answer depends on context: many projects, especially those involving web mapping, require outputs in <code>EPSG:4326</code>, in which case it is worth transforming the projected object. If, however, the project requires geometric calculations, implying planar geometry, e.g., calculating buffers (<a href="#sec-geometry-operations-on-projected-and-unprojected-data"><span>Section&nbsp;6.4</span></a>), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (<code>EPSG:27700</code>). That is the subject of <a href="#sec-reprojecting-raster-geometries"><span>Section&nbsp;6.8</span></a>. <!-- jn: is the above cross-reference correct? does not seem to be... --></p>
+<p>To make the <code>lnd_layer</code> and <code>lnd_layer_proj</code> objects geographically comparable, one of them must be transformed into the CRS of the other. But which CRS to use? The answer depends on context: many projects, especially those involving web mapping, require outputs in <code>EPSG:4326</code>, in which case it is worth transforming the projected object. If, however, the project requires geometric calculations, implying planar geometry, e.g., calculating buffers (<a href="#sec-geometry-operations-on-projected-and-unprojected-data"><span>Section&nbsp;6.4</span></a>), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (<code>EPSG:27700</code>). That is the subject of <a href="#sec-which-crs-to-use"><span>Section&nbsp;6.6</span></a>. <!-- jn: is the above cross-reference correct? does not seem to be... --> <!-- md: right, this was a mistake. now corrected --></p>
 </section>
 <section id="sec-which-crs-to-use" class="level2" data-number="6.6">
 <h2 data-number="6.6" class="anchored" data-anchor-id="sec-which-crs-to-use"><span class="header-section-number">6.6</span> Which CRS to use?</h2>
@@ -803,7 +803,6 @@ dtype: float64</code></pre>
 <!-- crs_lnd.to_epsg() -->
 <!-- As mentioned in @sec-coordinate-reference-systems, WKT representation, accessible through `.to_wkt()` of the `crs_lnd` object is the ultimate source of truth. -->
 <!-- This means that the outputs of the previous code chunk are queries from the WKT representation provided by PROJ, rather than inherent attributes of the object and its CRS. -->
-<!-- jn: end -->
 <p>Reprojecting to a different CRS is also demonstrated below using <code>cycle_hire_osm</code>, a point layer that represents ‘docking stations’ where you can hire bicycles in London. The contents of the CRS object associated with a given geometry column is changed when the object’s CRS is transformed. In the code chunk below, we create a new version of <code>cycle_hire_osm</code> with a projected CRS.</p>
 <div class="cell" data-execution_count="29">
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected <span class="op">=</span> cycle_hire_osm.to_crs(<span class="dv">27700</span>)</span>
@@ -851,10 +850,11 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Reprojection of the regular rasters is also known as warping. Additionally, there is a second similar operation called “transformation”. Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry. For example, it could convert the input raster (a regular grid) into a curvilinear grid. The <strong>rasterio</strong>, like common raster file formats (such as GeoTIFF), does not support curvilinear grids.</p>
+<p>Reprojection of the regular rasters is also known as warping. Additionally, there is a second similar operation called “transformation”. Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry. For example, it could convert the input raster (a regular grid) into a curvilinear grid. The <strong>rasterio</strong>, like common raster file formats (such as GeoTIFF), does not support curvilinear grids. The <strong>xarray</strong> package, for instance, can be used to <a href="https://docs.xarray.dev/en/stable/examples/multidimensional-coords.html">work with</a> curvilinear grids.</p>
 </div>
 </div>
 <!-- jn: regarding above note: is there any Python package supporting curvilinear grids? if yes, maybe mention it there... -->
+<!-- md: good point, added -->
 <p>The raster reprojection process is done using two functions from the <code>rasterio.warp</code> sub-package:</p>
 <ol type="1">
 <li><code>rasterio.warp.calculate_default_transform</code>: <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.calculate_default_transform"><code>calculate_default_transform</code></a>, is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds. Alternatively, the destination transformation matrix can be obtained from an existing raster; this is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (<a href="03-spatial-operations.html#sec-raster-local-operations"><span>Section&nbsp;3.3.3</span></a>) (see below)</li>
