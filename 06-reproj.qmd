@@ -618,7 +618,9 @@ Recall from @sec-raster-resampling that resampling using `rasterio.warp.reprojec
 Therefore, our next step is to create the metadata file used for writing the reprojected raster to file.
 For convenience, we are taking the metadata of the source raster (`src_nlcd.meta`), making a copy (`dst_kwargs`), and then updating those specific properties that need to be changed.
 Note that the reprojection process typically creates "No Data" pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be "filled" to get back a rectangular extent.
-<!--jn: I am unsure if I understand the above sentence... can you try to rephrase it? -->
+For example, a reprojected raster may appear as a "tilted" rectangle, inside a larger straight rectangular extent, whereas the margins around the tilted rectangle are inevitably filled with "No Data" (e.g., the white stripes surrounding the edges in @fig-raster-reproject-nlcd (b) are "No Data" pixels created as a result of reprojection). 
+<!-- jn: I am unsure if I understand the above sentence... can you try to rephrase it? -->
+<!-- md: agree, now added an example to clarify -->
 We need to specify a "No Data" value of our choice, if there is no existing definition, or keep the existing source raster "No Data" setting, such as `255` in this case.
 
 ```{python}
@@ -822,6 +824,7 @@ lon, lat
 Next, we can use the obtained lon/lat coordinates in `coords` to update the WKT definition of the azimuthal equidistant (AEQD) CRS seen below.
 Notice that we modified just two values below---`"Central_Meridian"` to the longitude and `"Latitude_Of_Origin"` to the latitude of our centroid.
 <!-- jn: can you explain the below syntax (if that Python-obvious, then just as a comment for me)? what's f? what's '''? -->
+<!-- md: now added a note about it -->
 
 ```{python}
 my_wkt = f'''PROJCS["Custom_AEQD",
@@ -836,6 +839,23 @@ my_wkt = f'''PROJCS["Custom_AEQD",
  UNIT["Meter",1.0]]'''
 print(my_wkt)
 ```
+
+::: callout-note
+The above expression uses the so-called ["f-strings"](https://docs.python.org/3/tutorial/inputoutput.html#tut-f-strings) syntax, which is one of several Python techniques to embed values inside a string (as alternatives to concatenating with `+`).
+For example, given:
+```
+x = 5
+```
+the expression:
+```
+f'the value of x is {x}'
+```
+is a shortcut to:
+```
+'the value of x is ' + str(x)
+```
+both returning the string `'the value of x is 5'`.
+:::
 
 This approach's last step is to transform our original object (`zion`) to our new custom CRS (`zion_aeqd`).
 
