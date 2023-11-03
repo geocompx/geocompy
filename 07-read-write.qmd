@@ -72,6 +72,7 @@ Files hosted on static URLs can be downloaded with the following method, as illu
 Note that the download code is complicated by the fact that the server checks the `User-agent` header of the request, basically to make sure that the download takes place through a browser.
 To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code.
 <!-- jn: the following code example looks fairly complex (I think it can be done with download.file only in R) -- cannot we simplify it somehow? -->
+<!-- md: I tried another solution (wget.download) but it requires the same workaround of user-agent (and also it is a third-party package which is less preferable), so I don't see how the code can be simplified. Right, in R download file doesn't require user-agent in this case, the "download" part of the code would be 1 expression instead of 4 in Python -->
 
 ```{python}
 #| eval: false
@@ -108,6 +109,7 @@ ne.plot();
 Many Python packages have been developed for accessing geographic data, two of which are presented in @tbl-data-packages and demonstrated below.
 These provide interfaces to one or more spatial libraries or geoportals and aim to make data access even quicker from the command line.
 <!-- jn: a table with data packages should have more examples of packages (at least ~5)... we do not need, however, to explain all of them... is that possible? -->
+<!-- md: I'm not aware of data packages in Python (never used any until now). unless we do find examples, I guess we can omit the table and simply describe the two packages 'cartopy' and 'osmnx'? -->
 
 | Package     | Description                                                                                       |
 |-------------|---------------------------------------------------------------------------------------------------|
@@ -135,7 +137,10 @@ counties = gpd.read_file(filename)
 counties.plot();
 ```
 
+Note that @fig-ne-counties x-axis spans the entire range of longitues, between `-180` and `180`, since the Aleutian Islands county (which is small and difficult to see on the map) crosses the [International Date Line](https://en.wikipedia.org/wiki/International_Date_Line).
+
 <!-- jn: maybe it would be worth explaning why the visualization spans the whole world, not just the continental US? (I not it is obvious to many people, but I assume -- not all) -->
+<!-- md: sure, good idea - now added -->
 
 Other layers can be accessed the same way.
 You need to specify the `resolution`, `category`, and `name` of the requested dataset in [Natural Earth Data](https://www.naturalearthdata.com/downloads/), then  run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and read the file into the Python environment, e.g., using `gpd.read_file`.
