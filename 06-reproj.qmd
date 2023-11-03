@@ -568,11 +568,51 @@ dst_transform, dst_width, dst_height = rasterio.warp.calculate_default_transform
     src_nlcd.height,
     *src_nlcd.bounds
 )
-dst_transform, dst_width, dst_height
+dst_transform
 ```
 
-Note that `*`, in `*src_nlcd.bounds`, is used to unpack `src_nlcd.bounds` to four separate arguments (`left`, `bottom`, `right`, and `top`), which `rasterio.warp.calculate_default_transform` requires.
+```{python}
+dst_width
+```
+
+```{python}
+dst_height
+```
+
 <!-- jn: what does it mean "unpack" here? -->
+<!-- md: I've added a note with an explanation -->
+
+::: callout-note
+The `*` syntax in Python is known as variable-length ["*positional* arguments"](https://docs.python.org/3/glossary.html#term-argument).
+It is used to pass a `list` or `tuple` (or other iterables object) to positional arguments of a function.
+
+For example, in the last code block, `*`, in `*src_nlcd.bounds`, is used to unpack `src_nlcd.bounds` (an iterable of length 4) to four separate arguments (`left`, `bottom`, `right`, and `top`), which `rasterio.warp.calculate_default_transform` requires in that order.
+In other words, the expression from the last example:
+```
+rasterio.warp.calculate_default_transform(
+    src_nlcd.crs,
+    dst_crs,
+    src_nlcd.width,
+    src_nlcd.height,
+    *src_nlcd.bounds
+)
+```
+is a shortcut of:
+```
+rasterio.warp.calculate_default_transform(
+    src_nlcd.crs,
+    dst_crs,
+    src_nlcd.width,
+    src_nlcd.height,
+    src_nlcd.bounds[0],
+    src_nlcd.bounds[1],
+    src_nlcd.bounds[2],
+    src_nlcd.bounds[3]
+)
+```
+"*Keyword* arguments" is a related technique; see note in @sec-raster-agg-disagg.
+:::
+
 
 Recall from @sec-raster-resampling that resampling using `rasterio.warp.reproject` can take place directly into a "destination" raster file connection.
 Therefore, our next step is to create the metadata file used for writing the reprojected raster to file.
