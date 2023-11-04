@@ -155,8 +155,9 @@ This is an alternative approach to "directly" downloading files as shown earlier
 The second example uses the **osmnx** package to find parks from the OpenStreetMap (OSM) database.
 As illustrated in the code-chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` function.
 The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can also be used to query a custom area of interest).
-The second argument specifies the OSM tag(s), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs.
+The second argument specifies the OSM [tag(s)](https://wiki.openstreetmap.org/wiki/Map_features), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs.
 <!-- jn: maybe this is a place to mention https://wiki.openstreetmap.org/wiki/Map_features ? -->
+<!-- md: good idea, now added -->
 
 ```{python}
 parks = ox.features.features_from_place(
@@ -177,6 +178,7 @@ parks[['name', 'geometry']].explore()
 It should be noted that the **osmnx** package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas.
 To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from [Geofabrik](https://download.geofabrik.de/), and then load them from the file into the Python environment.
 <!-- jn: it seems that on the Geofabrik website there is no Shapefile format available for download (except for Antarctica)... we need to fix the above sentence... -->
+<!-- md: for continent-level there are no Shapefiles, but for the country-level or for smaller regions there are Shapefiles available in almost all cases, e.g., regions of france https://download.geofabrik.de/europe/france.html, so the statement is still true at this point. I guess we can add a note that this service relies on a commercial company, and the Shapefile download options may be limited in the future? -->
 
 OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the [Overpass turbo](https://overpass-turbo.eu/) web service for rapid development and testing of OSM queries to [osm2pgsql](https://osm2pgsql.org/) for importing the data into a PostGIS database.
 Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers.
@@ -187,14 +189,11 @@ Using OSM encourages 'citizen science' and contributions back to the digital com
 <!-- For example, package **geopandas** comes with few built-in datasets (see `gpd.datasets.available` for a list of names). -->
 <!-- Using the `gpd.datasets.get_path` function and the dataset name, we can obtain the path to the location of the dataset file on our computer. -->
 <!-- For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we have already seen before): -->
-
 <!-- ne_filename = gpd.datasets.get_path('naturalearth_lowres') -->
 <!-- ne_filename -->
-
 <!-- jn: the above code returns a warning -- please update the example -->
-
+<!-- md: this section was removed since the 'datasets' sub-module is deprected (following our discussion on GitHub) -->
 <!-- Then, we can import the dataset, just like from any other file with `gpd.read_file`. -->
-
 <!-- ne = gpd.read_file(ne_filename) -->
 
 One way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into a set of coordinates.
@@ -202,17 +201,20 @@ This is typically done by sending a query to an online service and getting the l
 Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements.
 [Nominatim](https://nominatim.openstreetmap.org/ui/about.html) is a popular free service, based on OpenStreetMap data.
 It can be accessed in Python uisng the `osmnx.geocoder.geocode` function.
-The function returns a `tuple` of the `(lat,lon)` form.
+The function returns a `tuple` of the `(lat,lon)` form (in `EPSG:4326`).
 <!-- jn: in what CRS? maybe it would be good to add this info -->
-The example below searches for John Snow blue plaque coordinates located on a building in the Soho district of London.
+<!-- md: now added -->
+The example below searches for [John Snow blue plaque](https://en.m.wikipedia.org/wiki/John_Snow_(public_house)) coordinates located on a building in the Soho district of London.
 <!-- jn: maybe we should add a website about the John Snow blue plaque? not everyone is probably familiar with it... -->
+<!-- md: right, now added -->
 
 ```{python}
 ox.geocoder.geocode('54 Frith St, London W1D 4SJ, UK')
 ```
 
-If the query returns no results, an `InsufficientResponseError` is raised, a scenario that the user can deal with using [`try`/`except`](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
+If the query returns no results, an `InsufficientResponseError` is raised.
 <!--jn: what do you mean by "deal" here? what is the expected outcome? how to deal with it? -->
+<!--md: I agree this was confusing, so on second thought we can just say that "no results" raises an error, there is no strong reason to go into try/except explanation here, IMHO -->
 
 The alternative function `osmnx.geocoder.geocode_to_gdf` can be used to automatically geocode multiple addresses (accepting a `list` of `string`s) and transforming them into a `GeoDataFrame`.
 This function also returns `'Polygon'` geometries.
