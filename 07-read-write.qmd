@@ -321,9 +321,11 @@ In this section, we also show how to read specific rectangular extents ("windows
 Spatial vector data comes in a wide variety of file formats.
 Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with **geopandas** functions `read_file` and `to_file` (covered in @sec-data-output), respectively.
 
-**geopandas** uses GDAL to read and write data, via **fiona** (the [default](https://github.com/geopandas/geopandas/issues/2217)) or **pyogrio** packages (a recently developed alternative to **fiona**).
+**geopandas** uses GDAL to read and write data, via **fiona** (the [default](https://github.com/geopandas/geopandas/issues/2217)) or **pyogrio** packages (a recently developed alternative to **fiona**, which will become the default in the future, see [note](https://geopandas.org/en/stable/docs/user_guide/io.html) in "Reading and writing files" tutorial).
 <!-- jn: as far as I understand, pyogrio will be the default in the future, right? if so, we should mention it here -->
+<!-- md: good to know and important point! now added -->
 <!-- jn: also, given the above, which one should be present? -->
+<!-- md: I didn't understand this comment -->
 After **fiona** is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
 
 ```{python}
@@ -360,6 +362,7 @@ gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
 Some vector formats, such as GeoPackage, can store multiple data layers.
 By default, `gpd.read_file` reads the first layer of the file specified in `filename`.
 However, using the `layer` argument you can specify any other layer.
+To list the available layers, we can use function `fiona.listlayers` or `pyogrio.list_layers`.
 
 The `gpd.read_file` function also allows for reading just parts of the file into RAM with two possible mechanisms.
 The first one is related to the `where` argument, which allows specifying what part of the data to read using an SQL `WHERE` expression.
@@ -434,24 +437,41 @@ cycle_hire_xy.plot();
 Instead of columns describing 'XY' coordinates, a single column can also contain the geometry information, not necessarily points but possible any other geometry type.
 Well-known text (WKT), well-known binary (WKB), and GeoJSON are examples of formats used to encode geometry in such a column.
 For instance, the `world_wkt.csv` file has a column named `'WKT'`, representing polygons of the world's countries (in WKT format).
-To import and convert it to a `GeoDataFrame`, we can apply the `shapely.from_wkt` function (@sec-geometries) on the WKT strings, to convert them into `shapely` geometries (@fig-world_wkt-layer).
+When importing the CSV file into a `DataFrame`, the `'WKT'` column is interpreted just like any other string column.
+
+```{python}
+world_wkt = pd.read_csv('data/world_wkt.csv')
+world_wkt
+```
+
+To convert it to a `GeoDataFrame`, we can apply the `shapely.from_wkt` function (@sec-geometries) on the WKT strings, to convert them into `shapely` geometries (also see note about the `.apply` method in @sec-topological-relations).
+
+```{python}
+world_wkt['geometry'] = world_wkt['WKT'].apply(shapely.from_wkt)
+world_wkt = gpd.GeoDataFrame(world_wkt)
+world_wkt
+```
+
 <!-- jn: maybe it would be good to explain the `.apply` function here (or somewhere) -->
+<!-- md: There is now a note about '.apply' in ch03, now added a reference -->
+
+The resulting layer is shown in @fig-world_wkt-layer.
 
 ```{python}
 #| label: fig-world_wkt-layer
 #| fig-cap: The `world_wkt.csv` table transformed to a polygon layer
-world_wkt = pd.read_csv('data/world_wkt.csv')
-world_wkt['geometry'] = world_wkt['WKT'].apply(shapely.from_wkt)
-world_wkt = gpd.GeoDataFrame(world_wkt)
 world_wkt.plot();
 ```
 
-::: callout-note
-Not all of the supported vector file formats store information about their coordinate reference system.
+<!-- ::: callout-note -->
+<!-- Not all of the supported vector file formats store information about their coordinate reference system. -->
+
 <!-- jn: what are the examples of such formats? -->
-In these situations, it is possible to add the missing information using the `.set_crs` function.
-Please refer also to @sec-querying-and-setting-coordinate-systems for more information.
-:::
+<!-- md: I can't think of an example actually, if that's OK we can remove this note -->
+
+<!-- In these situations, it is possible to add the missing information using the `.set_crs` function. -->
+<!-- Please refer also to @sec-querying-and-setting-coordinate-systems for more information. -->
+<!-- ::: -->
 
 As a final example, we will show how **geopandas** also reads KML files.
 A KML file stores geographic information in XML format---a data format for the creation of web pages and the transfer of data in an application-independent way [@nolan_xml_2014].
@@ -464,8 +484,8 @@ fiona.supported_drivers['LIBKML'] = 'r'
 ```
 
 The sample KML file `KML_Samples.kml` contains more than one layer.
-To list the available layers, we can use the `fiona.listlayers` function.
 <!-- jn: maybe we could introduce this function earlier, for example around this sentence: "However, using the `layer` argument you can specify any other layer." -->
+<!-- md: good idea, now moved there (and also mentioned 'pyogrio.list_layers' alternative) -->
 
 ```{python}
 u = 'https://developers.google.com/kml/documentation/KML_Samples.kml'
@@ -923,8 +943,8 @@ For instance, if we "forget" about the `nodata` flag, the literal calculation of
 r.mean()
 ```
 
-There are two basic ways to deal with the situation: either converting the raster to `float` or using "No Data" mask.
-First, particularly with small rasters where memory constraints are irrelevant, it may be more convenient to go from `int` to `float`, to gain the ability of the natural `np.nan` representation.
+There are two basic ways to deal with the situation: either converting the raster to `float`, or using a "No Data" mask.
+The first approach, simple and particularly relevant for small rasters where memory constraints are irrelevant, is to go from `int` to `float`, to gain the ability of the natural `np.nan` representation.
 Here is how we can do this with `r_nodata_int.tif`.
 We detect the missing data flag, convert the raster to `float`, then assign `np.nan` into the cells that are supposed to be missing.
 
@@ -957,7 +977,11 @@ For example, the `.mean` of a masked array ignores the value `-9999`, because it
 r.mean()
 ```
 
+Switching to `float` and assigning `np.nan` is the simpler approach, since that way we can keep working with the familiar `ndarray` data structure for all raster types, whether `int` or `float`.
+Nevertheless, learning how to work with masked arrays can be beneficial when we have good reasons to keep our raster data in `int` arrays (for example, due to RAM limits) and still perform operations that take missing values into account.
+
 <!-- jn: maybe it would be good to compare pros and cons of these two approaches -->
+<!-- md: I've added a sentence about that (perhaps it is subjective, will be happy if you or others have other thoughts to add) -->
 
 Finally, keep in mind that, confusingly, `float` rasters may represent "No Data" using a specific "flag" (such as `-9999.0`), instead, or in addition to (!), the native `np.nan` representation.
 In such cases, the same considerations shown for `int` apply to `float` rasters as well.
