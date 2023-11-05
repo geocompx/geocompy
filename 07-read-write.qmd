@@ -308,9 +308,15 @@ If necessary, the table can be converted to a point layer (see examples in @sec-
 Executing commands such as `geopandas.read_file` (the main function we use for loading vector data) or `rasterio.open`+`.read` (the main group of functions used for loading raster data) silently sets off a chain of events that reads data from files.
 Moreover, there are many Python packages containing a wide range of geographic data or providing simple access to different data sources.
 All of them load the data into the Python environment or, more precisely, assign objects to your workspace, stored in RAM and accessible within the Python session.
+The latter is the most straightforward approach, suitable when RAM is not a limiting factor. 
+For large vector layers and rasters, partial reading may be required. 
+For vector layers, we will demonstrate how to read subsets of vector layers, filtered by attributes or by location (@sec-input-vector). 
+For rasters, we already showed earlier in the book how the user can choose which specific bands to read (@sec-using-rasterio), or read resampled data to a lower resolution (@sec-raster-agg-disagg).
+In this section, we also show how to read specific rectangular extents ("windows") from a raster file (@sec-input-raster).
 <!-- jn: what with large (>RAM) rasters? -->
+<!-- md: right, now elaborated (also for vector layers) -->
 
-### Vector data
+### Vector data {#sec-input-vector}
 
 Spatial vector data comes in a wide variety of file formats.
 Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with **geopandas** functions `read_file` and `to_file` (covered in @sec-data-output), respectively.
@@ -665,8 +671,9 @@ Most of the properties are either straightforward to choose, based on our aims, 
 The most complicated property is the `transform`, which specifies the raster origin and resolution.
 The `transform` is typically either obtained from an existing raster (serving as a "template"), created from scratch based on manually specified origin and resolution values (e.g., using `rasterio.transform.from_origin`), or calculated automatically (e.g., using `rasterio.warp.calculate_default_transform`), as shown in previous chapters.
 
-Earlier in the book, we have already demonstrated the four most common scenarios of writing rasters, covering the above-mentioned considerations:
+Earlier in the book, we have already demonstrated five common scenarios of writing rasters, covering the above-mentioned considerations:
 <!-- jn: there are five scenarios, not four, right? (see below) -->
+<!-- md: right, now corrected -->
 
 -   Creating from scratch (@sec-raster-from-scratch)---we created and wrote two rasters from scratch by associating the `elev` and `grain` arrays with an arbitrary spatial extent. The custom arbitrary transformation matrix was created using `rasterio.transform.from_origin`
 -   Aggregating (@sec-raster-agg-disagg)---we wrote an aggregated a raster, by resampling from an exising raster file, then updating the transformation matrix using `.transform.scale`
@@ -758,27 +765,29 @@ The most useful types for raster data are summarized in @tbl-numpy-data-types.
 
 : Commonly used **numpy** data types for rasters {#tbl-numpy-data-types}
 
-The raster data type needs to be specified when writing a raster, typically using the same type as that of the array to be written (see last example).
-For an existing raster file, the data type can be access through the `.dtype` property of the metadata (`.meta['dtype']`).
+The raster data type needs to be specified when writing a raster, typically using the same type as that of the array to be written (e.g., see the `dtype=r.dtype` part in the last example).
+For an existing raster file, the data type can be queried through the `.dtype` property of the metadata (`.meta['dtype']`).
 
 ```{python}
 rasterio.open('output/r.tif').meta['dtype']
 ```
 
-The file `r.tif` has the data type `np.int8`, which we specified when creating it according to the data type of the original array.
+The above expression shows that the GeoTIFF file `r.tif` has the data type `np.int8`, as specified when creating the file with `rasterio.open`, according to the data type of the array we wrote into the file (`dtype=r.dtype`).
 
 ```{python}
 r.dtype
 ```
 
-When reading the data back into the Python session, the array with the same data type is recreated.
+When reading the raster file back into the Python session, the exact same array is recreated.
 
 ```{python}
 rasterio.open('output/r.tif').read().dtype
 ```
 
-<!-- jn: I do not fully understand the story told by the last three code chunks... -->
-<!-- e.g., "which we specified when creating it according to the data type of the original array" when? maybe explain the difference between the first and third code chunk? -->
+These code sections demonstrate the agreement between GeoTIFF (and other file formats) data types, which are universal and understood by many programs and programming languages, and the corresponding `ndarray` data types which are defined by **numpy** (@tbl-numpy-data-types).
+
+<!-- jn: I do not fully understand the story told by the last three code chunks... e.g., "which we specified when creating it according to the data type of the original array" when? maybe explain the difference between the first and third code chunk? -->
+<!-- md: I now tried to clarify -->
 
 Writing multiband rasters is similar to writing single-band rasters, only that we need to:
 
@@ -851,10 +860,9 @@ dst.write(r, 1)
 dst.close()
 ```
 
-This is equivalent to `nodata=None` (not shown).
+This is equivalent to `nodata=None`.
 
 ```{python}
-#| eval: false
 rasterio.open('output/r_nodata_float.tif').meta
 ```
 
