@@ -83,14 +83,25 @@ Interactive maps provide much more flexibilty in terms of user experience and am
 Thus, in @sec-interactive-maps, we move on to elaborate on the `.explore` method for creating interactive maps, which was also briefly introduced earlier in @sec-vector-layers.
 
 ## Static maps {#sec-static-maps}
-<!-- jn: this intro can be improved/expanded -->
 
-Static maps are the most common type of visual output from geocomputation.
-When stored in a file, standard formats include `.png` and `.pdf` for graphical raster and vector outputs, respectively.
+<!-- jn: this intro can be improved/expanded -->
+<!-- md: agree, now expanded. will be happy to hear if you have suggestions for other important points to add -->
+
+Static maps are the most common type of visual output from geocomputation. 
+For example, we have been using `.plot` and `rasterio.plot.show` throughout the book, to display **geopandas** and **rasterio** geocomputation results, respectively. 
+In this section we systematically review and elaborate on the various properties that can be customized when using those functions.
+
+A static map is basically a digital image. 
+When stored in a file, standard formats include `.png` and `.pdf` for graphical raster and vector outputs, respectively. 
+Thanks to their simplicity, static maps can be shared in a wide variety of ways: in print, through files sent by e-mail, embedded in documents and web pages, etc.
+
+Nevertheless, there are many aesthetic considerations when making a static map, and there is also a wide variety of ways to create static maps using novel presentation methods. 
+This is the focus of the field of [cartography](https://en.wikipedia.org/wiki/Cartography), and beyond the scope of this book.
+
 <!-- jn: maybe it would be good to add a block here about the similarities and differences between spatial raster/vectors and graphical raster/vectors? -->
+<!-- md: I can see what you mean, personally I like this topic :-), but IMHO this is beyind the scope for most readers (we're showing just minimal example of exporting to file, and not really discussing formats in the main text), if everyone are in favor then sure we can add it -->
 
 <!-- Decision of whether to use static or interactive. -->
-
 <!-- Flow diagram? -->
 
 Let's move on to the basics of static mapping with Python.
@@ -135,6 +146,7 @@ nz.plot(color='lightgrey', edgecolor='blue');
 The next example uses `markersize` to get larger points (@fig-basic-plot-markersize).
 It also demonstrates how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case, using [`plt.subplots`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html) to initialize the plot and its `figsize` parameter to specify dimensions.
 <!-- jn: I think that a longer explanation is needed... What's fig? What else can be achieved with plt.subplots? What's the unit of 4x4? Etc... -->
+<!-- md: agree, now clarified in a note below. The units are inches, it was already specified next to the 4x4 -->
 
 ```{python}
 #| label: fig-basic-plot-markersize
@@ -142,6 +154,17 @@ It also demonstrates how to control the overall [figure size](https://matplotlib
 fig, ax = plt.subplots(figsize=(4,4))
 nz_height.plot(markersize=100, ax=ax);
 ```
+
+::: callout-note
+As you have probably noticed throughout the book, the `plt.subplots` function is used to initialize a **maptplotlib** plot layout, possibly also specifying image size (e.g., @fig-basic-plot-markersize) and multi-panel layout (e.g., @fig-faceted-map).
+The returned value is a `tuple` of [`Figure`](https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure) and [`Axes`](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes) objects, which we conventionally unpack to variables named `fig` and `ax`. 
+These two variables represent the entire figure, and the elements of individual sub-figures, respectively.
+
+For our purposes in this book, we have been using just the `ax` object, passing it to the `ax` parameter in further function calls, in order to add subsequent layers (e.g., @fig-plot-raster-and-vector) or other elements (e.g., @fig-plot-symbology-colors-r-scale) into the same panel.
+In a single-panel figure, we pass `ax` itself, whereas in a multi-panel figure we pass individual elements representing a specific panel (such as `ax[0]` or `ax[0][0]`, depending of the layout; see @sec-faceted-maps)
+
+Note that in some of the cases we have used an alternative to `plt.subplots`---we assigned an initial plot into a variable, conventionally named `base`, similarly passing it to the `ax` parameter of further calls, e.g., to add subsequent layers (e.g., @fig-two-layers); this (shorter) syntax, though, is less general than `plt.subplots` and not applicable in some of the cases (such as displaying a raster and a vector layer in the same plot, e.g., @fig-plot-raster-and-vector).
+:::
 
 ### Symbology {#sec-plot-symbology}
 
@@ -219,20 +242,21 @@ rasterio.plot.show(nz_elev, cmap='gist_earth');
 
 Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`.
 The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot-show-with-colorbar), reverting to **matplotlib** methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale).
+Basically, the code reverts to the **matplotlib** [`.colorbar`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.colorbar.html) method to add a legend, using the [`plt.imshow`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html) function that draws an image of a **numpy** array (which `rasterio.plot.show` is a wrapper of).
+
 <!-- jn: a few sentence explanation of the code below is needed... -->
+<!-- md: now added further explanation -->
 
 ```{python}
 #| label: fig-plot-symbology-colors-r-scale
 #| fig-cap: Adding a legend in `rasterio.plot.show`
 fig, ax = plt.subplots()
-i = ax.imshow(nz_elev.read(1), cmap='BrBG')
+i = plt.imshow(nz_elev.read(1), cmap='BrBG')
 rasterio.plot.show(nz_elev, cmap='BrBG', ax=ax);
 fig.colorbar(i, ax=ax);
 ```
 
 ### Labels {#sec-plot-static-labels}
-
-<!-- start here -->
 
 Labels are often useful to annotate maps and identify the location of specific features. 
 GIS software, as opposed to **matplotlib**, has specialized algorithms for label placement, e.g., to avoid overlaps between adjacent labels.
@@ -333,6 +357,7 @@ nz_height.plot(ax=base, color='red');
 We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).
 The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together.
 <!-- jn: what is fig? what is ax? what is the relation between them? this should be explained somewhere in the book... -->
+<!-- md: now added a note about that (in @sec-static-styling) -->
 
 For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
 
@@ -414,7 +439,7 @@ Check out the [gallery](https://xyzservices.readthedocs.io/en/stable/gallery.htm
 Custom basemaps (such as from your own raster tile server) can be  also specified using a [URL](https://contextily.readthedocs.io/en/latest/providers_deepdive.html#Manually-specifying-a-provider).
 Finally, you may read the [Adding a background map to plots](https://geopandas.org/en/stable/gallery/plotting_basemap_background.html) tutorial for more examples.
 
-### Faceted maps
+### Faceted maps {#sec-faceted-maps}
 
 Faceted maps are multiple maps displaying the same symbology for the same spatial layers, but with different data in each panel.
 The data displayed in the different panels typically refer to different properties, or time steps.
