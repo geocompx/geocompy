@@ -746,17 +746,19 @@ california_raster2 = rasterio.features.rasterize(
 To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points.
 This also requires the following code section to calculate the points, which we explain in @sec-spatial-vectorization.
 
-<!-- md: note to self that if we switch to a more efficient raster-to-points method (following Anita's suggestion), then this code block needs to be changed as well -->
+<!-- md: note to self that if we switch to a more efficient raster-to-points method (following Anita's suggestion), then this code block needs to be changed as well (edit: now done) -->
 
 ```{python}
-ids = california_raster1.copy()
-ids = np.arange(0, california_raster1.size) \
-    .reshape(california_raster1.shape) \
-    .astype(np.int32)
-shapes = rasterio.features.shapes(ids, transform=transform)
-pol = list(shapes)
-pnt = [shapely.geometry.shape(i[0]).centroid for i in pol]
-pnt = gpd.GeoSeries(pnt)
+height = california_raster1.shape[0]
+width = california_raster1.shape[1]
+cols, rows = np.meshgrid(np.arange(width), np.arange(height))
+x, y = rasterio.transform.xy(transform, rows, cols)
+x = np.array(x).flatten()
+y = np.array(y).flatten()
+z = california_raster1.flatten()
+geom = gpd.points_from_xy(x, y, crs=california.crs)
+pnt = gpd.GeoDataFrame(data={'value':z}, geometry=geom)
+pnt
 ```
 
 @fig-rasterize-lines-polygons shows the input vector layer, the rasterization results, and the points `pnt`.
@@ -786,8 +788,8 @@ Spatial vectorization is the counterpart of rasterization (@sec-rasterization).
 It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons.
 There are three standard methods to convert a raster to a vector layer, which we cover next:
 
--   Raster to polygons (@sec-raster-to-polygons)---the most straightforward form of vectorization, converting raster cells to polygons, where each pixel is represented by a rectangular polygon
--   Raster to points (@sec-raster-to-points)---has the additional step of calculating polygon centroids
+-   Raster to polygons (@sec-raster-to-polygons)---converting raster cells to rectangular polygons, representing pixel areas
+-   Raster to points (@sec-raster-to-points)---converting raster cells to points, representing pixel centroids
 -   Raster to contours (@sec-raster-to-contours)
 
 Let us demonstrate all three in the given order.
@@ -869,42 +871,71 @@ One [suggestion](https://gis.stackexchange.com/questions/455980/vectorizing-all-
 
 ### Raster to points {#sec-raster-to-points}
 
-To transform raster to points, we can use `rasterio.features.shapes`, same as in conversion to polygons (@sec-raster-to-points), only with the addition of the `.centroid` method to go from polygons to their centroids.
-However, to avoid dissolving nearby pixels, we will actually convert a raster with consecutive IDs, then extract the "true" values by point (it is not strictly necessary in this example, since the values of `elev.tif` are all unique).
-
-First, we create an `ndarray` with consecutive IDs, matching the shape of `elev.tif` raster values.
-
-```{python}
-r = src_elev.read(1)
-ids = r.copy()
-ids = np.arange(0, r.size).reshape(r.shape).astype(np.int32)
-ids
-```
-
-Next, we use the `rasterio.features.shapes` function to create a point layer with the raster cell IDs.
-
-<!-- md: note to self, this should be replaced with more efficient code following Anita's suggestion -->
+To transform a raster to points, we can use the [`rasterio.transform.xy`](https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.xy). 
+As the name suggests, the function accepts row and column indices, and transforms them into x- and y-coordinates (using the raster's transformation matrix).
+For example, the coordinates of the top-left pixel can be calculated passing the `(row,col)` indices of `(0,0)`.
 
 ```{python}
-shapes = rasterio.features.shapes(ids, transform=src_elev.transform)
-pol = list(shapes)
-geom = [shapely.geometry.shape(i[0]).centroid for i in pol]
-geom = gpd.GeoSeries(geom, crs=src_elev.crs)
-result = gpd.GeoDataFrame(geometry=geom)
-result
+src = rasterio.open('output/elev.tif')
+rasterio.transform.xy(src.transform, 0, 0)
 ```
 
-Finally, we extract (@sec-extraction-to-points) the `elev.tif` raster values to points, technically finalizing the raster-to-points conversion.
+::: callout-note
+Keep in mind that the coordinates of the top-left pixel (`(-1.25, 1.25)`), as calculated in the above expression, refer to the pixel *centroid*. 
+Therefore, they are not identical to the raster origin coordinates (`(-1.5,1.5)`), as specified in the transformation matrix, which are the coordinates of the top-left edge/corner of the raster (see @fig-raster-to-points).
 
 ```{python}
-result['value'] = rasterstats.point_query(
-    result, 
-    r, 
-    nodata = src_elev.nodata, 
-    affine = src_elev.transform,
-    interpolate='nearest'
-)
+src.transform
 ```
+:::
+
+To generalize the above expression to calculate the coordinates of *all* pixels, we first need to generate a grid of all possible row/column index combinations.
+This can be done using [`np.meshgrid`](https://numpy.org/doc/stable/reference/generated/numpy.meshgrid.html), as follows.
+
+```{python}
+height = src.shape[0]
+width = src.shape[1]
+cols, rows = np.meshgrid(np.arange(width), np.arange(height))
+```
+
+We now have two arrays, `rows` and `cols`, matching the shape of `elev.tif` and containing the corresponding row and column indices.
+
+```{python}
+rows
+```
+
+```{python}
+cols
+```
+
+These can be passed to `rasterio.transform.xy` to transform the indices into point coordinates, accordingly stored in lists of arrays `x` and `y`.
+
+```{python}
+x, y = rasterio.transform.xy(src.transform, rows, cols)
+```
+
+```{python}
+x
+```
+
+```{python}
+y
+```
+
+Typically we want to work with the points in the form of a `GeoDataFrame` which also holds the attribute(s) value(s) as point attributes.
+To get there, we can transform the coordinates as well as any attributes to 1-dimensional arrays, and then use methods we are already familiar with (@sec-vector-layer-from-scratch) to combine them into a `GeoDataFrame`.
+
+```{python}
+x = np.array(x).flatten()
+y = np.array(y).flatten()
+z = src.read(1).flatten()
+geom = gpd.points_from_xy(x, y, crs=src.crs)
+pnt = gpd.GeoDataFrame(data={'value':z}, geometry=geom)
+pnt
+```
+
+This "high-level" workflow, like many other **rasterio**-based workflows covered in the book, is a commonly used one but lacking from the package itself. 
+From the user perspective, it may be a good idea to wrap the workflow into a function (e.g., `raster_to_points(src)`, returning a `GeoDataFrame`), to be re-used whenever we need it.
 
 @fig-raster-to-points shows the input raster and the resulting point layer.
 
@@ -917,13 +948,15 @@ result['value'] = rasterstats.point_query(
 #| - Points
 # Input raster
 fig, ax = plt.subplots()
-result.plot(column='value', legend=True, ax=ax)
+pnt.plot(column='value', legend=True, ax=ax)
 rasterio.plot.show(src_elev, ax=ax);
 # Points
 fig, ax = plt.subplots()
-result.plot(column='value', legend=True, ax=ax)
+pnt.plot(column='value', legend=True, ax=ax)
 rasterio.plot.show(src_elev, cmap='Greys', ax=ax);
 ```
+
+Note that "No Data" pixels can be filtered out from the conversion, if necessary (see @sec-distance-to-nearest-geometry).
 
 ### Raster to contours {#sec-raster-to-contours}
 
@@ -999,10 +1032,9 @@ coastline
 ```
 
 For a "template" raster, we will aggregate the New Zealand DEM, in the `nz_elev.tif` file, to 5 times coarser resolution.
-The code section below follows the aggeregation example in @sec-raster-agg-disagg, then replaces the original (aggregated) values with unique IDs, which is a preliminary step when converting to points, as explained in @sec-raster-to-points.
-Finally, we also replace "erase" (i.e., replace with `np.nan`) IDs which were `np.nan` in the aggregated elevation raster, i.e., beyond the land area of New Zealand.
+The code section below follows the aggeregation example in @sec-raster-agg-disagg.
 <!-- jn: the last sentence could be rephrased... -->
-<!-- md: the following example should be relaced to more efficient code following Anita's suggestion, afterwards will rephrase the text too -->
+<!-- md: the following example should be relaced to more efficient code following Anita's suggestion, afterwards will rephrase the text too (edit: now done)-->
 
 ```{python}
 factor = 0.2
@@ -1019,40 +1051,44 @@ new_transform = src_nz_elev.transform * src_nz_elev.transform.scale(
     (src_nz_elev.width / r.shape[1]),
     (src_nz_elev.height / r.shape[0])
 )
-# Generating unique IDs per cell
-ids = r.copy()
-ids = np.arange(0, r.size).reshape(r.shape).astype(np.float32)
-# "Erasing" irrelevant IDs
-ids[np.isnan(r)] = np.nan
-ids
 ```
 
-The result is an array named `ids` with the IDs, and the corresponding `new_transform`, as plotted in @fig-raster-distances1.
+The resulting array `r`/`new_transform` and the lines layer `coastline` are plotted in @fig-raster-distances1.
+Note that the raster values are average elevations based on $5 \times 5$ pixels, but this is irrelevant for the subsequent calculation; the raster is going to be used as a template, and all of its values will be replaced with distances to coastline (@fig-raster-distances2).
 
 ```{python}
 #| label: fig-raster-distances1
 #| fig-cap: Template with cell IDs to calculate distance to nearest geometry
 
 fig, ax = plt.subplots()
-rasterio.plot.show(ids, transform=new_transform, ax=ax)
+rasterio.plot.show(r, transform=new_transform, ax=ax)
 gpd.GeoSeries(coastline).plot(ax=ax, edgecolor='black');
 ```
 
-To calculate distances, we must convert each pixel to a vector (point) geometry.
-For this purpose, we use the technique demonstrated in @sec-raster-to-points.
+To calculate the actual distances, we must convert each pixel to a vector (point) geometry.
+For this purpose, we use the technique demonstrated in @sec-raster-to-points, but we're keeping the points as a `list` of `shapely` geometries, rather than a `GeoDataFrame`, since such a list is sufficient for the subsequent calculation.
 
 ```{python}
-shapes = rasterio.features.shapes(ids, transform=new_transform)
-pol = list(shapes)
-pnt = [shapely.geometry.shape(i[0]).centroid for i in pol]
+height = r.shape[0]
+width = r.shape[1]
+cols, rows = np.meshgrid(np.arange(width), np.arange(height))
+x, y = rasterio.transform.xy(new_transform, rows, cols)
+x = np.array(x).flatten()
+y = np.array(y).flatten()
+z = r.flatten()
+x = x[~np.isnan(z)]
+y = y[~np.isnan(z)]
+geom = gpd.points_from_xy(x, y, crs=california.crs)
+geom = list(geom)
+geom[:5]
 ```
 
-The result `pnt` is a `list` of `shapely` geometries, representing raster cell centroids (excluding `np.nan` pixels):
+The result `geom` is a `list` of `shapely` geometries, representing raster cell centroids (excluding `np.nan` pixels, which were filtered out).
 
-Now we can calculate the corresponding `list` of distances, using the `.distance` method from **shapely**:
+Now we can calculate the corresponding `list` of point geometries and associated distances, using the `.distance` method from **shapely**:
 
 ```{python}
-distances = [(i, i.distance(coastline)) for i in pnt]
+distances = [(i, i.distance(coastline)) for i in geom]
 distances[0]
 ```
 
@@ -1061,7 +1097,7 @@ Finally, we rasterize (see @sec-rasterizing-points) the distances into our raste
 ```{python}
 image = rasterio.features.rasterize(
     distances,
-    out_shape=ids.shape,
+    out_shape=r.shape,
     dtype=np.float_,
     transform=new_transform,
     fill=np.nan
