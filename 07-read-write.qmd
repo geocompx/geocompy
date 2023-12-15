@@ -524,13 +524,11 @@ src
 
 All of the previous examples, like the one above, read spatial information from files stored on your hard drive.
 However, GDAL also allows reading data directly from online resources, such as HTTP/HTTPS/FTP web resources.
-The only thing we need to do is to add a `/vsicurl/` or `/vsicurl_streaming/` (see [here](https://gis.stackexchange.com/questions/450105/using-rasterio-to-read-ndvi-data-from-gimmss-cog-products)) prefix before the path to the file.
 Let's try it by connecting to the global monthly snow probability at 500 $m$ resolution for the period 2000-2012 [@hengl_t_2021_5774954].
-Snow probability for December is stored as a Cloud Optimized GeoTIFF (COG) file (see @sec-file-formats).
-To read an online file, we need to provide its URL together with the `/vsicurl_streaming/` prefix. 
+Snow probability for December is stored as a Cloud Optimized GeoTIFF (COG) file (see @sec-file-formats) and can be accessed by its HTTPS URI.
 
 ```{python}
-src = rasterio.open('/vsicurl_streaming/https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif')
+src = rasterio.open('https://zenodo.org/record/5774954/files/clm_snow.prob_esacci.dec_p.90_500m_s0..0cm_2000..2012_v2.0.tif')
 src
 ```
 
@@ -614,9 +612,11 @@ list(values)
 
 The example above efficiently extracts and downloads a single value instead of the entire GeoTIFF file, saving valuable resources.
 
-The `/vsicurl/` prefix also works for *vector* file formats, enabling you to import datasets from online storage with **geopandas** just by adding it before the vector file URL.
-Importantly, `/vsicurl/` is not the only prefix provided by GDAL---many more exist, such as `/vsizip/` to read spatial files from ZIP archives without decompressing them beforehand or `/vsis3/` for on-the-fly reading files available in AWS S3 buckets.
-You can learn more about it at <https://gdal.org/user/virtual_file_systems.html>.
+Note that URIs can also identify *vector* datasets, enabling you to import datasets from online storage with **geopandas**, including datasets within ZIP archives hosted on the web.
+
+```{python}
+gpd.read_file("zip+https://github.com/Toblerity/Fiona/files/11151652/coutwildrnp.zip")
+```
 
 ## Data output (O) {#sec-data-output}
 
