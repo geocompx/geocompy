@@ -6,7 +6,15 @@ for i in *.qmd; do
 done
 
 # Convert ipynb files to .py files
-jupytext --to py *.ipynb
+# jupytext --to py *.ipynb
+for i in *.ipynb; do
+  jupyter nbconvert --to python $i
+done
+
+# Remove irrelevant files
+rm code/chapters/index.py 
+rm code/chapters/preface.py 
+rm code/chapters/README.py
 
 # Move files to correct folders
 mv *.py -v code/chapters

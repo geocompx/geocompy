@@ -1,42 +1,42 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.15.2
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
+#!/usr/bin/env python
+# coding: utf-8
 
 # # Geometry operations {#sec-geometric-operations}
-#
+# 
 # ## Prerequisites {.unnumbered}
 
+# In[ ]:
+
+
 #| echo: false
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 pd.options.display.max_rows = 6
 pd.options.display.max_columns = 6
 pd.options.display.max_colwidth = 35
 plt.rcParams['figure.figsize'] = (5, 5)
 
+
 # This chapter requires importing the following packages:
 
+# In[ ]:
+
+
+import sys
 import numpy as np
 import shapely
 import geopandas as gpd
 import topojson as tp
 import rasterio
-import rasterio.warp
 import rasterio.plot
+import rasterio.warp
 import rasterio.mask
-import sys
+
 
 # It also relies on the following data files:
+
+# In[ ]:
+
 
 seine = gpd.read_file('data/seine.gpkg')
 us_states = gpd.read_file('data/us_states.gpkg')
@@ -44,40 +44,44 @@ nz = gpd.read_file('data/nz.gpkg')
 src = rasterio.open('data/dem.tif')
 src_elev = rasterio.open('output/elev.tif')
 
+
 # ## Introduction
-#
+# 
 # So far the book has explained the structure of geographic datasets (@sec-spatial-class), and how to manipulate them based on their non-geographic attributes (@sec-attr) and spatial relations (@sec-spatial-operations).
 # This chapter focuses on manipulating the geographic elements of geographic objects, for example by simplifying and converting vector geometries, and by cropping raster datasets.
 # After reading it you should understand and have control over the geometry column in vector layers and the extent and geographic location of pixels represented in rasters in relation to other geographic objects.
-#
+# 
 # @sec-geo-vec covers transforming vector geometries with 'unary' and 'binary' operations.
 # Unary operations work on a single geometry in isolation, including simplification (of lines and polygons), the creation of buffers and centroids, and shifting/scaling/rotating single geometries using 'affine transformations' (@sec-simplification to @sec-affine-transformations).
 # Binary transformations modify one geometry based on the shape of another, including clipping and geometry unions, covered in @sec-clipping and @sec-geometry-unions, respectively.
 # Type transformations (from a polygon to a line, for example) are demonstrated in Section @sec-type-transformations.
-#
+# 
 # @sec-geo-ras covers geometric transformations on raster objects.
 # This involves changing the size and number of the underlying pixels, and assigning them new values.
 # It teaches how to change the extent and the origin of a raster "manually" (@sec-extent-and-origin), how to change the resolution in fixed "steps" through aggregation and disaggregation (@sec-raster-agg-disagg), and finally how to resample a raster into any existing template, which is the most general and often most practical approach (@sec-raster-resampling).
 # These operations are especially useful if one would like to align raster datasets from diverse sources.
 # Aligned raster objects share a one-to-one correspondence between pixels, allowing them to be processed using map algebra operations (@sec-raster-local-operations).
-#
+# 
 # In the next chapter (@sec-raster-vector), we deal with the special case of geometry operations that involve both a raster and a vector layer together.
 # It shows how raster values can be 'masked' and 'extracted' by vector geometries.
 # Importantly it shows how to 'polygonize' rasters and 'rasterize' vector datasets, making the two data models more interchangeable.
-#
+# 
 # ## Geometric operations on vector data {#sec-geo-vec}
-#
+# 
 # This section is about operations that in some way change the geometry of vector layers.
 # It is more advanced than the spatial data operations presented in the previous chapter (in @sec-spatial-vec), because here we drill down into the geometry: the functions discussed in this section work on the geometric part (the geometry column, which is a `GeoSeries` object), either as standalone object or as part of a `GeoDataFrame`.
-#
+# 
 # ### Simplification {#sec-simplification}
-#
+# 
 # Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps.
 # Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps.
 # The **geopandas** package provides the [`.simplify`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html) method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count.
 # `.simplify` uses the `tolerance` to control the level of generalization in map units [@douglas_algorithms_1973].
-#
+# 
 # For example, a simplified geometry of a `'LineString'` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the `seine.simplify(2000)` command (@fig-simplify-lines).
+
+# In[ ]:
+
 
 #| label: fig-simplify-lines
 #| fig-cap: Simplification of the `seine` line layer 
@@ -89,11 +93,16 @@ seine_simp = seine.simplify(2000)
 seine.plot();
 seine_simp.plot();
 
+
 # The resulting `seine_simp` object is a copy of the original `seine` but with fewer vertices.
 # This is apparent, with the result being visually simpler (@fig-simplify-lines, right) and consuming about twice less memory than the original object, as shown in the comparison below.
 
+# In[ ]:
+
+
 print(f'Original: {sys.getsizeof(seine)} bytes')
 print(f'Simplified: {sys.getsizeof(seine_simp)} bytes')
+
 
 # Simplification is also applicable for polygons.
 # This is illustrated using `us_states`, representing the contiguous United States.
@@ -104,11 +113,19 @@ print(f'Simplified: {sys.getsizeof(seine_simp)} bytes')
 # <!-- jn: ref to CRS chapter? -->
 # <!-- md: done -->
 
+# In[ ]:
+
+
 us_states9311 = us_states.to_crs(9311)
+
 
 # The `.simplify` method from **geopandas** works the same way with a `'Polygon'`/`'MultiPolygon'` layer such as `us_states9311`:
 
+# In[ ]:
+
+
 us_states_simp1 = us_states9311.simplify(100000)
+
 
 # A limitation with `.simplify`, however, is that it simplifies objects on a per-geometry basis.
 # This means the "topology" is lost, resulting in overlapping and "holey" areal units as illustrated in @fig-simplify-polygons (b).
@@ -122,10 +139,17 @@ us_states_simp1 = us_states9311.simplify(100000)
 # <!-- jn: add a sentence or two explaining the code chunk below -->
 # <!-- md: added -->
 
+# In[ ]:
+
+
 topo = tp.Topology(us_states9311, prequantize=False)
 us_states_simp2 = topo.toposimplify(100000).to_gdf()
 
+
 # @fig-simplify-polygons compares the original input polygons and two simplification methods applied to `us_states9311`.
+
+# In[ ]:
+
 
 #| label: fig-simplify-polygons
 #| fig-cap: Polygon simplification in action, comparing the original geometry of the contiguous United States with simplified versions, generated with functions from the **geopandas** (middle), and **topojson** (right), packages. 
@@ -138,28 +162,40 @@ us_states9311.plot(color='lightgrey', edgecolor='black');
 us_states_simp1.plot(color='lightgrey', edgecolor='black');
 us_states_simp2.plot(color='lightgrey', edgecolor='black');
 
+
 # ### Centroids {#sec-centroids}
-#
+# 
 # Centroid operations identify the center of geographic objects.
 # Like statistical measures of central tendency (including mean and median definitions of 'average'), there are many ways to define the geographic center of an object.
 # All of them create single point representations of more complex vector objects.
-#
+# 
 # The most commonly used centroid operation is the geographic centroid.
 # This type of centroid operation (often referred to as 'the centroid') represents the center of mass in a spatial object (think of balancing a plate on your finger).
 # Geographic centroids have many uses, for example to create a simple point representation of complex geometries, to estimate distances between polygons, or to specify the location where polygon text labels are placed.
 # Centroids of the geometries in a `GeoSeries` or a `GeoDataFrame` are accessible through the `.centroid` property, as demonstrated in the code below, which generates the geographic centroids of regions in New Zealand and tributaries to the River Seine (black points in @fig-centroid-pnt-on-surface).
 
+# In[ ]:
+
+
 nz_centroid = nz.centroid
 seine_centroid = seine.centroid
+
 
 # Sometimes the geographic centroid falls outside the boundaries of their parent objects (think of vector data in shape of a doughnut).
 # In such cases 'point on surface' operations, created with the `.representative_point` method, can be used to guarantee the point will be in the parent object (e.g., for labeling irregular multipolygon objects such as island states), as illustrated by the red points in @fig-centroid-pnt-on-surface.
 # Notice that these red points always lie on their parent objects.
 
+# In[ ]:
+
+
 nz_pos = nz.representative_point()
 seine_pos = seine.representative_point()
 
+
 # The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surface.
+
+# In[ ]:
+
 
 #| label: fig-centroid-pnt-on-surface
 #| fig-cap: Centroids (black) and points on surface (red) of New Zealand and Seine datasets.
@@ -176,17 +212,21 @@ base = seine.plot(color='grey')
 seine_pos.plot(ax=base, color='None', edgecolor='red')
 seine_centroid.plot(ax=base, color='None', edgecolor='black');
 
+
 # ### Buffers {#sec-buffers}
-#
+# 
 # Buffers are polygons representing the area within a given distance of a geometric feature: regardless of whether the input is a point, line or polygon, the output is a polygon (when using positive buffer distance).
 # Unlike simplification, which is often used for visualization and reducing file size, buffering tends to be used for geographic data analysis.
 # How many points are within a given distance of this line?
 # Which demographic groups are within travel distance of this new shop?
 # These kinds of questions can be answered and visualized by creating buffers around the geographic entities of interest.
-#
+# 
 # @fig-buffers illustrates buffers of two different sizes (5 and 50 $km$) surrounding the river Seine and tributaries.
 # These buffers were created with commands below, using the `.buffer` method, applied to a `GeoSeries` or `GeoDataFrame`.
 # The `.buffer` method requires one important argument: the buffer distance, provided in the units of the CRS, in this case, meters (@fig-buffers).
+
+# In[ ]:
+
 
 #| label: fig-buffers
 #| fig-cap: Buffers around the Seine dataset of 5 km (left) and 50 km (right). Note the colors, which reflect the fact that one buffer is created per geometry feature.
@@ -199,72 +239,97 @@ seine_buff_50km = seine.buffer(50000)
 seine_buff_5km.plot(color='none', edgecolor=['c', 'm', 'y']);
 seine_buff_50km.plot(color='none', edgecolor=['c', 'm', 'y']);
 
+
 # Note that both `.centroid` and `.buffer` return a `GeoSeries` object, even when the input is a `GeoDataFrame`.
+
+# In[ ]:
+
 
 seine_buff_5km
 
+
 # In the common scenario when the original attributes of the input features need to be retained, you can replace the existing geometry with the new `GeoSeries` by creating a copy of the original `GeoDataFrame` and assigning the new buffer `GeoSeries` to the `geometry` column.
+
+# In[ ]:
+
 
 seine_buff_5km = seine.copy()
 seine_buff_5km.geometry = seine.buffer(5000)
 seine_buff_5km
 
+
 # Alternative option is to add a secondary geometry column directly to the original `GeoDataFrame`.
+
+# In[ ]:
+
 
 seine['geometry_5km'] = seine.buffer(5000)
 seine
 
+
 # You can then switch to either geometry column (i.e., make it the "active" geometry column) using `.set_geometry`, as in:
+
+# In[ ]:
+
 
 seine = seine.set_geometry('geometry_5km')
 
+
 # Let's revert to the original state of `seine` before moving on to the next section.
+
+# In[ ]:
+
 
 seine = seine.set_geometry('geometry')
 seine = seine.drop('geometry_5km', axis=1)
 
+
 # ### Affine transformations {#sec-affine-transformations}
-#
+# 
 # Affine transformations include, among others, shifting (translation), scaling and rotation, or any combination of these.
 # They preserves lines and parallelism, by angles and lengths are not necessarily preserved.
 # These transformations are an essential part of geocomputation.
 # For example, shifting is needed for labels placement, scaling is used in non-contiguous area cartograms, and many affine transformations are applied when reprojecting or improving the geometry that was created based on a distorted or wrongly projected map.
-#
+# 
 # The **geopandas** package implements affine transformation, for objects of classes `GeoSeries` and `GeoDataFrame`.
 # In both cases, the method is applied on the `GeoSeries` part, returning a just the `GeoSeries` of transformed geometries.
 # <!-- jn: and what if the input is a GeoDataFrame? what happens to the other columns? -->
 # <!-- md: just the 'GeoSeries' part is returned. to make that more clear, the results are now printed  -->
-#
+# 
 # Affine transformations of `GeoSeries` can be done using the [`.affine_transform`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.affine_transform.html) method, which is a wrapper around the `shapely.affinity.affine_transform` function.
 # As [documented](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2)/
-#
+# 
 # $$
 # x' = a x + b y + x_\mathrm{off}
 # $$ {#eq-affine1}
-#
+# 
 # $$
 # y' = d x + e y + y_\mathrm{off}
 # $$ {#eq-affine2}
-#
+# 
 # There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/docs/user_guide/geometric_manipulations.html#affine-transformations) for specific scenarios, such as:
-#
+# 
 # -   `.translate(xoff=0.0, yoff=0.0)`
 # -   `.scale(xfact=1.0, yfact=1.0, origin='center')`
 # -   `.rotate(angle, origin='center', use_radians=False)`
 # -   `.skew(angle, origin='center', use_radians=False)`
-#
+# 
 # For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using [`.translate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.translate.html).
 # <!-- jn: and what with z_off? -->
 # <!-- md: right! now added a note, and removed the z parameters to avoid confusion -->
 # The code below shifts the y-coordinates of `nz` by 100 $km$ to the north, but leaves the x-coordinates untouched.
 
+# In[ ]:
+
+
 nz_shift = nz.translate(0, 100000)
 nz_shift
+
 
 # ::: callout-note
 # **shapely**, and consequently **geopandas**, operations, typically [ignore](https://shapely.readthedocs.io/en/stable/manual.html#geometric-objects) the z-dimension of geometries in operations. For example, `shapely.LineString([(0,0,0),(0,0,1)]).length` returns `0` (and not `1`), since `.length` ignores the z-dimension. In this book (like in most real-world spatial analysis applications), we deal only with two-dimensional geometries.
 # :::
-#
+# 
 # Scaling enlarges or shrinks objects by a factor, and can be applied either globally or locally.
 # Global scaling increases or decreases all coordinates values in relation to the origin coordinates, while keeping all geometries topological relations intact.
 # **geopandas** implements local scaling using the [`.scale`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.scale.html) method.
@@ -276,21 +341,32 @@ nz_shift
 # <!-- jn: next sentence as a block? -->
 # <!-- md: done -->
 
+# In[ ]:
+
+
 nz_scale = nz.scale(0.5, 0.5, origin='centroid')
 nz_scale
+
 
 # ::: callout-note
 # When setting the `origin` in `.scale`, other than `'centroid'` it is possible to use `'center'`, for the bounding box center, or specific point coordinates, such as `(0,0)`.
 # :::
-#
+# 
 # Rotating the geometries can be done using the [`.rotate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.rotate.html) method.
 # When rotating, we need to specify the rotation angle (positive values imply clockwise rotation) and the `origin` points (using the same options as in `scale`).
 # For example, the following expression rotates `nz` by 30 degrees counter-clockwise, around the geometry centroids.
 
+# In[ ]:
+
+
 nz_rotate = nz.rotate(-30, origin='centroid')
 nz_rotate
 
+
 # @fig-affine-transformations shows the original layer `nz`, and the shifting, scaling and rotation results.
+
+# In[ ]:
+
 
 #| label: fig-affine-transformations
 #| fig-cap: 'Illustrations of affine transformations: shift, scale and rotate'
@@ -309,14 +385,18 @@ nz_scale.plot(ax=base, color='red', edgecolor='darkgrey');
 base = nz.plot(color='lightgrey', edgecolor='darkgrey')
 nz_rotate.plot(ax=base, color='red', edgecolor='darkgrey');
 
+
 # <!-- jn: you also mentioned skew before -- why it is not shown here? -->
 # <!-- md: these example follow geocompr (https://r.geocompx.org/geometry-operations#fig:affine-trans), where skew is also not shown. IMHO it's less useful, so maybe we can omit skew from the text? -->
-#
+# 
 # ### Pairwise geometry-generating operations {#sec-clipping}
-#
+# 
 # Spatial clipping is a form of spatial subsetting that involves changes to the geometry columns of at least some of the affected features.
 # Clipping can only apply to features more complex than points: lines, polygons and their 'multi' equivalents.
 # To illustrate the concept we will start with a simple example: two overlapping circles with a center point one unit away from each other and a radius of one (@fig-overlapping-circles).
+
+# In[ ]:
+
 
 #| label: fig-overlapping-circles
 #| fig-cap: Overlapping polygon (circle) geometries `x` and `y`
@@ -324,36 +404,56 @@ x = shapely.Point((0, 0)).buffer(1)
 y = shapely.Point((1, 0)).buffer(1)
 shapely.GeometryCollection([x, y])
 
+
 # Imagine you want to select not one circle or the other, but the space covered by both x and y.
 # This can be done using the `.intersection` method from **shapely**, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (@fig-intersection).
+
+# In[ ]:
+
 
 #| label: fig-intersection
 #| fig-cap: Intersection between `x` and `y`
 x.intersection(y)
 
+
 # More generally, clipping is an example of a 'pairwise geometry-generating operation', where new geometries are generated from two inputs.
 # Other than `.intersection` (@fig-intersection), there are three other standard pairwise operators: `.difference` (@fig-difference), `.union` (@fig-union), and `.symmetric_difference` (@fig-symmetric-difference).
+
+# In[ ]:
+
 
 #| label: fig-difference
 #| fig-cap: Difference between `x` and `y` (namely, `x` "minus" `y`)
 x.difference(y)
 
+
+# In[ ]:
+
+
 #| label: fig-union
 #| fig-cap: Union of `x` and `y` 
 x.union(y)
+
+
+# In[ ]:
+
 
 #| label: fig-symmetric-difference
 #| fig-cap: Symmetric difference between `x` and `y`
 x.symmetric_difference(y)
 
+
 # Keep in mind that `x` and `y` are interchangeable in all predicates except for `.difference`, where `x.difference(y)` means `x` minus `y`, whereas `y.difference(x)` means `y` minus `x`.
-#
+# 
 # The latter examples demonstrate pairwise operations between individual `shapely` geometries.
 # The **geopandas** package, as is often the case, contains wrappers of these **shapely** functions to be applied to multiple, or pairwise, use cases.
 # For example, applying either of the pairwise methods on a `GeoSeries` or `GeoDataFrame`, combined with a `shapely` geometry, returns the pairwise (many-to-one) results (which is analogous to other operators, like `.intersects` or `.distance`, see @sec-spatial-subsetting-vector and @sec-distance-relations, respectively).
-#
+# 
 # Let's demonstrate the "many-to-one" scenario by calculating the difference between each geometry in a `GeoSeries` and a "fixed" `shapely` geometry.
 # To create the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` and `2` units "upwards" on the y-axis.
+
+# In[ ]:
+
 
 geom1 = gpd.GeoSeries([x])
 geom2 = geom1.translate(0, 1)
@@ -361,7 +461,11 @@ geom3 = geom1.translate(0, 2)
 geom = pd.concat([geom1, geom2, geom3])
 geom
 
+
 # @fig-geom-intersection shows the `GeoSeries` `geom` with the `shapely` geometry (in red) that we will intersect with it.
+
+# In[ ]:
+
 
 #| label: fig-geom-intersection
 #| fig-cap: A `GeoSeries` with three circles, and a `shapely` geometry that we will "subtract" from it (in red)
@@ -369,42 +473,56 @@ fig, ax = plt.subplots()
 geom.plot(color='lightgrey', edgecolor='black', ax=ax)
 gpd.GeoSeries(y).plot(color='#FF000040', edgecolor='black', ax=ax);
 
+
 # Now, using `.intersection` automatically applies the **shapely** method of the same name on each geometry in `geom`, returning a new `GeoSeries`, which we name `geom_inter_y`, with the pairwise "intersections".
 # Note the empty third geometry (can you explain the meaning of this result?).
+
+# In[ ]:
+
 
 geom_inter_y = geom.intersection(y)
 geom_inter_y
 
+
 # @fig-geom-intersection2 is a plot of the result `geom_inter_y`.
 
-# +
+# In[ ]:
+
+
 #| label: fig-geom-intersection2
 #| fig-cap: The output `GeoSeries`, after subtracting a `shapely` geometry using `.intersection`
 
 geom_inter_y.plot(color='lightgrey', edgecolor='black');
-# -
+
 
 # The `.overlay` method (see @sec-joining-incongruent-layers) further extends this technique, making it possible to apply "many-to-many" pairwise geometry generations between all pairs of two `GeoDataFrame`s.
 # The output is a new `GeoDataFrame` with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry.
 # See the ["Set operations with overlay"](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
-#
+# 
 # ### Subsetting vs. clipping {#sec-subsetting-vs-clipping}
-#
+# 
 # In the last two chapters we have introduced two types of spatial operators: boolean, such as `.intersects` (@sec-spatial-subsetting-vector), and geometry-generating, such as `.intersection` (@sec-clipping).
 # Here, we illustrate the difference between them.
 # We do this using the specific scenario of subsetting points by polygons, where (unlike in other cases) both methods can be used for the same purpose and giving the same result.
 # <!-- Clipping objects can change their geometry but it can also subset objects, returning only features that intersect (or partly intersect) with a clipping/subsetting object.  -->
-#
+# 
 # To illustrate the point, we will subset points that cover the bounding box of the circles `x` and `y` from @fig-overlapping-circles.
 # Some points will be inside just one circle, some will be inside both and some will be inside neither.
 # The following code sections generates the sample data for this section, a simple random distribution of points within the extent of circles `x` and `y`, resulting in output illustrated in @fig-random-points.
 # We create the sample points in two steps.
 # First, we figure out the bounds where random points are to be generated.
 
+# In[ ]:
+
+
 bounds = x.union(y).bounds
 bounds
 
+
 # Second, we use `np.random.uniform` to calculate `n` random x- and y-coordinates within the given bounds.
+
+# In[ ]:
+
 
 np.random.seed(1)
 n = 10
@@ -413,12 +531,20 @@ coords_y = np.random.uniform(bounds[1], bounds[3], n)
 coords = list(zip(coords_x, coords_y))
 coords
 
+
 # Third, we transform the list of coordinates into a `list` of `shapely` points and then to a `GeoSeries`.
+
+# In[ ]:
+
 
 pnt = [shapely.Point(i) for i in coords]
 pnt = gpd.GeoSeries(pnt)
 
+
 # The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-random-points.
+
+# In[ ]:
+
 
 #| label: fig-random-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
@@ -426,21 +552,33 @@ base = pnt.plot(color='none', edgecolor='black')
 gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
 
+
 # Now, we can get back to our question: how to subset the points to only return the point that intersects with both `x` and `y`?
 # The code chunks below demonstrate two ways to achieve the same result.
 # In the first approach, we can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of `x` and `y` (see @sec-spatial-subsetting-vector) and then use it to subset `pnt` to get the result `pnt1`.
+
+# In[ ]:
+
 
 sel = pnt.intersects(x.intersection(y))
 pnt1 = pnt[sel]
 pnt1
 
+
 # In the second approach, we can also find the intersection between the input points represented by `pnt`, using the intersection of `x` and `y` as the subsetting/clipping object.
 # Since the second argument is an individual `shapely` geometry (`x.intersection(y)`), we get "pairwise" intersections of each `pnt` with it (see @sec-clipping):
+
+# In[ ]:
+
 
 pnt2 = pnt.intersection(x.intersection(y))
 pnt2
 
+
 # The subset `pnt2` is shown in @fig-intersection-points.
+
+# In[ ]:
+
 
 #| label: fig-intersection-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
@@ -449,31 +587,43 @@ gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
 pnt2.plot(ax=base, color='red');
 
+
 # The only difference between the two approaches is that `.intersection` returns all "intersections", even if they are empty.
 # When these are filtered out, `pnt2` becomes identical to `pnt1`:
+
+# In[ ]:
+
 
 pnt2 = pnt2[~pnt2.is_empty]
 pnt2
 
+
 # <!-- This second approach will return features that partly intersect with `x.intersection(y)` but with modified geometries for spatially extensive features that cross the border of the subsetting object. The results are identical, but the implementation differs substantially. -->
-#
+# 
 # The example above is rather contrived and provided for educational rather than applied purposes.
 # However, we encourage the reader to reproduce the results to deepen your understanding for handling geographic vector objects in Python. 
 # <!-- as it raises an important question: which implementation to use? -->
 # <!-- Generally, more concise implementations should be favored, meaning the first approach above. -->
 # <!-- jn: is the first approach really more concise? why? -->
 # <!-- md: sorry, this sentence comes from 'geocompr', and it's not transferable to the Python version, so now removed. -->
-#
+# 
 # ### Geometry unions {#sec-geometry-unions}
-#
+# 
 # Spatial aggregation can silently dissolve the geometries of touching polygons in the same group, as we saw in @sec-vector-attribute-aggregation.
 # This is demonstrated in the code chunk below, in which 49 `us_states` are aggregated into 4 regions using the `.dissolve` method.
+
+# In[ ]:
+
 
 regions = us_states[['REGION', 'geometry', 'total_pop_15']] \
     .dissolve(by='REGION', aggfunc='sum').reset_index()
 regions
 
+
 # @fig-dissolve compares the original `us_states` layer with the aggregated `regions` layer.
+
+# In[ ]:
+
 
 #| label: fig-dissolve
 #| fig-cap: "Spatial aggregation on contiguous polygons, illustrated by aggregating the population of 49 US states into 4 regions, with population represented by color. Note the operation automatically dissolves boundaries between states."
@@ -488,10 +638,14 @@ us_states.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
 fig, ax = plt.subplots(figsize=(9, 2.5))
 regions.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
 
+
 # What is happening with the geometries here?
 # Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method per group.
 # This is demonstrated in the code chunk below which creates a united western US using the standalone `unary_union` operation.
 # Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving (@fig-dissolve2).
+
+# In[ ]:
+
 
 #| label: fig-dissolve2
 #| fig-cap: Western US
@@ -499,7 +653,11 @@ us_west = us_states[us_states['REGION'] == 'West']
 us_west_union = us_west.geometry.unary_union
 us_west_union
 
+
 # To dissolve two (or more) groups of a `GeoDataFrame` into one geometry, we can either (a) use a combined condition or  (b) concatenate the two separate subsets and then dissove using `.unary_union`.
+
+# In[ ]:
+
 
 # Approach 1
 sel = (us_states['REGION'] == 'West') | (us_states['NAME'] == 'Texas')
@@ -510,69 +668,92 @@ us_west = us_states[us_states['REGION'] == 'West']
 texas = us_states[us_states['NAME'] == 'Texas']
 texas_union = pd.concat([us_west, texas]).unary_union
 
+
 # The result is identical in both cases, shown in @fig-dissolve3.
+
+# In[ ]:
+
 
 #| label: fig-dissolve3
 #| fig-cap: Western US and Texas
 texas_union
 
+
 # ### Type transformations {#sec-type-transformations}
-#
+# 
 # <!-- jn: I do not fully understand the story(ies) in this section. Please think about it -- maybe it can be reordered or some connecting sentences could be added... -->
-#
+# <!-- md: now added a roadmap, and also another example -->
+# 
 # Transformation of geometries, from one type to another, also known as "geometry casting", is often required to facilitate spatial analysis.
 # Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation, and the way that the input is organized (whether and individual geometry, or a vector layer).
 # Therefore, the exact expression(s) depend on the specific transformation we are interested in.
-#
+# 
 # In general, you need to figure out the required input of the respective construstor function according to the "destination" geometry (e.g., `shapely.LineString`, etc.), then reshape the input of the "source" geometry into the right form to be passed to that function.
 # Or, when available, you can use a wrapper from **geopandas**.
-#
+# 
 # In this section we demonstrate several common scenarios. 
 # We start with transformations of individual geometries from one type to another, using **shapely** methods:
-#
+# 
 # * `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring)
 # * `'MultiPoint'` to `'Polygon'` (@fig-type-transform-polygon)
 # * `'LineString'` to `'MultiPoint'` (@fig-type-transform-multipoint2)
 # * `'LineString'` to `'Polygon'` (@fig-type-transform-polygon2)
 # * `'Polygon'`s to `'MultiPolygon'` (@fig-type-transform-multipolygon)
 # * `'MultiPolygon'`s to `'Polygon'`s (@fig-type-transform-multipolygon1, @fig-type-transform-multipolygon2)
-#
+# 
 # Then, we move on and demonstrate casting workflows on `GeoDataFrame`s, where we have further considerations, such as keeping track of geometry attributes, and the possibility of dissolving, rather than just combining, geometries. As we will see, these are done either by "manually" applying **shapely** methods on all geometries in the given layer, or using **geopandas** wrapper methods which do it automatically:
-#
+# 
 # * `'MultiLineString'` to `'LineString'`s (using `.explode`) (@fig-multilinestring-to-linestring)
 # * `'LineString'` to `'MultiPoint'`s (using `.apply`) (@fig-linestring-to-multipoint)
 # * `'LineString'`s to `'MultiLineString'` (using `.dissolve`)
 # * `'Polygon'`s to `'MultiPolygon'` (using `.dissolve` or `.agg`) (@fig-combine-geoms)
 # * `'Polygon'` to `'(Multi)LineString'` (using `.boundary` or `.exterior`) (demonstrated in a subsequent chapter, see @sec-rasterizing-lines-and-polygons)
-#
+# 
 # Let's start with the simple individual-geometry casting examples, to illustrate how geometry casting works on **shapely** geometry objects. 
 # First, let's create a `'MultiPoint'` (@fig-type-transform-multipoint).
+
+# In[ ]:
+
 
 #| label: fig-type-transform-multipoint
 #| fig-cap: A `'MultiPoint'` geometry used to demonstrate **shapely** type transformations
 multipoint = shapely.MultiPoint([(1,1), (3,3), (5,1)])
 multipoint
 
+
 # A `'LineString'` can be created using `shapely.LineString` from a `list` of points.
-# Thus, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring).
+# Thus, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring). 
+# The `.geoms` property, mentioned in @sec-geometries, give access to the indivudual parts that comprise a multi-part geometry; it is one of the **shapely** access methods to internal parts of a geometry.
 # <!--jn: maybe it would be worth reexplaing .geoms here? -->
+# <!--md: now added a reference to the place where '.geoms' is mentioned, but it's not really explained; there is no comprehensive overview of 'shapely' access methods in the book at the moment. we could add a section about that (e.g., https://geobgu.xyz/py/07-shapely.html#geometry-coordinates), will be happy to hear what you think -->
+
+# In[ ]:
+
 
 #| label: fig-type-transform-linestring
 #| fig-cap: A `'LineString'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
-linestring = shapely.LineString(list(multipoint.geoms))
+linestring = shapely.LineString(multipoint.geoms)
 linestring
+
 
 # Similarly, a `'Polygon'` can be created using function `shapely.Polygon`, which accepts a sequence of point coordinates.
 # In principle, the last coordinate must be equal to the first, in order to form a closed shape.
 # However, `shapely.Polygon` is able to complete the last coordinate automatically, and therefore we can pass all of the coordinates of the `'MultiPoint'` directly to `shapely.Polygon` (@fig-type-transform-polygon).
+
+# In[ ]:
+
 
 #| label: fig-type-transform-polygon
 #| fig-cap: A `'Polygon'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
 polygon = shapely.Polygon([[p.x, p.y] for p in multipoint.geoms])
 polygon
 
+
 # The source `'MultiPoint'` geometry, and the derived `'LineString'` and `'Polygon'` geometries are shown in @fig-casting1.
 # Note that we convert the `shapely` geometries to `GeoSeries` to be able to use the **geopandas** `.plot` method.
+
+# In[ ]:
+
 
 #| label: fig-casting1
 #| fig-cap: Examples of `'LineString`' and `'Polygon'` casted from a `'MultiPoint'` geometry
@@ -585,31 +766,42 @@ gpd.GeoSeries(multipoint).plot();
 gpd.GeoSeries(linestring).plot();
 gpd.GeoSeries(polygon).plot();
 
+
 # Conversion from `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring) is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media.
 # This allows spatial operations such as the length of the path traveled.
 # Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (@fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
-#
+# 
 # Our `'LineString'` geometry can be converted back to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2).
+
+# In[ ]:
+
 
 #| label: fig-type-transform-multipoint2
 #| fig-cap: A `'MultiPoint'` created from the `'LineString'` in @fig-type-transform-linestring
 shapely.MultiPoint(linestring.coords)
 
+
 # A `'Polygon'` (exterior) coordinates can be passed to `shapely.MultiPoint`, to go back to a `'MultiPoint'` geometry, as well (@fig-type-transform-polygon2).
+
+# In[ ]:
+
 
 #| label: fig-type-transform-polygon2
 #| fig-cap: A `'MultiPoint'` created from the `'Polygon'` in @fig-type-transform-polygon
 shapely.MultiPoint(polygon.exterior.coords)
 
+
 # Using these methods, we can transform between `'Point'`, `'LineString'`, and `'Polygon'` geometries, assuming there is a sufficient number of points (at least two to form a line, and at least three to form a polygon).
 # When dealing with multi-part geometries using **shapely**, we can:
-#
+# 
 # -   Access single-part geometries (e.g., each `'Polygion'` in a `'MultiPolygon'` geometry) using `.geoms[i]`, where `i` is the index of the geometry
 # -   Combine single-part geometries into a multi-part geometry, by passing a `list` of the latter to the constructor function
-#
+# 
 # For example, here is how we combine two `'Polygon'` geometries into a `'MultiPolygon'` (while also using a **shapely** affine function `shapely.affinity.translate`, which is underlying the **geopandas** `.translate` method used earlier, see @sec-affine-transformations) (@fig-type-transform-multipolygon):
 
-# +
+# In[ ]:
+
+
 #| label: fig-type-transform-multipolygon
 #| fig-cap: A `'MultiPolygon'` created from the `'Polygon'` in @fig-type-transform-polygon and another polygon
 
@@ -618,34 +810,41 @@ multipolygon = shapely.MultiPolygon([
     shapely.affinity.translate(polygon.centroid.buffer(1.5), 3, 2)
 ])
 multipolygon
-# -
+
 
 # Now, here is how we can get back the `'Polygon'` part 1 (@fig-type-transform-multipolygon1):
 
-# +
+# In[ ]:
+
+
 #| label: fig-type-transform-multipolygon1
 #| fig-cap: The 1^st^ "part" extracted from the `'MultiPolygon'` in @fig-type-transform-multipolygon
 
 multipolygon.geoms[0]
-# -
+
 
 # and part 2 (@fig-type-transform-multipolygon2):
 
-# +
+# In[ ]:
+
+
 #| label: fig-type-transform-multipolygon2
 #| fig-cap: The 2^nd^ "part" extracted from the `'MultiPolygon'` in @fig-type-transform-multipolygon
 
 multipolygon.geoms[1]
-# -
+
 
 # However, dealing with multi-part geometries can be easier with **geopandas**. Thanks to the fact that geometries in a `GeoDataFrame` are associated with attributes, we can keep track of the origin of each geometry: duplicating the attributes when going from multi-part to single-part (using `.explode`, see below), or "collapsing" the attributes through aggregation when going from single-part to multi-part (using `.dissolve`, see @sec-geometry-unions).
 # <!-- jn: the above paragraph is dense and hard to read -->
 # <!-- md: agree, now rephrased -->
-#
+# 
 # Let's demonstrate going from multi-part to single-part (@fig-multilinestring-to-linestring) and then back to multi-part (@sec-geometry-unions), using a small line layer.
 # <!-- jn: demonstrate what? -->
 # <!-- md: right, now added references -->
 # As input, we will create a `'MultiLineString'` geometry composed of three lines (@fig-type-transform-multilinestring3).
+
+# In[ ]:
+
 
 #| label: fig-type-transform-multilinestring3
 #| fig-cap: A `'MultiLineString'` geometry composed of three lines
@@ -655,32 +854,52 @@ l3 = shapely.LineString([(2, 2), (4, 2)])
 ml = shapely.MultiLineString([l1, l2, l3])
 ml
 
+
 # Let's place it into a `GeoSeries`.
+
+# In[ ]:
+
 
 geom = gpd.GeoSeries([ml])
 geom
 
+
 # Then, put it into a `GeoDataFrame` with an attribute called `'id'`:
+
+# In[ ]:
+
 
 dat = gpd.GeoDataFrame(geometry=geom, data=pd.DataFrame({'id': [1]}))
 dat
+
 
 # You can imagine it as a road or river network.
 # The above layer `dat` has only one row that defines all the lines.
 # This restricts the number of operations that can be done, for example it prevents adding names to each line segment or calculating lengths of single lines.
 # Using **shapely** methods with which we are already familiar with (see above), the individual single-part geometries (i.e., the "parts") can be accessed through the `.geoms` property.
 
+# In[ ]:
+
+
 list(ml.geoms)
+
 
 # However, specifically for the "multi-part to single part" type transformation scenarios, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one.
 # The advantage is that the original attributes (such as `id`) are retained, so that we can keep track of the original multi-part geometry properties that each part came from.
 # The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively.
 
+# In[ ]:
+
+
 dat1 = dat.explode(index_parts=True).reset_index()
 dat1
 
+
 # For example, here we see that all `'LineString'` geometries came from the same multi-part geometry (`level_0`=`0`), which had three parts (`level_1`=`0`,`1`,`2`).
 # @fig-multilinestring-to-linestring demonstrates the effect of `.explode` in converting a layer with multi-part geometries into a layer with single part geometries.
+
+# In[ ]:
+
 
 #| label: fig-multilinestring-to-linestring
 #| fig-cap: Transformation a `'MultiLineString'` layer with one feature, into a `'LineString'` layer with three features, using `.explode`
@@ -691,16 +910,24 @@ dat1
 dat.plot(column='id');
 dat1.plot(column='level_1');
 
+
 # As a side-note, let's demonstrate how the above **shapely** casting methods can be translated to **geopandas**. 
 # Suppose that we want to transform `dat1`, which is a layer of type `'LineString'` with three features, to a layer of type `'MultiPoint'` (also with three features). 
 # Recall that for a single geometry, we use the expression `shapely.MultiPoint(x.coords)`, where `x` is a `'LineString'` (@fig-type-transform-multipoint2). 
 # When dealing with a `GeoDataFrame`, we wrap the conversion into `.apply`, to apply it on all geometries:
 
+# In[ ]:
+
+
 dat2 = dat1.copy()
 dat2.geometry = dat2.geometry.apply(lambda x: shapely.MultiPoint(x.coords))
 dat2
 
+
 # The result is illustrated in @fig-linestring-to-multipoint.
+
+# In[ ]:
+
 
 #| label: fig-linestring-to-multipoint
 #| fig-cap: Transformation a `'LineString'` layer with three features, into a `'MultiPoint'` layer (also with three features), using `.apply` and **shapely** methods
@@ -711,22 +938,34 @@ dat2
 dat1.plot(column='level_1');
 dat2.plot(column='level_1');
 
+
 # The opposite transformation, i.e., "single-part to multi-part", is achieved using the `.dissolve` method (which we are already familiar with, see @sec-geometry-unions).
 # For example, here is how we can get back to the `'MultiLineString'` geometry:
 
+# In[ ]:
+
+
 dat1.dissolve(by='id').reset_index()
 
+
 # The next code chunk is another example, dissolving the `nz` north and south parts into `'MultiPolygon'` geometries.
+
+# In[ ]:
+
 
 nz_dis1 = nz[['Island', 'Population', 'geometry']] \
     .dissolve(by='Island', aggfunc='sum') \
     .reset_index()
 nz_dis1
 
+
 # Note that `.dissolve` not only combines single-part into multi-part geometries, but also dissolves any internal borders.
 # So, in fact, the result may be single-part (in case when all parts touch each other, unlike in `nz`).
 # If, for some reason, we want to combine geometries into multi-part *without* dissolving, we can fall back to the **pandas** `.agg` method (custom table aggregation), supplemented with a **shapely** function specifying how exactly we want to transform each group of geometries into a new single geometry.
 # In the following example, for instance, we collect all `'Polygon'` and `'MultiPolygon'` parts of `nz` into a single `'MultiPolygon'` geometry with many separate parts (i.e., without dissolving), per group (`Island`).
+
+# In[ ]:
+
 
 #| warning: false
 nz_dis2 = nz \
@@ -739,9 +978,13 @@ nz_dis2 = nz \
 nz_dis2 = gpd.GeoDataFrame(nz_dis2).set_geometry('geometry').set_crs(nz.crs)
 nz_dis2
 
+
 # The difference between the last two results (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type `'MultiPolygon'`.
 # However, in the first case internal borders were dissolved, while in the second case they were not.
 # This is illustrated in @fig-combine-geoms:
+
+# In[ ]:
+
 
 #| label: fig-combine-geoms
 #| fig-cap: Combining New Zealand geometries into one, for each island, with and witout dissolving
@@ -752,33 +995,60 @@ nz_dis2
 nz_dis1.plot(color='lightgrey', edgecolor='black');
 nz_dis2.plot(color='lightgrey', edgecolor='black');
 
+
 # It is also worthwhile to note the `.boundary` and `.exterior` properties of `GeoSeries`, which are used to cast polygons to lines, with or without interior rings, respectively (see @sec-rasterizing-lines-and-polygons). 
-#
+# 
 # ## Geometric operations on raster data {#sec-geo-ras}
-#
+# 
 # <!-- jn: raster intro is missing (vector has an intro) -->
-#
+# <!-- md: right, I missed that! now added -->
+# 
+#  Geometric raster operations include the shift, flipping, mirroring, scaling, rotation or warping of images. 
+#  These operations are necessary for a variety of applications including georeferencing, used to allow images to be overlaid on an accurate map with a known CRS [@liu_essential_2009]. 
+#  A variety of georeferencing techniques exist, including:
+# 
+# * Georectification based on known ground control points
+# * Orthorectification, which also accounts for local topography
+# * Image registration is used to combine images of the same thing but shot from different sensors, by aligning one image with another (in terms of coordinate system and resolution)
+# 
+# Python is rather unsuitable for the first two points since these often require manual intervention which is why they are usually done with the help of dedicated GIS software. 
+# On the other hand, aligning several images is possible in Python and this section shows among others how to do so. 
+# This often includes changing the extent, the resolution and the origin of an image. 
+# A matching projection is of course also required but is already covered @sec-reprojecting-raster-geometries.
+# 
+# In any case, there are other reasons to perform a geometric operation on a single raster image. 
+# For instance, a common reason for aggregating a raster is to decrease run-time or save disk space. 
+# Of course, this approach is only recommended if the task at hand allows a coarser resolution of raster data.
+# 
 # ### Geometric intersections {#sec-raster-geometric-intersections}
-#
+# 
 # <!-- jn: Michael, what is the difference between this section and the section about cropping and masking in the next chapter?  -->
 # <!-- In geocompr, the difference is clean -- the first section is about cliping a raster with another raster; the second section is about cropping a raster with a vector. -->
 # <!-- Here, the difference is not clear to me. -->
 # <!-- If there is no difference, maybe we should either rewrite this section or remove it. -->
-#
+# <!-- md: that's correct, the only difference is that here the cropping geometry comes from another raster, however in 'rasterio' there is no distinct way to crop using a raster, so indeed most of the workflow is the same. I agree this section mostly repeats the same material, it's fine with me to remove it -->
+# 
 # In @sec-spatial-subsetting-raster we have shown how to extract values from a raster overlaid by coordinates or by a matching boolean mask.
 # A different case is when the area of interest is defined by any general (possibly non-matching) raster B, to retrieve a spatial output of a (smaller) subset of raster A we can:
-#
+# 
 # -   Extract the bounding box polygon of B (hereby, `clip`)
 # -   Mask and crop A (hereby, `elev.tif`) using B (@sec-raster-cropping)
-#
+# 
 # For example, suppose that we want to get a subset of the `elev.tif` raster using another, smaller, raster.
 # To demonstrate this, let's create (see @sec-raster-from-scratch) that smaller raster, hereby named `clip`.
 # First, we need to create a $3 \times 3$ array of raster values.
 
+# In[ ]:
+
+
 clip = np.array([1] * 9).reshape(3, 3)
 clip
 
+
 # Then, we define the transformation matrix, in such a way that `clip` intersects with `elev.tif` (@fig-raster-intersection).
+
+# In[ ]:
+
 
 new_transform = rasterio.transform.from_origin(
     west=0.9, 
@@ -788,7 +1058,11 @@ new_transform = rasterio.transform.from_origin(
 )
 new_transform
 
+
 # Now, for subsetting, we will derive a `shapely` geometry representing the `clip` raster extent, using [`rasterio.transform.array_bounds`](https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.array_bounds).
+
+# In[ ]:
+
 
 bbox = rasterio.transform.array_bounds(
     clip.shape[1], # columns
@@ -797,14 +1071,22 @@ bbox = rasterio.transform.array_bounds(
 )
 bbox
 
+
 # The four numeric values can be transformed into a rectangular `shapely` geometry using `shapely.box` (@fig-raster-clip-bbox).
+
+# In[ ]:
+
 
 #| label: fig-raster-clip-bbox
 #| fig-cap: '`shapely` geometry derived from a clipping raster bounding box coordinates, a preliminary step for geometric intersection between two rasters'
 bbox = shapely.box(*bbox)
 bbox
 
+
 # @fig-raster-intersection shows the alignment of `bbox` and `elev.tif`.
+
+# In[ ]:
+
 
 #| label: fig-raster-intersection
 #| fig-cap: The `elev.tif` raster, and the extent of another (smaller) raster `clip` which we use to subset it
@@ -812,8 +1094,12 @@ fig, ax = plt.subplots()
 rasterio.plot.show(src_elev, ax=ax)
 gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
 
+
 # From here on, subsetting can be done using masking and cropping, just like with any vector layer other than `bbox`, regardless whether it is rectangular or not.
 # We elaborate on masking and cropping in @sec-raster-cropping (check that section for details about `rasterio.mask.mask`), but, for completeness, here is the code for the last step of masking and cropping:
+
+# In[ ]:
+
 
 out_image, out_transform = rasterio.mask.mask(
     src_elev, 
@@ -823,12 +1109,20 @@ out_image, out_transform = rasterio.mask.mask(
     nodata=0
 )
 
+
 # The resulting subset array `out_image` contains all pixels intersecting with `clip` *pixels* (not necessarily with the centroids!).
 # However, due to the `all_touched=True` argument, those pixels which intersect with `clip`, but their centroid does not, retain their original values (e.g., `17`, `23`) rather than turned into "No Data" (e.g., `0`).
 
+# In[ ]:
+
+
 out_image
 
+
 # Therefore, in our case, subset `out_image` dimensions are $2 \times 2$ (@fig-raster-intersection2; also see @fig-raster-intersection).
+
+# In[ ]:
+
 
 #| label: fig-raster-intersection2
 #| fig-cap: The resulting subset of the `elev.tif` raster
@@ -836,8 +1130,9 @@ fig, ax = plt.subplots()
 rasterio.plot.show(out_image, transform=out_transform, ax=ax)
 gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
 
+
 # ### Extent and origin {#sec-extent-and-origin}
-#
+# 
 # When merging or performing map algebra on rasters, their resolution, projection, origin and/or extent have to match.
 # Otherwise, how should we add the values of one raster with a resolution of `0.2` decimal degrees to a second raster with a resolution of `1` decimal degree?
 # The same problem arises when we would like to merge satellite imagery from different sensors with different projections and resolutions.
@@ -846,50 +1141,78 @@ gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
 # However, sometimes it can be useful to modify raster placement and extent "manually", by adding or removing rows and columns, or by modifying the origin, that is, slightly shifting the raster.
 # Sometimes, there are reasons other than alignment with a second raster for manually modifying raster extent and placement.
 # For example, it may be useful to add extra rows and columns to a raster prior to focal operations, so that it is easier to operate on the edges.
-#
+# 
 # Let's demostrate the first operation, raster padding.
 # First, we will read the array with the `elev.tif` values:
+
+# In[ ]:
+
 
 r = src_elev.read(1)
 r
 
-# To pad an `ndarray`, we can use the `np.pad` function.
+
+# To pad an `ndarray`, we can use the [`np.pad`](https://numpy.org/doc/stable/reference/generated/numpy.pad.html) function.
 # The function accepts an array, and a tuple of the form `((rows_top,rows_bottom),(columns_left, columns_right))`.
 # Also, we can specify the value that's being used for padding with `constant_values` (e.g., `18`).
-# For example, here we pad `r` with one extra row and two extra columns, on both sides:
+# For example, here we pad `r` with one extra row and two extra columns, on both sides, resulting in the array `r_pad`:
+
+# In[ ]:
+
 
 rows = 1
 cols = 2
-s = np.pad(r, ((rows,rows),(cols,cols)), constant_values=18)
-s
+r_pad = np.pad(r, ((rows,rows),(cols,cols)), constant_values=18)
+r_pad
+
 
 # <!-- jn: why the object is named 's'? cannot we use a better name here? -->
-# However, for `s` to be used in spatial operations, we also have to update its transformation matrix.
+# <!-- md: good idea, now renamed to 'r_pad' -->
+# However, for `r_pad` to be used in any spatial operation, we also have to update its transformation matrix.
 # Whenever we add extra columns on the left, or extra rows on top, the raster *origin* changes.
 # To reflect this fact, we have to take to "original" origin and add the required multiple of pixel widths or heights (i.e., raster resolution steps).
 # The transformation matrix of a raster is accessible from the raster file metadata (@sec-raster-from-scratch) or, as a shortcut, through the `.transform` property of the raster file connection.
 # For example, the next code chunk shows the transformation matrix of `elev.tif`.
 
+# In[ ]:
+
+
 src_elev.transform 
 
+
 # From the transformation matrix, we are able to extract the origin.
+
+# In[ ]:
+
 
 xmin, ymax = src_elev.transform[2], src_elev.transform[5]
 xmin, ymax
 
+
 # We can also get the resolution of the data, which is the distance between two adjacent pixels.
+
+# In[ ]:
+
 
 dx, dy = src_elev.transform[0], src_elev.transform[4]
 dx, dy
 
+
 # These two parts of information are enough to calculate the new origin (`xmin_new,ymax_new`) of the padded raster.
+
+# In[ ]:
+
 
 xmin_new = xmin - dx * cols
 ymax_new = ymax - dy * rows
 xmin_new, ymax_new
 
+
 # Using the updated origin, we can update the transformation matrix (@sec-raster-from-scratch).
 # Keep in mind that the meaning of the last two arguments is `xsize`, `ysize`, so we need to pass the absolute value of `dy` (since it is negative).
+
+# In[ ]:
+
 
 new_transform = rasterio.transform.from_origin(
     west=xmin_new, 
@@ -899,14 +1222,19 @@ new_transform = rasterio.transform.from_origin(
 )
 new_transform
 
+
 # @fig-raster-shift-origin shows the padded raster, with the outline of the original `elev.tif` (in red), demonstrating that the origin was shifted correctly and the `new_transform` works fine.
+
+# In[ ]:
+
 
 #| label: fig-raster-shift-origin
 #| fig-cap: The padded `elev.tif` raster, and the extent of the original `elev.tif` raster (in red)
 fig, ax = plt.subplots()
-rasterio.plot.show(s, transform=new_transform, cmap='Greys', ax=ax)
+rasterio.plot.show(r_pad, transform=new_transform, cmap='Greys', ax=ax)
 elev_bbox = gpd.GeoSeries(shapely.box(*src_elev.bounds))
 elev_bbox.plot(color='none', edgecolor='red', ax=ax);
+
 
 # We can shift a raster origin not just when padding, but in any other use case, just by changing its transformation matrix.
 # The effect is that the raster is going to be shifted (which is analogous to `.translate` for shifting a vector layer, see @sec-affine-transformations).
@@ -914,14 +1242,22 @@ elev_bbox.plot(color='none', edgecolor='red', ax=ax);
 # As an example, let's shift the origin of `elev.tif` by `(-0.25,0.25)`.
 # First, we need to calculate the new origin.
 
+# In[ ]:
+
+
 xmin_new = xmin - 0.25  # shift xmin to the left
 ymax_new = ymax + 0.25  # shift ymax upwards
 xmin_new, ymax_new
 
+
 # To shift the origin in other directions we should change the two operators (`-`, `+`) accordingly.
 # <!-- jn: the above sentence as a block? -->
-#
+# <!-- md: I'm not sure this should be in a block because the sentence doesn't make sense without the entire example, it's more like a detail to be aware of in the workflow. perhaps we can rewrite it and add more details, does it makes sense? -->
+# 
 # Then, same as when padding (see above), we create an updated transformation matrix.
+
+# In[ ]:
+
 
 new_transform = rasterio.transform.from_origin(
     west=xmin_new, 
@@ -931,7 +1267,11 @@ new_transform = rasterio.transform.from_origin(
 )
 new_transform
 
+
 # @fig-raster-shift-origin2 shows the shifted raster and the outline of the original `elev.tif` raster (in red).
+
+# In[ ]:
+
 
 #| label: fig-raster-shift-origin2
 #| fig-cap: The padded `elev.tif` raster (@fig-raster-shift-origin) further shifted by `(0.25,0.25)`, and the extent of the original `elev.tif` raster (in red)
@@ -939,37 +1279,53 @@ fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=new_transform, cmap='Greys', ax=ax)
 elev_bbox.plot(color='none', edgecolor='red', ax=ax);
 
+
 # ### Aggregation and disaggregation {#sec-raster-agg-disagg}
-#
+# 
 # Raster datasets vary based on their resolution, from high resolution datasets that enable individual trees to be seen, to low resolution datasets covering large swaths of the Earth.
 # Raster datasets can be transformed to either decrease (aggregate) or increase (disaggregate) their resolution, for a number of reasons.
 # For example, aggregation can be used to reduce computational resource requirements of raster storage and subsequent steps, while disaggregation can be used to match other datasets, or to add detail.
 # As an example, we here change the spatial resolution of `dem.tif` by a factor of `5` (@fig-raster-aggregate).
-#
+# 
+# ::: callout-note
 # Raster aggregation is, in fact, a special case of raster resampling (see @sec-raster-resampling), where the target raster grid is aligned with the original raster, only with coarser pixels.
 # Conversely, raster resampling is the general case where the new grid is not necessarily an aggregation of the original one, but any other type of grid (such as a rotated and/or shifted one, etc.).
+# :::
 # <!-- jn: the above paragraph as a block? -->
-#
+# <!-- md: good idea, done -->
+# 
 # To aggregate a raster using **rasterio**, we go through [two steps](https://rasterio.readthedocs.io/en/stable/topics/resampling.html):
-#
+# 
 # -   Reading the raster values (using `.read`) into an `out_shape` that is different from the original `.shape`
 # -   Updating the `transform` according to `out_shape`
-#
+# 
 # Let's demonstrate it, using the `dem.tif` file.
 # Note the original shape of the raster; it has `117` rows and `117` columns.
 
+# In[ ]:
+
+
 src.read(1).shape
+
 
 # Also note the transform, which tells us that the raster resolution is about 30.85 $m$.
 
+# In[ ]:
+
+
 src.transform
+
 
 # To aggregate, instead of reading the raster values the usual way, as in `src.read(1)`, we can specify `out_shape` to read the values into a different shape.
 # Here, we calculate a new shape which is downscaled by a factor of `5`, i.e., the number of rows and columns is multiplied by `0.2`.
 # We must truncate any "partial" rows and columns, e.g., using `int`.
 # Each new pixel is now obtained, or "resampled", from $\sim 5 \times 5 = \sim 25$ "old" raster values.
-# We can choose the resampling method through the `resampling` parameter.
-# Here we use [`rasterio.enums.Resampling.average`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling), i.e., the new "large" pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in `dem.tif`.
+# It is crucial to choose an appropriate *resampling method* through the `resampling` parameter.
+# Here we use [`rasterio.enums.Resampling.average`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling), i.e., the new "large" pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in `dem.tif`. 
+# See @sec-raster-resampling for a list of other available methods.
+
+# In[ ]:
+
 
 factor = 0.2
 r = src.read(1,
@@ -980,27 +1336,23 @@ r = src.read(1,
     resampling=rasterio.enums.Resampling.average
 )
 
+
 # As expected, the resulting array `r` has \~5 times smaller dimensions, as shown below.
+
+# In[ ]:
+
 
 r.shape
 
+
 # <!-- jn: maybe it is worth moving this list to the next section and connect them to some explanations? here you can just mention that more options are mentioned in the next section -->
-# Other useful options for [`resampling`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling) include:
-#
-# -   `rasterio.enums.Resampling.nearest`---Nearest neighbor resampling
-# -   `rasterio.enums.Resampling.bilinear`---Bilinear resampling
-# -   `rasterio.enums.Resampling.cubic`---Cubic resampling
-# -   `rasterio.enums.Resampling.lanczos`---Lanczos windowed resampling
-# -   `rasterio.enums.Resampling.mode`---Mode resampling (most common value)
-# -   `rasterio.enums.Resampling.min`---Minimum resampling
-# -   `rasterio.enums.Resampling.max`---Maximum resampling
-# -   `rasterio.enums.Resampling.med`---Median resampling
-# -   `rasterio.enums.Resampling.sum`---Median resampling
-#
-# See below (@sec-raster-resampling) for an explanation of these methods.
-#
+# <!-- md: I agree, readers will probably look in the "resampling" section when referring to methods. Now moved the list there -->
+# 
 # What's left to be done is the second step, to update the transform, taking into account the change in raster shape.
 # This can be done as follows, using `.transform.scale`.
+
+# In[ ]:
+
 
 new_transform = src.transform * src.transform.scale(
     (src.width / r.shape[1]),
@@ -1008,7 +1360,11 @@ new_transform = src.transform * src.transform.scale(
 )
 new_transform
 
+
 # @fig-raster-aggregate shows the original raster and the aggregated one.
+
+# In[ ]:
+
 
 #| label: fig-raster-aggregate
 #| fig-cap: Aggregating a raster by a factor of 5, using average resampling
@@ -1019,8 +1375,12 @@ new_transform
 rasterio.plot.show(src);
 rasterio.plot.show(r, transform=new_transform);
 
+
 # This is a good opportunity to demonstrate exporting a raster with modified dimensions and transformation matrix.
 # We can update the raster metadata required for writing with the `update` method.
+
+# In[ ]:
+
 
 dst_kwargs = src.meta.copy()
 dst_kwargs.update({
@@ -1030,23 +1390,63 @@ dst_kwargs.update({
 })
 dst_kwargs
 
-# Then we can create a new file (`dem_agg5.tif`) in writing mode, and write the values from the aggregated array `r` into that file (see @sec-data-output-raster).
+
+# Then we can create a new file (`dem_agg5.tif`) in writing mode, and write the values from the aggregated array `r` into the 1^st^ band of the file (see @sec-data-output-raster for a detailed explanation of writing raster files with **rasterio**).
 # <!-- jn: some explanation is needed here: (a) what are **? (b) what is the meaning of 1 here? -->
+# <!-- md: sure, the complete explanation of raster writing are in ch07, but I've now added a note here too -->
+
+# In[ ]:
+
 
 dst = rasterio.open('output/dem_agg5.tif', 'w', **dst_kwargs)
 dst.write(r, 1)
 dst.close()
 
+
+# ::: callout-note
+# The `**` syntax in Python is known as variable-length ["*keyword* arguments"](https://docs.python.org/3/glossary.html#term-argument).
+# It is used to pass a dictionary of numerous `parameter:argument` pairs to named arguments of a function.
+# In `rasterio.open` writing mode, the "keyword arguments" syntax often comes in handy, because, instead of specifying each and every property of a new file, we pass a (modified) `.meta` dictionary based on another, template, raster. 
+# 
+# Technically, keep in mind that the expression:
+# ```
+# rasterio.open('out.tif', 'w', **dst_kwargs)
+# ```
+# where `dst_kwargs` is a `dict` of the following form (typically coming from a template raster, possibly with few "updated" properties using `.update`, see above):
+# ```
+# {'driver': 'GTiff',
+#  'dtype': 'float32',
+#  'nodata': nan,
+#  ...
+# }
+# ```
+# is a shortcut of:
+# ```
+# rasterio.open(
+#     'out.tif', 'w', 
+#     driver=dst_kwargs['driver'], 
+#     dtype=dst_kwargs['dtype'], 
+#     nodata=dst_kwargs['nodata'], 
+#     ...
+# )
+# ```
+# "*Positional* arguments" is a related technique; see note in @sec-reprojecting-raster-geometries.
+# :::
+# 
 # The opposite operation, namely disaggregation, is when we increase the resolution of raster objects.
-# Either of the supported resampling methods (see above) can be used.
+# Either of the supported resampling methods (see @sec-raster-resampling) can be used.
 # <!-- jn: update the above sentence after moving the resampling methods list to the next section -->
+# <!-- md: right, done -->
 # However, since we are not actually summarizing information but transferring the value of a large pixel into multiple small pixels, it makes sense to use either:
-#
+# 
 # -   Nearest neighbor resampling (`rasterio.enums.Resampling.nearest`), when want to keep the original values as-is, since modifying them would be incorrect (such as in categorical rasters)
 # -   Smoothing techniques, such as bilinear resampling (`rasterio.enums.Resampling.bilinear`), when we would like the smaller pixels to reflect gradual change between the original values, e.g., when the disaggregated raster is used for visualization purposes
-#
+# 
 # To disaggregate a raster, we go through exactly the same workflow as for aggregation, only using a different scaling factor, such as `factor=5` instead of `factor=0.2`, i.e., *increasing* the number of raster pixels instead of decreasing.
 # In the example below, we disaggregate using bilinear interpolation, to get a smoothed high-resolution raster.
+
+# In[ ]:
+
 
 factor = 5
 r2 = src.read(1,
@@ -1057,11 +1457,19 @@ r2 = src.read(1,
     resampling=rasterio.enums.Resampling.bilinear
 )
 
+
 # As expected, the dimensions of the disaggregated raster are this time \~5 times *bigger* than the original ones.
+
+# In[ ]:
+
 
 r2.shape
 
+
 # To calculate the new transform, we use the same expression as for aggregation, only with the new `r2` shape.
+
+# In[ ]:
+
 
 new_transform2 = src.transform * src.transform.scale(
     (src.width / r2.shape[1]),
@@ -1069,9 +1477,13 @@ new_transform2 = src.transform * src.transform.scale(
 )
 new_transform2
 
+
 # The original raster `dem.tif` was already quite detailed, so it would be difficult to see any difference when plotting it along with the disaggregation result.
 # A zoom-in of a small section of the rasters works better.
 # @fig-raster-disaggregate allows us to see the top-left corner of the original raster and the disaggregated one, demonstrating the increase in the number of pixels through disaggregation.
+
+# In[ ]:
+
 
 #| label: fig-raster-disaggregate
 #| fig-cap: Disaggregating a raster by a factor of 5, using bilinear tresampling. Only the a small portion (top-left corner) of the rasters is shown, to zoom-in and demonstrate the effect of disaggregation.
@@ -1082,53 +1494,74 @@ new_transform2
 rasterio.plot.show(src.read(1)[:5, :5], transform=src.transform);
 rasterio.plot.show(r2[:25, :25], transform=new_transform2);
 
+
 # Code to export the disaggregated raster would be identical to the one used above for the aggregated raster.
-#
+# 
 # ### Resampling {#sec-raster-resampling}
-#
+# 
 # Raster aggregation and disaggregation (@sec-raster-agg-disagg) are only suitable when we want to change just the resolution of our raster by a fixed factor.
 # However, what to do when we have two or more rasters with different resolutions and origins?
 # This is the role of resampling---a process of computing values for new pixel locations.
 # In short, this process takes the values of our original raster and recalculates new values for a target raster with custom resolution and origin (@fig-raster-resample).
-#
+# 
 # There are several methods for estimating values for a raster with different resolutions/origins (@fig-raster-resample).
 # The main resampling methods include:
-#
+# 
 # -   Nearest neighbor: assigns the value of the nearest cell of the original raster to the cell of the target one. This is a fast simple technique that is usually suitable for resampling categorical rasters
 # -   Bilinear interpolation: assigns a weighted average of the four nearest cells from the original raster to the cell of the target one. This is the fastest method that is appropriate for continuous rasters
 # -   Cubic interpolation: uses values of the 16 nearest cells of the original raster to determine the output cell value, applying third-order polynomial functions. Used for continuous rasters and results in a smoother surface compared to bilinear interpolation, but is computationally more demanding
 # -   Cubic spline interpolation: also uses values of the 16 nearest cells of the original raster to determine the output cell value, but applies cubic splines (piecewise third-order polynomial functions). Used for continuous rasters
 # -   Lanczos windowed sinc resampling: uses values of the 36 nearest cells of the original raster to determine the output cell value. Used for continuous rasters
 # -   Additionally, we can use straightforward summary methods, taking into account all pixels that coincide with the target pixel, such as average (@fig-raster-aggregate), minimum, maximum (@fig-raster-resample), median, mode, and sum
-#
+# 
 # The above explanation highlights that only nearest neighbor resampling is suitable for categorical rasters, while all remaining methods can be used (with different outcomes) for continuous rasters.
-#
+# 
 # <!-- jn: you explain here the "reproject" part of the name; maybe it would be also introduce the "warp" part of the name as well? -->
+# <!-- md: 'rasterio.warp' is the name of the sub-module where the `.reproject' function is, I added an explanation of this in a note in @sec-merging-rasters -->
 # With **rasterio**, resampling can be done using the [`rasterio.warp.reproject`](https://rasterio.readthedocs.io/en/stable/api/rasterio.warp.html#rasterio.warp.reproject) function .
 # To clarify this naming convention, note that raster *reprojection* is not fundamentally different from *resampling*---the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection).
 # In other words, reprojection is *resampling* into a grid that is in a different CRS.
 # Accordingly, both resampling and reprojection are done using the same function `rasterio.warp.reproject`.
 # We will demonstrate reprojection using `rasterio.warp.reproject` later in @sec-reprojecting-raster-geometries.
-#
+# 
 # The information required for `rasterio.warp.reproject`, whether we are resampling or reprojecting, is:
-#
+# 
 # -   The source and target *CRS*. These may be identical, when resampling, or different, when reprojecting
 # -   The source and target *transform*
-#
+# 
 # Importantly, `rasterio.warp.reproject` can work with file connections, such as a connection to an output file in write (`'w'`) mode.
 # This makes the function efficient for large rasters.
 # <!-- jn: maybe the above sentence could be a block? -->
-#
+# <!-- md: this is an important functionality of 'rasterio.warp.reproject' which we use throughout the book, so IMHO this should be in the main text. maybe we can rewrite it in another way? -->
+# 
 # The target and destination CRS are straightforward to specify, depending on our choice.
 # The source transform is also available, e.g., through the `.transform` property of the source file connection.
 # The only complicated part is to figure out the *destination transform*.
 # When resampling, the transform is typically derived either from a *template* raster, such as an existing raster file that we would like our origin raster to match, or from a numeric specification of our target grid (see below).
 # Otherwise, when the exact grid is not of importance, we can simply aggregate or disaggregate our raster as shown above (@sec-raster-agg-disagg).
 # (Note that when *reprojecting*, the target transform is not as straightforward to figure out, therefore we further use the `rasterio.warp.calculate_default_transform` function to compute it, as will be shown in @sec-reprojecting-raster-geometries.)
-#
+# 
+# Finally, the resampling method is specified through the `resampling` parameter of `rasterio.warp.reproject`. 
+# The default is nearest neighbor resampling. 
+# However, as mentioned above, you should be aware of the distiction between resampling methods, and choose the appropriate one according to the data type (continuous/categorical), the input and output resolution, and resampling purposes.
+# Possible arguments for [`resampling`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling) include:
+# 
+# -   `rasterio.enums.Resampling.nearest`---Nearest neighbor
+# -   `rasterio.enums.Resampling.bilinear`---Bilinear
+# -   `rasterio.enums.Resampling.cubic`---Cubic
+# -   `rasterio.enums.Resampling.lanczos`---Lanczos windowed
+# -   `rasterio.enums.Resampling.mode`---Mode. i.e., most common value
+# -   `rasterio.enums.Resampling.min`---Minimum
+# -   `rasterio.enums.Resampling.max`---Maximum
+# -   `rasterio.enums.Resampling.med`---Median
+# -   `rasterio.enums.Resampling.sum`---Median
+# 
 # Let's demonstrate resampling into a destination grid which is specified through numeric constraints, such as the extent and resolution.
 # These could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match.
 # Note that the resolution of the destination grid is \~10 times more coarse (300 $m$) than the original resolution of `dem.tif` (\~30 $m$) (@fig-raster-resample).
+
+# In[ ]:
+
 
 xmin = 794650
 xmax = 798250
@@ -1136,7 +1569,11 @@ ymin = 8931750
 ymax = 8935350
 res = 300
 
+
 # The corresponding transform based on these constraints can be created using the `rasterio.transform.from_origin` function, as follows:
+
+# In[ ]:
+
 
 dst_transform = rasterio.transform.from_origin(
     west=xmin, 
@@ -1146,17 +1583,25 @@ dst_transform = rasterio.transform.from_origin(
 )
 dst_transform
 
+
 # Again, note that in case we needed to resample into a grid specified by an existing "template" raster, we could skip this step and simply read the transform from the template file, as in `rasterio.open('template.tif').transform`.
-#
+# 
 # Now, we can move on to creating the destination file connection.
 # For that, we also have to know the raster dimensions that can be derived from the extent and the resolution.
+
+# In[ ]:
+
 
 width = int((xmax - xmin) / res)
 height = int((ymax - ymin) / res)
 width, height
 
+
 # Now we can create the destination file connection.
 # We are using the same metadata as the source file, except for the dimensions and the transform, which are going to be different and reflecting the resampling process.
+
+# In[ ]:
+
 
 dst_kwargs = src.meta.copy()
 dst_kwargs.update({
@@ -1166,9 +1611,13 @@ dst_kwargs.update({
 })
 dst = rasterio.open('output/dem_resample_nearest.tif', 'w', **dst_kwargs)
 
+
 # Finally, we reproject using function `rasterio.warp.reproject`.
 # Note that the source and destination are specified using [`rasterio.band`](https://rasterio.readthedocs.io/en/latest/api/rasterio.html#rasterio.band) applied on either the file connection, reflecting the fact that we operate on a specific layer of the rasters.
 # The resampling method being used here is nearest neighbor resampling (`rasterio.enums.Resampling.nearest`).
+
+# In[ ]:
+
 
 rasterio.warp.reproject(
     source=rasterio.band(src, 1),
@@ -1180,14 +1629,24 @@ rasterio.warp.reproject(
     resampling=rasterio.enums.Resampling.nearest
 )
 
-# In the end, we close the file and create a new file `output/dem_resample_nearest.tif` with the resampling result (@fig-raster-resample).
+
+# In the end, we close the file connection and create a new file `output/dem_resample_nearest.tif` with the resampling result (@fig-raster-resample).
 # <!-- jn: close the file or the file connection? -->
+# <!-- md: right, now corrected -->
+
+# In[ ]:
+
 
 dst.close()
 
-# Here is another code section just to demonstrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with.
-# Note that the transform is identical (@fig-raster-resample), all arguments other than the resampling method are identical.
+
+# Here is another code section just to demonstrate a different resampling method, the maximum resampling, i.e., every new pixel gets the maximum value of all the original pixels it coincides with (@fig-raster-resample).
+# Note that all arguments in the `rasterio.warp.reproject` function call are identical to the previous example, except for the `resampling` method.
 # <!-- jn: something is wrong with the above sentence... -->
+# <!-- md: thanks, this was a mistake, now corrected -->
+
+# In[ ]:
+
 
 #| eval: false
 dst = rasterio.open('output/dem_resample_maximum.tif', 'w', **dst_kwargs)
@@ -1202,7 +1661,11 @@ rasterio.warp.reproject(
 )
 dst.close()
 
+
 # The original raster `dem.tif`, and the two resampling results `dem_resample_nearest.tif` and `dem_resample_maximum.tif`, are shown in @fig-raster-resample.
+
+# In[ ]:
+
 
 #| label: fig-raster-resample
 #| fig-cap: Visual comparison of the original raster and two different resampling methods'
@@ -1221,6 +1684,7 @@ rasterio.plot.show(rasterio.open('output/dem_resample_nearest.tif'), ax=ax);
 fig, ax = plt.subplots(figsize=(4,4))
 rasterio.plot.show(rasterio.open('output/dem_resample_maximum.tif'), ax=ax);
 
+
 # ## Exercises
-#
+# 
 # ## References
