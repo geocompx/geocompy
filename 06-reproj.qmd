@@ -31,9 +31,6 @@ import rasterio.plot
 import rasterio.warp
 ```
 
-<!-- jn: question -- cannot we just somehow set all of these pandas options globally (for the whole book), instead of repeating them in every chapter? -->
-<!-- md: good idea, will try to check how -->
-
 It also relies on the following data files:
 
 ```{python}
@@ -50,9 +47,6 @@ cycle_hire_osm = gpd.read_file('data/cycle_hire_osm.gpkg')
 This chapter builds on that knowledge and goes further.
 It demonstrates how to set and transform geographic data from one CRS to another and, furthermore, highlights specific issues that can arise due to ignoring CRSs that you should be aware of, especially if your data is stored with lon/lat coordinates.
 
-<!-- In many projects there is no need to worry about, let alone convert between, different CRSs. -->
-<!-- jn: these two sentences do not "glue" well -->
-<!-- md: I suggest keeping just the 2nd sentence -->
 It is important to know if your data is in a projected or geographic coordinate system, and the consequences of this for geometry operations.
 However, if you know the CRS of your data and the consequences for geometry operations (covered in the next section), CRSs should just work behind the scenes: people often suddenly need to learn about CRSs when things go wrong.
 Having a clearly defined project CRS that all project data is in, plus understanding how and why to use different CRSs, can ensure that things do not go wrong.
@@ -85,22 +79,14 @@ The more concise identifier `4326` is also understood by **geopandas** and **ras
 
 The longer answer is that none of the three descriptions are sufficient, and more detail is needed for unambiguous CRS handling and transformations: due to the complexity of CRSs, it is not possible to capture all relevant information about them in such short text strings.
 For this reason, the Open Geospatial Consortium (OGC, which also developed the Simple Features specification that the **geopandas** package implements) developed an open standard format for describing CRSs that is called WKT (Well Known Text).
-<!-- jn: simple features or Simple Features? We need to be consistent -- please also take a look at previous chapters... -->
-<!-- md: right. IMHO "Simple Features" is more correct, now changed in other places too -->
 This is detailed in a [100+ page document](https://portal.opengeospatial.org/files/18-010r7) that "defines the structure and content of a text string implementation of the abstract model for coordinate reference systems described in ISO 19111:2019" [@opengeospatialconsortium_wellknown_2019].
-<!-- jn: the document link is broken... -->
-<!-- md: thanks, now corrected -->
 The [WKT representation](https://en.wikipedia.org/wiki/Well-known_text_representation_of_coordinate_reference_systems) of the WGS84 CRS, which has the identifier `EPSG:4326` is as follows.
-<!-- jn: I still struggle with a decision if we should show EPSG:4326 or OGC:CRS84. I think that the latter is more correct, but the former is more common. I am open for the discussion. -->
-<!-- md: I'm not even familiar with the 'OGC:CRS84' form, so I suggest keeping 'EPSG:4326', but if 'OGC:CRS84' is more correct then I'm open to the idea too -->
 
 ```{python}
 crs = pyproj.CRS.from_string('EPSG:4326') # or '.from_epsg(4326)'
 print(crs.to_wkt(pretty=True))
 ```
 
-<!-- jn: maybe it would be good to add a sentence or two explaining the about wkt representation..? -->
-<!-- md: good point, I'm not sure what are the important points to say about it - for now I've added a link to Wikipedia -->
 The output of the command shows how the CRS identifier (also known as a Spatial Reference Identifier or [SRID](https://postgis.net/workshops/postgis-intro/projection.html)) works: it is simply a look-up, providing a unique identifier associated with a more complete WKT representation of the CRS.
 This raises the question: what happens if there is a mismatch between the identifier and the longer WKT representation of a CRS?
 On this point Open Geospatial Consortium [@opengeospatialconsortium_wellknown_2019] is clear, the verbose WKT representation takes precedence over the [identifier](https://docs.opengeospatial.org/is/18-010r7/18-010r7.html#37):
@@ -119,20 +105,14 @@ print(crs.to_wkt(pretty=True))
 
 WKT strings are exhaustive, detailed, and precise, allowing for unambiguous CRSs storage and transformations.
 They contain all relevant information about any given CRS, including its datum and ellipsoid, prime meridian, projection, and units.
-<!-- jn: maybe it would be good to add a sentence or two explaining the about wkt representation..? -->
-<!-- md: same as above -->
 
 Recent PROJ versions (6+) still allow use of proj-strings to define coordinate operations, but some proj-string keys (`+nadgrids`, `+towgs84`, `+k`, `+init=epsg:`) are either no longer supported or are discouraged.
-<!-- jn: "proj4 strings" or "proj-string"? We need to be consistent -- please also take a look at previous chapters... -->
-<!-- md: agree. the proj docs seem to use 'proj-string', so I'm in favor of that -->
 Additionally, only three datums (i.e., WGS84, NAD83, and NAD27) can be directly set in proj-string.
 Longer explanations of the evolution of CRS definitions and the PROJ library can be found in [@bivand_progress_2021], Chapter 2 of [@pebesma_spatial_2022], and a [blog post by Floris Vanderhaeghe](https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/).
 
 ::: callout-note
 As outlined in the [PROJ documentation](https://proj.org/development/reference/cpp/cpp_general.html), there are different versions of the WKT CRS format including WKT1 and two variants of WKT2, the latter of which (WKT2, 2018 specification) corresponds to the ISO 19111:2019 [@opengeospatialconsortium_wellknown_2019].
 :::
-<!-- jn: maybe the last sentence could be a block? -->
-<!-- md: agree, now added -->
 
 ## Querying and setting coordinate systems {#sec-querying-and-setting-coordinate-systems}
 
@@ -177,12 +157,6 @@ world.crs.axis_info[1].unit_name
 world.crs.to_authority()
 ```
 
-<!-- The `to_proj4()` method returns the proj-string representation of the CRS. -->
-<!-- world.crs.to_proj4() -->
-
-<!-- jn: the last code example leaves the following message (I think we should either remove the whole code example, or just remove the message but explaining it in the text..): '/home/jn/micromamba/envs/geocompy/lib/python3.11/site-packages/pyproj/crs/crs.py:1293: UserWarning: You will likely lose important projection information when converting to a PROJ string from another format. See: https://proj.org/faq.html#what-is-the-best-format-for-describing-coordinate-reference-systems proj = self._crs.to_proj4(version=version)' -->
-<!-- md: I suggest in general we keep the warning messages (if any), so the reader is not surprised when they run the code. in this case, since we also mention that proj-strings are outdated, I agree we can just remove the code example -->
-
 In cases when a coordinate reference system (CRS) is missing or the wrong CRS is set, the `.set_crs` method can be used on a `GeoSeries` or a `GeoDataFrame` to set it.
 The CRS can be specified using an EPSG code as the first argument.
 In case the object already has a different CRS definition, we must also specify `allow_override=True` to replace it (otherwise we get an error).
@@ -204,8 +178,6 @@ In **rasterio**, the CRS information is stored as part of a raster file connecti
 Replacing the CRS definition for a **rasterio** file connection is typically not necessary, because it is not considered in any operation; only the transformation matrix and coordinates are.
 One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch).
 However, if we, for some reason, need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode.
-<!-- jn: what's the difference between `r+` and `rw`? -->
-<!-- md: good point, I've added a note about file connection modes -->
 To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`, 
 
 ```{python}
@@ -258,8 +230,6 @@ lnd_layer.crs
 This implies that **geopandas** does not know what the CRS is and is unwilling to guess.
 Unless a CRS is manually specified or is loaded from a source that has CRS metadata, **geopandas** does not make any explicit assumptions about which coordinate systems, other than to say "I don't know".
 This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying [assumption](https://datatracker.ietf.org/doc/html/rfc7946#section-4) that all coordinates have a lon/lat CRS: `EPSG:4326`.
-<!-- jn: Michael, please check if the above statement is still correct (I vaguely recall some recent discussion about this...)  -->
-<!-- md: as far as I can tell it's correct, now added a reference; e.g., reading a GeoJSON in 'geopandas' automatically sets CRS to 4326 -->
 
 A CRS can be added to `GeoSeries` or `GeoDataFrame` objects using the `.set_crs` method, as mentioned above.
 
@@ -267,9 +237,6 @@ A CRS can be added to `GeoSeries` or `GeoDataFrame` objects using the `.set_crs`
 lnd_layer = lnd_layer.set_crs(4326)
 ```
 
-<!-- jn: "all geographic coordinates have a coordinate system" what does it mean? -->
-<!-- md: I'm not sure either, suggest removing the sentence -->
-<!-- In general, all geographic coordinates have a coordinate system and software can only make good decisions about plotting and geometry operations if it knows what type of CRS it is working with. -->
 When working with **geopandas** and **rasterio**, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered.
 It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not).
 When exporting the results, though, it is important to keep the CRS definition in place, because other software typically *do* use, and require, the CRS definition in calculation.
@@ -371,8 +338,6 @@ But which CRS to use?
 The answer depends on context: many projects, especially those involving web mapping, require outputs in `EPSG:4326`, in which case it is worth transforming the projected object.
 If, however, the project requires geometric calculations, implying planar geometry, e.g., calculating buffers (@sec-geometry-operations-on-projected-and-unprojected-data), it is necessary to transform data with a geographic CRS into an equivalent object with a projected CRS, such as the British National Grid (`EPSG:27700`).
 That is the subject of @sec-which-crs-to-use.
-<!-- jn: is the above cross-reference correct? does not seem to be... -->
-<!-- md: right, this was a mistake. now corrected -->
 
 ## Which CRS to use? {#sec-which-crs-to-use}
 
@@ -470,23 +435,6 @@ lnd_layer2.distance(lnd_layer_proj)
 It may come as a surprise that `lnd_layer` and `lnd_layer2` are just over 2 $km$ apart!
 The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually-created coordinates that created `lnd_layer` and `lnd_layer_proj`.
 
-<!-- jn: maybe we can remove the text from here to my next comment, as it is already explained in the previous section..? -->
-<!-- md: agree, now removed -->
-<!-- The CRS of `GeoSeries` and `GeoDataFrame` objects can be queried and set---as we learned in @sec-querying-and-setting-coordinate-systems---using the `.crs` property and the `.set_crs` method, respectively. -->
-<!-- The output is printed as multiple lines of text containing information about the coordinate system: -->
-
-<!-- crs_lnd = lnd_layer.crs -->
-<!-- crs_lnd -->
-
-<!-- As mentioned in @sec-coordinate-reference-systems, a CRS object has many useful properties to examing the CRS characteristics and details, including `.name` and `.to_epsg()`: -->
-
-<!-- crs_lnd.name -->
-<!-- crs_lnd.to_proj4() -->
-<!-- crs_lnd.to_epsg() -->
-
-<!-- As mentioned in @sec-coordinate-reference-systems, WKT representation, accessible through `.to_wkt()` of the `crs_lnd` object is the ultimate source of truth. -->
-<!-- This means that the outputs of the previous code chunk are queries from the WKT representation provided by PROJ, rather than inherent attributes of the object and its CRS. -->
-
 Reprojecting to a different CRS is also demonstrated below using `cycle_hire_osm`, a point layer that represents 'docking stations' where you can hire bicycles in London.
 The contents of the CRS object associated with a given geometry column is changed when the object's CRS is transformed.
 In the code chunk below, we create a new version of `cycle_hire_osm` with a projected CRS.
@@ -506,9 +454,6 @@ crs_lnd_new = pyproj.CRS.from_epsg(27700)
 crs_lnd_new.name, crs_lnd_new.to_wkt()
 ```
 
-<!-- jn: what to do with the long message: '/home/jn/micromamba/envs/geocompy/lib/python3.11/site-packages/pyproj/crs/crs.py:1293: UserWarning: You will likely lose important projection information when converting to a PROJ string from another format. See: https://proj.org/faq.html#what-is-the-best-format-for-describing-coordinate-reference-systems proj = self._crs.to_proj4(version=version)' ? -->
-<!-- md: same as above, removed the code example -->
-  
 The result shows that the EPSG code `27700` represents the British National Grid, a result that could have been found by searching online for "[EPSG 27700](https://www.google.com/search?q=CRS+27700)".
 
 ## Reprojecting raster geometries {#sec-reprojecting-raster-geometries}
@@ -529,8 +474,6 @@ For example, it could convert the input raster (a regular grid) into a curviline
 The **rasterio**, like common raster file formats (such as GeoTIFF), does not support curvilinear grids.
 The **xarray** package, for instance, can be used to [work with](https://docs.xarray.dev/en/stable/examples/multidimensional-coords.html) curvilinear grids.
 :::
-<!-- jn: regarding above note: is there any Python package supporting curvilinear grids? if yes, maybe mention it there... -->
-<!-- md: good point, added -->
 
 The raster reprojection process is done using two functions from the `rasterio.warp` sub-package:
 
@@ -580,9 +523,6 @@ dst_width
 dst_height
 ```
 
-<!-- jn: what does it mean "unpack" here? -->
-<!-- md: I've added a note with an explanation -->
-
 ::: callout-note
 The `*` syntax in Python is known as variable-length ["*positional* arguments"](https://docs.python.org/3/glossary.html#term-argument).
 It is used to pass a `list` or `tuple` (or other iterables object) to positional arguments of a function.
@@ -619,9 +559,7 @@ Recall from @sec-raster-resampling that resampling using `rasterio.warp.reprojec
 Therefore, our next step is to create the metadata file used for writing the reprojected raster to file.
 For convenience, we are taking the metadata of the source raster (`src_nlcd.meta`), making a copy (`dst_kwargs`), and then updating those specific properties that need to be changed.
 Note that the reprojection process typically creates "No Data" pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be "filled" to get back a rectangular extent.
-For example, a reprojected raster may appear as a "tilted" rectangle, inside a larger straight rectangular extent, whereas the margins around the tilted rectangle are inevitably filled with "No Data" (e.g., the white stripes surrounding the edges in @fig-raster-reproject-nlcd (b) are "No Data" pixels created as a result of reprojection). 
-<!-- jn: I am unsure if I understand the above sentence... can you try to rephrase it? -->
-<!-- md: agree, now added an example to clarify -->
+For example, a reprojected raster may appear as a "tilted" rectangle, inside a larger straight rectangular extent, whereas the margins around the tilted rectangle are inevitably filled with "No Data" (e.g., the white stripes surrounding the edges in @fig-raster-reproject-nlcd (b) are "No Data" pixels created as a result of reprojection).
 We need to specify a "No Data" value of our choice, if there is no existing definition, or keep the existing source raster "No Data" setting, such as `255` in this case.
 
 ```{python}
@@ -646,7 +584,6 @@ dst_nlcd = rasterio.open('output/nlcd_4326.tif', 'w', **dst_kwargs)
 ```
 
 Then, we use the `rasterio.warp.reproject` function to calculate and write the reprojection result into the `dst_nlcd` file connection.
-
 
 ```{python}
 #| output: false
@@ -719,8 +656,6 @@ template.meta
 ```
 
 Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the "template".
-<!-- jn: why 'w' and not 'rw' or 'r+'? -->
-<!-- md: almost always we need either 'r' (read existing file) or 'w' (create new file); 'r+' is an exception, when we change (e.g. the crs) an existing file. I've added a note about that following another comment above -->
 
 ```{python}
 dst_nlcd_2 = rasterio.open('output/nlcd_4326_2.tif', 'w', **template.meta)
@@ -825,8 +760,6 @@ lon, lat
 
 Next, we can use the obtained lon/lat coordinates in `coords` to update the WKT definition of the azimuthal equidistant (AEQD) CRS seen below.
 Notice that we modified just two values below---`"Central_Meridian"` to the longitude and `"Latitude_Of_Origin"` to the latitude of our centroid.
-<!-- jn: can you explain the below syntax (if that Python-obvious, then just as a comment for me)? what's f? what's '''? -->
-<!-- md: now added a note about it -->
 
 ```{python}
 my_wkt = f'''PROJCS["Custom_AEQD",

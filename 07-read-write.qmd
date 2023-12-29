@@ -71,8 +71,6 @@ Downloads can be initiated from the command line using a variety of techniques, 
 Files hosted on static URLs can be downloaded with the following method, as illustrated in the code chunk below which accesses the [Natural Earth Data](https://www.naturalearthdata.com/) website to download the world airports layer zip file and to extract the contained ESRI Shapefile.
 Note that the download code is complicated by the fact that the server checks the `User-agent` header of the request, basically to make sure that the download takes place through a browser.
 To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code.
-<!-- jn: the following code example looks fairly complex (I think it can be done with download.file only in R) -- cannot we simplify it somehow? -->
-<!-- md: I tried another solution (wget.download) but it requires the same workaround of user-agent (and also it is a third-party package which is less preferable), so I don't see how the code can be simplified. Right, in R download file doesn't require user-agent in this case, the "download" part of the code would be 1 expression instead of 4 in Python -->
 
 ```{python}
 #| eval: false
@@ -145,9 +143,6 @@ counties.plot();
 
 Note that @fig-ne-counties x-axis spans the entire range of longitues, between `-180` and `180`, since the Aleutian Islands county (which is small and difficult to see on the map) crosses the [International Date Line](https://en.wikipedia.org/wiki/International_Date_Line).
 
-<!-- jn: maybe it would be worth explaning why the visualization spans the whole world, not just the continental US? (I not it is obvious to many people, but I assume -- not all) -->
-<!-- md: sure, good idea - now added -->
-
 Other layers can be accessed the same way.
 You need to specify the `resolution`, `category`, and `name` of the requested dataset in [Natural Earth Data](https://www.naturalearthdata.com/downloads/), then  run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and read the file into the Python environment, e.g., using `gpd.read_file`.
 This is an alternative approach to "directly" downloading files as shown earlier (@sec-retrieving-open-data).
@@ -156,8 +151,6 @@ The second example uses the **osmnx** package [@osmnx] to find parks from the Op
 As illustrated in the code-chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` function.
 The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can also be used to query a custom area of interest).
 The second argument specifies the OSM [tag(s)](https://wiki.openstreetmap.org/wiki/Map_features), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs.
-<!-- jn: maybe this is a place to mention https://wiki.openstreetmap.org/wiki/Map_features ? -->
-<!-- md: good idea, now added -->
 
 ```{python}
 parks = ox.features.features_from_place(
@@ -184,18 +177,6 @@ OpenStreetMap is a vast global database of crowd-sourced data, is growing daily,
 Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers.
 Using OSM encourages 'citizen science' and contributions back to the digital commons (you can start editing data representing a part of the world you know well at [www.openstreetmap.org](https://www.openstreetmap.org/)).
 
-<!-- Sometimes, packages come with built-in datasets. -->
-<!-- These can be accessed just like any other object (e.g., function) that is imported as part of the package, or in other ways as specified in the package documentation. -->
-<!-- For example, package **geopandas** comes with few built-in datasets (see `gpd.datasets.available` for a list of names). -->
-<!-- Using the `gpd.datasets.get_path` function and the dataset name, we can obtain the path to the location of the dataset file on our computer. -->
-<!-- For example, `'naturalearth_lowres'` is a vector layer of world countries (from Natural Earth Data, which we have already seen before): -->
-<!-- ne_filename = gpd.datasets.get_path('naturalearth_lowres') -->
-<!-- ne_filename -->
-<!-- jn: the above code returns a warning -- please update the example -->
-<!-- md: this section was removed since the 'datasets' sub-module is deprected (following our discussion on GitHub) -->
-<!-- Then, we can import the dataset, just like from any other file with `gpd.read_file`. -->
-<!-- ne = gpd.read_file(ne_filename) -->
-
 One way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into a set of coordinates.
 This is typically done by sending a query to an online service and getting the location as a result.
 Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements.
@@ -203,13 +184,8 @@ Many such services exist that differ in the used method of geocoding, usage limi
 
 **geopandas** provides the [`gpd.tools.geocode`](https://geopandas.org/en/stable/docs/reference/api/geopandas.tools.geocode.html), which can geocode addresses to a `GeoDataFrame`.
 Internally it uses the **geopy** package, supporting several providers through the `provider` parameter (use `geopy.geocoders.SERVICE_TO_GEOCODER` to see possible options).
-<!-- The function returns a `tuple` of the `(lat,lon)` form (in `EPSG:4326`). -->
-<!-- jn: in what CRS? maybe it would be good to add this info -->
-<!-- md: now added -->
 The example below searches for [John Snow blue plaque](https://en.m.wikipedia.org/wiki/John_Snow_(public_house)) coordinates located on a building in the Soho district of London.
 The result is a `GeoDataFrame` with the address we passed to `gpd.tools.geocode`, and the detected point location.
-<!-- jn: maybe we should add a website about the John Snow blue plaque? not everyone is probably familiar with it... -->
-<!-- md: right, now added -->
 
 ```{python}
 result = gpd.tools.geocode('54 Frith St, London W1D 4SJ, UK')
@@ -226,19 +202,6 @@ result = gpd.tools.geocode([
 result
 ```
 
-<!-- If the query returns no results, an `InsufficientResponseError` is raised. -->
-
-<!--jn: what do you mean by "deal" here? what is the expected outcome? how to deal with it? -->
-<!--md: I agree this was confusing, so on second thought we can just say that "no results" raises an error, there is no strong reason to go into try/except explanation here, IMHO -->
-
-<!-- The alternative function `osmnx.geocoder.geocode_to_gdf` can be used to automatically geocode multiple addresses (accepting a `list` of `string`s) and transforming them into a `GeoDataFrame`. -->
-<!-- This function also returns `'Polygon'` geometries. -->
-<!-- jn: why "also"? -->
-<!-- jn: why Polygon geometries? what is the logic behind it? -->
-
-<!-- result = ox.geocoder.geocode_to_gdf(['54 Frith St, London W1D 4SJ, UK']) -->
-<!-- result -->
-
 The result is visualized in @fig-ox-geocode using the `.explore` function. 
 We are using the `marker_kwds` parameter of `.explore` to make the marker larger (see @sec-interactive-styling).
 
@@ -247,11 +210,6 @@ We are using the `marker_kwds` parameter of `.explore` to make the marker larger
 #| fig-cap: Specific address in London, geocoded into a `GeoDataFrame`
 result.iloc[[0]].explore(color='red', marker_kwds={'radius':20})
 ```
-
-<!-- ```{=html} -->
-<!-- ## Geographic web services -->
-<!-- To complete... -->
-<!-- ``` -->
 
 ## File formats {#sec-file-formats}
 
@@ -284,8 +242,6 @@ GDAL provides access to more than 200 vector and raster data formats.
 
 An important development ensuring the standardization and open-sourcing of file formats was the founding of the Open Geospatial Consortium ([OGC](http://www.opengeospatial.org/)) in 1994.
 Beyond defining the Simple Features data model (see @sec-simple-features), the OGC also coordinates the development of open standards, for example as used in file formats such as KML and GeoPackage.
-<!-- jn: simple features or Simple Features? -->
-<!-- md: now corrected -->
 Open file formats of the kind endorsed by the OGC have several advantages over proprietary formats: the standards are published, ensure transparency and open up the possibility for users to further develop and adjust the file formats to their specific needs.
 
 ESRI Shapefile is the most popular vector data exchange format; however, it is not an fully open format (though its specification is open).
@@ -326,8 +282,6 @@ For large vector layers and rasters, partial reading may be required.
 For vector layers, we will demonstrate how to read subsets of vector layers, filtered by attributes or by location (@sec-input-vector). 
 For rasters, we already showed earlier in the book how the user can choose which specific bands to read (@sec-using-rasterio), or read resampled data to a lower resolution (@sec-raster-agg-disagg).
 In this section, we also show how to read specific rectangular extents ("windows") from a raster file (@sec-input-raster).
-<!-- jn: what with large (>RAM) rasters? -->
-<!-- md: right, now elaborated (also for vector layers) -->
 
 ### Vector data {#sec-input-vector}
 
@@ -465,9 +419,6 @@ world_wkt = gpd.GeoDataFrame(world_wkt)
 world_wkt
 ```
 
-<!-- jn: maybe it would be good to explain the `.apply` function here (or somewhere) -->
-<!-- md: There is now a note about '.apply' in ch03, now added a reference -->
-
 The resulting layer is shown in @fig-world_wkt-layer.
 
 ```{python}
@@ -475,16 +426,6 @@ The resulting layer is shown in @fig-world_wkt-layer.
 #| fig-cap: The `world_wkt.csv` table transformed to a polygon layer
 world_wkt.plot();
 ```
-
-<!-- ::: callout-note -->
-<!-- Not all of the supported vector file formats store information about their coordinate reference system. -->
-
-<!-- jn: what are the examples of such formats? -->
-<!-- md: I can't think of an example actually, if that's OK we can remove this note -->
-
-<!-- In these situations, it is possible to add the missing information using the `.set_crs` function. -->
-<!-- Please refer also to @sec-querying-and-setting-coordinate-systems for more information. -->
-<!-- ::: -->
 
 As a final example, we will show how **geopandas** also reads KML files.
 A KML file stores geographic information in XML format---a data format for the creation of web pages and the transfer of data in an application-independent way [@nolan_xml_2014].
@@ -497,8 +438,6 @@ fiona.supported_drivers['LIBKML'] = 'r'
 ```
 
 The sample KML file `KML_Samples.kml` contains more than one layer.
-<!-- jn: maybe we could introduce this function earlier, for example around this sentence: "However, using the `layer` argument you can specify any other layer." -->
-<!-- md: good idea, now moved there (and also mentioned 'pyogrio.list_layers' alternative) -->
 
 ```{python}
 u = 'https://developers.google.com/kml/documentation/KML_Samples.kml'
@@ -566,9 +505,6 @@ w = rasterio.windows.from_bounds(
 )
 w
 ```
-
-<!-- jn: why eval:false for these examples? the output is not shown... -->
-<!-- md: I think because it wasn't working well with my internet connection at home, now removed -->
 
 Now we can read the partial array, according to the specified window `w`, by passing it to the `.read` method.
 
@@ -644,8 +580,6 @@ world.to_file('output/world.gpkg')
 ```
 
 Instead of overwriting the file, we could add new rows to the file with `mode='a'` ("append" mode, as opposed to the default `mode='w'` for the "write" mode).
-<!-- jn: "a new layer"? or add new rows? -->
-<!-- md: right, this was a mistake. now corrected -->
 Appending is supported by several spatial formats, including GeoPackage.
 
 ```{python}
@@ -709,8 +643,6 @@ The most complicated property is the `transform`, which specifies the raster ori
 The `transform` is typically either obtained from an existing raster (serving as a "template"), created from scratch based on manually specified origin and resolution values (e.g., using `rasterio.transform.from_origin`), or calculated automatically (e.g., using `rasterio.warp.calculate_default_transform`), as shown in previous chapters.
 
 Earlier in the book, we have already demonstrated five common scenarios of writing rasters, covering the above-mentioned considerations:
-<!-- jn: there are five scenarios, not four, right? (see below) -->
-<!-- md: right, now corrected -->
 
 -   Creating from scratch (@sec-raster-from-scratch)---we created and wrote two rasters from scratch by associating the `elev` and `grain` arrays with an arbitrary spatial extent. The custom arbitrary transformation matrix was created using `rasterio.transform.from_origin`
 -   Aggregating (@sec-raster-agg-disagg)---we wrote an aggregated a raster, by resampling from an exising raster file, then updating the transformation matrix using `.transform.scale`
@@ -822,9 +754,6 @@ rasterio.open('output/r.tif').read().dtype
 ```
 
 These code sections demonstrate the agreement between GeoTIFF (and other file formats) data types, which are universal and understood by many programs and programming languages, and the corresponding `ndarray` data types which are defined by **numpy** (@tbl-numpy-data-types).
-
-<!-- jn: I do not fully understand the story told by the last three code chunks... e.g., "which we specified when creating it according to the data type of the original array" when? maybe explain the difference between the first and third code chunk? -->
-<!-- md: I now tried to clarify -->
 
 Writing multiband rasters is similar to writing single-band rasters, only that we need to:
 
@@ -996,9 +925,6 @@ r.mean()
 
 Switching to `float` and assigning `np.nan` is the simpler approach, since that way we can keep working with the familiar `ndarray` data structure for all raster types, whether `int` or `float`.
 Nevertheless, learning how to work with masked arrays can be beneficial when we have good reasons to keep our raster data in `int` arrays (for example, due to RAM limits) and still perform operations that take missing values into account.
-
-<!-- jn: maybe it would be good to compare pros and cons of these two approaches -->
-<!-- md: I've added a sentence about that (perhaps it is subjective, will be happy if you or others have other thoughts to add) -->
 
 Finally, keep in mind that, confusingly, `float` rasters may represent "No Data" using a specific "flag" (such as `-9999.0`), instead, or in addition to (!), the native `np.nan` representation.
 In such cases, the same considerations shown for `int` apply to `float` rasters as well.

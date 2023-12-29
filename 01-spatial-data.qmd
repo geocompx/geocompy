@@ -4,6 +4,16 @@ jupyter: python3
 
 # Geographic data in Python {#sec-spatial-class}
 
+```{python}
+#| echo: false
+import matplotlib.pyplot as plt
+import pandas as pd
+pd.set_option('display.max_rows', 6)
+pd.set_option('display.max_columns', 6)
+pd.options.display.max_colwidth = 35
+plt.rcParams['figure.figsize'] = (5, 5)
+```
+
 ## Introduction
 
 This chapter outlines two fundamental geographic data models --- vector and raster --- and introduces the main Python packages for working with them.
@@ -18,7 +28,7 @@ Rasters aggregate spatially specific features to a given resolution, meaning tha
 Which to use?
 The answer likely depends on your domain of application, and the datasets you have access to:
 
--   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?--> <!-- md: I think that's true but now sure how we can back up this idea, will be happy to hear what everyone thinks -->
+-   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders
 -   Raster datasets and methods dominate many environmental sciences because of the reliance on remote sensing data
 
 Python has strong support for both data models.
@@ -302,12 +312,10 @@ A useful list of possible geometry types can be found in R's **sf** package [doc
 Simple feature geometries can be represented by well-known binary (WKB) and well-known text (WKT) encodings.
 <!-- TODO: add reference or at least link to OGC document on this? --> WKB representations are usually hexadecimal strings easily readable for computers, and this is why GIS software and spatial databases use WKB to transfer and store geometry objects.
 WKT, on the other hand, is a human-readable text markup description of Simple Features.
-<!-- jn: simple features or Simple Features? -->
-<!-- md: Simple Features, now corrected -->
 Both formats are exchangeable, and if we present one, we will naturally choose the WKT representation.
 
 The foundation of each geometry type is the point.
-A point is simply a coordinate in 2D, 3D, or 4D space such as shown in @fig-point and @fig-point2.
+A point is simply a coordinate in 2D, 3D, or 4D space such as shown in @fig-point.
 
 ``` text
 POINT (5 2)
@@ -431,7 +439,7 @@ A `'MultiPolygon'` geometry (@fig-multipolygon1) is created from a `list` of `Po
 #| fig-cap: A `MultiPolygon` geometry
 multipolygon = shapely.MultiPolygon([
     [[(1,5), (2,2), (4,1), (4,4), (1,5)], []],  ## Polygon 1 
-    [[(0,2), (1,2), (1,3), (0,3), (0,2)], []]  ## Polygon 2, etc.
+    [[(0,2), (1,2), (1,3), (0,3), (0,2)], []]   ## Polygon 2, etc.
 ])
 multipolygon
 ```
@@ -442,7 +450,7 @@ Since the required input has four hierarchical levels, it may be more clear to c
 #| output: false
 multipolygon = shapely.MultiPolygon([
     shapely.Polygon([(1,5), (2,2), (4,1), (4,4), (1,5)]),  ## Polygon 1 
-    shapely.Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])  ## Polygon 2, etc.
+    shapely.Polygon([(0,2), (1,2), (1,3), (0,3), (0,2)])   ## Polygon 2, etc.
 ])
 multipolygon
 ```
@@ -659,11 +667,7 @@ In the following two sections, we introduce **rasterio**, which is the raster-re
 
 To work with the **rasterio** package, we first need to import it.
 Additionally, as the raster data is stored within **numpy** arrays, we import the **numpy** package and make all its functions accessible for effective data manipulation. 
-<!-- jn: `rasterio.plot` or **rasterio.plot**?--> 
-<!--md: right! now fixed -->
 Finally, we import the **rasterio.plot** sub-module for its `rasterio.plot.show` function that allows for quick visualization of rasters.
-<!--jn: you should also mention subprocess -->
-<!--md: we didn't actually need it, now removed -->
 
 ```{python}
 import numpy as np
@@ -679,8 +683,6 @@ When working with **rasterio**, importing a raster is actually a two-step proces
 
 This separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file.
 The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size.
-<!-- jn: what do you mean with "selective"? did you mean "optional"? -->
-<!-- md: meaning that we can choose what to read; now rephrased to make it more clear -->
 Accordingly, the second step (`.read`) is selective, meaning that the user can fine tune the subset of values (bands, rows/columns, resolution, etc.) that are actually being read.
 For example, we may want to read just one raster band rather than reading all bands.
 
@@ -707,8 +709,6 @@ Let us examine it with the `meta` property.
 src.meta
 ```
 
-<!-- jn: maybe it would be good to list and explain the obtained values (e.g., what does the uint16 mean? what does the width? etc.) -->
-<!-- md: agree, now clarified or added references to other places in the book --> 
 Namely, it allows us to see the following properties, which we will elaborate on below, and in later chapters:
 
 -   `driver`---The raster file format (see @sec-data-output-raster)
@@ -775,8 +775,6 @@ Therefore, to create a raster, we first need to have an array with the values, a
 Let's create the arrays `elev` and `grain`.
 The `elev` array is a $6 \times 6$ array with sequential values from `1` to `36`.
 It can be created as follows using the `np.arange` function and `.reshape` method.
-<!-- jn: why 1, 37, and not 1, 36? -->
-<!-- md: because the 'to' argument is exclusive (like in basic Python's `range`) -->
 
 ```{python}
 elev = np.arange(1, 37, dtype=np.uint8).reshape(6, 6)
@@ -800,8 +798,6 @@ grain
 ```
 
 Note that in both cases, we are using the `uint8` (unsigned integer in 8 bits, i.e., `0-255`) data type, which is sufficient to represent all possible values of the given rasters (see @tbl-numpy-data-types).
-<!-- jn: do we explain possible data types somewhere in the book? if so, we should add a cross-reference here. -->
-<!-- md: yes, good idea! now added -->
 This is the recommended approach for a minimal memory footprint.
 
 What is missing now is the georeferencing information (see @sec-using-rasterio).
@@ -855,8 +851,6 @@ Finally, to export the raster for permanent storage, along with the CRS definiti
 Don't worry if the code below is unclear; the concepts related to writing raster data to file will be explained in @sec-data-output-raster. 
 For now, for completeness, and also to use these rasters in subsequent chapters without having to re-create them from scratch, we just provide the code for exporting the `elev` and `grain` rasters into the `output` directory.
 In the case of `elev`, we do it as follows with the `open`, `write`, and `close` methods of the **rasterio** package.
-<!-- jn: please explain 'w', count, crs (add a cross-reference to the section where we explain CRSs) -->
-<!-- md: these are explained in the cited section, now added clarification -->
 
 ```{python}
 #| eval: false
@@ -986,10 +980,6 @@ zion.crs
 ```
 
 We can also illustrate the difference between a geographic and a projected CRS by plotting the `zion` data in both CRSs (@fig-zion-crs). Note that we are using the [`.grid`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.grid.html) method of **matplotlib** to draw grid lines on top of the plot.
-<!-- jn: have we explained the grid() method first? if not, we should do it here. -->
-<!-- md: now added reference -->
-<!-- jn: the plot does not align well (1e6 number above the right panel)... -->
-<!-- md: not sure I understand, the 1e6 is a factor automatically added to keep the axis labels as small numbers -->
 
 ```{python}
 #| label: fig-zion-crs

@@ -53,9 +53,7 @@ tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
 ## Introduction
 
 <!-- - Geopandas explore has been used in previous chapters. -->
-
 <!-- - When to focus on visualisation? At the end of geographic data processing workflows. -->
-
 <!-- Input datasets: https://github.com/geocompx/spDatapy -->
 
 A satisfying and important aspect of geographic research is communicating the results.
@@ -84,9 +82,6 @@ Thus, in @sec-interactive-maps, we move on to elaborate on the `.explore` method
 
 ## Static maps {#sec-static-maps}
 
-<!-- jn: this intro can be improved/expanded -->
-<!-- md: agree, now expanded. will be happy to hear if you have suggestions for other important points to add -->
-
 Static maps are the most common type of visual output from geocomputation. 
 For example, we have been using `.plot` and `rasterio.plot.show` throughout the book, to display **geopandas** and **rasterio** geocomputation results, respectively. 
 In this section we systematically review and elaborate on the various properties that can be customized when using those functions.
@@ -97,9 +92,6 @@ Thanks to their simplicity, static maps can be shared in a wide variety of ways:
 
 Nevertheless, there are many aesthetic considerations when making a static map, and there is also a wide variety of ways to create static maps using novel presentation methods. 
 This is the focus of the field of [cartography](https://en.wikipedia.org/wiki/Cartography), and beyond the scope of this book.
-
-<!-- jn: maybe it would be good to add a block here about the similarities and differences between spatial raster/vectors and graphical raster/vectors? -->
-<!-- md: I can see what you mean, personally I like this topic :-), but IMHO this is beyind the scope for most readers (we're showing just minimal example of exporting to file, and not really discussing formats in the main text), if everyone are in favor then sure we can add it -->
 
 <!-- Decision of whether to use static or interactive. -->
 <!-- Flow diagram? -->
@@ -145,8 +137,6 @@ nz.plot(color='lightgrey', edgecolor='blue');
 
 The next example uses `markersize` to get larger points (@fig-basic-plot-markersize).
 It also demonstrates how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case, using [`plt.subplots`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html) to initialize the plot and its `figsize` parameter to specify dimensions.
-<!-- jn: I think that a longer explanation is needed... What's fig? What else can be achieved with plt.subplots? What's the unit of 4x4? Etc... -->
-<!-- md: agree, now clarified in a note below. The units are inches, it was already specified next to the 4x4 -->
 
 ```{python}
 #| label: fig-basic-plot-markersize
@@ -173,8 +163,6 @@ We can set symbology in a `.plot` using the following parameters:
 -   `column`---a column name
 -   `legend`---whether to show a legend
 -   `cmap`---color map, a.k.a. color scale, a palette from which the colors are sampled
-<!-- jn: what's color map? what does it mean? You use term color scale later... -->
-<!-- md: these are interchangeable, now clarified -->
 
 For example, @fig-plot-symbology shows the `nz` polygons colored according to the `'Median_income'` attribute (column), with a legend.
 
@@ -203,9 +191,6 @@ nz.plot(column='Median_income', legend=True, cmap='Reds');
 nz.plot(column='Median_income', legend=True, cmap='Reds_r');
 nz.plot(column='Median_income', legend=True, cmap='plasma');
 ```
-
-<!-- jn: spring does not look like a color blind friendly color scale... I would suggest to use a different one. (I would suggest avoiding giving bad examples, even if they are just examples...) -->
-<!-- md: sure, I replaced with another color scale which seems more recommended, will be happy for other suggestions -->
 
 Categorical symbology is also supported, such as when `column` points to an `str` attribute.
 For categorical variables, it makes sense to use a qualitative color scale, such as `'Set1'` from ColorBrewer.
@@ -244,9 +229,6 @@ Unfortunately, there is no built-in option to display a legend in `rasterio.plot
 The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot-show-with-colorbar), reverting to **matplotlib** methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale).
 Basically, the code reverts to the **matplotlib** [`.colorbar`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.colorbar.html) method to add a legend, using the [`plt.imshow`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html) function that draws an image of a **numpy** array (which `rasterio.plot.show` is a wrapper of).
 
-<!-- jn: a few sentence explanation of the code below is needed... -->
-<!-- md: now added further explanation -->
-
 ```{python}
 #| label: fig-plot-symbology-colors-r-scale
 #| fig-cap: Adding a legend in `rasterio.plot.show`
@@ -274,8 +256,6 @@ When labeling vector layers, we typically want to add numerous labels, based on 
 To do that, we can run a `for` loop, or use the `.apply` method, to pass the label text and the coordinates of each feature to `.annotate`.
 In the following example, we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
 We are also using `ha`, short for `horizontalalignment`, with `'center'` (other options are `'right'` and `'left'`, see [Text properties and layout](https://matplotlib.org/stable/users/explain/text/text_props.html) reference for **matplotlib**) (@fig-labels-polygon).
-<!-- jn: what are other options for ha? maybe it would be worth mentioning them somewhere in this subsection? -->
-<!-- md: good idea, now added -->
 
 ```{python}
 #| label: fig-labels-polygon
@@ -303,7 +283,7 @@ ctr
 
 Then, we again use `.apply`, combined with `.annotate`, to add the text labels. 
 The main difference compared to the previous example (@fig-labels-polygon) is that we are directly passing the geometry coordinates (`.geometry.coords[0]`), since the geometries are points rather than polygons.
-We are also using the `weight='bold'` argument to use bold font (see [Text properties and layout](https://matplotlib.org/stable/users/explain/text/text_props.html) reference for **matplotlib**) for list of other options) (@fig-labels-points1).
+We are also using the `weight='bold'` argument to use bold font (see [Text properties and layout](https://matplotlib.org/stable/users/explain/text/text_props.html) reference for **matplotlib** for list of other options) (@fig-labels-points1).
 <!-- jn: what are other weight options? where to find them? -->
 <!-- md: now added a link to the page with other options -->
 
@@ -326,8 +306,6 @@ ctr.apply(
 It should be noted that sometimes we wish to add text labels "manually", one by one, rather than use a loop or `.apply`. 
 For example, we may want to add labels of specific locations not stored in a layer, or to have control over the specific properties of each label. 
 To add text labels manually, we can run the `.annotate` expressions one at a time, as shown in the code section below recreating the last result with the "manual" approach (@fig-labels-points2).
-<!-- jn: maybe for the "manual" approach example it would be better to specify coordinates by hand rather than using the centroid coordinates? -->
-<!-- md: agree, now changed the example -->
 
 ```{python}
 #| label: fig-labels-points2
@@ -356,8 +334,6 @@ nz_height.plot(ax=base, color='red');
 
 We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).
 The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together.
-<!-- jn: what is fig? what is ax? what is the relation between them? this should be explained somewhere in the book... -->
-<!-- md: now added a note about that (in @sec-static-styling) -->
 
 For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
 
@@ -395,10 +371,6 @@ gpd.GeoSeries(nz.unary_union, crs=nz.crs) \
     .plot(ax=ax, color='red')
 nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
 ```
-<!-- jn: what's facecolor? -->
-<!-- md: it should be 'color', now corrected -->
-<!-- jn: why one example uses .boundary and the other uses .exterior? -->
-<!-- md: right, now corrected -->
 
 ::: callout-note
 Note that the drawing order of layers is not necessarily according to the order of expressions, in the code, but according to layer *type*. For example, by [default](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) line layers are drawn on top of point layers. To override the default plotting order, we can use the `zorder` argument of `.plot`. Layers with higher `zorder` values will be drawn on top. For example, the following would draw `layer2` on top of `layer1` (regaredless of their types).
@@ -461,8 +433,6 @@ nz[vars]
 
 We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables.
 To do that, we initialize the plot with the expected number of panels, such as `ncols=len(vars)` if we wish to have one row and four columns, and then go over the variables in a `for` loop, each time plotting `vars[i]` into the `ax[i]` panel (@fig-faceted-map).
-<!-- jn: you mention ncols=len(vars) in the text but uses ncols=4 in the code... I think it should be unified -->
-<!-- md: right, now corrected -->
 
 ```{python}
 #| label: fig-faceted-map
@@ -513,8 +483,6 @@ See the first code chunk in the next section for another example of manual panel
 
 Static maps can be exported to a file using the [`matplotlib.pyplot.savefig`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.savefig.html) function.
 For example, the following code section recreates fig-two-layers, but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`.
-<!-- jn: the following code chunk is fairly long... maybe it would be good to replace it with some less complex example? -->
-<!-- md: I agree, this wasn't necessary because we just demonstrate saving to file. now switched to a simpler example -->
 
 ```{python}
 #| output: false
@@ -548,9 +516,6 @@ plt.savefig('output/plot_rasterio2.svg', dpi=300)
 <!-- ## Animated maps -->
 
 ## Interactive maps {#sec-interactive-maps}
-
-<!-- jn: an intro paragraph is missing -->
-<!-- md: now added -->
 
 While static maps can enliven geographic datasets, interactive maps can take them to a new level. 
 Interactivity can take many forms, the most common and useful of which is the ability to pan around and zoom into any part of a geographic dataset overlaid on a 'web map' to show context.
@@ -628,9 +593,6 @@ Note that the above-mentioned styling properties (other then `opacity`) are not 
 #| fig-cap: Styling of points in `.explore` (using `marker`)
 nz_height.explore(marker_type='marker')
 ```
-
-<!-- jn: can we use our own png images as well? -->
-<!-- md: yes, but as far as I could tell this is only possible directly using 'folium' and using a loop that goes over rows (e.g., https://stackoverflow.com/questions/74200088/using-custom-icons-for-multiple-locations-with-folium-and-pandas), IMHO this is beyond the scope of the book -->
 
 ### Layers
 
