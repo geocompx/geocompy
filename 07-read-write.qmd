@@ -2,14 +2,41 @@
 
 ## Prerequisites {.unnumbered}
 
+```{python .content-visible when-format="pdf"}
+#| echo: false
+import folium
+import os
+import time
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+def map_to_png(m, fname, path=None):
+    options = Options()
+    options.add_argument("--headless")
+    browser = webdriver.Firefox(options=options)
+    browser.set_window_size(1008, 612)
+    if not path:
+        path = os.getcwd()
+    # save the map, open with selenium, wait for initial load
+    m.save('{}/map.html'.format(path))
+    browser.get('file://{}/map.html'.format(path))
+    time.sleep(5)
+    browser.save_screenshot('images/{}.png'.format(fname))
+    browser.quit()
+```
+
 ```{python}
 #| echo: false
 import matplotlib.pyplot as plt
 import pandas as pd
 pd.options.display.max_rows = 6
-pd.options.display.max_columns = 6
+pd.options.display.max_columns = 5
 pd.options.display.max_colwidth = 35
 plt.rcParams['figure.figsize'] = (5, 5)
+```
+
+```{python .content-visible when-format="pdf"}
+#| echo: false
+pd.options.display.max_colwidth = 13
 ```
 
 This chapter requires importing the following packages:
@@ -162,11 +189,25 @@ parks = ox.features.features_from_place(
 The result is a `GeoDataFrame` with the parks in Leeds.
 Now, we can plots the geometries with the `name` property in the tooltips using `explore` (@fig-ox-features).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-ox-features
 #| fig-cap: Parks in Leeds, based on OpenStreetMap data, downloaded using package **osmnx**
 parks[['name', 'geometry']].explore()
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+parks[['name', 'geometry']].explore()
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(parks[['name', 'geometry']].explore(), 'fig-ox-features')
+```
+![Parks in Leeds, based on OpenStreetMap data, downloaded using package **osmnx**](images/fig-ox-features.png){#fig-ox-features}
+:::
 
 It should be noted that the **osmnx** package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas.
 To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from [Geofabrik](https://download.geofabrik.de/), and then load them from the file into the Python environment.
@@ -205,11 +246,25 @@ result
 The result is visualized in @fig-ox-geocode using the `.explore` function. 
 We are using the `marker_kwds` parameter of `.explore` to make the marker larger (see @sec-interactive-styling).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-ox-geocode
 #| fig-cap: Specific address in London, geocoded into a `GeoDataFrame`
 result.iloc[[0]].explore(color='red', marker_kwds={'radius':20})
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+result.iloc[[0]].explore(color='red', marker_kwds={'radius':20})
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(result.iloc[[0]].explore(color='red', marker_kwds={'radius':20}), 'fig-ox-geocode')
+```
+![Specific address in London, geocoded into a `GeoDataFrame`](images/fig-ox-geocode.png){#fig-ox-geocode}
+:::
 
 ## File formats {#sec-file-formats}
 
@@ -238,7 +293,7 @@ GDAL provides access to more than 200 vector and raster data formats.
 | ESRI FileGDB      | `.gdb`                 | Spatial and nonspatial objects created by ArcGIS. Allows: multiple feature classes; topology. Limited support from GDAL.                                                                           | Vector and raster                | Proprietary    |
 | GeoPackage        | `.gpkg`                | Lightweight database container based on SQLite allowing an easy and platform-independent exchange of geodata                                                                                       | Vector and (very limited) raster | Open           |
 
-: Commonly used spatial data file formats {#tbl-file-formats}
+: Commonly used spatial data file formats {#tbl-file-formats tbl-colwidths="[23, 13, 54, 15, 15]"}
 
 An important development ensuring the standardization and open-sourcing of file formats was the founding of the Open Geospatial Consortium ([OGC](http://www.opengeospatial.org/)) in 1994.
 Beyond defining the Simple Features data model (see @sec-simple-features), the OGC also coordinates the development of open standards, for example as used in file formats such as KML and GeoPackage.

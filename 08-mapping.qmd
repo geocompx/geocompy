@@ -2,14 +2,41 @@
 
 ## Prerequisites {.unnumbered}
 
+```{python .content-visible when-format="pdf"}
+#| echo: false
+import folium
+import os
+import time
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+def map_to_png(m, fname, path=None):
+    options = Options()
+    options.add_argument("--headless")
+    browser = webdriver.Firefox(options=options)
+    browser.set_window_size(1008, 612)
+    if not path:
+        path = os.getcwd()
+    # save the map, open with selenium, wait for initial load
+    m.save('{}/map.html'.format(path))
+    browser.get('file://{}/map.html'.format(path))
+    time.sleep(5)
+    browser.save_screenshot('images/{}.png'.format(fname))
+    browser.quit()
+```
+
 ```{python}
 #| echo: false
 import matplotlib.pyplot as plt
 import pandas as pd
 pd.options.display.max_rows = 6
-pd.options.display.max_columns = 6
+pd.options.display.max_columns = 5
 pd.options.display.max_colwidth = 35
 plt.rcParams['figure.figsize'] = (5, 5)
+```
+
+```{python .content-visible when-format="pdf"}
+#| echo: false
+pd.options.display.max_colwidth = 13
 ```
 
 ```{python}
@@ -533,11 +560,25 @@ This is what we cover in this section.
 
 An interactive map of a `GeoSeries` or `GeoDataFrame` can be created with `.explore` (@sec-vector-layers).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore
 #| fig-cap: Minimal example of an interactive vector layer plot with `.explore`
 nz.explore()
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+nz.explore()
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(nz.explore(), 'fig-explore')
+```
+![Minimal example of an interactive vector layer plot with `.explore`](images/fig-explore.png){#fig-explore}
+:::
 
 ### Styling {#sec-interactive-styling}
 
@@ -556,11 +597,25 @@ The `style_kwds` keys are mostly used to control the color and opacity of the ou
 
 For example, here is how we can set green fill color and 30% opaque black outline of `nz` polygons in `.explore` (@fig-explore-styling-polygons):
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-styling-polygons
 #| fig-cap: Styling of polygons in `.explore`
 nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3}), 'fig-explore-styling-polygons')
+```
+![Styling of polygons in `.explore`](images/fig-explore-styling-polygons.png){#fig-explore-styling-polygons}
+:::
 
 The `dict` passed to `marker_kwds` controls the way that points are displayed:
 
@@ -575,6 +630,7 @@ Additionally, for points, we can set the `marker_type`, to one of:
 
 For example, the following expression draws `'circe_marker`' points with 20 pixel radius, green fill, and black outline (@fig-explore-styling-points).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-styling-points
 #| fig-cap: Styling of points in `.explore` (using `circle_marker`)
@@ -584,32 +640,84 @@ nz_height.explore(
     marker_kwds={'radius':20}
 )
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+nz_height.explore(
+    color='green', 
+    style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, 
+    marker_kwds={'radius':20}
+)
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(nz_height.explore(
+    color='green', 
+    style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, 
+    marker_kwds={'radius':20}
+), 'fig-explore-styling-points')
+```
+![Styling of points in `.explore` (using `circle_marker`)](images/fig-explore-styling-points.png){#fig-explore-styling-points}
+:::
 
 @fig-explore-styling-points2 demonstrates the `'marker_type'` option.
 Note that the above-mentioned styling properties (other then `opacity`) are not applicable when using `marker_type='marker'`, because the markers are fixed PNG images.
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-styling-points2
 #| fig-cap: Styling of points in `.explore` (using `marker`)
 nz_height.explore(marker_type='marker')
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+nz_height.explore(marker_type='marker')
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(nz_height.explore(marker_type='marker'), 'fig-explore-styling-points2')
+```
+![Styling of points in `.explore` (using `marker`)](images/fig-explore-styling-points2.png){#fig-explore-styling-points2}
+:::
 
 ### Layers
 
 To display multiple layers, one on top of another, with `.explore`, we use the `m` argument, which stands for the previous map (@fig-explore-layers).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-layers
 #| fig-cap: Displaying multiple layers in an interactive map with `.explore`
 m = nz.explore()
 nz_height.explore(m=m, color='red')
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+m = nz.explore()
+nz_height.explore(m=m, color='red')
+```
+```{python}
+#| echo: false
+#| output: false
+m = nz.explore()
+map_to_png(nz_height.explore(m=m, color='red'), 'fig-explore-layers')
+```
+![Displaying multiple layers in an interactive map with `.explore`](images/fig-explore-layers.png){#fig-explore-layers}
+:::
 
 One of the advantages of interactive maps is the ability to turn layers "on" and "off".
 This capability is implemented in [`folium.LayerControl`](https://python-visualization.github.io/folium/latest/user_guide/ui_elements/layer_control.html#LayerControl) from package **folium**, which the **geopandas** `.explore` method is a wrapper of.
 For example, this is how we can add a layer control for the `nz` and `nz_height` layers (@fig-explore-layers-controls).
 Note the `name` properties, used to specify layer names in the control, and the `collapsed` property, used to specify whether the control is fully visible at all times (`False`), or on mouse hover (`True`, the default).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-layers-controls
 #| fig-cap: Displaying multiple layers in an interactive map with `.explore`
@@ -618,27 +726,75 @@ nz_height.explore(m=m, color='red', name='Points (elevation)')
 folium.LayerControl(collapsed=False).add_to(m)
 m
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+m = nz.explore(name='Polygons (adm. areas)')
+nz_height.explore(m=m, color='red', name='Points (elevation)')
+folium.LayerControl(collapsed=False).add_to(m)
+m
+```
+```{python}
+#| echo: false
+#| output: false
+m = nz.explore(name='Polygons (adm. areas)')
+nz_height.explore(m=m, color='red', name='Points (elevation)')
+folium.LayerControl(collapsed=False).add_to(m)
+map_to_png(m, 'fig-explore-layers-controls')
+```
+![Displaying multiple layers in an interactive map with `.explore`](images/fig-explore-layers-controls.png){#fig-explore-layers-controls}
+:::
 
 ### Symbology {#sec-explore-symbology}
 
 Symbology can be specified in `.explore` using similar arguments as in `.plot` (@sec-plot-symbology).
 For example, @fig-explore-symbology is an interactive version of @fig-plot-symbology-colors (a).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-symbology
 #| fig-cap: 'Symbology in an interactive map of a vector layer, created with `.explore`'
 nz.explore(column='Median_income', legend=True, cmap='Reds')
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+nz.explore(column='Median_income', legend=True, cmap='Reds')
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds'), 'fig-explore-symbology')
+```
+![Symbology in an interactive map of a vector layer, created with `.explore`](images/fig-explore-symbology.png){#fig-explore-symbology}
+:::
 
 Fixed styling (@sec-explore-symbology) can be combined with symbology settings.
 For example, polygon outline colors in @fig-explore-symbology are styled according to `'Median_income'`, however, this layer has overlapping outlines and their color is arbitrarily set according to the order of features (top-most features), which may be misleading and confusing.
 To specify fixed outline colors (e.g., black), we can use the `color` and `weight` properties of `style_kwds` (@fig-explore-symbology2):
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-symbology2
 #| fig-cap: 'Symbology combined with fixed styling in `.explore`'
 nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color':'black', 'weight': 0.5})
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+nz.explore(column='Median_income', legend=True, cmap='Reds',
+           style_kwds={'color':'black', 'weight': 0.5})
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color':'black', 'weight': 0.5}), 'fig-explore-symbology2')
+```
+![Symbology combined with fixed styling in `.explore`](images/fig-explore-symbology2.png){#fig-explore-symbology2}
+:::
 
 ### Basemaps
 
@@ -652,11 +808,25 @@ Several popular built-in basemaps can be specified using a string:
 Other basemaps are available through the **xyzservices** package, which needs to be installed (see `xyzservices.providers` for a list), or using a custom tile server URL.
 For example, the following expression displays the `'CartoDB positron'` tiles in an `.explore` map (@fig-explore-basemaps).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-basemaps
 #| fig-cap: Specifying the basemap in `.explore`
 nz.explore(tiles='CartoDB positron')
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+nz.explore(tiles='CartoDB positron')
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png(nz.explore(tiles='CartoDB positron'), 'fig-explore-basemaps')
+```
+![Specifying the basemap in `.explore`](images/fig-explore-basemaps.png){#fig-explore-basemaps}
+:::
 
 ### Exporting
 
