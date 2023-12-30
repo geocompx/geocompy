@@ -2399,7 +2399,7 @@ dtype: float64</code></pre>
 <div class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_elev.sample([(<span class="fl">0.1</span>, <span class="fl">0.1</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="58">
-<pre><code>&lt;generator object sample_gen at 0x7f23ae773b30&gt;</code></pre>
+<pre><code>&lt;generator object sample_gen at 0x7f070cfdbb30&gt;</code></pre>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -3037,7 +3037,7 @@ Note
 </section>
 <section id="sec-merging-rasters" class="level3" data-number="3.3.8">
 <h3 data-number="3.3.8" class="anchored" data-anchor-id="sec-merging-rasters"><span class="header-section-number">3.3.8</span> Merging rasters</h3>
-<p>Suppose we would like to compute the NDVI (see <a href="#sec-raster-local-operations"><span>Section&nbsp;3.3.3</span></a>), and additionally want to compute terrain attributes from elevation data for observations within a study area. Such computations rely on remotely sensed information. The corresponding source imagery is often divided into scenes covering a specific spatial extent (i.e., “tiles”), and frequently, a study area covers more than one scene. Then, we would need to merge (also known as “mosaic”) the scenes covered by our study area. In case when all scenes are “aligned” (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes should be resampled (see <a href="04-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.3.4</span></a>) to the grid defined by the first scene.</p>
+<p>Suppose we would like to compute the NDVI (see <a href="#sec-raster-local-operations"><span>Section&nbsp;3.3.3</span></a>), and additionally want to compute terrain attributes from elevation data for observations within a study area. Such computations rely on remotely sensed information. The corresponding source imagery is often divided into scenes covering a specific spatial extent (i.e., “tiles”), and frequently, a study area covers more than one scene. Then, we would need to merge (also known as “mosaic”) the scenes covered by our study area. In case when all scenes are “aligned” (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes should be resampled (see <a href="04-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.3.3</span></a>) to the grid defined by the first scene.</p>
 <p>For example, let us merge digital elevation data from two SRTM elevation tiles, for Austria (<code>'aut.tif'</code>) and Switzerland (<code>'ch.tif'</code>). Merging can be done using function <code>rasterio.merge.merge</code>, which accepts a <code>list</code> of raster file connections, and returns the new <code>ndarray</code> and a “transform”, representing the resulting mosaic.</p>
 <div class="cell" data-execution_count="88">
 <div class="sourceCode cell-code" id="cb116"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a>src_1 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/aut.tif'</span>)</span>
@@ -3103,7 +3103,7 @@ Note
 </ul>
 <p>When dealing with non-overlapping tiles, such as <code>aut.tif</code> and <code>ch.tif</code> (above), the <code>method</code> argument has no practical effect. However, it becomes relevant when we want to combine spectral imagery from scenes that were taken on different dates. The above four options for <code>method</code> do not cover the commonly required scenario when we would like to compute the <em>mean</em> value—for example to calculate a seasonal average NDVI image from a set of partially overlapping satellite images (such as Landsat). An alternative worflow to <code>rasterio.merge.merge</code>, for calculating a mosaic as well as “averaging” any overlaps, is to go through two steps:</p>
 <ul>
-<li>Resampling all scenes into a common “global” grid (<a href="04-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.3.4</span></a>), thereby producing a series of “matching” rasters (with the area surrounding each scene set as “No Data”)</li>
+<li>Resampling all scenes into a common “global” grid (<a href="04-geometry-operations.html#sec-raster-resampling"><span>Section&nbsp;4.3.3</span></a>), thereby producing a series of “matching” rasters (with the area surrounding each scene set as “No Data”)</li>
 <li>Averaging the rasters through raster algebra (<a href="#sec-raster-local-operations"><span>Section&nbsp;3.3.3</span></a>), using <code>np.mean(m,axis=0)</code> or <code>np.nanmean(m,axis=0)</code> (depending whether we prefer to ignore “No Data” or not), where <code>m</code> is the multi-band array, which would return a single-band array of averages</li>
 </ul>
 <!-- ## Exercises
