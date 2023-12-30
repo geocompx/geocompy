@@ -858,7 +858,7 @@ In any case, there are other reasons to perform a geometric operation on a singl
 For instance, a common reason for aggregating a raster is to decrease run-time or save disk space. 
 Of course, this approach is only recommended if the task at hand allows a coarser resolution of raster data.
 
-### Geometric intersections {#sec-raster-geometric-intersections}
+<!-- ### Geometric intersections {#sec-raster-geometric-intersections} -->
 
 <!-- jn: Michael, what is the difference between this section and the section about cropping and masking in the next chapter?  -->
 <!-- In geocompr, the difference is clean -- the first section is about cliping a raster with another raster; the second section is about cropping a raster with a vector. -->
@@ -866,92 +866,61 @@ Of course, this approach is only recommended if the task at hand allows a coarse
 <!-- If there is no difference, maybe we should either rewrite this section or remove it. -->
 <!-- md: that's correct, the only difference is that here the cropping geometry comes from another raster, however in 'rasterio' there is no distinct way to crop using a raster, so indeed most of the workflow is the same. I agree this section mostly repeats the same material, it's fine with me to remove it -->
 
-In @sec-spatial-subsetting-raster we have shown how to extract values from a raster overlaid by coordinates or by a matching boolean mask.
-A different case is when the area of interest is defined by any general (possibly non-matching) raster B, to retrieve a spatial output of a (smaller) subset of raster A we can:
+<!-- In @sec-spatial-subsetting-raster we have shown how to extract values from a raster overlaid by coordinates or by a matching boolean mask. -->
+<!-- A different case is when the area of interest is defined by any general (possibly non-matching) raster B, to retrieve a spatial output of a (smaller) subset of raster A we can: -->
 
--   Extract the bounding box polygon of B (hereby, `clip`)
--   Mask and crop A (hereby, `elev.tif`) using B (@sec-raster-cropping)
+<!-- -   Extract the bounding box polygon of B (hereby, `clip`) -->
+<!-- -   Mask and crop A (hereby, `elev.tif`) using B (@sec-raster-cropping) -->
 
-For example, suppose that we want to get a subset of the `elev.tif` raster using another, smaller, raster.
-To demonstrate this, let's create (see @sec-raster-from-scratch) that smaller raster, hereby named `clip`.
-First, we need to create a $3 \times 3$ array of raster values.
+<!-- For example, suppose that we want to get a subset of the `elev.tif` raster using another, smaller, raster. -->
+<!-- To demonstrate this, let's create (see @sec-raster-from-scratch) that smaller raster, hereby named `clip`. -->
+<!-- First, we need to create a $3 \times 3$ array of raster values. -->
 
-```{python}
-clip = np.array([1] * 9).reshape(3, 3)
-clip
-```
+<!-- clip = np.array([1] * 9).reshape(3, 3) -->
+<!-- clip -->
 
-Then, we define the transformation matrix, in such a way that `clip` intersects with `elev.tif` (@fig-raster-intersection).
+<!-- Then, we define the transformation matrix, in such a way that `clip` intersects with `elev.tif` (@fig-raster-intersection). -->
 
-```{python}
-new_transform = rasterio.transform.from_origin(
-    west=0.9, 
-    north=0.45, 
-    xsize=0.3, 
-    ysize=0.3
-)
-new_transform
-```
+<!-- new_transform = rasterio.transform.from_origin(west=0.9, north=0.45, xsize=0.3, ysize=0.3) -->
+<!-- new_transform -->
 
-Now, for subsetting, we will derive a `shapely` geometry representing the `clip` raster extent, using [`rasterio.transform.array_bounds`](https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.array_bounds).
+<!-- Now, for subsetting, we will derive a `shapely` geometry representing the `clip` raster extent, using [`rasterio.transform.array_bounds`](https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.array_bounds). -->
 
-```{python}
-bbox = rasterio.transform.array_bounds(
-    clip.shape[1], # columns
-    clip.shape[0], # rows
-    new_transform
-)
-bbox
-```
+<!-- bbox = rasterio.transform.array_bounds(clip.shape[1], clip.shape[0], new_transform) -->
+<!-- bbox -->
 
-The four numeric values can be transformed into a rectangular `shapely` geometry using `shapely.box` (@fig-raster-clip-bbox).
+<!-- The four numeric values can be transformed into a rectangular `shapely` geometry using `shapely.box` (@fig-raster-clip-bbox). -->
 
-```{python}
-#| label: fig-raster-clip-bbox
-#| fig-cap: '`shapely` geometry derived from a clipping raster bounding box coordinates, a preliminary step for geometric intersection between two rasters'
-bbox = shapely.box(*bbox)
-bbox
-```
+<!-- #| label: fig-raster-clip-bbox -->
+<!-- #| fig-cap: '`shapely` geometry derived from a clipping raster bounding box coordinates, a preliminary step for geometric intersection between two rasters' -->
+<!-- bbox = shapely.box(*bbox) -->
+<!-- bbox -->
 
-@fig-raster-intersection shows the alignment of `bbox` and `elev.tif`.
+<!-- @fig-raster-intersection shows the alignment of `bbox` and `elev.tif`. -->
 
-```{python}
-#| label: fig-raster-intersection
-#| fig-cap: The `elev.tif` raster, and the extent of another (smaller) raster `clip` which we use to subset it
-fig, ax = plt.subplots()
-rasterio.plot.show(src_elev, ax=ax)
-gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
-```
+<!-- #| label: fig-raster-intersection -->
+<!-- #| fig-cap: The `elev.tif` raster, and the extent of another (smaller) raster `clip` which we use to subset it -->
+<!-- fig, ax = plt.subplots() -->
+<!-- rasterio.plot.show(src_elev, ax=ax) -->
+<!-- gpd.GeoSeries([bbox]).plot(color='none', ax=ax); -->
 
-From here on, subsetting can be done using masking and cropping, just like with any vector layer other than `bbox`, regardless whether it is rectangular or not.
-We elaborate on masking and cropping in @sec-raster-cropping (check that section for details about `rasterio.mask.mask`), but, for completeness, here is the code for the last step of masking and cropping:
+<!-- From here on, subsetting can be done using masking and cropping, just like with any vector layer other than `bbox`, regardless whether it is rectangular or not. -->
+<!-- We elaborate on masking and cropping in @sec-raster-cropping (check that section for details about `rasterio.mask.mask`), but, for completeness, here is the code for the last step of masking and cropping: -->
 
-```{python}
-out_image, out_transform = rasterio.mask.mask(
-    src_elev, 
-    [bbox], 
-    crop=True,
-    all_touched=True,
-    nodata=0
-)
-```
+<!-- out_image, out_transform = rasterio.mask.mask(src_elev, [bbox], crop=True, all_touched=True, nodata=0) -->
 
-The resulting subset array `out_image` contains all pixels intersecting with `clip` *pixels* (not necessarily with the centroids!).
-However, due to the `all_touched=True` argument, those pixels which intersect with `clip`, but their centroid does not, retain their original values (e.g., `17`, `23`) rather than turned into "No Data" (e.g., `0`).
+<!-- The resulting subset array `out_image` contains all pixels intersecting with `clip` *pixels* (not necessarily with the centroids!). -->
+<!-- However, due to the `all_touched=True` argument, those pixels which intersect with `clip`, but their centroid does not, retain their original values (e.g., `17`, `23`) rather than turned into "No Data" (e.g., `0`). -->
 
-```{python}
-out_image
-```
+<!-- out_image -->
 
-Therefore, in our case, subset `out_image` dimensions are $2 \times 2$ (@fig-raster-intersection2; also see @fig-raster-intersection).
+<!-- Therefore, in our case, subset `out_image` dimensions are $2 \times 2$ (@fig-raster-intersection2; also see @fig-raster-intersection). -->
 
-```{python}
-#| label: fig-raster-intersection2
-#| fig-cap: The resulting subset of the `elev.tif` raster
-fig, ax = plt.subplots()
-rasterio.plot.show(out_image, transform=out_transform, ax=ax)
-gpd.GeoSeries([bbox]).plot(color='none', ax=ax);
-```
+<!-- #| label: fig-raster-intersection2 -->
+<!-- #| fig-cap: The resulting subset of the `elev.tif` raster -->
+<!-- fig, ax = plt.subplots() -->
+<!-- rasterio.plot.show(out_image, transform=out_transform, ax=ax) -->
+<!-- gpd.GeoSeries([bbox]).plot(color='none', ax=ax); -->
 
 ### Extent and origin {#sec-extent-and-origin}
 
