@@ -4,14 +4,19 @@ jupyter: python3
 
 # Geographic data in Python {#sec-spatial-class}
 
+```{python .content-visible when-format="pdf"}
+#| echo: false
+import map_to_png
+```
+
 ```{python}
 #| echo: false
-import matplotlib.pyplot as plt
-import pandas as pd
-pd.set_option('display.max_rows', 6)
-pd.set_option('display.max_columns', 6)
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+import book_options
+```
+
+```{python .content-visible when-format="pdf"}
+#| echo: false
+import book_options_pdf
 ```
 
 ## Introduction
@@ -107,7 +112,7 @@ import shapely
 import geopandas as gpd
 ```
 
-We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**.
+We also limit the maximum number of printed rows to six, to save space, using the `'display.max_rows'` option of **pandas**.
 
 ```{python}
 pd.set_option('display.max_rows', 6)
@@ -197,28 +202,47 @@ gdf.plot();
 
 Interactive maps of `GeoDataFrame` objects can be created with the `.explore` method, as illustrated in @fig-gdf-explore which was created with the following command:
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-gdf-explore
 #| fig-cap: Basic interactive map with `.explore`
 gdf.explore()
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+gdf.explore()
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png.map_to_png(gdf.explore(), 'fig-gdf-explore')
+```
+![Basic interactive map with `.explore`](images/fig-gdf-explore.png){#fig-gdf-explore}
+:::
 
 A subset of the data can be also plotted in a similar fashion.
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-gdf-explore2
 #| fig-cap: Interactive map of a `GeoDataFrame` subset
 gdf[gdf['name_long'] == 'Egypt'].explore()
 ```
-
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+gdf[gdf['name_long'] == 'Egypt'].explore()
+```
 ```{python}
 #| echo: false
-# (Alternative)
-# import hvplot.pandas
-# gdf.hvplot(title='Hello world', geo=True, hover_cols=['name_long'], legend=False).opts(bgcolor='lightgray', active_tools=['wheel_zoom']) 
-#This way, we can also add background tiles:
-# gdf.hvplot(tiles='OSM', alpha=0.5, geo=True, title='Hello world', hover_cols=['name_long'], legend=False).opts(active_tools=['wheel_zoom']) 
+#| output: false
+map_to_png.map_to_png(gdf[gdf['name_long'] == 'Egypt'].explore(), 'fig-gdf-explore2')
 ```
+![Interactive map of a `GeoDataFrame` subset](images/fig-gdf-explore2.png){#fig-gdf-explore2}
+:::
 
 ### Geometry columns {#sec-geometry-columns}
 
@@ -289,19 +313,51 @@ Only one geometry column at a time is "active", in the sense that it is being ac
 To switch the active geometry column from one `GeoSeries` column to another, we use `set_geometry`.
 @fig-switch-to-centroids and @fig-switch-to-polygons shows interactive maps of the `gdf` layer with the `'bbox'` and `'polygon'` geometry columns activated, respectively.
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-switch-to-centroids
 #| fig-cap: Switching to the `'bbox'` geometry column in the `world` layer, and plotting it
 gdf = gdf.set_geometry('bbox')
 gdf.explore()
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+gdf = gdf.set_geometry('bbox')
+gdf.explore()
+```
+```{python}
+#| echo: false
+#| output: false
+gdf = gdf.set_geometry('bbox')
+map_to_png.map_to_png(gdf.explore(), 'fig-switch-to-centroids')
+```
+![Switching to the `'bbox'` geometry column in the `world` layer, and plotting it](images/fig-switch-to-centroids.png){#fig-switch-to-centroids}
+:::
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-switch-to-polygons
 #| fig-cap: Switching to the `'polygons'` geometry column in the `world` layer, and plotting it
 gdf = gdf.set_geometry('polygon')
 gdf.explore()
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+gdf = gdf.set_geometry('polygon')
+gdf.explore()
+```
+```{python}
+#| echo: false
+#| output: false
+gdf = gdf.set_geometry('polygon')
+map_to_png.map_to_png(gdf.explore(), 'fig-switch-to-polygons')
+```
+![Switching to the `'polygons'` geometry column in the `world` layer, and plotting it](images/fig-switch-to-polygons.png){#fig-switch-to-polygons}
+:::
 
 ### The Simple Features standard {#sec-simple-features}
 
@@ -572,11 +628,25 @@ towns_layer
 Now, we are able to create an interactive map of the `towns_layer` object(@fig-layer-from-scratch-explore).
 To make the points easier to see, we are customizing a fill color and size (we elaborate on `.explore` options in @sec-interactive-maps).
 
+:::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-layer-from-scratch-explore
 #| fig-cap: '`towns_layer`, created from scratch, visualized using `.explore`'
 towns_layer.explore(color='red', marker_kwds={'radius': 10})
 ```
+:::
+:::  {.content-visible when-format="pdf"}
+```{python}
+#| eval: false
+towns_layer.explore(color='red', marker_kwds={'radius': 10})
+```
+```{python}
+#| echo: false
+#| output: false
+map_to_png.map_to_png(towns_layer.explore(color='red', marker_kwds={'radius': 10}), 'fig-layer-from-scratch-explore')
+```
+![`towns_layer`, created from scratch, visualized using `.explore`](images/fig-layer-from-scratch-explore.png){#fig-layer-from-scratch-explore}
+:::
 
 Spatial object can be also created from a `pandas.DataFrame` object that contains columns with coordinates.
 For that, we need to first create a `GeoSeries` object from the coordinates, and then combine it with `DataFrame` to a `GeoDataFrame` object.
