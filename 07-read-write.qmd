@@ -4,39 +4,17 @@
 
 ```{python .content-visible when-format="pdf"}
 #| echo: false
-import folium
-import os
-import time
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-def map_to_png(m, fname, path=None):
-    options = Options()
-    options.add_argument("--headless")
-    browser = webdriver.Firefox(options=options)
-    browser.set_window_size(1008, 612)
-    if not path:
-        path = os.getcwd()
-    # save the map, open with selenium, wait for initial load
-    m.save('{}/map.html'.format(path))
-    browser.get('file://{}/map.html'.format(path))
-    time.sleep(5)
-    browser.save_screenshot('images/{}.png'.format(fname))
-    browser.quit()
+import map_to_png
 ```
 
 ```{python}
 #| echo: false
-import matplotlib.pyplot as plt
-import pandas as pd
-pd.options.display.max_rows = 6
-pd.options.display.max_columns = 5
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+import book_options
 ```
 
 ```{python .content-visible when-format="pdf"}
 #| echo: false
-pd.options.display.max_colwidth = 13
+import book_options_pdf
 ```
 
 This chapter requires importing the following packages:
@@ -45,6 +23,8 @@ This chapter requires importing the following packages:
 import urllib.request
 import zipfile
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 import shapely
 import fiona
 import geopandas as gpd
@@ -192,7 +172,7 @@ parks[['name', 'geometry']].explore()
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(parks[['name', 'geometry']].explore(), 'fig-ox-features')
+map_to_png.map_to_png(parks[['name', 'geometry']].explore(), 'fig-ox-features')
 ```
 ![Parks in Leeds, based on OpenStreetMap data, downloaded using package **osmnx**](images/fig-ox-features.png){#fig-ox-features}
 :::
@@ -247,7 +227,7 @@ result.iloc[[0]].explore(color='red', marker_kwds={'radius':20})
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(result.iloc[[0]].explore(color='red', marker_kwds={'radius':20}), 'fig-ox-geocode')
+map_to_png.map_to_png(result.iloc[[0]].explore(color='red', marker_kwds={'radius':20}), 'fig-ox-geocode')
 ```
 ![Specific address in London, geocoded into a `GeoDataFrame`](images/fig-ox-geocode.png){#fig-ox-geocode}
 :::

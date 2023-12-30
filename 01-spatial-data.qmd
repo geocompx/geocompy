@@ -6,39 +6,17 @@ jupyter: python3
 
 ```{python .content-visible when-format="pdf"}
 #| echo: false
-import folium
-import os
-import time
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-def map_to_png(m, fname, path=None):
-    options = Options()
-    options.add_argument("--headless")
-    browser = webdriver.Firefox(options=options)
-    browser.set_window_size(1008, 612)
-    if not path:
-        path = os.getcwd()
-    # save the map, open with selenium, wait for initial load
-    m.save('{}/map.html'.format(path))
-    browser.get('file://{}/map.html'.format(path))
-    time.sleep(5)
-    browser.save_screenshot('images/{}.png'.format(fname))
-    browser.quit()
+import map_to_png
 ```
 
 ```{python}
 #| echo: false
-import matplotlib.pyplot as plt
-import pandas as pd
-pd.set_option('display.max_rows', 6)
-pd.set_option('display.max_columns', 5)
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+import book_options
 ```
 
 ```{python .content-visible when-format="pdf"}
 #| echo: false
-pd.options.display.max_colwidth = 13
+import book_options_pdf
 ```
 
 ## Introduction
@@ -134,7 +112,7 @@ import shapely
 import geopandas as gpd
 ```
 
-We also limit the maximum number of printed rows to four, to save space, using the `'display.max_rows'` option of **pandas**.
+We also limit the maximum number of printed rows to six, to save space, using the `'display.max_rows'` option of **pandas**.
 
 ```{python}
 pd.set_option('display.max_rows', 6)
@@ -239,7 +217,7 @@ gdf.explore()
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(gdf.explore(), 'fig-gdf-explore')
+map_to_png.map_to_png(gdf.explore(), 'fig-gdf-explore')
 ```
 ![Basic interactive map with `.explore`](images/fig-gdf-explore.png){#fig-gdf-explore}
 :::
@@ -261,7 +239,7 @@ gdf[gdf['name_long'] == 'Egypt'].explore()
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(gdf[gdf['name_long'] == 'Egypt'].explore(), 'fig-gdf-explore2')
+map_to_png.map_to_png(gdf[gdf['name_long'] == 'Egypt'].explore(), 'fig-gdf-explore2')
 ```
 ![Interactive map of a `GeoDataFrame` subset](images/fig-gdf-explore2.png){#fig-gdf-explore2}
 :::
@@ -353,7 +331,7 @@ gdf.explore()
 #| echo: false
 #| output: false
 gdf = gdf.set_geometry('bbox')
-map_to_png(gdf.explore(), 'fig-switch-to-centroids')
+map_to_png.map_to_png(gdf.explore(), 'fig-switch-to-centroids')
 ```
 ![Switching to the `'bbox'` geometry column in the `world` layer, and plotting it](images/fig-switch-to-centroids.png){#fig-switch-to-centroids}
 :::
@@ -376,7 +354,7 @@ gdf.explore()
 #| echo: false
 #| output: false
 gdf = gdf.set_geometry('polygon')
-map_to_png(gdf.explore(), 'fig-switch-to-polygons')
+map_to_png.map_to_png(gdf.explore(), 'fig-switch-to-polygons')
 ```
 ![Switching to the `'polygons'` geometry column in the `world` layer, and plotting it](images/fig-switch-to-polygons.png){#fig-switch-to-polygons}
 :::
@@ -665,7 +643,7 @@ towns_layer.explore(color='red', marker_kwds={'radius': 10})
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(towns_layer.explore(color='red', marker_kwds={'radius': 10}), 'fig-layer-from-scratch-explore')
+map_to_png.map_to_png(towns_layer.explore(color='red', marker_kwds={'radius': 10}), 'fig-layer-from-scratch-explore')
 ```
 ![`towns_layer`, created from scratch, visualized using `.explore`](images/fig-layer-from-scratch-explore.png){#fig-layer-from-scratch-explore}
 :::

@@ -4,39 +4,17 @@
 
 ```{python .content-visible when-format="pdf"}
 #| echo: false
-import folium
-import os
-import time
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
-def map_to_png(m, fname, path=None):
-    options = Options()
-    options.add_argument("--headless")
-    browser = webdriver.Firefox(options=options)
-    browser.set_window_size(1008, 612)
-    if not path:
-        path = os.getcwd()
-    # save the map, open with selenium, wait for initial load
-    m.save('{}/map.html'.format(path))
-    browser.get('file://{}/map.html'.format(path))
-    time.sleep(5)
-    browser.save_screenshot('images/{}.png'.format(fname))
-    browser.quit()
+import map_to_png
 ```
 
 ```{python}
 #| echo: false
-import matplotlib.pyplot as plt
-import pandas as pd
-pd.options.display.max_rows = 6
-pd.options.display.max_columns = 5
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+import book_options
 ```
 
 ```{python .content-visible when-format="pdf"}
 #| echo: false
-pd.options.display.max_colwidth = 13
+import book_options_pdf
 ```
 
 ```{python}
@@ -575,7 +553,7 @@ nz.explore()
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(nz.explore(), 'fig-explore')
+map_to_png.map_to_png(nz.explore(), 'fig-explore')
 ```
 ![Minimal example of an interactive vector layer plot with `.explore`](images/fig-explore.png){#fig-explore}
 :::
@@ -612,7 +590,7 @@ nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3}), 'fig-explore-styling-polygons')
+map_to_png.map_to_png(nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3}), 'fig-explore-styling-polygons')
 ```
 ![Styling of polygons in `.explore`](images/fig-explore-styling-polygons.png){#fig-explore-styling-polygons}
 :::
@@ -653,7 +631,7 @@ nz_height.explore(
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(nz_height.explore(
+map_to_png.map_to_png(nz_height.explore(
     color='green', 
     style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, 
     marker_kwds={'radius':20}
@@ -680,7 +658,7 @@ nz_height.explore(marker_type='marker')
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(nz_height.explore(marker_type='marker'), 'fig-explore-styling-points2')
+map_to_png.map_to_png(nz_height.explore(marker_type='marker'), 'fig-explore-styling-points2')
 ```
 ![Styling of points in `.explore` (using `marker`)](images/fig-explore-styling-points2.png){#fig-explore-styling-points2}
 :::
@@ -707,7 +685,7 @@ nz_height.explore(m=m, color='red')
 #| echo: false
 #| output: false
 m = nz.explore()
-map_to_png(nz_height.explore(m=m, color='red'), 'fig-explore-layers')
+map_to_png.map_to_png(nz_height.explore(m=m, color='red'), 'fig-explore-layers')
 ```
 ![Displaying multiple layers in an interactive map with `.explore`](images/fig-explore-layers.png){#fig-explore-layers}
 :::
@@ -741,7 +719,7 @@ m
 m = nz.explore(name='Polygons (adm. areas)')
 nz_height.explore(m=m, color='red', name='Points (elevation)')
 folium.LayerControl(collapsed=False).add_to(m)
-map_to_png(m, 'fig-explore-layers-controls')
+map_to_png.map_to_png(m, 'fig-explore-layers-controls')
 ```
 ![Displaying multiple layers in an interactive map with `.explore`](images/fig-explore-layers-controls.png){#fig-explore-layers-controls}
 :::
@@ -766,7 +744,7 @@ nz.explore(column='Median_income', legend=True, cmap='Reds')
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds'), 'fig-explore-symbology')
+map_to_png.map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds'), 'fig-explore-symbology')
 ```
 ![Symbology in an interactive map of a vector layer, created with `.explore`](images/fig-explore-symbology.png){#fig-explore-symbology}
 :::
@@ -791,7 +769,7 @@ nz.explore(column='Median_income', legend=True, cmap='Reds',
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color':'black', 'weight': 0.5}), 'fig-explore-symbology2')
+map_to_png.map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color':'black', 'weight': 0.5}), 'fig-explore-symbology2')
 ```
 ![Symbology combined with fixed styling in `.explore`](images/fig-explore-symbology2.png){#fig-explore-symbology2}
 :::
@@ -823,7 +801,7 @@ nz.explore(tiles='CartoDB positron')
 ```{python}
 #| echo: false
 #| output: false
-map_to_png(nz.explore(tiles='CartoDB positron'), 'fig-explore-basemaps')
+map_to_png.map_to_png(nz.explore(tiles='CartoDB positron'), 'fig-explore-basemaps')
 ```
 ![Specifying the basemap in `.explore`](images/fig-explore-basemaps.png){#fig-explore-basemaps}
 :::
