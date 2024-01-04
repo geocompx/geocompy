@@ -15,6 +15,7 @@ done
 rm code/chapters/index.py 
 rm code/chapters/preface.py 
 rm code/chapters/README.py
+rm ipynb/README.ipynb
 
 # Move files to correct folders
 mv *.py -v code/chapters
