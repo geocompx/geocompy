@@ -22,11 +22,13 @@ jobs:
         env:
           SRC_FOLDER_PATH1: 'ipynb'
           SRC_FOLDER_PATH2: 'data'
+          SRC_FOLDER_PATH3: 'output'
           TARGET_BRANCH: 'geocompy'
         run: |
           git config --global --add safe.directory /__w/geocompy/geocompy
           files1=$(find $SRC_FOLDER_PATH1 -type f) # get the file list
           files2=$(find $SRC_FOLDER_PATH2 -type f) # get the file list
+          files3=$(find $SRC_FOLDER_PATH3 -type f) # get the file list
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add *.ipynb
@@ -37,6 +39,7 @@ jobs:
           git checkout ${GITHUB_REF##*/} -- $files1 # copy files from the source branch
           git mv -f ipynb/*.ipynb . # move files from ipynb to root dir
           git checkout ${GITHUB_REF##*/} -- $files2 # copy files from the source branch
+          git checkout ${GITHUB_REF##*/} -- $files3 # copy files from the source branch
           git add -A
           git diff-index --quiet HEAD ||  git commit -am "deploy files"  # commit to the repository (ignore if no modification)
           git push origin $TARGET_BRANCH # push to remote branch
