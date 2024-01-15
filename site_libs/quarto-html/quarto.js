@@ -18,25 +18,12 @@ const layoutMarginEls = () => {
       // clear the top margin so we recompute it
       marginChild.style.marginTop = null;
       const top = marginChild.getBoundingClientRect().top + window.scrollY;
-      console.log({
-        childtop: marginChild.getBoundingClientRect().top,
-        scroll: window.scrollY,
-        top,
-        lastBottom,
-      });
       if (top < lastBottom) {
         const margin = lastBottom - top;
         marginChild.style.marginTop = `${margin}px`;
       }
       const styles = window.getComputedStyle(marginChild);
       const marginTop = parseFloat(styles["marginTop"]);
-
-      console.log({
-        top,
-        height: marginChild.getBoundingClientRect().height,
-        marginTop,
-        total: top + marginChild.getBoundingClientRect().height + marginTop,
-      });
       lastBottom = top + marginChild.getBoundingClientRect().height + marginTop;
     }
   }
@@ -46,7 +33,15 @@ window.document.addEventListener("DOMContentLoaded", function (_event) {
   // Recompute the position of margin elements anytime the body size changes
   if (window.ResizeObserver) {
     const resizeObserver = new window.ResizeObserver(
-      throttle(layoutMarginEls, 50)
+      throttle(() => {
+        layoutMarginEls();
+        if (
+          window.document.body.getBoundingClientRect().width < 990 &&
+          isReaderMode()
+        ) {
+          quartoToggleReader();
+        }
+      }, 50)
     );
     resizeObserver.observe(window.document.body);
   }
