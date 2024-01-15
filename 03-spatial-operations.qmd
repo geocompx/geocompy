@@ -1002,6 +1002,7 @@ $$ {#eq-ndvi}
 , where $NIR$ is the near-infrared band and $Red$ is the red band.
 
 Let's calculate NDVI for the multispectral Landsat satellite file (`landsat.tif`) of the Zion National Park.
+The file `landsat.tif` contains surface reflectance values (range `0`-`1`) in the blue, green, red and near-infrared (NIR) bands.
 We start by reading the file and extracting the NIR and red bands, which are the fourth and third bands, respectively.
 Next, we apply the formula to calculate the NDVI values.
 
@@ -1012,13 +1013,11 @@ red = landsat[2]
 ndvi = (nir-red)/(nir+red)
 ```
 
-We also convert values \>`1` to "No Data".
+<!-- We also convert values \>`1` to "No Data". -->
+<!-- ndvi[ndvi>1] = np.nan -->
 <!-- jn: explain why -->
 <!-- md: I guess because the 'landsat' dataset has (uncorrected) brightness values, so the NDVI turns out to be beyond the valid range? I suggest adding a box to explain that, but I'm not sure what are the values exactly. this dataset is from 'geocomr' so maybe Jakub/Robin, can you please help with that? -->
-
-```{python}
-ndvi[ndvi>1] = np.nan
-```
+<!-- md: Solved now after discussion on GitHub and help from Jakub https://github.com/geocompx/geocompy/issues/218 --> 
 
 When plotting an RGB image using the `rasterio.plot.show` function, the function assumes that values are in the range `[0,1]` for floats, or `[0,255]` for integers (otherwise clipped) and the order of bands is RGB.
 To "prepare" the multi-band raster for `rasterio.plot.show`, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the `[:3]` slice to select the first three bands and then the `[::-1]` slice to reverse the bands order, and divide by the raster maximum to set the maximum value to `1`.
@@ -1033,7 +1032,7 @@ The default is to start from the beginning, go to the end, and use steps of `1`.
 Otherwise, `start` is inclusive and `end` is exclusive, whereas negative `step` values imply going backwards starting from the end. 
 Also, always keep in mind that Python indices start from `0`.
 When subsetting two- or three-dimensional objects, indices for each dimension are separated by commas, where either index can be set to `:` meaning "all values".
-The last dimensions can also be omitted implying `:`, e.g., to subset the first three bands from a three-dimensional array `a` we can use either `a[:3,:,:]` or `a[:3]`
+The last dimensions can also be omitted implying `:`, e.g., to subset the first three bands from a three-dimensional array `a` we can use either `a[:3,:,:]` or `a[:3]`.
 
 In the above example: 
 
