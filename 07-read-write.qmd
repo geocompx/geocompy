@@ -363,10 +363,15 @@ tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
 tanzania
 ```
 
-If you do not know the names of the available columns, a good approach is to just read one row of the data using the `rows` argument, which can be used to read the first N rows, then use the `.columns` property to examine the column names:
+If you do not know the names of the available columns, a good approach is to read the layer metadata using [`pyogrio.read_info`](https://pyogrio.readthedocs.io/en/latest/api.html#pyogrio.read_info). The resulting object contains, among other properties, the column names (`fields`) and data types (`dtypes`): 
 
 ```{python}
-gpd.read_file('data/world.gpkg', rows=1).columns
+info = pyogrio.read_info('data/world.gpkg')
+info['fields']
+```
+
+```{python}
+info['dtypes']
 ```
 
 The second mechanism uses the `mask` argument to filter data based on intersection with an existing geometry.
@@ -397,14 +402,18 @@ Note that the last two expressions are used to add text labels with the `name_lo
 # Using 'where'
 fig, ax = plt.subplots()
 tanzania.plot(ax=ax, color='lightgrey', edgecolor='grey')
-tanzania.apply(lambda x: ax.annotate(text=x['name_long'], 
-               xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+tanzania.apply(
+    lambda x: ax.annotate(text=x['name_long'], 
+    xy=x.geometry.centroid.coords[0], ha='center'), axis=1
+);
 # Using 'mask'
 fig, ax = plt.subplots()
 tanzania_neigh.plot(ax=ax, color='lightgrey', edgecolor='grey')
 tanzania_buf.plot(ax=ax, color='none', edgecolor='red')
-tanzania_neigh.apply(lambda x: ax.annotate(text=x['name_long'],
-                     xy=x.geometry.centroid.coords[0], ha='center'), axis=1);
+tanzania_neigh.apply(
+    lambda x: ax.annotate(text=x['name_long'],
+    xy=x.geometry.centroid.coords[0], ha='center'), axis=1
+);
 ```
 
 A different, `gpd.read_postgis`, function can be used to read a vector layer from a PostGIS database.
