@@ -28,7 +28,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import shapely
-import fiona
 import pyogrio
 import geopandas as gpd
 import rasterio
@@ -314,23 +313,21 @@ In this section, we also show how to read specific rectangular extents ("windows
 Spatial vector data comes in a wide variety of file formats.
 Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with **geopandas** functions `read_file` and `to_file` (covered in @sec-data-output), respectively.
 
-**geopandas** uses GDAL to read and write data, via **fiona** (the [default](https://github.com/geopandas/geopandas/issues/2217)) or **pyogrio** packages (a recently developed alternative to **fiona**, which will become the default in the future, see [note](https://geopandas.org/en/stable/docs/user_guide/io.html) in "Reading and writing files" tutorial).
-After **fiona** is imported, the command `fiona.supported_drivers` can be used to list drivers available to GDAL, including whether they can (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
+**geopandas** uses GDAL to read and write data, via **pyogrio** since `geopandas` version `1.0.0` (previously via **fiona**).
+After **pyogrio** is imported, `pyogrio.list_drivers` can be used to list drivers available to GDAL, including whether they can (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
 
 ```{python}
 #| eval: false
-fiona.supported_drivers
+pyogrio.list_drivers()
 ```
 
 ```
-{'DXF': 'rw',
- 'CSV': 'raw',
- ...   
- 'TopoJSON': 'r',
- 'LIBKML': 'r'}
+{'PCIDSK': 'rw',
+ 'PDS4': 'rw',
+ ...
+ 'AVCE00': 'r',
+ 'HTTP': 'r'}
 ```
-
-Other, less common, drivers can be ["activated"](https://geopandas.org/en/stable/docs/user_guide/io.html) by manually supplementing `fiona.supported_drivers`.
 
 The first argument of the **geopandas** versatile data import function `gpd.read_file` is `filename`, which is typically a string, but can also be a file connection.
 The content of a string could vary between different drivers.
@@ -351,7 +348,7 @@ gpd.read_file('{"type":"Point","coordinates":[34.838848,31.296301]}')
 Some vector formats, such as GeoPackage, can store multiple data layers.
 By default, `gpd.read_file` reads the first layer of the file specified in `filename`.
 However, using the `layer` argument you can specify any other layer.
-To list the available layers, we can use function `fiona.listlayers` or `pyogrio.list_layers`.
+To list the available layers, we can use function `gpd.list_layers` (or `pyogrio.list_layers`).
 
 The `gpd.read_file` function also allows for reading just parts of the file into RAM with two possible mechanisms.
 The first one is related to the `where` argument, which allows specifying what part of the data to read using an SQL `WHERE` expression.
@@ -461,18 +458,12 @@ world_wkt.plot();
 As a final example, we will show how **geopandas** also reads KML files.
 A KML file stores geographic information in XML format---a data format for the creation of web pages and the transfer of data in an application-independent way [@nolan_xml_2014].
 Here, we access a KML file from the web.
-First, if necessary, we may need to "activate" the `KML` driver, which is not always available by default (just one of these expressions should be sufficient, depending on your system).
-
-```{python}
-fiona.supported_drivers['KML'] = 'r'
-fiona.supported_drivers['LIBKML'] = 'r'
-```
 
 The sample KML file `KML_Samples.kml` contains more than one layer.
 
 ```{python}
 u = 'https://developers.google.com/kml/documentation/KML_Samples.kml'
-fiona.listlayers(u)
+gpd.list_layers(u)
 ```
 
 We can choose, for instance, the first layer `'Placemarks'` and read it, using `gpd.read_file` with an additional `layer` argument.
