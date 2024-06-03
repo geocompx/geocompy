@@ -42,7 +42,7 @@ Python has strong support for both data models.
 We will focus on **shapely** and **geopandas** for working with geograpic vector data, and **rasterio** for working with rasters.
 
 **shapely** is a "low-level" package for working with individual vector geometry objects.
-**geopandas** is a "high-level" package for working with geometry columns (`GeoSeries` objects), which internally contain **shapely** geometries, and vector layers (`GeoDataFrame` objects).
+**geopandas** is a "high-level" package for working with geometry columns (`GeoSeries` objects), which internally contain **shapely** geometries, and with vector layers (`GeoDataFrame` objects).
 The **geopandas** ecosystem provides a comprehensive approach for working with vector layers in Python, with many packages building on it.
 
 There are several partially overlapping packages for working with raster data, each with its own advantages and disadvantages.
@@ -62,7 +62,7 @@ Most point geometries contain only two dimensions (3-dimensional CRSs may contai
 In this system, London, for example, can be represented by the coordinates `(-0.1,51.5)`.
 This means that its location is -0.1 degrees east and 51.5 degrees north of the origin.
 The origin, in this case, is at 0 degrees longitude (a prime meridian located at Greenwich) and 0 degrees latitude (the Equator) in a geographic ('lon/lat') CRS (@fig-vector-london, left panel).
-The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000, 180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS (@fig-vector-london, right panel).
+The same point could also be approximated in a projected CRS with 'Easting/Northing' values of `(530000,180000)` in the British National Grid, meaning that London is located 530 $km$ East and 180 $km$ North of the origin of the CRS (@fig-vector-london, right panel).
 The location of National Grid's origin, in the sea beyond South West Peninsular, ensures that most locations in the UK have positive Easting and Northing values.
 
 ::: {#fig-vector-london layout-ncol=2}
@@ -76,10 +76,10 @@ The left plot represents a geographic CRS with an origin at 0° longitude and la
 The right plot represents a projected CRS with an origin located in the sea west of the South West Peninsula.
 :::
 
-There is more to CRSs, as described in @sec-coordinate-reference-systems-intro and @sec-reproj-geo-data but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing the distance from an origin, usually in $x$ then $y$ dimensions.
+There is more to CRSs, as described in @sec-coordinate-reference-systems-intro and @sec-reproj-geo-data but, for the purposes of this section, it is sufficient to know that coordinates consist of two numbers representing the distance from an origin, usually in $x$ and $y$ dimensions.
 
 **geopandas** [@geopandas] provides classes for geographic vector data and a consistent command-line interface for reproducible geographic data analysis in Python.
-It also provides an interface to three mature libraries for geocomputation which, in combination, represent a strong foundation on which many geographic applications (including QGIS and R's spatial ecosystem):
+It also provides an interface to three mature libraries for geocomputation which, in combination, represent a strong foundation on which many geographic applications are built (including QGIS and R's spatial ecosystem):
 
 -   GDAL, for reading, writing, and manipulating a wide range of geographic data formats, covered in @sec-read-write
 -   PROJ, a powerful library for coordinate system transformations, which underlies the content covered in @sec-reproj-geo-data
@@ -97,7 +97,7 @@ The three main vector geographic data classes in Python are:
 
 -   `GeoDataFrame`, a class representing vector layers, with a geometry column (class `GeoSeries`) as one of the columns
 -   `GeoSeries`, a class that is used to represent the geometry column in `GeoDataFrame` objects
--   `shapely` geometry objects which represent individual geometries, such as a point or a polygon
+-   `shapely` geometry objects which represent individual geometries, such as a point or a polygon in `GeoSeries` objects
 
 The first two classes (`GeoDataFrame` and `GeoSeries`) are defined in **geopandas**.
 The third class is defined in the **shapely** package, which deals with individual geometries, and is a main dependency of the **geopandas** package.
@@ -121,7 +121,7 @@ pd.set_option('display.max_rows', 6)
 ```
 
 Projects often start by importing an existing vector layer saved as a GeoPackage (`.gpkg`) file, an ESRI Shapefile (`.shp`), or other geographic file format.
-The function `read_file()` imports a GeoPackage file named `world.gpkg` located in the `data` directory of Python's working directory into a `GeoDataFrame` named `gdf`.
+The function `gpd.read_file` imports a GeoPackage file named `world.gpkg` located in the `data` directory of Python's working directory into a `GeoDataFrame` named `gdf`.
 
 ```{python}
 #| echo: false
@@ -266,7 +266,7 @@ The geometry column also contains the spatial reference information, if any (als
 gdf.geometry.crs
 ```
 
-Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature involve just the geometry.
+Many geometry operations, such as calculating the centroid, buffer, or bounding box of each feature, involve just the geometry.
 Applying this type of operation on a `GeoDataFrame` is therefore basically a shortcut to applying it on the `GeoSeries` object in the geometry column.
 For example, the two following commands return exactly the same result, a `GeoSeries` with country bounding box polygons (using the [`.envelope`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.envelope.html) method).
 
@@ -288,23 +288,22 @@ gdf2
 ```
 
 Another useful property of the geometry column is the geometry type, as shown in the following code.
-Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same for every row.
-Accordingly, the `.type` property returns a `Series` (of type `string`), rather than a single value (the same can be done with the shortcut `gdf.geom_type`).
+Note that the types of geometries contained in a geometry column (and, thus, a vector layer) are not necessarily the same for every row. 
+It is possible to have multiple geometry types in a single `GeoSeries`.
+Accordingly, the `.type` property returns a `Series` (with values of type `str`, i.e., strings), rather than a single value (the same can be done with the shortcut `gdf.geom_type`).
 
 ```{python}
 gdf.geometry.type
 ```
 
-To summarize the occurrence of different geometry types in a geometry column, we can use the **pandas** method called `value_counts`.
+To summarize the occurrence of different geometry types in a geometry column, we can use the **pandas** `.value_counts` method.
+In this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
 
 ```{python}
 gdf.geometry.type.value_counts()
 ```
 
-It is possible to have multiple geometry types in a single `GeoSeries`.
-However, in this case, we see that the `gdf` layer contains only `'MultiPolygon'` geometries.
-
-A `GeoDataFrame` can also have multiple `GeoSeries`.
+A `GeoDataFrame` can also have multiple `GeoSeries` columns, as demonstrated in the following code section.
 
 ```{python}
 #| output: false 
@@ -314,7 +313,7 @@ gdf
 ```
 
 Only one geometry column at a time is "active", in the sense that it is being accessed in operations involving the geometries (such as `.centroid`, `.crs`, etc.).
-To switch the active geometry column from one `GeoSeries` column to another, we use `set_geometry`.
+To switch the active geometry column from one `GeoSeries` column to another, we use `.set_geometry`.
 @fig-switch-to-centroids and @fig-switch-to-polygons shows interactive maps of the `gdf` layer with the `'bbox'` and `'polygon'` geometry columns activated, respectively.
 
 :::  {.content-visible when-format="html"}
@@ -405,7 +404,7 @@ MULTILINESTRING ((1 5, 4 4, 4 1, 2 2, 3 2), (1 2, 2 4))
 MULTIPOLYGON (((1 5, 2 2, 4 1, 4 4, 1 5), (0 2, 1 2, 1 3, 0 3, 0 2)))
 ```
 
-Finally, a geometry collection can contain any combination of geometries including (multi)points and linestrings (@fig-geometrycollection).
+Finally, a geometry collection can contain any combination of geometries of the other six types, such as the combination of a multipoint and linestring shown below (@fig-geometrycollection).
 
 ``` text
 GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2),
@@ -414,8 +413,8 @@ GEOMETRYCOLLECTION (MULTIPOINT (5 2, 1 3, 3 4, 3 2),
 
 ### Geometries {#sec-geometries}
 
-Each element in the geometry column is a geometry object, of class `shapely` [@shapely].
-For example, here is one specific geometry selected by implicit index (Canada, i.e., the 4^th^ element in `gdf`'s geometry column').
+Each element in the geometry column (`GeoSeries`) is a geometry object of class `shapely` [@shapely].
+For example, here is one specific geometry selected by implicit index (Canada, the 4^th^ element in `gdf`'s geometry column).
 
 ```{python}
 gdf.geometry.iloc[3]
@@ -433,7 +432,7 @@ The following section demonstrates creating a `shapely` geometry of each type fr
 In the first example (a `'Point'`) we show two types of inputs to create a geometry: a list of coordinates or a `string` in the WKT format.
 In the examples for the remaining geometries we use the former approach.
 
-Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function (@fig-point).
+Creating a `'Point'` geometry from a list of coordinates uses the `shapely.Point` function in the following expression (@fig-point).
 
 ```{python}
 #| label: fig-point
@@ -442,7 +441,7 @@ point = shapely.Point([5, 2])
 point
 ```
 
-Alternatively, we can use the `shapely.from_wkt` to transform a WKT string to a `shapely` geometry object.
+Alternatively, we can use `shapely.from_wkt` to transform a WKT string to a `shapely` geometry object.
 Here is an example of creating the same `'Point'` geometry from WKT (@fig-point).
 
 ```{python}
@@ -468,7 +467,7 @@ Note that in the following example, there is one list of coordinates that define
 #| fig-cap: A `Polygon` geometry
 polygon = shapely.Polygon(
     [(1,5), (2,2), (4,1), (4,4), (1,5)],  ## Exterior
-    [[(2,4), (3,4), (3,3), (2,3), (2,4)]]  ## Holes
+    [[(2,4), (3,4), (3,3), (2,3), (2,4)]]  ## Hole(s)
 )
 polygon
 ```
@@ -526,8 +525,9 @@ geometrycollection = shapely.GeometryCollection([multipoint, multilinestring])
 geometrycollection
 ```
 
-`shapely` geometries act as atomic units of vector data, meaning that there is no concept of geometry *sets*: each operation accepts individual geometry object(s) as input, and retunrs an individual geometry as output. (The `GeoSeries` and `GeoDataFrame` objects, defined in **geopandas**, are used to deal with sets of `shapely` geometries, collectively)
-For example, the following expression calculates the difference between the buffered `multipolygon` (using distance of `0.2`) and itself (@fig-mpol-buffer-difference):
+`shapely` geometries act as atomic units of vector data, meaning that there is no concept of geometry *sets*: each operation accepts individual geometry object(s) as input, and returns an individual geometry as output. 
+(The `GeoSeries` and `GeoDataFrame` objects, defined in **geopandas**, are used to deal with sets of `shapely` geometries, collectively.)
+For example, the following expression calculates the difference (see @sec-clipping) between the buffered (see @sec-buffers) `multipolygon` (using distance of `0.2`) and itself (@fig-mpol-buffer-difference):
 
 ```{python}
 #| label: fig-mpol-buffer-difference
@@ -535,7 +535,7 @@ For example, the following expression calculates the difference between the buff
 multipolygon.buffer(0.2).difference(multipolygon)
 ```
 
-As demonstrated above, a `shapely` geometry object is automatically evaluated to a small image of the geometry (when using an interface capable of displaying it, such as a Jupyter Notebook).
+As demonstrated in the last few figures, a `shapely` geometry object is automatically evaluated to a small image of the geometry (when using an interface capable of displaying it, such as Jupyter Notebook).
 To print the WKT string instead, we can use the `print` function:
 
 ```{python}
