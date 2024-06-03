@@ -591,7 +591,7 @@ Next, we combine the `GeoSeries` with other attributes into a `dict`.
 The geometry column is a `GeoSeries`, named `geometry`.
 The other attributes (if any) may be defined using `list` or `Series` objects.
 Here, for simplicity, we use the `list` option for defining the three attributes `name`, `temperature`, and `date`.
-Again, note that the `list` can be of length \>1, in case we are creating a layer with more than one feature.
+Again, note that the `list` can be of length \>1, in case we are creating a layer with more than one feature (i.e., multiple rows).
 
 ```{python}
 lnd_data = {
@@ -631,7 +631,7 @@ towns_layer = gpd.GeoDataFrame(towns_data)
 towns_layer
 ```
 
-Now, we are able to create an interactive map of the `towns_layer` object(@fig-layer-from-scratch-explore).
+Now, we are able to create an interactive map of the `towns_layer` object (@fig-layer-from-scratch-explore).
 To make the points easier to see, we are customizing a fill color and size (we elaborate on `.explore` options in @sec-interactive-maps).
 
 :::  {.content-visible when-format="html"}
@@ -655,8 +655,8 @@ map_to_png.map_to_png(towns_layer.explore(color='red', marker_kwds={'radius': 10
 ![`towns_layer`, created from scratch, visualized using `.explore`](images/fig-layer-from-scratch-explore.png){#fig-layer-from-scratch-explore}
 :::
 
-Spatial object can be also created from a `pandas.DataFrame` object that contains columns with coordinates.
-For that, we need to first create a `GeoSeries` object from the coordinates, and then combine it with `DataFrame` to a `GeoDataFrame` object.
+A spatial (point) layer can be also created from a `DataFrame` object (package **pandas**) that contains columns with coordinates.
+To demonstrate, we hereby first create a `GeoSeries` object from the coordinates, and then combine it with the `DataFrame` to form a `GeoDataFrame`.
 
 ```{python}
 towns_table = pd.DataFrame({
@@ -671,12 +671,12 @@ towns_layer = gpd.GeoDataFrame(towns_table, geometry=towns_geom, crs=4326)
 ```
 
 The output gives the same result as previous `towns_layer`.
-This approach is particularly useful when we need to read data from a CSV file, e.g., using `pandas.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame` (see another example in @sec-spatial-joining).
+This approach is particularly useful when we need to read data from a CSV file, e.g., using `pd.read_csv`, and want to turn the resulting `DataFrame` into a `GeoDataFrame` (see another example in @sec-spatial-joining).
 
 ### Derived numeric properties {#sec-area-length}
 
-Vector layers are characterized by two essential derived numeric properties: Length (`.length`)---applicable to lines and Area (`.area`)---applicable to polygons.
-Area and length can be calculated for any data structures discussed above, either a `shapely` geometry, in which case the returned value is a number or for `GeoSeries` or `DataFrame`, in which case the returned value is a numeric `Series`.
+Vector layers are characterized by two essential derived numeric properties: *length* (`.length`)---applicable to lines, and *area* (`.area`)---applicable to polygons.
+Area and length can be calculated for any data structures discussed above, either a `shapely` geometry, in which case the returned value is a number, or for `GeoSeries` or `DataFrame`, in which case the returned value is a numeric `Series`.
 
 ```{python}
 linestring.length
@@ -695,7 +695,7 @@ This means that length and area measurements for geometries in WGS84 (`crs=4326`
 
 To obtain meaningful length and area measurements for data in a geographic CRS, the geometries first need to be transformed to a projected CRS (see @sec-reprojecting-vector-geometries) applicable to the area of interest.
 For example, the area of Slovenia can be calculated in the UTM zone 33N CRS (`crs=32633`).
-The result is in $m^2$, the units of the CRS of this dataset.
+The result is in $m^2$, the units of the UTM zone 33N CRS.
 
 ```{python}
 gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
@@ -704,16 +704,18 @@ gdf[gdf['name_long'] == 'Slovenia'].to_crs(32633).area
 ## Raster data {#sec-raster-data}
 
 The spatial raster data model represents the world with the continuous grid of cells (often also called pixels; @fig-raster-intro-plot1 (A)). 
-This data model often refers to so-called regular grids, in which each cell has the same, constant size---and we will focus on the regular grids in this book only. 
+This data model often refers to so-called regular grids, in which each cell has the same, constant size---and we will focus only on regular grids in this book. 
 However, several other types of grids exist, including rotated, sheared, rectilinear, and curvilinear grids (see Chapter 1 of @pebesma_spatial_2022 or Chapter 2 of @tennekes_elegant_2022).
 
 The raster data model usually consists of a raster header (or metadata) and a matrix (with rows and columns) representing equally spaced cells (often also called pixels; @fig-raster-intro-plot1 (A)). 
-The raster header defines the coordinate reference system, the extent and the origin. 
-The origin (or starting point) is frequently the coordinate of the lower-left corner of the matrix. 
-The metadata defines the extent via the origin, the number of columns, the number of rows, and the cell size resolution. 
-The matrix representation avoids storing explicitly the coordinates for the four corner points (in fact it only stores one coordinate, namely the origin) of each cell, as would be the case for rectangular vector polygons. 
+The raster header defines the coordinate reference system, the the origin and the resolution. 
+The origin (or starting point) is typically the coordinate of the lower-left corner of the matrix. 
+The metadata defines the the origin, and the cell size, i.e., resolution.
+Combined with the column and row count, the extent can also be derived.
+The matrix representation avoids storing explicitly the coordinates for the four corner points (in fact it only stores one coordinate, namely the origin) of each cell, as would be the case for rectangular vector polygons.
 This and map algebra (@sec-map-algebra) makes raster processing much more efficient and faster than vector data processing. 
-However, in contrast to vector data, the cell of one raster layer can only hold a single value. The value might be numeric or categorical (@fig-raster-intro-plot1 (C)).
+However, in contrast to vector data, the cell of one raster layer can only hold a single value. 
+The cell values are numeric, representing either a continuous or a categorical variable (@fig-raster-intro-plot1 (C)).
 
 ![Raster data types: (A) cell IDs, (B) cell values, (C) a colored raster map](images/raster-intro-plot1.png){#fig-raster-intro-plot1}
 
@@ -732,10 +734,10 @@ As we will see shortly, they differ in scope and underlying data models.
 Specifically, **rasterio** represents rasters as **numpy** arrays associated with a separate object holding the spatial metadata.
 The **rioxarray** package, a wrapper of **rasterio**, however, represents rasters with **xarray** "extended" arrays, which are an extension of **numpy** array designed to hold axis labels and attributes in the same object, together with the array of raster values.
 Similar approaches are provided by less well-known **xarray-spatial** and **geowombat** packages.
-Comparatively, **rasterio** is more well-established, but it is more low-level (which has both advantabes and distadvantages).
+Comparatively, **rasterio** is more well-established, but it is more low-level (which has both advantages and distadvantages).
 
 All of the above-mentioned packages, however, are not exhaustive in the same way **geopandas** is.
-For example, when working with **rasterio**, on the one hand, more packages may be needed to accomplish common tasks such as zonal statistics (package **rasterstats**) or calculating topographic indices (package **richdem**).
+For example, when working with **rasterio**, more packages may be needed to accomplish common tasks such as zonal statistics (package **rasterstats**) or calculating topographic indices (package **richdem**).
 <!-- On the other hand, **xarray** was extended to accommodate spatial operators missing from the core package itself, with the **rioxarray** and **xarray-spatial** packages. -->
 
 In the following two sections, we introduce **rasterio**, which is the raster-related package we are going to work with through the rest of the book.
@@ -758,13 +760,13 @@ When working with **rasterio**, importing a raster is actually a two-step proces
 -   First, we open a raster file "connection" using `rasterio.open`
 -   Second, we read raster values from the connection using the `.read` method
 
-This separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file.
+This type of separation is analogous to basic Python functions for reading from files, such as `open` and `.readline` to read from a text file.
 The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size.
 Accordingly, the second step (`.read`) is selective, meaning that the user can fine tune the subset of values (bands, rows/columns, resolution, etc.) that are actually being read.
 For example, we may want to read just one raster band rather than reading all bands.
 
-In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection.
-For this example, we use a single-band raster representing elevation in Zion National Park.
+In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection, hereby named `src`.
+For this example, we use a single-band raster representing elevation in Zion National Park, stored in `srtm.tif`.
 
 ```{python}
 src = rasterio.open('data/srtm.tif')
@@ -780,7 +782,7 @@ rasterio.plot.show(src);
 ```
 
 The `DatasetReader` contains the raster metadata, that is, all of the information other than the raster values.
-Let us examine it with the `meta` property.
+Let's examine it with the `.meta` property.
 
 ```{python}
 src.meta
@@ -800,7 +802,7 @@ Namely, it allows us to see the following properties, which we will elaborate on
 
 The last item (i.e., `transform`) deserves more attention.
 To position a raster in geographical space, in addition to the CRS, we must specify the raster *origin* ($x_{min}$, $y_{max}$) and resolution ($delta_{x}$, $delta_{y}$).
-In the transformation matrix notation, these data items are stored as follows:
+In the transformation matrix notation, assuming a regular grid, these data items are stored as follows:
 
 ```{text}
 Affine(delta_x, 0.0, x_min,
@@ -808,8 +810,9 @@ Affine(delta_x, 0.0, x_min,
 ```
 
 Note that, by convention, raster y-axis origin is set to the maximum value ($y_{max}$) rather than the minimum, and, accordingly, the y-axis resolution ($delta_{y}$) is negative.
+In other words, since the origin is in the *top*-left corner, advancing along the y-axis is done through negative steps (downwards).
 
-Finally, the `.read` method of the `DatasetReader` is used to read the actual raster values.
+In the second step, the `.read` method of the `DatasetReader` is used to read the actual raster values.
 Importantly, we can read:
 
 -   All layers (as in `.read()`)
@@ -818,18 +821,18 @@ Importantly, we can read:
 
 Note that the layer indices start from `1`, contrary to the Python convention of the first index being `0`.
 
-The resulting object is a **numpy** array [@numpy], with either two or three dimensions:
+The object returned by `.read` is a **numpy** array [@numpy], with either two or three dimensions:
 
 -   *Three* dimensions, when reading more than one layer (e.g., `.read()` or `.read([1,2])`). In such case, the dimensions pattern is `(layers, rows, columns)`
 -   *Two* dimensions, when reading one specific layer (e.g., `.read(1)`). In such case, the dimensions pattern is `(rows, columns)`
 
-Let's read the first (and only) layer from the `srtm.tif` raster, using the file connection object `src` using the `.read(1)` method.
+Let's read the first (and only) layer from the `srtm.tif` raster, using the file connection object `src` and the `.read` method.
 
 ```{python}
 src.read(1)
 ```
 
-The result is a two-dimensional **numpy** array in which each value represents the elevation of the corresponding pixel.
+The result is a two-dimensional **numpy** array where each value represents the elevation of the corresponding pixel.
 
 The relation between a **rasterio** file connection and the derived properties is summarized in @fig-rasterio-structure.
 The file connection (created with `rasterio.open`) gives access to the two components of raster data: the metadata (via the `.meta` property) and the values (via the `.read` method).
@@ -845,13 +848,13 @@ Nevertheless, the examples will be helpful to become more familiar with the **ra
 
 Conceptually, a raster is an array combined with georeferencing information, whereas the latter comprises:
 
--   A transformation matrix, linking pixel indices with coordinates in a particular coordinate system
+-   A transformation matrix, containing the origin and resolution, thus linking pixel indices with coordinates in a particular coordinate system
 -   A CRS definition, specifying the association of that coordinate system with the surface of the earth (optional)
 
 Therefore, to create a raster, we first need to have an array with the values, and then supplement it with the georeferencing information.
 Let's create the arrays `elev` and `grain`.
 The `elev` array is a $6 \times 6$ array with sequential values from `1` to `36`.
-It can be created as follows using the `np.arange` function and `.reshape` method.
+It can be created as follows using the `np.arange` function and `.reshape` method from **numpy**.
 
 ```{python}
 elev = np.arange(1, 37, dtype=np.uint8).reshape(6, 6)
@@ -859,7 +862,7 @@ elev
 ```
 
 The `grain` array represents a categorical raster with values `0`, `1`, `2`, corresponding to categories "clay", "silt", "sand", respectively.
-We will create it from a specific arrangement of pixel values using the **numpy** `array` and `reshape` functions.
+We will create it from a specific arrangement of pixel values, using **numpy**'s `np.array` and `.reshape`.
 
 ```{python}
 v = [
@@ -884,6 +887,7 @@ In this case, since the rasters are arbitrary, we also set up an arbitrary trans
 -   The raster resolution ($delta_{x}$, $delta_{y}$) is `0.5,-0.5`
 
 We can add this information using [`rasterio.transform.from_origin`](rasterio.transform.from_origin), and specifying `west`, `north`, `xsize`, and `ysize` parameters.
+The resulting transformation matrix object is hereby named `new_transform`.
 
 ```{python}
 new_transform = rasterio.transform.from_origin(
@@ -916,10 +920,10 @@ rasterio.plot.show(grain, transform=new_transform);
 At this point, we have two rasters, each composed of an array and related transformation matrix.
 We can work with the raster using **rasterio** by:
 
--   Passing the transformation matrix wherever actual raster pixel coordinates are important (such as in function `show` above)
--   Keeping in mind that any other layer we use in the analysis is in the same CRS of those coordinates
+-   Passing the transformation matrix wherever actual raster pixel coordinates are important (such as in function `rasterio.plot.show` above)
+-   Keeping in mind that any other layer we use in the analysis is in the same CRS
 
-Finally, to export the raster for permanent storage, along with the CRS definition, we need to go through the following steps:
+Finally, to export the raster for permanent storage, along with the spatial metadata, we need to go through the following steps:
 
 1.  Create a raster file connection (where we set the transform and the CRS, among other settings)
 2.  Write the array with raster values into the connection
@@ -927,7 +931,7 @@ Finally, to export the raster for permanent storage, along with the CRS definiti
 
 Don't worry if the code below is unclear; the concepts related to writing raster data to file will be explained in @sec-data-output-raster. 
 For now, for completeness, and also to use these rasters in subsequent chapters without having to re-create them from scratch, we just provide the code for exporting the `elev` and `grain` rasters into the `output` directory.
-In the case of `elev`, we do it as follows with the `open`, `write`, and `close` methods of the **rasterio** package.
+In the case of `elev`, we do it as follows with the `rasterio.open`, `.write`, and `.close` functions and methods of the **rasterio** package.
 
 ```{python}
 #| eval: false
@@ -947,7 +951,7 @@ new_dataset.close()
 
 Note that the CRS we (arbitrarily) set for the `elev` raster is WGS84, defined using `crs=4326` according to the EPSG code.
 
-Exporting the `grain` raster is done in the same way, with the only difference being the array we write into the connection.
+Exporting the `grain` raster is done in the same way, with the only differences being the file name and the array we write into the connection.
 
 ```{python}
 #| eval: false
@@ -1002,7 +1006,7 @@ These allow local variations on Earth's surface, such as large mountain ranges, 
 This can be seen in @fig-geocentric-vs-local, where the local datum is fitted to the area of Philippines, but is misaligned with most of the rest of the planet's surface.
 Both datums in @fig-geocentric-vs-local are put on top of a geoid---a model of global mean sea level.
 
-![Geocentric and local geodetic datums shown on top of a geoid (in false color and the vertical exaggeration by 10,000 scale factor). Image of the geoid is adapted from the work of [@essd-11-647-2019].](https://r.geocompx.org/figures/02_datum_fig.png){#fig-geocentric-vs-local}
+![Geocentric and local geodetic datums shown on top of a geoid (in false color and the vertical exaggeration by 10,000 scale factor). Image of the geoid is adapted from the work of [@essd-11-647-2019].](images/geocompr_02_datum_fig.png){#fig-geocentric-vs-local}
 
 ### Projected coordinate reference systems {#sec-projected-coordinate-reference-systems}
 
@@ -1041,7 +1045,8 @@ epsg_codes[:5]  ## Print first five supported EPSG codes
 pyproj.CRS.from_epsg(4326)  ## Printout of WGS84 CRS (EPSG:4326)
 ```
 
-A quick summary of different projections, their types, properties, and suitability can be found in "Map Projections" (1993) and at <https://www.geo-projections.com/>.
+A quick summary of different projections, their types, properties, and suitability can be found at <https://www.geo-projections.com/>.
+<!-- md: "Map Projections" (1993) - there is no citation and I'm not familiar with this source -->
 We will expand on CRSs and explain how to project from one CRS to another in @sec-reproj-geo-data.
 But, for now, it is sufficient to know:
 
