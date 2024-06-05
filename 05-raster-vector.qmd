@@ -146,12 +146,12 @@ The related operation, cropping, reduces the raster extent to the extent of the 
 -   To just crop, *without* masking, we can derive the bounding box polygon of the vector layer, and then crop using that polygon, also combined with `crop=True` (@fig-raster-crop (c))
 -   To crop *and* mask, we can use `rasterio.mask.mask`, same as above for masking, just setting `crop=True` instead of the default `crop=False` (@fig-raster-crop (d))
 
-For the example of cropping only, the extent polygon of `zion` can be obtained as a `shapely` geometry object using the `.unary_union.envelope` property(@fig-zion-bbox).
+For the example of cropping only, the extent polygon of `zion` can be obtained as a `shapely` geometry object using `.union_all().envelope`(@fig-zion-bbox).
 
 ```{python}
 #| label: fig-zion-bbox
 #| fig-cap: Bounding box `'Polygon'` geometry of the `zion` layer
-bb = zion.unary_union.envelope
+bb = zion.union_all().envelope
 bb
 ```
 
@@ -982,7 +982,7 @@ Calculating a raster of distances to the nearest geometry is an example of a "gl
 To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand.
 This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation (@sec-raster-agg-disagg), raster conversion to points (@sec-raster-to-points), and rasterizing points (@sec-rasterizing-points).
 
-For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary as a `'MultiLineString'` geometry. Note that `.dissolve(by=None)` (@sec-vector-attribute-aggregation) calls `.unary_union` on all geometries (i.e., aggregates everything into one group), which is what we want to do here.
+For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary as a `'MultiLineString'` geometry. Note that `.dissolve(by=None)` (@sec-vector-attribute-aggregation) calls `.union_all` on all geometries (i.e., aggregates everything into one group), which is what we want to do here.
 
 ```{python}
 coastline = nz.dissolve().to_crs(src_nz_elev.crs).boundary

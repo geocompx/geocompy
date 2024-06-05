@@ -536,29 +536,29 @@ regions.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
 ```
 
 What is happening with the geometries here?
-Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.unary_union`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.unary_union.html#geopandas.GeoSeries.unary_union) method per group.
-This is demonstrated in the code chunk below which creates a united western US using the standalone `unary_union` operation.
+Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.union_all`](https://geopandas.org/en/latest/docs/reference/api/geopandas.GeoSeries.union_all.html) method per group.
+This is demonstrated in the code chunk below which creates a united western US using the standalone `.union_all` operation.
 Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving (@fig-dissolve2).
 
 ```{python}
 #| label: fig-dissolve2
 #| fig-cap: Western US
 us_west = us_states[us_states['REGION'] == 'West']
-us_west_union = us_west.geometry.unary_union
+us_west_union = us_west.geometry.union_all()
 us_west_union
 ```
 
-To dissolve two (or more) groups of a `GeoDataFrame` into one geometry, we can either (a) use a combined condition or  (b) concatenate the two separate subsets and then dissove using `.unary_union`.
+To dissolve two (or more) groups of a `GeoDataFrame` into one geometry, we can either (a) use a combined condition or  (b) concatenate the two separate subsets and then dissove using `.union_all`.
 
 ```{python}
 # Approach 1
 sel = (us_states['REGION'] == 'West') | (us_states['NAME'] == 'Texas')
 texas_union = us_states[sel]
-texas_union = texas_union.geometry.unary_union
+texas_union = texas_union.geometry.union_all()
 # Approach 2
 us_west = us_states[us_states['REGION'] == 'West']
 texas = us_states[us_states['NAME'] == 'Texas']
-texas_union = pd.concat([us_west, texas]).unary_union
+texas_union = pd.concat([us_west, texas]).union_all()
 ```
 
 The result is identical in both cases, shown in @fig-dissolve3.

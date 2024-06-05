@@ -75,7 +75,7 @@ Another unique aspect of spatial objects is distance: all spatial objects are re
 
 Spatial operations on raster objects include subsetting---covered in @sec-spatial-subsetting-raster---and merging several raster 'tiles' into a single object, as demonstrated in @sec-merging-rasters.
 Map algebra covers a range of operations that modify raster cell values, with or without reference to surrounding cell values.
-The concept of map algebra, vital for many applications, is introduced in @sec-map-algebra; local, focal and zonal map algebra operations are covered in sections @sec-raster-local-operations, @sec-focal-operations, and @sec-zonal-operations, respectively. 
+The concept of map algebra, vital for many applications, is introduced in @sec-map-algebra; local, focal, and zonal map algebra operations are covered in sections @sec-raster-local-operations, @sec-focal-operations, and @sec-zonal-operations, respectively. 
 Global map algebra operations, which generate summary statistics representing an entire raster dataset, and distance calculations on rasters, are discussed in Section @sec-global-operations-and-distances.
 
 ::: callout-note
@@ -105,7 +105,7 @@ canterbury = nz[nz['Name'] == 'Canterbury']
 canterbury
 ```
 
-Then, we use the `.intersects` method evaluate, for each of the `nz_height` points, whether they intersect with Canterbury.
+Then, we use the `.intersects` method to evaluate, for each of the `nz_height` points, whether they intersect with Canterbury.
 The result `canterbury_height` is a boolean `Series` with the "answers".
 
 ```{python}
@@ -142,7 +142,7 @@ canterbury_height.plot(ax=base, color='None', edgecolor='red');
 
 Like in attribute subsetting (@sec-vector-attribute-subsetting), we are using a boolean series (`sel`), of the same length as the number of rows in the filtered table (`nz_height`), created based on a condition applied on itself.
 The difference is that the condition is not a comparison of attribute values, but an evaluation of a spatial relation.
-Namely, we evaluate whether each geometry of `nz_height` intersects with `canterbury` geometry, using the `.intersects` method.
+Namely, we evaluate whether each geometry of `nz_height` intersects with the `canterbury` geometry, using the `.intersects` method.
 
 Various topological relations can be used for spatial subsetting which determine the type of spatial relationship that features in the target object must have with the subsetting object to be selected.
 These include touches, crosses, or within, as we will see shortly in @sec-topological-relations.
@@ -173,13 +173,13 @@ canterbury.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
 canterbury_height2.plot(ax=base, color='None', edgecolor='red');
 ```
 
-In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using `.unary_union`, before applying the `.intersects` (or any other) operator.
+In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using `.union_all`, before applying the `.intersects` (or any other) operator.
 For example, here is how we can subset the `nz_height` points which intersect with Canterbury or Southland.
 (Note that we are also using the `.isin` method, as demonstrated in the end of @sec-vector-attribute-subsetting.)
 
 ```{python}
 canterbury_southland = nz[nz['Name'].isin(['Canterbury', 'Southland'])]
-sel = nz_height.intersects(canterbury_southland.unary_union)
+sel = nz_height.intersects(canterbury_southland.union_all())
 canterbury_southland_height = nz_height[sel]
 canterbury_southland_height
 ```
@@ -387,7 +387,7 @@ The scenario illustrated in @fig-spatial-join shows that the `random_points` obj
 Before creating the joined dataset, we use spatial subsetting to create `world_random`, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of @fig-spatial-join (b)).
 
 ```{python}
-world_random = world[world.intersects(random_points.unary_union)]
+world_random = world[world.intersects(random_points.union_all())]
 world_random
 ```
 
