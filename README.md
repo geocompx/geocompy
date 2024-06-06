@@ -1,4 +1,5 @@
 
+
 # geocompy
 
 [![Render](https://github.com/geocompx/geocompy/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompx/geocompy/actions/workflows/main.yaml)
@@ -6,9 +7,14 @@
 [![Open in GitHub
 Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 
-<https://py.geocompx.org>
+Geocomputation with Python is an open source book project that will be
+published as a physical book. We are developing it in the open and
+publishing an up-to-date online version at <https://py.geocompx.org>.
 
-Running the code in this book requires the following:
+## Dependencies
+
+Running the code that is part of Geocomputation with Python (geocompy
+for short) requires the following dependencies to be installed:
 
 1.  Python dependencies, which can be installed with
     [`pip`](https://pypi.org/project/pip/), a package manager or a
@@ -37,13 +43,8 @@ a way to test changes and contribute fixes in an instant.
 
 To run the book in Codespaces, click on the link below.
 
-<figure>
-<a
-href="https://github.com/codespaces/new?hide_repo_select=true&amp;ref=main&amp;repo=447558863"><img
-src="https://github.com/codespaces/badge.svg"
-alt="Open in GitHub Codespaces" /></a>
-<figcaption>Open in GitHub Codespaces</figcaption>
-</figure>
+[![Open in GitHub
+Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 
 You should [see](https://github.com/geocompx/geocompy/issues/114)
 something like this, the result of running all the code in the book by
