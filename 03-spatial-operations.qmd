@@ -219,10 +219,10 @@ Notice that each geometry pair has a ["DE-9IM"](https://en.wikipedia.org/wiki/DE
 DE-9IM strings describe the dimensionality (0=points, 1=lines, 2=polygons) of the pairwise intersections of the interior, boundary, and exterior, of two geometries (i.e., nine values of 0/1/2 encoded into a string).
 This is an advanced topic beyond the scope of this book, which can be useful to understand the difference between relation types, or define custom types of relations.
 See the [DE-9IM strings](https://r.geocompx.org/spatial-operations#de-9im-strings) section in Geocomputation with R [@lovelace_geocomputation_2019]. 
-Also note that the **shapely** package contains the `.relate` and `.relate_pattern` [methods](https://shapely.readthedocs.io/en/stable/manual.html#de-9im-relationships), for derive and test for DE-9IM patterns, respectively.
+Also note that the **shapely** package contains the `.relate` and `.relate_pattern` [methods](https://shapely.readthedocs.io/en/stable/manual.html#de-9im-relationships), to derive and to test for DE-9IM patterns, respectively.
 :::
 
-![Topological relations between vector geometries, inspired by Figures 1 and 2 in Egenhofer and Herring (1990). The relations for which the `x.relation(y)` is true are printed for each geometry pair, with `x` represented in pink and `y` represented in blue. The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](images/relations-1.png){#fig-spatial-relations}
+![Topological relations between vector geometries, inspired by Figures 1 and 2 in [@egenhofer_mathematical_1990]. The relations for which the `x.relation(y)` is true are printed for each geometry pair, with `x` represented in pink and `y` represented in blue. The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](images/relations-1.png){#fig-spatial-relations}
 
 In **shapely**, methods testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships).
 **geopandas** provides their wrappers (with the same method name) which can be applied on multiple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting-vector).
@@ -243,11 +243,11 @@ poly = gpd.GeoSeries([
 ```
 
 The sample dataset which we created is composed of three is `GeoSeries`: named `points`, `line`, and `poly`, which are visualized in @fig-spatial-relations-geoms.
-The last expression is a `for` loop used to add text labels (`1`, `2`, and `3`) to identify the points; we are going to explain the concepts of text annotations with **geopandas** `.plot` in @sec-plot-static-labels.
+The last expression is a `for` loop used to add text labels (`0`, `1`, and `2`) to identify the points; we are going to explain the concepts of text annotations with **geopandas** `.plot` in @sec-plot-static-labels.
 
 ```{python}
 #| label: fig-spatial-relations-geoms
-#| fig-cap: Points, line and polygon objects arranged to illustrate topological relations
+#| fig-cap: Points (`points`), line (`line`) and polygon (`poly`) objects used to illustrate topological relations
 base = poly.plot(color='lightgrey', edgecolor='red')
 line.plot(ax=base, color='black', linewidth=7)
 points.plot(ax=base, color='none', edgecolor='black')
@@ -259,7 +259,7 @@ for i in enumerate(points):
 ```
 
 A simple query is: which of the points in `points` intersect in some way with polygon `poly`?
-The question can be answered by visual inspection (points 1 and 3 are touching and are within the polygon, respectively).
+The question can be answered by visual inspection (points `0` and `2` are touching and are within the polygon, respectively).
 Alternatively, we can get the solution with the `.intersects` method, which reports whether or not each geometry in a `GeoSeries` (`points`) intersects with a single `shapely` geometry (`poly.iloc[0]`).
 
 ```{python}
@@ -267,7 +267,7 @@ points.intersects(poly.iloc[0])
 ```
 
 The result shown above is a boolean `Series`.
-Its contents should match our intuition: positive (`True`) results are returned for the first and third point, and a negative result (`False`) for the second.
+Its contents should match our intuition: positive (`True`) results are returned for the points `0` and `2`, and a negative result (`False`) for point `1`.
 Each value in this `Series` represents a feature in the first input (`points`).
 
 All earlier examples in this chapter demonstrate the "many-to-one" mode of `.intersects` and analogous methods, where the relation is evaluated between each of several geometries in a `GeoSeries`/`GeoDataFrame`, and an individual `shapely` geometry.
@@ -277,7 +277,7 @@ For example, the expression `nz.intersects(nz)` returns a `Series` of 16 `True` 
 
 A third mode is when we are interested in a "many-to-many" evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two `GeoSeries` objects.
 At the time of writing, there is no built-in method to do this in **geopandas**.
-However, the [`.apply`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html) method can be used to repeat a "many-to-one" evaluation over all geometries in the second layer, resulting in a matrix of *pairwise* results.
+However, the `.apply` method (package **pandas**) can be used to repeat a "many-to-one" evaluation over all geometries in the second layer, resulting in a matrix of *pairwise* results.
 We will create another `GeoSeries` with two polygons, named `poly2`, to demonstrate this.
 
 ```{python}
@@ -301,16 +301,16 @@ for i in enumerate(points):
     )
 ```
 
-Now we can use  to get the intersection relations matrix.
-The result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly` geometry.
-We can see that the first point intersects with both polygons, while the second and third points intersect with one of the polygons each.
+Now we can use `.apply` to get the intersection relations matrix.
+The result is a `DataFrame`, where each row represents a `points` geometry and each column represents a `poly2` geometry.
+We can see that the point `0` intersects with both polygons, while points `1` and `2` intersect with one of the polygons each.
 
 ```{python}
 points.apply(lambda x: poly2.intersects(x))
 ```
 
 ::: callout-note
-The [`.apply`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html) method (package **pandas**) is used to apply a function along one of the axes of a `DataFrame` (or `GeoDataFrame`).
+The `.apply` method (package **pandas**) is used to apply a function along one of the axes of a `DataFrame` (or `GeoDataFrame`).
 That is, we can apply a function on all rows (`axis=1`) or all columns (`axis=0`, the default). 
 When the function being applied returns a single value, the output of `.apply` is a `Series` (e.g., `.apply(len)` returns the lengths of all columns, because `len` returns a single value). 
 When the function returns a `Series`, then `.apply` returns a `DataFrame` (such as in the above example.)
@@ -318,7 +318,7 @@ When the function returns a `Series`, then `.apply` returns a `DataFrame` (such 
 
 ::: callout-note
 Since the above result, like any pairwise matrix, (1) is composed of values of the same type, and (2) has no contrasting role for rows and columns, is may be more convenient to use a plain **numpy** array to work with it. 
-In such case, we can use the [`.to_numpy`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_numpy.html) method to go from `DataFrame` to `ndarray`.
+In such case, we can use the `.to_numpy` method to go from `DataFrame` to `ndarray`.
 
 ```{python}
 points.apply(lambda x: poly2.intersects(x)).to_numpy()
@@ -337,7 +337,7 @@ points.within(poly.iloc[0])
 points.touches(poly.iloc[0])
 ```
 
-Note that although the first point touches the boundary polygon, it is not within it; the third point is within the polygon but does not touch any part of its border.
+Note that although the point `0` touches the boundary polygon, it is not within it; point `2` is within the polygon but does not touch any part of its border.
 The opposite of `.intersects` is `.disjoint`, which returns only objects that do not spatially relate in any way to the selecting object.
 
 ```{python}
@@ -353,15 +353,15 @@ Another way is to calculate the distances using the `.distance` method, and then
 points.distance(poly.iloc[0]) < 0.2
 ```
 
-Note that although the second point is more than `0.2` units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to `0.2`.
+Note that although point `1` is more than `0.2` units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to `0.2`.
 This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure @fig-spatial-relations.
-We can verify the actual distance between the second point and the polygon is `0.13`, as follows.
+We can verify that the actual distance between point `1` and the polygon is `0.13`, as follows.
 
 ```{python}
 points.iloc[1].distance(poly.iloc[0])
 ```
 
-This is also a good opportunity to repeat that all distance-related calculations in **gopandas** (and **shapely**) assume planar geometry, and only take into account the coordinate values. It is up to the user to make sure that all input layers are in the same projected CRS, so that this type of calculations make sense (see @sec-geometry-operations-on-projected-and-unprojected-data and @sec-when-to-reproject).
+This is also a good opportunity to repeat that all distance-related calculations in **geopandas** (and **shapely**) assume planar geometry, and only take into account the coordinate values. It is up to the user to make sure that all input layers are in the same projected CRS, so that this type of calculations make sense (see @sec-geometry-operations-on-projected-and-unprojected-data and @sec-when-to-reproject).
 
 ### Spatial joining {#sec-spatial-joining}
 
@@ -425,7 +425,7 @@ random_joined.plot(ax=base, column='name_long', legend=True);
 
 Sometimes two geographic datasets do not touch but still have a strong geographic relationship.
 The datasets `cycle_hire` and `cycle_hire_osm` provide a good example.
-Plotting them reeveals that they are often closely related but they do not seem to touch, as shown in @fig-cycle-hire.
+Plotting them reveals that they are often closely related but they do not seem to touch, as shown in @fig-cycle-hire.
 
 ```{python}
 #| label: fig-cycle-hire
@@ -459,7 +459,11 @@ Note that we transform the data to a projected CRS (`27700`) to use real buffer 
 crs = 27700
 cycle_hire_buffers = cycle_hire.copy().to_crs(crs)
 cycle_hire_buffers.geometry = cycle_hire_buffers.buffer(20)
-cycle_hire_buffers = gpd.sjoin(cycle_hire_buffers, cycle_hire_osm.to_crs(crs))
+cycle_hire_buffers = gpd.sjoin(
+    cycle_hire_buffers, 
+    cycle_hire_osm.to_crs(crs), 
+    how='left'
+)
 cycle_hire_buffers
 ```
 
@@ -525,7 +529,7 @@ Second, we calculate the average elevation, using ordinary (non-spatial) aggrega
 This result tells us the average elevation of all `nz_height` points located within each `nz` region.
 
 ```{python}
-nz_height2 = nz_height2.groupby('Name')[['elevation']].mean()
+nz_height2 = nz_height2.groupby('Name')[['elevation']].mean().reset_index()
 nz_height2
 ```
 
@@ -536,10 +540,10 @@ nz2 = pd.merge(nz[['Name', 'geometry']], nz_height2, on='Name', how='left')
 nz2
 ```
 
-We now have create the `nz_height4` layer, which gives the average `nz_height` elevation value per polygon.
+We now have create the `nz2` layer, which gives the average `nz_height` elevation value per polygon.
 The result is shown in @fig-nz-avg-nz-height.
 Note that the `missing_kwds` part determines the style of geometries where the symbology attribute (`elevation`) is missing, because there were no `nz_height` points overlapping with them.
-The default is to omit them, which is usually not what we want, but with `{'color':'none','edgecolor':'black'}`, those polygons are shown with black outline and no fill.
+The default is to omit them, which is usually not what we want, but with `{'color':'grey','edgecolor':'black'}`, those polygons are shown with black outline and grey fill.
 
 ```{python}
 #| label: fig-nz-avg-nz-height
@@ -548,7 +552,7 @@ nz2.plot(
   column='elevation', 
   legend=True,
   cmap='Blues', edgecolor='black',
-  missing_kwds={'color': 'none', 'edgecolor': 'black'}
+  missing_kwds={'color': 'grey', 'edgecolor': 'black'}
 );
 ```
 
