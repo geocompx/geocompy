@@ -1184,33 +1184,33 @@ The code section is relatively long due to the workaround to create a color key 
 
 ```{python}
 #| label: fig-raster-slope
-#| fig-cap: Slope and aspect calculation from a DEM
-#| layout-ncol: 3
-#| fig-subcap: 
-#| - Input DEM
-#| - Slope (degrees)
-#| - Aspect (degrees)
+#| fig-cap: Slope and aspect calculation from a digital elevation model (DEM), showing the input DEM (left), slope (center), and aspect (right).
+# Input DEM
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(7.5, 2.55))
+
 # Input DEM
 src_srtm = rasterio.open('output/srtm_32612.tif')
 srtm = src_srtm.read(1).astype(float)
 srtm[srtm == src_srtm.nodata] = np.nan
-fig, ax = plt.subplots()
-rasterio.plot.show(src_srtm, cmap='Spectral_r', ax=ax)
-fig.colorbar(ax.imshow(srtm, cmap='Spectral_r'), ax=ax);
+axes[0].imshow(srtm, cmap='Spectral_r')
+axes[0].set_title('Input DEM')
+
 # Slope
 src_srtm_slope = rasterio.open('output/srtm_32612_slope.tif')
 srtm_slope = src_srtm_slope.read(1)
 srtm_slope[srtm_slope == src_srtm_slope.nodata] = np.nan
-fig, ax = plt.subplots()
-rasterio.plot.show(src_srtm_slope, cmap='Spectral_r', ax=ax)
-fig.colorbar(ax.imshow(srtm_slope, cmap='Spectral_r'), ax=ax);
+axes[1].imshow(srtm_slope, cmap='Spectral_r')
+axes[1].set_title('Slope')
+
 # Aspect
 src_srtm_aspect = rasterio.open('output/srtm_32612_aspect.tif')
 srtm_aspect = src_srtm_aspect.read(1)
 srtm_aspect[srtm_aspect == src_srtm_aspect.nodata] = np.nan
-fig, ax = plt.subplots()
-rasterio.plot.show(src_srtm_aspect, cmap='twilight', ax=ax)
-fig.colorbar(ax.imshow(srtm_aspect, cmap='twilight'), ax=ax);
+axes[2].imshow(srtm_aspect, cmap='twilight')
+axes[2].set_title('Aspect')
+
+plt.tight_layout()
+plt.show()
 ```
 
 ### Zonal operations {#sec-zonal-operations}
