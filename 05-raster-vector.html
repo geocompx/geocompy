@@ -342,7 +342,7 @@ window.Quarto = {
 <section id="prerequisites" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
 <p>This chapter requires importing the following packages:</p>
-<div id="fb2fb7e4" class="cell" data-execution_count="3">
+<div id="979e30df" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -357,7 +357,7 @@ window.Quarto = {
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterstats</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>It also relies on the following data files:</p>
-<div id="0079eda7" class="cell" data-execution_count="4">
+<div id="15de48ba" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>src_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/srtm.tif'</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>src_nlcd <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/nlcd.tif'</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>src_grain <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/grain.tif'</span>)</span>
@@ -390,11 +390,11 @@ window.Quarto = {
 <li>The <code>zion.gpkg</code> vector layer representing the Zion National Park boundaries (a <code>GeoDataFrame</code> named <code>zion</code>)</li>
 </ul>
 <p>Both target and cropping objects must have the same projection. Since it is easier and more precise to reproject vector layers, compared to rasters, we use the following expression to reproject (<a href="06-reproj.html#sec-reprojecting-vector-geometries" class="quarto-xref"><span>Section 6.7</span></a>) the vector layer <code>zion</code> into the CRS of the raster <code>src_srtm</code>.</p>
-<div id="aea945d2" class="cell" data-execution_count="5">
+<div id="67786068" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>zion <span class="op">=</span> zion.to_crs(src_srtm.crs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To mask the image, i.e., convert all pixels which do not intersect with the <code>zion</code> polygon to “No Data”, we use the <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.mask.html#rasterio.mask.mask"><code>rasterio.mask.mask</code></a> function.</p>
-<div id="d13e2043" class="cell" data-execution_count="6">
+<div id="edd0ec7b" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>out_image_mask, out_transform_mask <span class="op">=</span> rasterio.mask.mask(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    src_srtm, </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    zion.geometry, </span>
@@ -403,7 +403,7 @@ window.Quarto = {
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Note that we need to choose and specify a “No Data” value, within the valid range according to the data type. Since <code>srtm.tif</code> is of type <code>uint16</code> (how can we check?), we choose <code>9999</code> (a positive integer that is guaranteed not to occur in the raster). Also note that <strong>rasterio</strong> does not directly support <strong>geopandas</strong> data structures, so we need to pass a “collection” of <strong>shapely</strong> geometries: a <code>GeoSeries</code> (see above) or a <code>list</code> of <strong>shapely</strong> geometries (see next example) both work. The output consists of two objects. The first one is the <code>out_image</code> array with the masked values.</p>
-<div id="37f1236f" class="cell" data-execution_count="7">
+<div id="edf43377" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>out_image_mask</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
 <pre><code>array([[[9999, 9999, 9999, ..., 9999, 9999, 9999],
@@ -416,7 +416,7 @@ window.Quarto = {
 </div>
 </div>
 <p>The second one is a new transformation matrix <code>out_transform</code>.</p>
-<div id="27cea1b4" class="cell" data-execution_count="8">
+<div id="8c0e333d" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>out_transform_mask</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="8">
 <pre><code>Affine(0.0008333333332777796, 0.0, -113.23958321278403,
@@ -425,7 +425,7 @@ window.Quarto = {
 </div>
 <p>Note that masking (without cropping!) does not modify the raster extent. Therefore, the new transform is identical to the original (<code>src_srtm.transform</code>).</p>
 <p>Unfortunately, the <code>out_image</code> and <code>out_transform</code> objects do not contain any information indicating that <code>9999</code> represents “No Data”. To associate the information with the raster, we must write it to file along with the corresponding metadata. For example, to write the masked raster to file, we first need to modify the “No Data” setting in the metadata.</p>
-<div id="d7e237ae" class="cell" data-execution_count="9">
+<div id="c1c62ccc" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_srtm.meta</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update(nodata<span class="op">=</span><span class="dv">9999</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>dst_kwargs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -442,17 +442,17 @@ window.Quarto = {
 </div>
 </div>
 <p>Then we can write the masked raster to file with the updated metadata object.</p>
-<div id="357f139c" class="cell" data-execution_count="10">
+<div id="77ccd77a" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>new_dataset <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_masked.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>new_dataset.write(out_image_mask)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>new_dataset.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now we can re-import the raster and check that the “No Data” value is correctly set.</p>
-<div id="ebcebad0" class="cell" data-execution_count="11">
+<div id="544d5cc0" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>src_srtm_mask <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_masked.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The <code>.meta</code> property contains the <code>nodata</code> entry. Now, any relevant operation (such as plotting, see <a href="#fig-raster-crop" class="quarto-xref">Figure&nbsp;<span>5.2</span></a> (b)) will take “No Data” into account.</p>
-<div id="b8b65026" class="cell" data-execution_count="12">
+<div id="debd8730" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>src_srtm_mask.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="12">
 <pre><code>{'driver': 'GTiff',
@@ -489,7 +489,7 @@ Figure&nbsp;5.1: Bounding box <code>'Polygon'</code> geometry of the <code>zion<
 </div>
 </div>
 <p>The extent can now be used for masking. Here, we are also using the <code>all_touched=True</code> option so that pixels partially overlapping with the extent are also included in the output.</p>
-<div id="64478536" class="cell" data-execution_count="14">
+<div id="dbb13301" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>out_image_crop, out_transform_crop <span class="op">=</span> rasterio.mask.mask(</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    src_srtm, </span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    [bb], </span>
@@ -513,7 +513,7 @@ Note
 </div>
 </div>
 <p>Finally, the third example is where we perform crop both and mask operations, using <code>rasterio.mask.mask</code> with <code>crop=True</code>.</p>
-<div id="9d179dc5" class="cell" data-execution_count="15">
+<div id="44b0fe2c" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>out_image_mask_crop, out_transform_mask_crop <span class="op">=</span> rasterio.mask.mask(</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    src_srtm, </span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    zion.geometry, </span>
@@ -522,7 +522,7 @@ Note
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>When writing the result to file, it is here crucial to update the transform and dimensions, since they were modified as a result of cropping. Also note that <code>out_image_mask_crop</code> is a three-dimensional array (even though it has one band in this case), so the number of rows and columns are in <code>.shape[1]</code> and <code>.shape[2]</code> (rather than <code>.shape[0]</code> and <code>.shape[1]</code>), respectively.</p>
-<div id="42161fb7" class="cell" data-execution_count="16">
+<div id="9218be8c" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_srtm.meta</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'nodata'</span>: <span class="dv">9999</span>,</span>
@@ -539,7 +539,7 @@ Note
 <span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>new_dataset.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s also create a file connection to the newly created file <code>srtm_masked_cropped.tif</code> in order to plot it (<a href="#fig-raster-crop" class="quarto-xref">Figure&nbsp;<span>5.2</span></a> (d)).</p>
-<div id="b72695b9" class="cell" data-execution_count="17">
+<div id="a0d9289e" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>src_srtm_mask_crop <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/srtm_masked_cropped.tif'</span>)</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>out_image_mask_crop.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="17">
@@ -654,7 +654,7 @@ Figure&nbsp;5.3: 30 point locations within the Zion National Park, with elevatio
 </div>
 </div>
 <p>The following expression extracts elevation values from <code>srtm.tif</code> according to <code>zion_points</code>, using <code>rasterstats.point_query</code>.</p>
-<div id="0125029d" class="cell" data-execution_count="20">
+<div id="6ce399e7" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>result1 <span class="op">=</span> rasterstats.point_query(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    zion_points, </span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    src_srtm.read(<span class="dv">1</span>), </span>
@@ -665,7 +665,7 @@ Figure&nbsp;5.3: 30 point locations within the Zion National Park, with elevatio
 </div>
 <p>The first two arguments are the vector layer and the array with rastetr values. The <code>nodata</code> and <code>affine</code> arguments are used to align the array values into the CRS, and to correctly treat “No Data” flags. Finally, the <code>interpolate</code> argument controls the way that the cell values are asigned to the point; <code>interpolate='nearest'</code> typically makes more sense, as opposed to the other option <code>interpolate='bilinear'</code> which is the default.</p>
 <p>Alternatively, we can pass a raster file path to <code>rasterstats.point_query</code>, in which case <code>nodata</code> and <code>affine</code> are not necessary, as the function can understand those properties from the raster file.</p>
-<div id="11644e5b" class="cell" data-execution_count="21">
+<div id="66a3e686" class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>result2 <span class="op">=</span> rasterstats.point_query(</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    zion_points, </span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'data/srtm.tif'</span>,</span>
@@ -673,20 +673,20 @@ Figure&nbsp;5.3: 30 point locations within the Zion National Park, with elevatio
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The resulting object is a <code>list</code> of raster values, corresponding to <code>zion_points</code>. For example, here are the elevations of the first five points.</p>
-<div id="c3a4445b" class="cell" data-execution_count="22">
+<div id="4375d14e" class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>result1[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="22">
 <pre><code>[1802, 2433, 1886, 1370, 1452]</code></pre>
 </div>
 </div>
-<div id="bdb3aeea" class="cell" data-execution_count="23">
+<div id="40bed700" class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>result2[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="23">
 <pre><code>[1802, 2433, 1886, 1370, 1452]</code></pre>
 </div>
 </div>
 <p>To get a <code>GeoDataFrame</code> with the original points geometries (and other attributes, if any), as well as the extracted raster values, we can assign the extraction result into a new column. As you can see, both approaches give the same result.</p>
-<div id="0513e343" class="cell" data-execution_count="24">
+<div id="48b2c0f7" class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>zion_points[<span class="st">'elev1'</span>] <span class="op">=</span> result1</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>zion_points[<span class="st">'elev2'</span>] <span class="op">=</span> result2</span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>zion_points</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -759,7 +759,7 @@ Figure&nbsp;5.3: 30 point locations within the Zion National Park, with elevatio
 <h3 data-number="5.3.2" class="anchored" data-anchor-id="sec-extraction-to-lines"><span class="header-section-number">5.3.2</span> Extraction to lines</h3>
 <p>Raster extraction is also applicable with line selectors. The typical line extraction algorithm is to extract one value for each raster cell touched by a line. However, this particular approach is not recommended to obtain values along the transects, as it is hard to get the correct distance between each pair of extracted raster values.</p>
 <p>For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points using the “extraction to points” technique (<a href="#sec-extraction-to-points" class="quarto-xref"><span>Section 5.3.1</span></a>). To demonstrate this, the code below creates (see <a href="01-spatial-data.html#sec-vector-data" class="quarto-xref"><span>Section 1.2</span></a> for recap) <code>zion_transect</code>, a straight line going from northwest to southeast of the Zion National Park.</p>
-<div id="a0a407ce" class="cell" data-execution_count="25">
+<div id="e9cb2634" class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>coords <span class="op">=</span> [[<span class="op">-</span><span class="fl">113.2</span>, <span class="fl">37.45</span>], [<span class="op">-</span><span class="fl">112.9</span>, <span class="fl">37.2</span>]]</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>zion_transect <span class="op">=</span> shapely.LineString(coords)</span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(zion_transect)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -769,19 +769,19 @@ Figure&nbsp;5.3: 30 point locations within the Zion National Park, with elevatio
 </div>
 <p>The utility of extracting heights from a linear selector is illustrated by imagining that you are planning a hike. The method demonstrated below provides an ‘elevation profile’ of the route (the line does not need to be straight), useful for estimating how long it will take due to long climbs.</p>
 <p>First, we need to create a layer consisting of points along our line (<code>zion_transect</code>), at specified intervals (e.g., <code>250</code>). To do that, we need to transform the line into a projected CRS (so that we work with true distances, in <span class="math inline">\(m\)</span>), such as UTM. This requires going through a <code>GeoSeries</code>, as <strong>shapely</strong> geometries have no CRS definition nor concept of reprojection (see <a href="01-spatial-data.html#sec-vector-layer-from-scratch" class="quarto-xref"><span>Section 1.2.6</span></a>).</p>
-<div id="7ba750c4" class="cell" data-execution_count="26">
+<div id="01efa180" class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>zion_transect_utm <span class="op">=</span> gpd.GeoSeries(zion_transect, crs<span class="op">=</span><span class="dv">4326</span>).to_crs(<span class="dv">32612</span>)</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>zion_transect_utm <span class="op">=</span> zion_transect_utm.iloc[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The printout of the new geometry shows this is still a straight line between two points, only with coordinates in a projected CRS.</p>
-<div id="8c9a2c03" class="cell" data-execution_count="27">
+<div id="d8b94b5e" class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(zion_transect_utm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>LINESTRING (305399.67208180577 4147066.650206682, 331380.8917453843 4118750.0947884847)</code></pre>
 </div>
 </div>
 <p>Next, we need to calculate the distances, along the line, where points are going to be generated, using <a href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html"><code>np.arange</code></a>. This is a numeric sequence starting at <code>0</code>, going up to line <code>.length</code>, in steps of <code>250</code> (<span class="math inline">\(m\)</span>).</p>
-<div id="1ecaea54" class="cell" data-execution_count="28">
+<div id="1ff736c3" class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>distances <span class="op">=</span> np.arange(<span class="dv">0</span>, zion_transect_utm.length, <span class="dv">250</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>distances[:<span class="dv">7</span>]  <span class="co">## First 7 distance cutoff points</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="28">
@@ -789,7 +789,7 @@ Figure&nbsp;5.3: 30 point locations within the Zion National Park, with elevatio
 </div>
 </div>
 <p>The distances cutoffs are used to sample (“interpolate”) points along the line. The <strong>shapely</strong> <a href="https://shapely.readthedocs.io/en/stable/manual.html#object.interpolate"><code>.interpolate</code></a> method is used to generate the points, which then are reprojected back to the geographic CRS of the raster (EPSG:<code>4326</code>).</p>
-<div id="af4ed313" class="cell" data-execution_count="29">
+<div id="c1ba5545" class="cell" data-execution_count="29">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-overflow-wrap code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>zion_transect_pnt <span class="op">=</span> [zion_transect_utm.interpolate(distance) <span class="cf">for</span> distance <span class="kw">in</span> distances]</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>zion_transect_pnt <span class="op">=</span> gpd.GeoSeries(zion_transect_pnt, crs<span class="op">=</span><span class="dv">32612</span>).to_crs(src_srtm.crs)</span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>zion_transect_pnt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -805,7 +805,7 @@ Length: 154, dtype: geometry</code></pre>
 </div>
 </div>
 <p>Finally, we extract the elevation values for each point in our transect and combine the information with <code>zion_transect_pnt</code> (after “promoting” it to a <code>GeoDataFrame</code>, to accommodate extra attributes), using the point extraction method shown earlier (<a href="#sec-extraction-to-points" class="quarto-xref"><span>Section 5.3.1</span></a>). We also attach the respective distance cutoff points <code>distances</code>.</p>
-<div id="01cd340b" class="cell" data-execution_count="30">
+<div id="962bf1d5" class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> rasterstats.point_query(</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    zion_transect_pnt, </span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    src_srtm.read(<span class="dv">1</span>), </span>
@@ -930,7 +930,7 @@ Figure&nbsp;5.4: Extracting a raster values profile to line
 <section id="sec-extraction-to-polygons" class="level3" data-number="5.3.3">
 <h3 data-number="5.3.3" class="anchored" data-anchor-id="sec-extraction-to-polygons"><span class="header-section-number">5.3.3</span> Extraction to polygons</h3>
 <p>The final type of geographic vector object for raster extraction is polygons. Like lines, polygons tend to return many raster values per polygon. For continuous rasters (<a href="#fig-raster-extract-to-polygon" class="quarto-xref">Figure&nbsp;<span>5.5</span></a> (a)), we typically want to generate summary statistics for raster values per polygon, for example to characterize a single region or to compare many regions. The generation of raster summary statistics, by polygons, is demonstrated in the code below using <code>rasterstats.zonal_stats</code>, which creates a list of summary statistics (in this case a list of length 1, since there is just one polygon).</p>
-<div id="e83bc7f3" class="cell" data-execution_count="32">
+<div id="34783c30" class="cell" data-execution_count="32">
 <div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> rasterstats.zonal_stats(</span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    zion, </span>
 <span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    src_srtm.read(<span class="dv">1</span>), </span>
@@ -957,7 +957,7 @@ Note
 </div>
 </div>
 <p>Transformation of the <code>list</code> to a <code>DataFrame</code> (e.g., to attach the derived attributes to the original polygon layer), is straightforward with the <code>pd.DataFrame</code> constructor.</p>
-<div id="82a1fe5e" class="cell" data-execution_count="33">
+<div id="0e834ab8" class="cell" data-execution_count="33">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(result)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="33">
 <div>
@@ -995,7 +995,7 @@ Note
 </ul>
 <p>See the <a href="https://pythonhosted.org/rasterstats/manual.html#statistics">documentation</a> of <code>rasterstats.zonal_stats</code> for the complete list. Additionally, the <code>rasterstats.zonal_stats</code> function accepts user-defined functions for calculating any custom statistics.</p>
 <p>To count occurrences of categorical raster values within polygons (<a href="#fig-raster-extract-to-polygon" class="quarto-xref">Figure&nbsp;<span>5.5</span></a> (b)), we can use masking (<a href="#sec-raster-cropping" class="quarto-xref"><span>Section 5.2</span></a>) combined with <code>np.unique</code>, as follows.</p>
-<div id="291cb9f2" class="cell" data-execution_count="34">
+<div id="6aa25184" class="cell" data-execution_count="34">
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>out_image, out_transform <span class="op">=</span> rasterio.mask.mask(</span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    src_nlcd, </span>
 <span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    zion.geometry.to_crs(src_nlcd.crs), </span>
@@ -1080,11 +1080,11 @@ Figure&nbsp;5.5: Sample data used for continuous and categorical raster extracti
 <section id="sec-rasterizing-points" class="level3" data-number="5.4.1">
 <h3 data-number="5.4.1" class="anchored" data-anchor-id="sec-rasterizing-points"><span class="header-section-number">5.4.1</span> Rasterizing points</h3>
 <p>To demonstrate point rasterization, we will prepare a “template” raster that has the same extent and CRS as the input vector data <code>cycle_hire_osm_projected</code> (a dataset on cycle hire points in London, illustrated in <a href="#fig-rasterize-points" class="quarto-xref">Figure&nbsp;<span>5.6</span></a> (a)) and a spatial resolution of 1000 <span class="math inline">\(m\)</span>. To do that, we first take our point layer and transform it to a projected CRS.</p>
-<div id="41e5eae4" class="cell" data-execution_count="36">
+<div id="eb66349e" class="cell" data-execution_count="36">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected <span class="op">=</span> cycle_hire_osm.to_crs(<span class="dv">27700</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, we calculate the <code>out_shape</code> and <code>transform</code> of the template raster. To calculate the transform, we combine the top-left corner of the <code>cycle_hire_osm_projected</code> bounding box with the required resolution (e.g., 1000 <span class="math inline">\(m\)</span>).</p>
-<div id="bdf37a40" class="cell" data-execution_count="37">
+<div id="e52fe2e9" class="cell" data-execution_count="37">
 <div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>bounds <span class="op">=</span> cycle_hire_osm_projected.total_bounds</span>
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> <span class="dv">1000</span></span>
 <span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>transform <span class="op">=</span> rasterio.transform.from_origin(</span>
@@ -1100,7 +1100,7 @@ Figure&nbsp;5.5: Sample data used for continuous and categorical raster extracti
 </div>
 </div>
 <p>To calculate the <code>out_shape</code>, we divide the x-axis and y-axis extent by the resolution, taking the ceiling of the results.</p>
-<div id="650e8214" class="cell" data-execution_count="38">
+<div id="3012b5c1" class="cell" data-execution_count="38">
 <div class="sourceCode cell-code" id="cb50"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>rows <span class="op">=</span> math.ceil((bounds[<span class="dv">3</span>] <span class="op">-</span> bounds[<span class="dv">1</span>]) <span class="op">/</span> res)</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> math.ceil((bounds[<span class="dv">2</span>] <span class="op">-</span> bounds[<span class="dv">0</span>]) <span class="op">/</span> res)</span>
 <span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>shape <span class="op">=</span> (rows, cols)</span>
@@ -1111,7 +1111,7 @@ Figure&nbsp;5.5: Sample data used for continuous and categorical raster extracti
 </div>
 <p>Finally, we are ready to rasterize. As mentioned abover, point rasterization can be a very flexible operation: the results depend not only on the nature of the template raster, but also on the the pixel “activation” method, namely the way we deal with multiple points matching the same pixel.</p>
 <p>To illustrate this flexibility, we will try three different approaches to point rasterization (<a href="#fig-rasterize-points" class="quarto-xref">Figure&nbsp;<span>5.6</span></a> (b)-(d)). First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters). In this case, we transfer the value of <code>1</code> to all pixels where at least one point falls in. In the <strong>rasterio</strong> framework, we use the <code>rasterio.features.rasterize</code> function, which requires an iterable object of <code>geometry,value</code> pairs. In this first example, we transform the point <code>GeoDataFrame</code> into a <code>list</code> of <code>shapely</code> geometries and the (fixed) value of <code>1</code>, using list comprehension as follows. The first five elements of the <code>list</code> are hereby printed to illustrate its structure.</p>
-<div id="e8f251d9" class="cell" data-execution_count="39">
+<div id="4e8a0f44" class="cell" data-execution_count="39">
 <div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>g <span class="op">=</span> [(g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry]</span>
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>g[:<span class="dv">5</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="39">
@@ -1123,7 +1123,7 @@ Figure&nbsp;5.5: Sample data used for continuous and categorical raster extracti
 </div>
 </div>
 <p>The list of <code>geometry,value</code> pairs is passed to <code>rasterio.features.rasterize</code>, along with the <code>shape</code> and <code>transform</code> which define the raster template. The result <code>ch_raster1</code> is an <code>ndarray</code> with the burned values of <code>1</code> where the pixel coincides with at least one point, and <code>0</code> in “unaffected” pixels. Note that <code>merge_alg=rasterio.enums.MergeAlg.replace</code> (the default) is used here, which means that a pixel get <code>1</code> when one or more point fall in it, or keeps the original <code>0</code> value otherwise.</p>
-<div id="c2a0813b" class="cell" data-execution_count="40">
+<div id="fd1b93e3" class="cell" data-execution_count="40">
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>ch_raster1 <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    shapes<span class="op">=</span>g,</span>
 <span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape, </span>
@@ -1145,7 +1145,7 @@ Figure&nbsp;5.5: Sample data used for continuous and categorical raster extracti
 </div>
 </div>
 <p>In our second variant of point rasterization, we count the number of bike hire stations. To do that, we use the fixed value of <code>1</code> (same as in the last example), but this time combined with the <code>merge_alg=rasterio.enums.MergeAlg.add</code> argument. That way, multiple values burned into the same pixel are <em>summed</em>, rather than replaced keeping last (which is the default). The new output, <code>ch_raster2</code>, shows the number of cycle hire points in each grid cell.</p>
-<div id="db1eb488" class="cell" data-execution_count="41">
+<div id="8caffa36" class="cell" data-execution_count="41">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>g <span class="op">=</span> [(g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> cycle_hire_osm_projected.geometry]</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>ch_raster2 <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    shapes<span class="op">=</span>g,</span>
@@ -1170,7 +1170,7 @@ Figure&nbsp;5.5: Sample data used for continuous and categorical raster extracti
 </div>
 </div>
 <p>The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what is the capacity in each grid cell? To calculate that, in our third point rasterization variant we sum the field (<code>'capacity'</code>) rather than the fixed values of <code>1</code>. This requires using a more complex list comprehension expression, where we also (1) extract both geometries and the attribute of interest, and (2) filter out “No Data” values, which can be done as follows. You are invited to run the separate parts to see how this works; the important point is that, in the end, we get the list <code>g</code> with the <code>geometry,value</code> pairs to be burned, only that the <code>value</code> is now variable, rather than fixed, among points.</p>
-<div id="9543af96" class="cell" data-execution_count="42">
+<div id="230549e5" class="cell" data-execution_count="42">
 <div class="sourceCode cell-code" id="cb58"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>g <span class="op">=</span> [(g, v) <span class="cf">for</span> g, v <span class="kw">in</span> cycle_hire_osm_projected[[<span class="st">'geometry'</span>, <span class="st">'capacity'</span>]] <span class="op">\</span></span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>        .dropna(subset<span class="op">=</span><span class="st">'capacity'</span>)</span>
 <span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>        .to_numpy() <span class="op">\</span></span>
@@ -1185,7 +1185,7 @@ Figure&nbsp;5.5: Sample data used for continuous and categorical raster extracti
 </div>
 </div>
 <p>Now we rasterize the points, again using <code>merge_alg=rasterio.enums.MergeAlg.add</code> to sum the capacity values per pixel.</p>
-<div id="735fd53e" class="cell" data-execution_count="43">
+<div id="32f1d9a3" class="cell" data-execution_count="43">
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>ch_raster3 <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    shapes<span class="op">=</span>g,</span>
 <span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
@@ -1297,7 +1297,7 @@ Figure&nbsp;5.6: Original data and three variants of point rasterization
 <section id="sec-rasterizing-lines-and-polygons" class="level3" data-number="5.4.2">
 <h3 data-number="5.4.2" class="anchored" data-anchor-id="sec-rasterizing-lines-and-polygons"><span class="header-section-number">5.4.2</span> Rasterizing lines and polygons</h3>
 <p>Another dataset based on California’s polygons and borders (created below) illustrates rasterization of lines. There are three preliminary steps. First, we subset the California polygon.</p>
-<div id="aa5e527c" class="cell" data-execution_count="45">
+<div id="17ec63f4" class="cell" data-execution_count="45">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>california <span class="op">=</span> us_states[us_states[<span class="st">'NAME'</span>] <span class="op">==</span> <span class="st">'California'</span>]</span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>california</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="45">
@@ -1332,7 +1332,7 @@ Figure&nbsp;5.6: Original data and three variants of point rasterization
 </div>
 </div>
 <p>Second, we “cast” the polygon into a <code>'MultiLineString'</code> geometry, using the <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.boundary.html"><code>.boundary</code></a> property that <code>GeoSeries</code> have.</p>
-<div id="539c2edb" class="cell" data-execution_count="46">
+<div id="d39b92c7" class="cell" data-execution_count="46">
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>california_borders <span class="op">=</span> california.geometry.boundary</span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>california_borders</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="46">
@@ -1341,7 +1341,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <p>Third, we create the <code>transform</code> and <code>shape</code> describing our template raster, with a resolution of a <code>0.5</code> degree, using the same approach as in <a href="#sec-rasterizing-points" class="quarto-xref"><span>Section 5.4.1</span></a>.</p>
-<div id="bbeeba09" class="cell" data-execution_count="47">
+<div id="4c8e8986" class="cell" data-execution_count="47">
 <div class="sourceCode cell-code" id="cb66"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>bounds <span class="op">=</span> california_borders.total_bounds</span>
 <span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> <span class="fl">0.5</span></span>
 <span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>transform <span class="op">=</span> rasterio.transform.from_origin(</span>
@@ -1359,7 +1359,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <p>Finally, we rasterize <code>california_borders</code> based on the calculated template’s <code>shape</code> and <code>transform</code>. When considering line or polygon rasterization, one useful additional argument is <code>all_touched</code>. By default it is <code>False</code>, but when changed to <code>True</code>—all cells that are touched by a line or polygon border get a value. Line rasterization with <code>all_touched=True</code> is demonstrated in the code below (<a href="#fig-rasterize-lines-polygons" class="quarto-xref">Figure&nbsp;<span>5.7</span></a>, left). We are also using <code>fill=np.nan</code> to set “background” values as “No Data”.</p>
-<div id="44bb6c80" class="cell" data-execution_count="48">
+<div id="fc1b194c" class="cell" data-execution_count="48">
 <div class="sourceCode cell-code" id="cb68"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>california_raster1 <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    [(g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> california_borders],</span>
 <span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
@@ -1369,7 +1369,7 @@ dtype: geometry</code></pre>
 <span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Compare it to a polygon rasterization, with <code>all_touched=False</code> (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in <a href="#fig-rasterize-lines-polygons" class="quarto-xref">Figure&nbsp;<span>5.7</span></a> (right).</p>
-<div id="d5b86c8e" class="cell" data-execution_count="49">
+<div id="bbb928d8" class="cell" data-execution_count="49">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>california_raster2 <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    [(g, <span class="dv">1</span>) <span class="cf">for</span> g <span class="kw">in</span> california.geometry],</span>
 <span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>shape,</span>
@@ -1378,7 +1378,7 @@ dtype: geometry</code></pre>
 <span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To illustrate which raster pixels are actually selected as part of rasterization, we also show them as points. This also requires the following code section to calculate the points, which we explain in <a href="#sec-spatial-vectorization" class="quarto-xref"><span>Section 5.5</span></a>.</p>
-<div id="a31c3796" class="cell" data-execution_count="50">
+<div id="3d53319d" class="cell" data-execution_count="50">
 <div class="sourceCode cell-code" id="cb70"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>height <span class="op">=</span> california_raster1.shape[<span class="dv">0</span>]</span>
 <span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> california_raster1.shape[<span class="dv">1</span>]</span>
 <span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>cols, rows <span class="op">=</span> np.meshgrid(np.arange(width), np.arange(height))</span>
@@ -1505,21 +1505,21 @@ Figure&nbsp;5.7: Examples of line and polygon rasterization
 <h3 data-number="5.5.1" class="anchored" data-anchor-id="sec-raster-to-polygons"><span class="header-section-number">5.5.1</span> Raster to polygons</h3>
 <p>The <a href="https://rasterio.readthedocs.io/en/stable/api/rasterio.features.html#rasterio.features.shapes"><code>rasterio.features.shapes</code></a> gives access to raster pixels as polygon geometries, along with the associated raster values. The returned object is a generator (see note in <a href="03-spatial-operations.html#sec-spatial-subsetting-raster" class="quarto-xref"><span>Section 3.3.1</span></a>), yielding <code>geometry,value</code> pairs.</p>
 <p>For example, the following expression returns a generator named <code>shapes</code>, referring to the pixel polygons.</p>
-<div id="44475315" class="cell" data-execution_count="52">
+<div id="9616f9be" class="cell" data-execution_count="52">
 <div class="sourceCode cell-code" id="cb72"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>shapes <span class="op">=</span> rasterio.features.shapes(</span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    rasterio.band(src_grain, <span class="dv">1</span>) </span>
 <span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>shapes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="52">
-<pre><code>&lt;generator object shapes at 0x7f941ccca020&gt;</code></pre>
+<pre><code>&lt;generator object shapes at 0x7f662f0e2020&gt;</code></pre>
 </div>
 </div>
 <p>We can generate all shapes at once into a <code>list</code> named <code>pol</code> with <code>list(shapes)</code>.</p>
-<div id="16040de0" class="cell" data-execution_count="53">
+<div id="eae2b7df" class="cell" data-execution_count="53">
 <div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>pol <span class="op">=</span> <span class="bu">list</span>(shapes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Each element in <code>pol</code> is a <code>tuple</code> of length 2, containing the GeoJSON-like <code>dict</code>—representing the polygon geometry and the value of the pixel(s)—which comprise the polygon. For example, here is the first element of <code>pol</code>.</p>
-<div id="6e4f5c93" class="cell" data-execution_count="54">
+<div id="6a45e53a" class="cell" data-execution_count="54">
 <div class="sourceCode cell-code" id="cb75"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>pol[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="54">
 <pre><code>({'type': 'Polygon',
@@ -1545,7 +1545,7 @@ Note
 </div>
 </div>
 <p>To transform the <code>list</code> coming out of <code>rasterio.features.shapes</code> into the familiar <code>GeoDataFrame</code>, we need few more steps of data reshaping. First, we apply the <a href="https://shapely.readthedocs.io/en/stable/manual.html#shapely.geometry.shape"><code>shapely.geometry.shape</code></a> function to go from a <code>list</code> of GeoJSON-like <code>dict</code>s to a <code>list</code> of <code>shapely</code> geometry objects. The <code>list</code> can then be converted to a <code>GeoSeries</code> (see <a href="01-spatial-data.html#sec-vector-layer-from-scratch" class="quarto-xref"><span>Section 1.2.6</span></a>).</p>
-<div id="2e628d20" class="cell" data-execution_count="55">
+<div id="161e7d71" class="cell" data-execution_count="55">
 <div class="sourceCode cell-code" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> [shapely.geometry.shape(i[<span class="dv">0</span>]) <span class="cf">for</span> i <span class="kw">in</span> pol]</span>
 <span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>geom <span class="op">=</span> gpd.GeoSeries(geom, crs<span class="op">=</span>src_grain.crs)</span>
 <span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>geom</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1561,7 +1561,7 @@ Length: 14, dtype: geometry</code></pre>
 </div>
 </div>
 <p>The values can also be extracted from the <code>rasterio.features.shapes</code> and turned into a corresponding <code>Series</code>.</p>
-<div id="3767691f" class="cell" data-execution_count="56">
+<div id="1b1a0d56" class="cell" data-execution_count="56">
 <div class="sourceCode cell-code" id="cb79"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> [i[<span class="dv">1</span>] <span class="cf">for</span> i <span class="kw">in</span> pol]</span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> pd.Series(values)</span>
 <span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>values</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1577,7 +1577,7 @@ Length: 14, dtype: float64</code></pre>
 </div>
 </div>
 <p>Finally, the two can be combined into a <code>GeoDataFrame</code>, hereby named <code>result</code>.</p>
-<div id="b607a21a" class="cell" data-execution_count="57">
+<div id="9c337252" class="cell" data-execution_count="57">
 <div class="sourceCode cell-code" id="cb81"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'value'</span>: values, <span class="st">'geometry'</span>: geom})</span>
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>result</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="57">
@@ -1656,7 +1656,7 @@ Figure&nbsp;5.8: <code>grain.tif</code> converted to a polygon layer
 <section id="sec-raster-to-points" class="level3" data-number="5.5.2">
 <h3 data-number="5.5.2" class="anchored" data-anchor-id="sec-raster-to-points"><span class="header-section-number">5.5.2</span> Raster to points</h3>
 <p>To transform a raster to points, we can use the <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.transform.html#rasterio.transform.xy"><code>rasterio.transform.xy</code></a>. As the name suggests, the function accepts row and column indices, and transforms them into x- and y-coordinates (using the raster’s transformation matrix). For example, the coordinates of the top-left pixel can be calculated passing the <code>(row,col)</code> indices of <code>(0,0)</code>.</p>
-<div id="0d8f8cab" class="cell" data-execution_count="59">
+<div id="48ec7779" class="cell" data-execution_count="59">
 <div class="sourceCode cell-code" id="cb83"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>src <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/elev.tif'</span>)</span>
 <span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>rasterio.transform.xy(src.transform, <span class="dv">0</span>, <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="59">
@@ -1674,7 +1674,7 @@ Note
 </div>
 <div class="callout-body-container callout-body">
 <p>Keep in mind that the coordinates of the top-left pixel (<code>(-1.25, 1.25)</code>), as calculated in the above expression, refer to the pixel <em>centroid</em>. Therefore, they are not identical to the raster origin coordinates (<code>(-1.5,1.5)</code>), as specified in the transformation matrix, which are the coordinates of the top-left edge/corner of the raster (see <a href="#fig-raster-to-points" class="quarto-xref">Figure&nbsp;<span>5.9</span></a>).</p>
-<div id="cc4492f9" class="cell" data-execution_count="60">
+<div id="8c478608" class="cell" data-execution_count="60">
 <div class="sourceCode cell-code" id="cb85"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>src.transform</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="60">
 <pre><code>Affine(0.5, 0.0, -1.5,
@@ -1684,13 +1684,13 @@ Note
 </div>
 </div>
 <p>To generalize the above expression to calculate the coordinates of <em>all</em> pixels, we first need to generate a grid of all possible row/column index combinations. This can be done using <a href="https://numpy.org/doc/stable/reference/generated/numpy.meshgrid.html"><code>np.meshgrid</code></a>, as follows.</p>
-<div id="53104c8f" class="cell" data-execution_count="61">
+<div id="0f642303" class="cell" data-execution_count="61">
 <div class="sourceCode cell-code" id="cb87"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>height <span class="op">=</span> src.shape[<span class="dv">0</span>]</span>
 <span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> src.shape[<span class="dv">1</span>]</span>
 <span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>cols, rows <span class="op">=</span> np.meshgrid(np.arange(width), np.arange(height))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We now have two arrays, <code>rows</code> and <code>cols</code>, matching the shape of <code>elev.tif</code> and containing the corresponding row and column indices.</p>
-<div id="f5b8fe9f" class="cell" data-execution_count="62">
+<div id="d5235025" class="cell" data-execution_count="62">
 <div class="sourceCode cell-code" id="cb88"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>rows</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="62">
 <pre><code>array([[0, 0, 0, 0, 0, 0],
@@ -1701,7 +1701,7 @@ Note
        [5, 5, 5, 5, 5, 5]])</code></pre>
 </div>
 </div>
-<div id="9251b6c7" class="cell" data-execution_count="63">
+<div id="6972381b" class="cell" data-execution_count="63">
 <div class="sourceCode cell-code" id="cb90"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>cols</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="63">
 <pre><code>array([[0, 1, 2, 3, 4, 5],
@@ -1713,10 +1713,10 @@ Note
 </div>
 </div>
 <p>These can be passed to <code>rasterio.transform.xy</code> to transform the indices into point coordinates, accordingly stored in lists of arrays <code>x</code> and <code>y</code>.</p>
-<div id="86d601a6" class="cell" data-execution_count="64">
+<div id="04bc38a0" class="cell" data-execution_count="64">
 <div class="sourceCode cell-code" id="cb92"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>x, y <span class="op">=</span> rasterio.transform.xy(src.transform, rows, cols)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="a7b089cc" class="cell" data-execution_count="65">
+<div id="e3272552" class="cell" data-execution_count="65">
 <div class="sourceCode cell-code" id="cb93"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="65">
 <pre><code>[array([-1.25, -0.75, -0.25,  0.25,  0.75,  1.25]),
@@ -1727,7 +1727,7 @@ Note
  array([-1.25, -0.75, -0.25,  0.25,  0.75,  1.25])]</code></pre>
 </div>
 </div>
-<div id="147ba3b9" class="cell" data-execution_count="66">
+<div id="f4914ade" class="cell" data-execution_count="66">
 <div class="sourceCode cell-code" id="cb95"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>y</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="66">
 <pre><code>[array([1.25, 1.25, 1.25, 1.25, 1.25, 1.25]),
@@ -1739,7 +1739,7 @@ Note
 </div>
 </div>
 <p>Typically we want to work with the points in the form of a <code>GeoDataFrame</code> which also holds the attribute(s) value(s) as point attributes. To get there, we can transform the coordinates as well as any attributes to 1-dimensional arrays, and then use methods we are already familiar with (<a href="01-spatial-data.html#sec-vector-layer-from-scratch" class="quarto-xref"><span>Section 1.2.6</span></a>) to combine them into a <code>GeoDataFrame</code>.</p>
-<div id="557a22a1" class="cell" data-execution_count="67">
+<div id="866a436a" class="cell" data-execution_count="67">
 <div class="sourceCode cell-code" id="cb97"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.array(x).flatten()</span>
 <span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> np.array(y).flatten()</span>
 <span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> src.read(<span class="dv">1</span>).flatten()</span>
@@ -1881,12 +1881,12 @@ Figure&nbsp;5.10: Displaying raster contours
 <li>Writing a custom function to export contour coordinates generated by, e.g., <a href="https://www.tutorialspoint.com/how-to-get-coordinates-from-the-contour-in-matplotlib"><strong>matplotlib</strong></a> or <a href="https://gis.stackexchange.com/questions/268331/how-can-i-extract-contours-from-a-raster-with-python"><strong>skimage</strong></a></li>
 </ol>
 <p>We demonstrate the first approach, using <code>gdal_contour</code>. Although we deviate from the Python-focused approach towards more direct interaction with GDAL, the benefit of <code>gdal_contour</code> is the proven algorithm, customized to spatial data, and with many relevant options. Both the <code>gdal_contour</code> program (along with other GDAL programs) and its <strong>osgeo</strong> Python wrapper, should already be installed on your system since GDAL is a dependency of <strong>rasterio</strong>. Using the command line pathway, generating 50 <span class="math inline">\(m\)</span> contours of the <code>dem.tif</code> file can be done as follows.</p>
-<div id="e960b389" class="cell" data-execution_count="70">
+<div id="1541b47e" class="cell" data-execution_count="70">
 <div class="sourceCode cell-code" id="cb100"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>os.system(<span class="st">'gdal_contour -a elev data/dem.tif output/dem_contour.gpkg -i 50.0'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Like all GDAL programs (also see <code>gdaldem</code> example in <a href="03-spatial-operations.html#sec-focal-operations" class="quarto-xref"><span>Section 3.3.4</span></a>), <code>gdal_contour</code> works with files. Here, the input is the <code>data/dem.tif</code> file and the result is exported to the <code>output/dem_contour.gpkg</code> file.</p>
 <p>To illustrate the result, let’s read the resulting <code>dem_contour.gpkg</code> layer back into the Python environment. Note that the layer contains an attribute named <code>'elev'</code> (as specified using <code>-a elev</code>) with the contour elevation values.</p>
-<div id="b62c53ad" class="cell" data-execution_count="71">
+<div id="c0807451" class="cell" data-execution_count="71">
 <div class="sourceCode cell-code" id="cb101"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>contours1 <span class="op">=</span> gpd.read_file(<span class="st">'output/dem_contour.gpkg'</span>)</span>
 <span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>contours1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="70">
@@ -1976,7 +1976,7 @@ Figure&nbsp;5.11: Contours of the <code>dem.tif</code> raster, calculated using 
 <h2 data-number="5.6" class="anchored" data-anchor-id="sec-distance-to-nearest-geometry"><span class="header-section-number">5.6</span> Distance to nearest geometry</h2>
 <p>Calculating a raster of distances to the nearest geometry is an example of a “global” raster operation (<a href="03-spatial-operations.html#sec-global-operations-and-distances" class="quarto-xref"><span>Section 3.3.6</span></a>). To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand. This example also wraps many of the concepts introduced in this chapter and in previous chapter, such as raster aggregation (<a href="04-geometry-operations.html#sec-raster-agg-disagg" class="quarto-xref"><span>Section 4.3.2</span></a>), raster conversion to points (<a href="#sec-raster-to-points" class="quarto-xref"><span>Section 5.5.2</span></a>), and rasterizing points (<a href="#sec-rasterizing-points" class="quarto-xref"><span>Section 5.4.1</span></a>).</p>
 <p>For the coastline, we will dissolve the New Zealand administrative division polygon layer and “extract” the boundary as a <code>'MultiLineString'</code> geometry. Note that <code>.dissolve(by=None)</code> (<a href="02-attribute-operations.html#sec-vector-attribute-aggregation" class="quarto-xref"><span>Section 2.2.2</span></a>) calls <code>.union_all</code> on all geometries (i.e., aggregates everything into one group), which is what we want to do here.</p>
-<div id="7df489b7" class="cell" data-execution_count="73">
+<div id="5b531222" class="cell" data-execution_count="73">
 <div class="sourceCode cell-code" id="cb103"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a>coastline <span class="op">=</span> nz.dissolve().to_crs(src_nz_elev.crs).boundary</span>
 <span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>coastline</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="72">
@@ -1985,7 +1985,7 @@ dtype: geometry</code></pre>
 </div>
 </div>
 <p>For a “template” raster, we will aggregate the New Zealand DEM, in the <code>nz_elev.tif</code> file, to 5 times coarser resolution. The code section below follows the aggeregation example in <a href="04-geometry-operations.html#sec-raster-agg-disagg" class="quarto-xref"><span>Section 4.3.2</span></a>.</p>
-<div id="b5612f4b" class="cell" data-execution_count="74">
+<div id="f833a3e0" class="cell" data-execution_count="74">
 <div class="sourceCode cell-code" id="cb105"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>factor <span class="op">=</span> <span class="fl">0.2</span></span>
 <span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading aggregated array</span></span>
 <span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> src_nz_elev.read(<span class="dv">1</span>,</span>
@@ -2020,7 +2020,7 @@ Figure&nbsp;5.12: Template with cell IDs to calculate distance to nearest geomet
 </div>
 </div>
 <p>To calculate the actual distances, we must convert each pixel to a vector (point) geometry. For this purpose, we use the technique demonstrated in <a href="#sec-raster-to-points" class="quarto-xref"><span>Section 5.5.2</span></a>, but we’re keeping the points as a <code>list</code> of <code>shapely</code> geometries, rather than a <code>GeoDataFrame</code>, since such a list is sufficient for the subsequent calculation.</p>
-<div id="cb272910" class="cell" data-execution_count="76">
+<div id="3de45040" class="cell" data-execution_count="76">
 <div class="sourceCode cell-code" id="cb107"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a>height <span class="op">=</span> r.shape[<span class="dv">0</span>]</span>
 <span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> r.shape[<span class="dv">1</span>]</span>
 <span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>cols, rows <span class="op">=</span> np.meshgrid(np.arange(width), np.arange(height))</span>
@@ -2043,7 +2043,7 @@ Figure&nbsp;5.12: Template with cell IDs to calculate distance to nearest geomet
 </div>
 <p>The result <code>geom</code> is a <code>list</code> of <code>shapely</code> geometries, representing raster cell centroids (excluding <code>np.nan</code> pixels, which were filtered out).</p>
 <p>Now we can calculate the corresponding <code>list</code> of point geometries and associated distances, using the <code>.distance</code> method from <strong>shapely</strong>:</p>
-<div id="c7cbc9a0" class="cell" data-execution_count="77">
+<div id="05d0efea" class="cell" data-execution_count="77">
 <div class="sourceCode cell-code" id="cb109"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a>distances <span class="op">=</span> [(i, i.distance(coastline)) <span class="cf">for</span> i <span class="kw">in</span> geom]</span>
 <span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>distances[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="76">
@@ -2053,7 +2053,7 @@ Figure&nbsp;5.12: Template with cell IDs to calculate distance to nearest geomet
 </div>
 </div>
 <p>Finally, we rasterize (see <a href="#sec-rasterizing-points" class="quarto-xref"><span>Section 5.4.1</span></a>) the distances into our raster template.</p>
-<div id="eec2ba79" class="cell" data-execution_count="78">
+<div id="4cd712d0" class="cell" data-execution_count="78">
 <div class="sourceCode cell-code" id="cb111"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> rasterio.features.rasterize(</span>
 <span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>    distances,</span>
 <span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>    out_shape<span class="op">=</span>r.shape,</span>
