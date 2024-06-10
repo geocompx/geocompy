@@ -351,7 +351,7 @@ window.Quarto = {
 <section id="prerequisites" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="prerequisites">Prerequisites</h2>
 <p>This chapter requires importing the following packages:</p>
-<div id="8153b984" class="cell" data-execution_count="3">
+<div id="5e75c5c1" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -364,7 +364,7 @@ window.Quarto = {
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rasterio.warp</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>It also relies on the following data files:</p>
-<div id="4427d29e" class="cell" data-execution_count="4">
+<div id="4f4e3448" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>src_srtm <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/srtm.tif'</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>src_nlcd <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'data/nlcd.tif'</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>zion <span class="op">=</span> gpd.read_file(<span class="st">'data/zion.gpkg'</span>)</span>
@@ -389,7 +389,7 @@ window.Quarto = {
 <p>Each refers to the same thing: the ‘WGS84’ coordinate system that forms the basis of Global Positioning System (GPS) coordinates and many other datasets. But which one is correct?</p>
 <p>The short answer is that the third way to identify CRSs is correct: <code>EPSG:4326</code> is understood by <strong>geopandas</strong> and <strong>rasterio</strong> packages covered in this book, plus many other software projects for working with geographic data including <a href="https://docs.qgis.org/3.22/en/docs/user_manual/working_with_projections/working_with_projections.html">QGIS</a> and <a href="https://proj.org/development/quickstart.html">PROJ</a>. <code>EPSG:4326</code> is future-proof. Furthermore, although it is machine readable, unlike the proj-string representation <code>EPSG:4326</code> is short, easy to remember and highly ‘findable’ online (searching for <code>EPSG:4326</code> yields a dedicated page on the website <a href="https://epsg.io/4326">epsg.io</a>, for example). The more concise identifier <code>4326</code> is also understood by <strong>geopandas</strong> and <strong>rasterio</strong>.</p>
 <p>The longer answer is that none of the three descriptions are sufficient, and more detail is needed for unambiguous CRS handling and transformations: due to the complexity of CRSs, it is not possible to capture all relevant information about them in such short text strings. For this reason, the Open Geospatial Consortium (OGC, which also developed the Simple Features specification that the <strong>geopandas</strong> package implements) developed an open standard format for describing CRSs that is called WKT (Well Known Text). This is detailed in a <a href="https://portal.opengeospatial.org/files/18-010r7">100+ page document</a> that “defines the structure and content of a text string implementation of the abstract model for coordinate reference systems described in ISO 19111:2019” <span class="citation" data-cites="opengeospatialconsortium_wellknown_2019">(<a href="references.html#ref-opengeospatialconsortium_wellknown_2019" role="doc-biblioref">Open Geospatial Consortium 2019</a>)</span>. The <a href="https://en.wikipedia.org/wiki/Well-known_text_representation_of_coordinate_reference_systems">WKT representation</a> of the WGS84 CRS, which has the identifier <code>EPSG:4326</code> is as follows.</p>
-<div id="4f097a80" class="cell" data-execution_count="5">
+<div id="4171a1b5" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>crs <span class="op">=</span> pyproj.CRS.from_string(<span class="st">'EPSG:4326'</span>) <span class="co"># or '.from_epsg(4326)'</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(crs.to_wkt(pretty<span class="op">=</span><span class="va">True</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -426,7 +426,7 @@ window.Quarto = {
 <p>Should any attributes or values given in the cited identifier be in conflict with attributes or values given explicitly in the WKT description, the WKT values shall prevail.</p>
 </blockquote>
 <p>The convention of referring to CRSs identifiers in the form <code>AUTHORITY:CODE</code> allows a wide range of formally defined coordinate systems to be referred to. The most commonly used authority in CRS identifiers is EPSG, an acronym for the European Petroleum Survey Group which published a standardized list of CRSs. Other authorities can be used in CRS identifiers. <code>ESRI:54030</code>, for example, refers to ESRI’s implementation of the Robinson projection, which has the following WKT string.</p>
-<div id="796cf03e" class="cell" data-execution_count="6">
+<div id="cc515bab" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>crs <span class="op">=</span> pyproj.CRS.from_string(<span class="st">'ESRI:54030'</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(crs.to_wkt(pretty<span class="op">=</span><span class="va">True</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -481,7 +481,7 @@ Note
 <section id="sec-querying-and-setting-coordinate-systems" class="level2" data-number="6.3">
 <h2 data-number="6.3" class="anchored" data-anchor-id="sec-querying-and-setting-coordinate-systems"><span class="header-section-number">6.3</span> Querying and setting coordinate systems</h2>
 <p>Let’s see how CRSs are stored in Python spatial objects and how they can be queried and set. First we will look at getting and setting CRSs in vector geographic data objects. Consider the <code>GeoDataFrame</code> object named <code>world</code>, imported from a file <code>world.gpkg</code> that represents countries worldwide. Its CRS can be retrieved using the <code>.crs</code> property.</p>
-<div id="7072d84b" class="cell" data-execution_count="7">
+<div id="1d800444" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>world.crs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
 <pre><code>&lt;Geographic 2D CRS: EPSG:4326&gt;
@@ -507,14 +507,14 @@ Datum: World Geodetic System 1984 ensemble
 </ol>
 <p>The WKT representation, which is internally used when saving the object to a file or doing any coordinate operations, can be extracted using <code>.crs.to_wkt()</code> as shown above (<a href="#sec-coordinate-reference-systems" class="quarto-xref"><span>Section 6.2</span></a>). We can also see that the <code>world</code> object has the WGS84 ellipsoid, the latitude and longitude axis order, and uses the Greenwich prime meridian. We also have the suitable suitable area specification for the use of this CRS, and CRS identifier: <code>EPSG:4326</code>.</p>
 <p>The CRS specification object, such as <code>world.crs</code>, has several useful properties and methods to explicitly retrieve information about the used CRS. For example, we can check whether the CRS is geographic with the <code>.is_geographic</code> property.</p>
-<div id="6e3fc9a0" class="cell" data-execution_count="8">
+<div id="0271243d" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>world.crs.is_geographic</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="8">
 <pre><code>True</code></pre>
 </div>
 </div>
 <p>CRS units of both axes (typically identical) can be retrieved with the <code>.axis_info</code> property.</p>
-<div id="0aa2f778" class="cell" data-execution_count="9">
+<div id="115b9fde" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>world.crs.axis_info[<span class="dv">0</span>].unit_name</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>world.crs.axis_info[<span class="dv">1</span>].unit_name</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="9">
@@ -522,30 +522,30 @@ Datum: World Geodetic System 1984 ensemble
 </div>
 </div>
 <p><code>AUTHORITY</code> and <code>CODE</code> strings may be obtained with the <code>.to_authority()</code> method.</p>
-<div id="26fb9faf" class="cell" data-execution_count="10">
+<div id="34150b30" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>world.crs.to_authority()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="10">
 <pre><code>('EPSG', '4326')</code></pre>
 </div>
 </div>
 <p>In cases when a coordinate reference system (CRS) is missing or the wrong CRS is set, the <code>.set_crs</code> method can be used on a <code>GeoSeries</code> or a <code>GeoDataFrame</code> to set it. The CRS can be specified using an EPSG code as the first argument. In case the object already has a different CRS definition, we must also specify <code>allow_override=True</code> to replace it (otherwise we get an error). In the first example we set the <code>EPSG:4326</code> CRS, which has no effect because <code>world</code> already has that exact CRS definition, while the second example replaces the existing CRS with a new definition of <code>EPSG:3857</code>.</p>
-<div id="d5f8083d" class="cell" data-execution_count="11">
+<div id="12f515ea" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>world2 <span class="op">=</span> world.set_crs(<span class="dv">4326</span>)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>world3 <span class="op">=</span> world.set_crs(<span class="dv">3857</span>, allow_override<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The provided number is interpreted as an <code>EPSG</code> code. We can also use strings, as in <code>'EPSG:4326'</code>, which is useful to make the code more clear and when using other authorities than <code>EPSG</code>.</p>
-<div id="c811d3d9" class="cell" data-execution_count="12">
+<div id="04437e8a" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>world4 <span class="op">=</span> world.set_crs(<span class="st">'ESRI:54009'</span>, allow_override<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>In <strong>rasterio</strong>, the CRS information is stored as part of a raster file connection metadata (<a href="01-spatial-data.html#sec-using-rasterio" class="quarto-xref"><span>Section 1.3.1</span></a>). Replacing the CRS definition for a <strong>rasterio</strong> file connection is typically not necessary, because it is not considered in any operation; only the transformation matrix and coordinates are. One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (<a href="01-spatial-data.html#sec-raster-from-scratch" class="quarto-xref"><span>Section 1.3.2</span></a>). However, if we, for some reason, need to change the CRS definition in the file connection metadata, we can do that when opening the file in <code>r+</code> (reading and writing) mode. To demonstrate, we will create a copy of the <code>nlcd.tif</code> file, named <code>nlcd2.tif</code>,</p>
-<div id="ebd98a7b" class="cell" data-execution_count="13">
+<div id="92bff497" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>shutil.copy(<span class="st">'data/nlcd.tif'</span>, <span class="st">'output/nlcd_modified_crs.tif'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="13">
 <pre><code>'output/nlcd_modified_crs.tif'</code></pre>
 </div>
 </div>
 <p>and examine its existing CRS.</p>
-<div id="3ebfcee4" class="cell" data-execution_count="14">
+<div id="015da986" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>src_nlcd2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_modified_crs.tif'</span>, <span class="st">'r+'</span>)</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>src_nlcd2.crs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="14">
@@ -566,12 +566,12 @@ Note
 </div>
 </div>
 <p>To replace the definition with a new one, such as <code>EPSG:3857</code>, we can use the <code>.crs</code> method, as shown below.</p>
-<div id="1c7166fe" class="cell" data-execution_count="15">
+<div id="4b6be362" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>src_nlcd2.crs <span class="op">=</span> <span class="dv">3857</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>src_nlcd2.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, examining the file connection demonstrates that the CRS was indeed changed.</p>
-<div id="bd59c332" class="cell" data-execution_count="16">
+<div id="f0e1c8da" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_modified_crs.tif'</span>).crs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="16">
 <pre><code>CRS.from_epsg(3857)</code></pre>
@@ -579,7 +579,7 @@ Note
 </div>
 <p>Importantly, the <code>.set_crs</code> (for vector layers) or the assignment to <code>.crs</code> (for rasters), as shown above, do not alter coordinates’ values or geometries. Their role is only to set a metadata information about the object CRS. Consequently, the objects we created, <code>world3</code>, <code>world4</code>, and <code>src_nlcd2</code> are “incorrect”, in the sense that the geometries are in fact given in a different CRS than specified in the associated CRS definition.</p>
 <p>In some cases, the CRS of a geographic object is unknown, as is the case in the London dataset created in the code chunk below, building on the example of London introduced in <a href="01-spatial-data.html#sec-vector-layer-from-scratch" class="quarto-xref"><span>Section 1.2.6</span></a>.</p>
-<div id="d469702d" class="cell" data-execution_count="17">
+<div id="edd867e1" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>lnd_point <span class="op">=</span> shapely.Point(<span class="op">-</span><span class="fl">0.1</span>, <span class="fl">51.5</span>)</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>lnd_geom <span class="op">=</span> gpd.GeoSeries([lnd_point])</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>lnd_layer <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: lnd_geom})</span>
@@ -607,12 +607,12 @@ Note
 </div>
 </div>
 <p>Querying the <code>.crs</code> of such a layer returns <code>None</code>, therefore nothing is printed.</p>
-<div id="241c25b3" class="cell" data-execution_count="18">
+<div id="b8b6c585" class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>lnd_layer.crs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This implies that <strong>geopandas</strong> does not know what the CRS is and is unwilling to guess. Unless a CRS is manually specified or is loaded from a source that has CRS metadata, <strong>geopandas</strong> does not make any explicit assumptions about which coordinate systems, other than to say “I don’t know”. This behavior makes sense given the diversity of available CRSs but differs from some approaches, such as the GeoJSON file format specification, which makes the simplifying <a href="https://datatracker.ietf.org/doc/html/rfc7946#section-4">assumption</a> that all coordinates have a lon/lat CRS: <code>EPSG:4326</code>.</p>
 <p>A CRS can be added to <code>GeoSeries</code> or <code>GeoDataFrame</code> objects using the <code>.set_crs</code> method, as mentioned above.</p>
-<div id="beb1393d" class="cell" data-execution_count="19">
+<div id="d2ad09cd" class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>lnd_layer <span class="op">=</span> lnd_layer.set_crs(<span class="dv">4326</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>When working with <strong>geopandas</strong> and <strong>rasterio</strong>, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered. It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not). When exporting the results, though, it is important to keep the CRS definition in place, because other software typically <em>do</em> use, and require, the CRS definition in calculation. It should also be mentioned that, in some cases the CRS specification is left unspecified on purpose, for example when working with layers in arbitrary or non-geographic space (simulations, internal building plans, analysis of plot-scale ecological patterns, etc.).</p>
@@ -627,7 +627,7 @@ Note
 </ul>
 <p>For example, to calculate a buffer of 100 <span class="math inline">\(km\)</span> around London, we need to work with a layer representing London in a projected CRS (e.g., <code>EPSG:27700</code>) and pass the distance value in the CRS units (e.g., <code>100000</code> <span class="math inline">\(m\)</span>).</p>
 <p>In the following code chunk we create, from scratch, a point layer <code>lnd_layer_proj</code> with a point representing London (compare it to <code>lnd_layer</code>, in a geographical CRS which we created above, see <a href="#sec-querying-and-setting-coordinate-systems" class="quarto-xref"><span>Section 6.3</span></a>).</p>
-<div id="ff6ff678" class="cell" data-execution_count="20">
+<div id="3989cb6a" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>lnd_point_proj <span class="op">=</span> shapely.Point(<span class="dv">530000</span>, <span class="dv">180000</span>)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>lnd_geom_proj <span class="op">=</span> gpd.GeoSeries([lnd_point_proj], crs<span class="op">=</span><span class="dv">27700</span>)</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj <span class="op">=</span> gpd.GeoDataFrame({<span class="st">'geometry'</span>: lnd_geom_proj})</span>
@@ -655,7 +655,7 @@ Note
 </div>
 </div>
 <p>Now, we can use the <code>.buffer</code> method (<a href="04-geometry-operations.html#sec-buffers" class="quarto-xref"><span>Section 4.2.3</span></a>) to calculate the buffer of 100 <span class="math inline">\(km\)</span> around London.</p>
-<div id="27373466" class="cell" data-execution_count="21">
+<div id="15e88650" class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj_buff <span class="op">=</span> lnd_layer_proj.<span class="bu">buffer</span>(<span class="dv">100000</span>)</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>lnd_layer_proj_buff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="21">
@@ -665,11 +665,11 @@ dtype: geometry</code></pre>
 </div>
 <p>The resulting buffer is shown in the left panel of <a href="#fig-reprojection-geo-proj" class="quarto-xref">Figure&nbsp;<span>6.1</span></a>.</p>
 <p>Calculating a 100-<span class="math inline">\(km\)</span> buffer directly for <code>lnd_layer</code>, which is in a geographical CRS, is impossible. Since the <code>lnd_layer</code> is in decimal degrees, the closest thing to a 100-<span class="math inline">\(km\)</span> buffer would be to use a distance of 1 degree, which is roughly equivalent to 100 <span class="math inline">\(km\)</span> (1 degree is about 111 <span class="math inline">\(km\)</span> at the equator):</p>
-<div id="02fb8064" class="cell" data-execution_count="22">
+<div id="1b60f219" class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff <span class="op">=</span> lnd_layer.<span class="bu">buffer</span>(<span class="dv">1</span>)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>lnd_layer_buff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_405/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_406/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer_buff = lnd_layer.buffer(1)</code></pre>
 </div>
@@ -755,13 +755,13 @@ Note
 <h2 data-number="6.5" class="anchored" data-anchor-id="sec-when-to-reproject"><span class="header-section-number">6.5</span> When to reproject?</h2>
 <p>The previous section showed how to set the CRS manually, with an expression such as <code>lnd_layer.set_crs(4326)</code>. In real world applications, however, CRSs are usually set automatically when data is read-in. Thus, in many projects the main CRS-related task is to transform objects, from one CRS into another. But when should data be transformed? And into which CRS? There are no clear-cut answers to these questions and CRS selection always involves trade-offs <span class="citation" data-cites="maling_coordinate_1992">(<a href="references.html#ref-maling_coordinate_1992" role="doc-biblioref">Maling 1992</a>)</span>. However, there are some general principles provided in this section that can help you decide.</p>
 <p>First, it’s worth considering when to transform. In some cases transformation to a geographic CRS is essential, such as when publishing data online (for example, a Leaflet-based map using Python package <a href="https://python-visualization.github.io/folium/latest/"><strong>folium</strong></a>). Another case is when two objects with different CRSs must be compared or combined, as shown when we try to find the distance between two objects with different CRSs.</p>
-<div id="e4913c0e" class="cell" data-execution_count="24">
+<div id="c66dcfea" class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>lnd_layer.distance(lnd_layer_proj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_405/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+<pre><code>/tmp/ipykernel_406/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer.distance(lnd_layer_proj)
-/tmp/ipykernel_405/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
+/tmp/ipykernel_406/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
 Use `to_crs()` to reproject one of the input geometries to match the CRS of the other.
 
 Left CRS: EPSG:4326
@@ -785,7 +785,7 @@ dtype: float64</code></pre>
 <p>A commonly used default is Universal Transverse Mercator (<a href="https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system">UTM</a>), a set of CRSs that divides the Earth into 60 longitudinal wedges and 20 latitudinal segments. The transverse Mercator projection used by UTM CRSs is conformal but distorts areas and distances with increasing severity with distance from the center of the UTM zone. Documentation from the GIS software Manifold therefore suggests restricting the longitudinal extent of projects using UTM zones to 6 degrees from the central meridian (source: <a href="http://www.manifold.net/doc/mfd9/universal_transverse_mercator_projection.htm">manifold.net</a>). Therefore, we recommend using UTM only when your focus is on preserving angles for a relatively small area!</p>
 <p>Almost every place on Earth has a UTM code, such as <code>'60H'</code> which refers, amoung others, to northern New Zealand. UTM EPSG codes run sequentially from <code>32601</code> to <code>32660</code> for northern hemisphere locations and from <code>32701</code> to <code>32760</code> for southern hemisphere locations.</p>
 <p>To show how the system works, let’s create a function, <code>lonlat2UTM</code> to calculate the EPSG code associated with any point on the planet.</p>
-<div id="0291f56e" class="cell" data-execution_count="25">
+<div id="d8e5102d" class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lonlat2UTM(lon, lat):</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    utm <span class="op">=</span> (math.floor((lon <span class="op">+</span> <span class="dv">180</span>) <span class="op">/</span> <span class="dv">6</span>) <span class="op">%</span> <span class="dv">60</span>) <span class="op">+</span> <span class="dv">1</span></span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lat <span class="op">&gt;</span> <span class="dv">0</span>:</span>
@@ -795,14 +795,14 @@ dtype: float64</code></pre>
 <span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> utm</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The following command uses this function to identify the UTM zone and associated EPSG code for Auckland.</p>
-<div id="8ed6ff2f" class="cell" data-execution_count="26">
+<div id="8b3d3080" class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>lonlat2UTM(<span class="fl">174.7</span>, <span class="op">-</span><span class="fl">36.9</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="26">
 <pre><code>32760</code></pre>
 </div>
 </div>
 <p>Here is another example for London (where we “unpack” the coordinates of the 1<sup>st</sup> geometry in <code>lnd_layer</code> into the <code>lonlat2UTM</code> function arguments).</p>
-<div id="a318615c" class="cell" data-execution_count="27">
+<div id="570bac6e" class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>lonlat2UTM(<span class="op">*</span>lnd_layer.geometry.iloc[<span class="dv">0</span>].coords[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="27">
 <pre><code>32630</code></pre>
@@ -824,11 +824,11 @@ dtype: float64</code></pre>
 <h2 data-number="6.7" class="anchored" data-anchor-id="sec-reprojecting-vector-geometries"><span class="header-section-number">6.7</span> Reprojecting vector geometries</h2>
 <p><a href="01-spatial-data.html#sec-vector-data" class="quarto-xref"><span>Section 1.2</span></a> demonstrated how vector geometries are made-up of points, and how points form the basis of more complex objects such as lines and polygons. Reprojecting vectors thus consists of transforming the coordinates of these points, which form the vertices of lines and polygons.</p>
 <p><a href="#sec-geometry-operations-on-projected-and-unprojected-data" class="quarto-xref"><span>Section 6.4</span></a> contains an example in which at a <code>GeoDataFrame</code> had to be transformed into an equivalent object, with a different CRS, to calculate the distance between two objects. Reprojection of vector layers is done using the <a href="https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.to_crs.html">.to_crs</a> method.</p>
-<div id="aaed0214" class="cell" data-execution_count="28">
+<div id="bc101631" class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>lnd_layer2 <span class="op">=</span> lnd_layer.to_crs(<span class="dv">27700</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now that a transformed version of <code>lnd_layer</code> has been created, the distance between the two representations of London can be found using the <code>.distance</code> method.</p>
-<div id="db475451" class="cell" data-execution_count="29">
+<div id="a7594aae" class="cell" data-execution_count="29">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>lnd_layer2.distance(lnd_layer_proj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="29">
 <pre><code>0    2017.949587
@@ -837,7 +837,7 @@ dtype: float64</code></pre>
 </div>
 <p>It may come as a surprise that <code>lnd_layer</code> and <code>lnd_layer2</code> are just over 2 <span class="math inline">\(km\)</span> apart! The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually-created coordinates that created <code>lnd_layer</code> and <code>lnd_layer_proj</code>.</p>
 <p>Reprojecting to a different CRS is also demonstrated below using <code>cycle_hire_osm</code>, a point layer that represents ‘docking stations’ where you can hire bicycles in London. The contents of the CRS object associated with a given geometry column is changed when the object’s CRS is transformed. In the code chunk below, we create a new version of <code>cycle_hire_osm</code> with a projected CRS.</p>
-<div id="3177aff5" class="cell" data-execution_count="30">
+<div id="ab656c9b" class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected <span class="op">=</span> cycle_hire_osm.to_crs(<span class="dv">27700</span>)</span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>cycle_hire_osm_projected.crs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="30">
@@ -858,7 +858,7 @@ Datum: Ordnance Survey of Great Britain 1936
 </div>
 </div>
 <p>The resulting object has a new CRS with an EPSG code <code>27700</code>. But how to find out more details about this EPSG code, or any code? One option is to search for it online. Another option is to create a standalone CRS object within the Python environment (using <code>pyproj.CRS.from_string</code> or <code>pyproj.CRS.from_epsg</code>, see <a href="#sec-coordinate-reference-systems" class="quarto-xref"><span>Section 6.2</span></a>), and then query its properties, such as <code>.name</code> and <code>.to_wkt()</code>.</p>
-<div id="a7f08315" class="cell" data-execution_count="31">
+<div id="068f2981" class="cell" data-execution_count="31">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>crs_lnd_new <span class="op">=</span> pyproj.CRS.from_epsg(<span class="dv">27700</span>)</span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>crs_lnd_new.name, crs_lnd_new.to_wkt()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="31">
@@ -890,7 +890,7 @@ Note
 <li><code>rasterio.warp.reproject</code>: introduced in <a href="04-geometry-operations.html#sec-raster-resampling" class="quarto-xref"><span>Section 4.3.3</span></a>, calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear)</li>
 </ol>
 <p>Let’s take a look at two examples of raster transformation: using categorical and continuous data. Land cover data are usually represented by categorical maps. The <code>nlcd.tif</code> file provides information for a small area in Utah, USA obtained from National Land Cover Database 2011 in the NAD83 / UTM zone 12N CRS. We already created a connection to the <code>nlcd.tif</code> file at the beginning of this chapter, named <code>src_nlcd</code>.</p>
-<div id="723cc836" class="cell" data-execution_count="32">
+<div id="62f6f45c" class="cell" data-execution_count="32">
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>src_nlcd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="32">
 <pre><code>&lt;open DatasetReader name='data/nlcd.tif' mode='r'&gt;</code></pre>
@@ -899,11 +899,11 @@ Note
 <p>Recall from previous chapters that the raster transformation matrix and dimensions are accessible from the file connection using <code>src_nlcd.transform</code>, <code>src_nlcd.width</code>, and <code>src_nlcd.height</code>, respectively. <!--src_nlcd.bounds is not mentioned here but it is used in the code chunk below... --></p>
 <p>This information will be required to calculate the destination transformation matrix.</p>
 <p>First, let’s define the destination CRS. In this case, we choose WGS84 (EPSG code <code>4326</code>).</p>
-<div id="2222b915" class="cell" data-execution_count="33">
+<div id="c1db6204" class="cell" data-execution_count="33">
 <div class="sourceCode cell-code" id="cb51"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>dst_crs <span class="op">=</span> <span class="st">'EPSG:4326'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now, we are ready to calculate the destination raster transformation matrix (<code>dst_transform</code>), and the destination dimensions (<code>dst_width</code>, <code>dst_height</code>), using <code>rasterio.warp.calculate_default_transform</code>, as follows:</p>
-<div id="a5da74de" class="cell" data-execution_count="34">
+<div id="7e41e9e7" class="cell" data-execution_count="34">
 <div class="sourceCode cell-code" id="cb52"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height <span class="op">=</span> rasterio.warp.calculate_default_transform(</span>
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    src_nlcd.crs,</span>
 <span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    dst_crs,</span>
@@ -917,13 +917,13 @@ Note
        0.0, -0.00031506316853514724, 37.51912722777022)</code></pre>
 </div>
 </div>
-<div id="702c4ddc" class="cell" data-execution_count="35">
+<div id="f9655d11" class="cell" data-execution_count="35">
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>dst_width</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="35">
 <pre><code>1244</code></pre>
 </div>
 </div>
-<div id="d999e147" class="cell" data-execution_count="36">
+<div id="f23fd1fd" class="cell" data-execution_count="36">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>dst_height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="36">
 <pre><code>1246</code></pre>
@@ -963,7 +963,7 @@ Note
 </div>
 </div>
 <p>Recall from <a href="04-geometry-operations.html#sec-raster-resampling" class="quarto-xref"><span>Section 4.3.3</span></a> that resampling using <code>rasterio.warp.reproject</code> can take place directly into a “destination” raster file connection. Therefore, our next step is to create the metadata file used for writing the reprojected raster to file. For convenience, we are taking the metadata of the source raster (<code>src_nlcd.meta</code>), making a copy (<code>dst_kwargs</code>), and then updating those specific properties that need to be changed. Note that the reprojection process typically creates “No Data” pixels, even when there were none in the input raster, since the raster orientation changes and the edges need to be “filled” to get back a rectangular extent. For example, a reprojected raster may appear as a “tilted” rectangle, inside a larger straight rectangular extent, whereas the margins around the tilted rectangle are inevitably filled with “No Data” (e.g., the white stripes surrounding the edges in <a href="#fig-raster-reproject-nlcd" class="quarto-xref">Figure&nbsp;<span>6.2</span></a> (b) are “No Data” pixels created as a result of reprojection). We need to specify a “No Data” value of our choice, if there is no existing definition, or keep the existing source raster “No Data” setting, such as <code>255</code> in this case.</p>
-<div id="08afbb5e" class="cell" data-execution_count="37">
+<div id="036c42ed" class="cell" data-execution_count="37">
 <div class="sourceCode cell-code" id="cb60"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>dst_kwargs <span class="op">=</span> src_nlcd.meta.copy()</span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>dst_kwargs.update({</span>
 <span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'crs'</span>: dst_crs,</span>
@@ -986,11 +986,11 @@ Note
 </div>
 <p>Now, we are ready to create the reprojected raster. Here, reprojection takes place between two file connections, meaning that the raster value arrays are not being read into memory at once. It is also possible to reproject into an in-memory <code>ndarray</code> object, see the <a href="https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.reproject">documentation</a>.</p>
 <p>To write the reprojected raster, we first create a destination file connection <code>dst_nlcd</code>, pointing at the output file path of our choice (<code>'output/nlcd_4326.tif'</code>), using the updated metadata object created earlier (<code>dst_kwargs</code>):</p>
-<div id="2d4bcac3" class="cell" data-execution_count="38">
+<div id="0c8c29df" class="cell" data-execution_count="38">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>dst_kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Then, we use the <code>rasterio.warp.reproject</code> function to calculate and write the reprojection result into the <code>dst_nlcd</code> file connection.</p>
-<div id="4457083e" class="cell" data-execution_count="39">
+<div id="d5b8649d" class="cell" data-execution_count="39">
 <div class="sourceCode cell-code" id="cb63"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_nlcd, <span class="dv">1</span>),</span>
 <span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_nlcd, <span class="dv">1</span>),</span>
@@ -1002,11 +1002,11 @@ Note
 <span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Note–like in the example in <a href="04-geometry-operations.html#sec-raster-resampling" class="quarto-xref"><span>Section 4.3.3</span></a>—that the <code>source</code> and <code>destination</code> accept a “band” object, created using <code>rasterio.band</code>. In this case, there is just one band. If there were more bands, we would have to repeat the procedure for each band, using <code>i</code> instead of <code>1</code> inside a <a href="https://rasterio.readthedocs.io/en/latest/topics/reproject.html#reprojecting-a-geotiff-dataset">loop</a>. Finally, we close the file connection so that the data are actually written.</p>
-<div id="95592fb9" class="cell" data-execution_count="40">
+<div id="9eecf2e8" class="cell" data-execution_count="40">
 <div class="sourceCode cell-code" id="cb64"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Many properties of the new object differ from the previous one, including the number of columns and rows (and therefore number of cells), resolution (transformed from meters into degrees), and extent, as summarized below by comparing the <code>.meta</code> object of the source and destination rasters.</p>
-<div id="d0fb9380" class="cell" data-execution_count="41">
+<div id="98a8b881" class="cell" data-execution_count="41">
 <div class="sourceCode cell-code" id="cb65"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>src_nlcd.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="41">
 <pre><code>{'driver': 'GTiff',
@@ -1020,7 +1020,7 @@ Note
         0.0, -31.52465870178793, 4154086.47216415)}</code></pre>
 </div>
 </div>
-<div id="a8717fa4" class="cell" data-execution_count="42">
+<div id="d42b51a7" class="cell" data-execution_count="42">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>src_nlcd_4326 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>)</span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>src_nlcd_4326.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="42">
@@ -1036,13 +1036,13 @@ Note
 </div>
 </div>
 <p>Examining the unique raster values tells us that the new raster has the same categories, plus the value <code>255</code> representing “No Data”:</p>
-<div id="29a602b3" class="cell" data-execution_count="43">
+<div id="5409aea2" class="cell" data-execution_count="43">
 <div class="sourceCode cell-code" id="cb69"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>np.unique(src_nlcd.read(<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="43">
 <pre><code>array([1, 2, 3, 4, 5, 6, 7, 8], dtype=uint8)</code></pre>
 </div>
 </div>
-<div id="7258d246" class="cell" data-execution_count="44">
+<div id="7d93e28b" class="cell" data-execution_count="44">
 <div class="sourceCode cell-code" id="cb71"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>np.unique(src_nlcd_4326.read(<span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="44">
 <pre><code>array([  1,   2,   3,   4,   5,   6,   7,   8, 255], dtype=uint8)</code></pre>
@@ -1088,7 +1088,7 @@ Figure&nbsp;6.2: Reprojecting a categorical raster using nearest neighbor resamp
 </div>
 <p>In the above example, we automatically calculated an optimal (i.e., most information preserving) destination grid using <code>rasterio.warp.calculate_default_transform</code>. This is appropriate when there are no specific requirements for the destination raster spatial properties. Namely, we are not required to obtain a specific origin and resolution, but just wish to preserve the raster values as much as possible. To do that, <code>rasterio.warp.calculate_default_transform</code> “tries” to keep the extent and resolution of the destination raster as similar as possible to the source. In other situations, however, we need to reproject a raster into a specific “template”, so that it corresponds, for instance, with other rasters we use in the analysis. In the following code examples, we reproject the <code>nlcd.tif</code> raster, again, but this time using the <code>nlcd_4326.tif</code> reprojection result as the “template” to demonstrate this alternative workflow.</p>
 <p>First, we create a connection to our “template” raster to read its metadata.</p>
-<div id="67575c17" class="cell" data-execution_count="46">
+<div id="11d05ad5" class="cell" data-execution_count="46">
 <div class="sourceCode cell-code" id="cb74"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>template <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>)</span>
 <span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>template.meta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="46">
@@ -1104,11 +1104,11 @@ Figure&nbsp;6.2: Reprojecting a categorical raster using nearest neighbor resamp
 </div>
 </div>
 <p>Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the “template”.</p>
-<div id="a0926fb4" class="cell" data-execution_count="47">
+<div id="9441a1f9" class="cell" data-execution_count="47">
 <div class="sourceCode cell-code" id="cb76"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2 <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>, <span class="st">'w'</span>, <span class="op">**</span>template.meta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now, we can resample and write the result with <code>rasterio.warp.reproject</code>.</p>
-<div id="725e7b01" class="cell" data-execution_count="48">
+<div id="fbcb1651" class="cell" data-execution_count="48">
 <div class="sourceCode cell-code" id="cb77"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>rasterio.warp.reproject(</span>
 <span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>    source<span class="op">=</span>rasterio.band(src_nlcd, <span class="dv">1</span>),</span>
 <span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>    destination<span class="op">=</span>rasterio.band(dst_nlcd_2, <span class="dv">1</span>),</span>
@@ -1121,7 +1121,7 @@ Figure&nbsp;6.2: Reprojecting a categorical raster using nearest neighbor resamp
 <span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a>dst_nlcd_2.close()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Naturally, the outputs of the last two examples—<code>nlcd_4326.tif</code> and <code>nlcd_4326_2.tif</code>—are identical, as we used the same destination grid and the same source data. We can check it with <code>np.all</code>.</p>
-<div id="2320d36c" class="cell" data-execution_count="49">
+<div id="8baf374b" class="cell" data-execution_count="49">
 <div class="sourceCode cell-code" id="cb78"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326.tif'</span>).read(<span class="dv">1</span>) <span class="op">==</span> <span class="op">\</span></span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>    rasterio.<span class="bu">open</span>(<span class="st">'output/nlcd_4326_2.tif'</span>).read(<span class="dv">1</span>)</span>
 <span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>np.<span class="bu">all</span>(d)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1133,7 +1133,7 @@ Figure&nbsp;6.2: Reprojecting a categorical raster using nearest neighbor resamp
 <p>Importantly, when the template raster has much more “coarse” resolution than the source raster, the <code>rasterio.enums.Resampling.average</code> (for continuous rasters) or <code>rasterio.enums.Resampling.mode</code> (for categorical rasters) resampling methods should be used, instead of <code>rasterio.enums.Resampling.nearest</code>. Otherwise, much of the data will be lost, as the “nearest” method can capture one pixel value only for each destination raster pixel.</p>
 <p>Reprojecting continuous rasters (with numeric or, in this case, integer values) follows an almost identical procedure. This is demonstrated below with <code>srtm.tif</code> from the Shuttle Radar Topography Mission (SRTM), which represents height in meters above sea level (elevation) with the WGS84 CRS.</p>
 <p>We will reproject this dataset into a projected CRS, but not with the nearest neighbor method. Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster. The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight. The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method. The code is practically the same, except for changing the source and destination file names, and replacing <code>rasterio.enums.Resampling.nearest</code> with <code>rasterio.enums.Resampling.bilinear</code>.</p>
-<div id="a1159e31" class="cell" data-execution_count="50">
+<div id="e79e3b14" class="cell" data-execution_count="50">
 <div class="sourceCode cell-code" id="cb80"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>dst_crs <span class="op">=</span> <span class="st">'EPSG:32612'</span></span>
 <span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>dst_transform, dst_width, dst_height <span class="op">=</span> rasterio.warp.calculate_default_transform(</span>
 <span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>    src_srtm.crs,</span>
@@ -1204,7 +1204,7 @@ Figure&nbsp;6.3: Reprojecting a continuous raster using bilinear resampling
 <h2 data-number="6.9" class="anchored" data-anchor-id="sec-custom-map-projections"><span class="header-section-number">6.9</span> Custom map projections</h2>
 <p>Established CRSs captured by <code>AUTHORITY:CODE</code> identifiers such as <code>EPSG:4326</code> are well suited for many applications. However, it is desirable to use alternative projections or to create custom CRSs in some cases. <a href="#sec-which-crs-to-use" class="quarto-xref"><span>Section 6.6</span></a> mentioned reasons for using custom CRSs, and provided several possible approaches. Here, we show how to apply these ideas in Python.</p>
 <p>One is to take an existing WKT definition of a CRS, modify some of its elements, and then use the new definition for reprojecting, using the reprojection methods shown above for vector layers (<a href="#sec-reprojecting-vector-geometries" class="quarto-xref"><span>Section 6.7</span></a>) and rasters (<a href="#sec-reprojecting-raster-geometries" class="quarto-xref"><span>Section 6.8</span></a>). For example, let’s transforms the <code>zion.gpkg</code> vector layer to a custom azimuthal equidistant (AEQD) CRS. Using a custom AEQD CRS requires knowing the coordinates of the center point of a dataset in degrees (geographic CRS). In our case, this information can be extracted by calculating the centroid of the <code>zion</code> layer transformed into WGS84:</p>
-<div id="f2b4c872" class="cell" data-execution_count="52">
+<div id="3274806c" class="cell" data-execution_count="52">
 <div class="sourceCode cell-code" id="cb82"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>lon, lat <span class="op">=</span> zion.to_crs(<span class="dv">4326</span>).union_all().centroid.coords[<span class="dv">0</span>]</span>
 <span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>lon, lat</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="52">
@@ -1212,7 +1212,7 @@ Figure&nbsp;6.3: Reprojecting a continuous raster using bilinear resampling
 </div>
 </div>
 <p>Next, we can use the obtained lon/lat coordinates in <code>coords</code> to update the WKT definition of the azimuthal equidistant (AEQD) CRS seen below. Notice that we modified just two values below—<code>"Central_Meridian"</code> to the longitude and <code>"Latitude_Of_Origin"</code> to the latitude of our centroid.</p>
-<div id="ba340e39" class="cell" data-execution_count="53">
+<div id="04b048bf" class="cell" data-execution_count="53">
 <div class="sourceCode cell-code" id="cb84"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>my_wkt <span class="op">=</span> <span class="ss">f'''PROJCS["Custom_AEQD",</span></span>
 <span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a><span class="ss"> GEOGCS["GCS_WGS_1984",</span></span>
 <span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="ss">  DATUM["WGS_1984",</span></span>
@@ -1257,7 +1257,7 @@ Note
 </div>
 </div>
 <p>This approach’s last step is to transform our original object (<code>zion</code>) to our new custom CRS (<code>zion_aeqd</code>).</p>
-<div id="02a24d3c" class="cell" data-execution_count="54">
+<div id="8957c808" class="cell" data-execution_count="54">
 <div class="sourceCode cell-code" id="cb89"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>zion_aeqd <span class="op">=</span> zion.to_crs(my_wkt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Custom projections can also be made interactively, for example, using the <a href="https://projectionwizard.org/#">Projection Wizard</a> web application <span class="citation" data-cites="savric_projection_2016">(<a href="references.html#ref-savric_projection_2016" role="doc-biblioref">Šavrič, Jenny, and Jenny 2016</a>)</span>. This website allows you to select a spatial extent of your data and a distortion property, and returns a list of possible projections. The list also contains WKT definitions of the projections that you can copy and use for reprojections. See Open Geospatial Consortium (<a href="https://r.geocompx.org/references.html#ref-opengeospatialconsortium_wellknown_2019">2019</a>) for details on creating custom CRS definitions with WKT strings.</p>
