@@ -72,8 +72,8 @@ It is more advanced than the spatial data operations presented in the previous c
 
 Simplification is a process for generalization of vector objects (lines and polygons) usually for use in smaller scale maps.
 Another reason for simplifying objects is to reduce the amount of memory, disk space and network bandwidth they consume: it may be wise to simplify complex geometries before publishing them as interactive maps.
-The **geopandas** package provides the [`.simplify`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.simplify.html) method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count.
-`.simplify` uses the `tolerance` to control the level of generalization in map units [@douglas_algorithms_1973].
+The **geopandas** package provides the `.simplify` method, which uses the GEOS implementation of the Douglas-Peucker algorithm to reduce the vertex count.
+`.simplify` uses `tolerance` to control the level of generalization in map units [@douglas_algorithms_1973].
 
 For example, a simplified geometry of a `'LineString'` geometry, representing the river Seine and tributaries, using tolerance of `2000` meters, can be created using the `seine.simplify(2000)` command (@fig-simplify-lines).
 
@@ -115,14 +115,13 @@ us_states_simp1 = us_states9311.simplify(100000)
 A limitation with `.simplify`, however, is that it simplifies objects on a per-geometry basis.
 This means the "topology" is lost, resulting in overlapping and "holey" areal units as illustrated in @fig-simplify-polygons (b).
 The `.toposimplify` method from package **topojson** provides an alternative that overcomes this issue.
-By [default](https://mattijn.github.io/topojson/example/settings-tuning.html#simplify_algorithm) it uses the Douglas-Peucker algorithm like the `.simplify` method.
-However, another algorithm, known as Visvalingam-Whyatt, which overcomes some limitations of the Douglas-Peucker algorithm [@visvalingam_line_1993], is also available in `.toposimplify`.
 The main advanatage of `.toposimplify` is that it is topologically "aware": it simplifies the combined borders of the polygons (rather than each polygon on its own), thus ensuring that the overlap is maintained.
 The following code chunk uses `.toposimplify` to simplify `us_states9311`.
 Note that, when using the **topojson** package, we first need to calculate a "topology" object, using function `tp.Topology`, and then apply the sumplification function, such as `.toposimplify`, to obtain a simplified layer.
 We are also using the `.to_gdf` method to return a `GeoDataFrame`. 
 
 ```{python}
+#| warning: false
 topo = tp.Topology(us_states9311, prequantize=False)
 us_states_simp2 = topo.toposimplify(100000).to_gdf()
 ```
@@ -176,6 +175,7 @@ The centroids and points in surface are illustrated in @fig-centroid-pnt-on-surf
 #| fig-subcap: 
 #| - New Zealand
 #| - Seine
+
 # New Zealand
 base = nz.plot(color='white', edgecolor='lightgrey')
 nz_centroid.plot(ax=base, color='None', edgecolor='black')
@@ -196,17 +196,23 @@ These kinds of questions can be answered and visualized by creating buffers arou
 
 @fig-buffers illustrates buffers of two different sizes (5 and 50 $km$) surrounding the river Seine and tributaries.
 These buffers were created with commands below, using the `.buffer` method, applied to a `GeoSeries` or `GeoDataFrame`.
-The `.buffer` method requires one important argument: the buffer distance, provided in the units of the CRS, in this case, meters (@fig-buffers).
+The `.buffer` method requires one important argument: the buffer distance, provided in the units of the CRS, in this case, meters.
+
+```{python}
+seine_buff_5km = seine.buffer(5000)
+seine_buff_50km = seine.buffer(50000)
+```
+
+The results are shown in @fig-buffers.
 
 ```{python}
 #| label: fig-buffers
-#| fig-cap: Buffers around the Seine dataset of 5 km (left) and 50 km (right). Note the colors, which reflect the fact that one buffer is created per geometry feature.
+#| fig-cap: Buffers around the Seine dataset of 5 $km$ and 50 $km$. Note the colors, which reflect the fact that one buffer is created per geometry feature.
 #| layout-ncol: 2
 #| fig-subcap: 
 #| - 5 $km$ buffer
 #| - 50 $km$ buffer
-seine_buff_5km = seine.buffer(5000)
-seine_buff_50km = seine.buffer(50000)
+
 seine_buff_5km.plot(color='none', edgecolor=['c', 'm', 'y']);
 seine_buff_50km.plot(color='none', edgecolor=['c', 'm', 'y']);
 ```
@@ -225,14 +231,14 @@ seine_buff_5km.geometry = seine.buffer(5000)
 seine_buff_5km
 ```
 
-Alternative option is to add a secondary geometry column directly to the original `GeoDataFrame`.
+An alternative option is to add a secondary geometry column directly to the original `GeoDataFrame`.
 
 ```{python}
 seine['geometry_5km'] = seine.buffer(5000)
 seine
 ```
 
-You can then switch to either geometry column (i.e., make it the "active" geometry column) using `.set_geometry`, as in:
+You can then switch to either geometry column (i.e., make it "active") using `.set_geometry`, as in:
 
 ```{python}
 seine = seine.set_geometry('geometry_5km')
@@ -248,15 +254,15 @@ seine = seine.drop('geometry_5km', axis=1)
 ### Affine transformations {#sec-affine-transformations}
 
 Affine transformations include, among others, shifting (translation), scaling and rotation, or any combination of these.
-They preserves lines and parallelism, by angles and lengths are not necessarily preserved.
+They preserves lines and parallelism, but angles and lengths are not necessarily preserved.
 These transformations are an essential part of geocomputation.
 For example, shifting is needed for labels placement, scaling is used in non-contiguous area cartograms, and many affine transformations are applied when reprojecting or improving the geometry that was created based on a distorted or wrongly projected map.
 
 The **geopandas** package implements affine transformation, for objects of classes `GeoSeries` and `GeoDataFrame`.
 In both cases, the method is applied on the `GeoSeries` part, returning a just the `GeoSeries` of transformed geometries.
 
-Affine transformations of `GeoSeries` can be done using the [`.affine_transform`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.affine_transform.html) method, which is a wrapper around the `shapely.affinity.affine_transform` function.
-As [documented](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2)/
+Affine transformations of `GeoSeries` can be done using the `.affine_transform` method, which is a wrapper around the `shapely.affinity.affine_transform` function.
+As [documented](https://shapely.readthedocs.io/en/stable/manual.html#shapely.affinity.affine_transform), a 2D affine transformation requires a six-parameter list `[a,b,d,e,xoff,yoff]` which represents the following equations for transforming the coordinates (@eq-affine1 and @eq-affine2).
 
 $$
 x' = a x + b y + x_\mathrm{off}
@@ -272,7 +278,7 @@ There are also simplified `GeoSeries` [methods](https://geopandas.org/en/stable/
 -   `.scale(xfact=1.0, yfact=1.0, origin='center')`
 -   `.rotate(angle, origin='center', use_radians=False)`
 
-For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using [`.translate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.translate.html).
+For example, *shifting* only requires the $x_{off}$ and $y_{off}$, using `.translate`.
 The code below shifts the y-coordinates of `nz` by 100 $km$ to the north, but leaves the x-coordinates untouched.
 
 ```{python}
@@ -281,12 +287,12 @@ nz_shift
 ```
 
 ::: callout-note
-**shapely**, and consequently **geopandas**, operations, typically [ignore](https://shapely.readthedocs.io/en/stable/manual.html#geometric-objects) the z-dimension of geometries in operations. For example, `shapely.LineString([(0,0,0),(0,0,1)]).length` returns `0` (and not `1`), since `.length` ignores the z-dimension. In this book (like in most real-world spatial analysis applications), we deal only with two-dimensional geometries.
+**shapely**, and consequently **geopandas**, operations, typically [ignore](https://shapely.readthedocs.io/en/stable/manual.html#geometric-objects) the z-dimension (if there is one) of geometries in operations. For example, `shapely.LineString([(0,0,0),(0,0,1)]).length` returns `0` (and not `1`), since `.length` ignores the z-dimension. In this book (like in most real-world spatial analysis applications), we deal only with two-dimensional geometries.
 :::
 
 Scaling enlarges or shrinks objects by a factor, and can be applied either globally or locally.
 Global scaling increases or decreases all coordinates values in relation to the origin coordinates, while keeping all geometries topological relations intact.
-**geopandas** implements scaling using the [`.scale`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.scale.html) method.
+**geopandas** implements scaling using the `.scale` method.
 Local scaling treats geometries independently and requires points around which geometries are going to be scaled, e.g., centroids.
 In the example below, each geometry is shrunk by a factor of two around the centroids (@fig-affine-transformations (b)).
 To achieve that, we pass the `0.5` and `0.5` scaling factors (for x and y, respectively), and the `'centroid'` option for the point of origin.
@@ -296,13 +302,11 @@ nz_scale = nz.scale(0.5, 0.5, origin='centroid')
 nz_scale
 ```
 
-::: callout-note
 When setting the `origin` in `.scale`, other than `'centroid'` it is possible to use `'center'`, for the bounding box center, or specific point coordinates, such as `(0,0)`.
-:::
 
-Rotating the geometries can be done using the [`.rotate`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.rotate.html) method.
+Rotating the geometries can be done using the `.rotate` method.
 When rotating, we need to specify the rotation angle (positive values imply clockwise rotation) and the `origin` points (using the same options as in `scale`).
-For example, the following expression rotates `nz` by 30 degrees counter-clockwise, around the geometry centroids.
+For example, the following expression rotates `nz` by $30\degree$ counter-clockwise, around the geometry centroids.
 
 ```{python}
 nz_rotate = nz.rotate(-30, origin='centroid')
@@ -313,7 +317,7 @@ nz_rotate
 
 ```{python}
 #| label: fig-affine-transformations
-#| fig-cap: 'Illustrations of affine transformations: shift, scale and rotate'
+#| fig-cap: 'Affine transformations of the `nz` layer: shift, scale and rotate'
 #| layout-ncol: 3
 #| fig-subcap: 
 #| - Shift
@@ -344,7 +348,7 @@ y = shapely.Point((1, 0)).buffer(1)
 shapely.GeometryCollection([x, y])
 ```
 
-Imagine you want to select not one circle or the other, but the space covered by both x and y.
+Imagine you want to select not one circle or the other, but the space covered by both `x` and `y`.
 This can be done using the `.intersection` method from **shapely**, illustrated using objects named `x` and `y` which represent the left- and right-hand circles (@fig-intersection).
 
 ```{python}
@@ -395,9 +399,10 @@ geom
 
 ```{python}
 #| label: fig-geom-intersection
-#| fig-cap: A `GeoSeries` with three circles, and a `shapely` geometry that we will "subtract" from it (in red)
+#| fig-cap: A `GeoSeries` with three circles (in grey), and a `shapely` geometry that we will "subtract" from it (in red)
+
 fig, ax = plt.subplots()
-geom.plot(color='lightgrey', edgecolor='black', ax=ax)
+geom.plot(color='#00000030', edgecolor='black', ax=ax)
 gpd.GeoSeries(y).plot(color='#FF000040', edgecolor='black', ax=ax);
 ```
 
@@ -415,12 +420,12 @@ geom_inter_y
 #| label: fig-geom-intersection2
 #| fig-cap: The output `GeoSeries`, after subtracting a `shapely` geometry using `.intersection`
 
-geom_inter_y.plot(color='lightgrey', edgecolor='black');
+geom_inter_y.plot(color='#00000030', edgecolor='black');
 ```
 
 The `.overlay` method (see @sec-joining-incongruent-layers) further extends this technique, making it possible to apply "many-to-many" pairwise geometry generations between all pairs of two `GeoDataFrame`s.
 The output is a new `GeoDataFrame` with the pairwise outputs, plus the attributes of both inputs which were the inputs of the particular pairwise output geometry.
-See the ["Set operations with overlay"](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
+Also see the ["Set operations with overlay"](https://geopandas.org/en/stable/docs/user_guide/set_operations.html) article in the **geopandas** documentation for examples of `.overlay`.
 
 ### Subsetting vs. clipping {#sec-subsetting-vs-clipping}
 
@@ -429,7 +434,7 @@ Here, we illustrate the difference between them.
 We do this using the specific scenario of subsetting points by polygons, where (unlike in other cases) both methods can be used for the same purpose and giving the same result.
 
 To illustrate the point, we will subset points that cover the bounding box of the circles `x` and `y` from @fig-overlapping-circles.
-Some points will be inside just one circle, some will be inside both and some will be inside neither.
+Some points will be inside just one circle, some will be inside both, and some will be inside neither.
 The following code sections generates the sample data for this section, a simple random distribution of points within the extent of circles `x` and `y`, resulting in output illustrated in @fig-random-points.
 We create the sample points in two steps.
 First, we figure out the bounds where random points are to be generated.
@@ -450,7 +455,7 @@ coords = list(zip(coords_x, coords_y))
 coords
 ```
 
-Third, we transform the list of coordinates into a `list` of `shapely` points and then to a `GeoSeries`.
+Third, we transform the list of coordinates into a `list` of `shapely` points, and then to a `GeoSeries`.
 
 ```{python}
 pnt = [shapely.Point(i) for i in coords]
@@ -461,7 +466,7 @@ The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-
 
 ```{python}
 #| label: fig-random-points
-#| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
+#| fig-cap: Randomly distributed points within the bounding box enclosing circles `x` and `y`
 base = pnt.plot(color='none', edgecolor='black')
 gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
