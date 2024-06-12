@@ -1,5 +1,3 @@
-
-
 # geocompy
 
 [![Render](https://github.com/geocompx/geocompy/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompx/geocompy/actions/workflows/main.yaml)
