@@ -393,7 +393,7 @@ Let's demonstrate the "many-to-one" scenario by calculating the difference betwe
 To create the latter, let's take `x` and combine it with itself translated (@sec-affine-transformations) to a distance of `1` and `2` units "upwards" on the y-axis.
 
 ```{python}
-geom1 = gpd.GeoSeries([x])
+geom1 = gpd.GeoSeries(x)
 geom2 = geom1.translate(0, 1)
 geom3 = geom1.translate(0, 2)
 geom = pd.concat([geom1, geom2, geom3])
@@ -473,13 +473,13 @@ The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-
 #| label: fig-random-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles `x` and `y`
 base = pnt.plot(color='none', edgecolor='black')
-gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
-gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
+gpd.GeoSeries(x).plot(ax=base, color='none', edgecolor='darkgrey');
+gpd.GeoSeries(y).plot(ax=base, color='none', edgecolor='darkgrey');
 ```
 
 Now, we can get back to our question: how to subset the points to only return the point that intersects with both `x` and `y`?
 The code chunks below demonstrate two ways to achieve the same result.
-In the first approach, we can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of `x` and `y` (see @sec-spatial-subsetting-vector) and then use it to subset `pnt` to get the result `pnt1`.
+In the first approach, we can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of `x` and `y` (see @sec-spatial-subsetting-vector), and then use it to subset `pnt` to get the result `pnt1`.
 
 ```{python}
 sel = pnt.intersects(x.intersection(y))
@@ -501,8 +501,8 @@ The subset `pnt2` is shown in @fig-intersection-points.
 #| label: fig-intersection-points
 #| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
 base = pnt.plot(color='none', edgecolor='black')
-gpd.GeoSeries([x]).plot(ax=base, color='none', edgecolor='darkgrey');
-gpd.GeoSeries([y]).plot(ax=base, color='none', edgecolor='darkgrey');
+gpd.GeoSeries(x).plot(ax=base, color='none', edgecolor='darkgrey');
+gpd.GeoSeries(y).plot(ax=base, color='none', edgecolor='darkgrey');
 pnt2.plot(ax=base, color='red');
 ```
 
@@ -546,7 +546,7 @@ regions.plot(ax=ax, edgecolor='black', column='total_pop_15', legend=True);
 ```
 
 What is happening with the geometries here?
-Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the [`.union_all`](https://geopandas.org/en/latest/docs/reference/api/geopandas.GeoSeries.union_all.html) method per group.
+Behind the scenes, `.dissolve` combines the geometries and dissolve the boundaries between them using the `.union_all` method per group.
 This is demonstrated in the code chunk below which creates a united western US using the standalone `.union_all` operation.
 Note that the result is a `shapely` geometry, as the individual attributes are "lost" as part of dissolving (@fig-dissolve2).
 
@@ -594,7 +594,7 @@ We start with transformations of individual geometries from one type to another,
 * `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring)
 * `'MultiPoint'` to `'Polygon'` (@fig-type-transform-polygon)
 * `'LineString'` to `'MultiPoint'` (@fig-type-transform-multipoint2)
-* `'LineString'` to `'Polygon'` (@fig-type-transform-polygon2)
+* `'Polygon'` to `'MultiPoint'` (@fig-type-transform-polygon2)
 * `'Polygon'`s to `'MultiPolygon'` (@fig-type-transform-multipolygon)
 * `'MultiPolygon'`s to `'Polygon'`s (@fig-type-transform-multipolygon1, @fig-type-transform-multipolygon2)
 
@@ -617,8 +617,8 @@ multipoint
 ```
 
 A `'LineString'` can be created using `shapely.LineString` from a `list` of points.
-Thus, a `'MultiPoint'` can be converted to a `'LineString'` by extracting the individual points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring). 
-The `.geoms` property, mentioned in @sec-geometries, give access to the indivudual parts that comprise a multi-part geometry; it is one of the **shapely** access methods to internal parts of a geometry.
+Thus, a `'MultiPoint'` can be converted to a `'LineString'` by passing the points into a `list`, then passing them to `shapely.LineString` (@fig-type-transform-linestring). 
+The `.geoms` property, mentioned in @sec-geometries, give access to the indivudual parts that comprise a multi-part geometry, as an iterable object similar to a `list`; it is one of the **shapely** access methods to internal parts of a geometry.
 <!--jn: maybe it would be worth reexplaing .geoms here? -->
 <!--md: now added a reference to the place where '.geoms' is mentioned, but it's not really explained; there is no comprehensive overview of 'shapely' access methods in the book at the moment. we could add a section about that (e.g., https://geobgu.xyz/py/07-shapely.html#geometry-coordinates), will be happy to hear what you think -->
 
@@ -636,7 +636,7 @@ However, `shapely.Polygon` is able to complete the last coordinate automatically
 ```{python}
 #| label: fig-type-transform-polygon
 #| fig-cap: A `'Polygon'` created from the `'MultiPoint'` in @fig-type-transform-multipoint
-polygon = shapely.Polygon([[p.x, p.y] for p in multipoint.geoms])
+polygon = shapely.Polygon(multipoint.geoms)
 polygon
 ```
 
@@ -656,7 +656,7 @@ gpd.GeoSeries(linestring).plot();
 gpd.GeoSeries(polygon).plot();
 ```
 
-Conversion from `'MultiPoint'` to `'LineString'` (@fig-type-transform-linestring) is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media.
+Conversion from `'MultiPoint'` to `'LineString'`, shown above (@fig-type-transform-linestring), is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media.
 This allows spatial operations such as the length of the path traveled.
 Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (@fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
@@ -676,7 +676,7 @@ A `'Polygon'` (exterior) coordinates can be passed to `shapely.MultiPoint`, to g
 shapely.MultiPoint(polygon.exterior.coords)
 ```
 
-Using these methods, we can transform between `'Point'`, `'LineString'`, and `'Polygon'` geometries, assuming there is a sufficient number of points (at least two to form a line, and at least three to form a polygon).
+Using these methods, we can transform between `'Point'`, `'LineString'`, and `'Polygon'` geometries, assuming there is a sufficient number of points (at least two for a line, and at least three for a polygon).
 When dealing with multi-part geometries using **shapely**, we can:
 
 -   Access single-part geometries (e.g., each `'Polygion'` in a `'MultiPolygon'` geometry) using `.geoms[i]`, where `i` is the index of the geometry
@@ -695,7 +695,7 @@ multipolygon = shapely.MultiPolygon([
 multipolygon
 ```
 
-Now, here is how we can get back the `'Polygon'` part 1 (@fig-type-transform-multipolygon1):
+Given `multipolygon`, here is how we can get back the `'Polygon'` part 1 (@fig-type-transform-multipolygon1):
 
 ```{python}
 #| label: fig-type-transform-multipolygon1
@@ -731,7 +731,7 @@ ml
 Let's place it into a `GeoSeries`.
 
 ```{python}
-geom = gpd.GeoSeries([ml])
+geom = gpd.GeoSeries(ml)
 geom
 ```
 
@@ -756,6 +756,7 @@ The advantage is that the original attributes (such as `id`) are retained, so th
 The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively.
 
 ```{python}
+#| warning: false
 dat1 = dat.explode(index_parts=True).reset_index()
 dat1
 ```
@@ -770,8 +771,8 @@ For example, here we see that all `'LineString'` geometries came from the same m
 #| fig-subcap: 
 #| - MultiLineString layer
 #| - LineString layer, after applying `.explode`
-dat.plot(column='id');
-dat1.plot(column='level_1');
+dat.plot(column='id', linewidth=7);
+dat1.plot(column='level_1', linewidth=7);
 ```
 
 As a side-note, let's demonstrate how the above **shapely** casting methods can be translated to **geopandas**. 
@@ -794,18 +795,18 @@ The result is illustrated in @fig-linestring-to-multipoint.
 #| fig-subcap: 
 #| - LineString layer
 #| - MultiPoint layer
-dat1.plot(column='level_1');
-dat2.plot(column='level_1');
+dat1.plot(column='level_1', linewidth=7);
+dat2.plot(column='level_1', markersize=50);
 ```
 
 The opposite transformation, i.e., "single-part to multi-part", is achieved using the `.dissolve` method (which we are already familiar with, see @sec-geometry-unions).
-For example, here is how we can get back to the `'MultiLineString'` geometry:
+For example, here is how we can get from the `'LineString'` layer with three features back to the `'MultiLineString'` layer with one feature (since, in this case, there is just one "group"):
 
 ```{python}
 dat1.dissolve(by='id').reset_index()
 ```
 
-The next code chunk is another example, dissolving the `nz` north and south parts into `'MultiPolygon'` geometries.
+The next code chunk is another example, dissolving the 16 polygons in `nz` into two geometries of the north and south parts (i.e., the two `'Island'` "groups").
 
 ```{python}
 nz_dis1 = nz[['Island', 'Population', 'geometry']] \
@@ -815,9 +816,9 @@ nz_dis1
 ```
 
 Note that `.dissolve` not only combines single-part into multi-part geometries, but also dissolves any internal borders.
-So, in fact, the result may be single-part (in case when all parts touch each other, unlike in `nz`).
+So, in fact, the resulting geometries may be single-part (in case when all parts touch each other, unlike in `nz`).
 If, for some reason, we want to combine geometries into multi-part *without* dissolving, we can fall back to the **pandas** `.agg` method (custom table aggregation), supplemented with a **shapely** function specifying how exactly we want to transform each group of geometries into a new single geometry.
-In the following example, for instance, we collect all `'Polygon'` and `'MultiPolygon'` parts of `nz` into a single `'MultiPolygon'` geometry with many separate parts (i.e., without dissolving), per group (`Island`).
+In the following example, for instance, we collect all `'Polygon'` and `'MultiPolygon'` parts of `nz` into a single `'MultiPolygon'` geometry with many separate parts (i.e., without dissolving), per group.
 
 ```{python}
 #| warning: false
@@ -832,7 +833,7 @@ nz_dis2 = gpd.GeoDataFrame(nz_dis2).set_geometry('geometry').set_crs(nz.crs)
 nz_dis2
 ```
 
-The difference between the last two results (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type `'MultiPolygon'`.
+The difference between the last two results `nz_dis1` and `nz_dis2` (with and without dissolving, respectively) is not evident in the printout: in both cases we got a layer with two features of type `'MultiPolygon'`.
 However, in the first case internal borders were dissolved, while in the second case they were not.
 This is illustrated in @fig-combine-geoms:
 
@@ -862,7 +863,7 @@ A variety of georeferencing techniques exist, including:
 Python is rather unsuitable for the first two points since these often require manual intervention which is why they are usually done with the help of dedicated GIS software. 
 On the other hand, aligning several images is possible in Python and this section shows among others how to do so. 
 This often includes changing the extent, the resolution and the origin of an image. 
-A matching projection is of course also required but is already covered @sec-reprojecting-raster-geometries.
+A matching projection is of course also required but is already covered in @sec-reprojecting-raster-geometries.
 
 In any case, there are other reasons to perform a geometric operation on a single raster image. 
 For instance, a common reason for aggregating a raster is to decrease run-time or save disk space. 
