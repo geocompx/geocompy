@@ -952,7 +952,7 @@ r = src_elev.read(1)
 r
 ```
 
-To pad an `ndarray`, we can use the [`np.pad`](https://numpy.org/doc/stable/reference/generated/numpy.pad.html) function.
+To pad an `ndarray`, we can use the `np.pad` function.
 The function accepts an array, and a tuple of the form `((rows_top,rows_bottom),(columns_left, columns_right))`.
 Also, we can specify the value that's being used for padding with `constant_values` (e.g., `18`).
 For example, here we pad `r` with one extra row and two extra columns, on both sides, resulting in the array `r_pad`:
@@ -1050,7 +1050,7 @@ new_transform
 
 ```{python}
 #| label: fig-raster-shift-origin2
-#| fig-cap: The padded `elev.tif` raster (@fig-raster-shift-origin) further shifted by `(0.25,0.25)`, and the extent of the original `elev.tif` raster (in red)
+#| fig-cap: The `elev.tif` raster shifted by `(0.25,0.25)`, and its original extent (in red)
 fig, ax = plt.subplots()
 rasterio.plot.show(r, transform=new_transform, cmap='Greys', ax=ax)
 elev_bbox.plot(color='none', edgecolor='red', ax=ax);
@@ -1061,13 +1061,13 @@ elev_bbox.plot(color='none', edgecolor='red', ax=ax);
 Raster datasets vary based on their resolution, from high resolution datasets that enable individual trees to be seen, to low resolution datasets covering large swaths of the Earth.
 Raster datasets can be transformed to either decrease (aggregate) or increase (disaggregate) their resolution, for a number of reasons.
 For example, aggregation can be used to reduce computational resource requirements of raster storage and subsequent steps, while disaggregation can be used to match other datasets, or to add detail.
-As an example, we here change the spatial resolution of `dem.tif` by a factor of `5` (@fig-raster-aggregate).
 
 ::: callout-note
 Raster aggregation is, in fact, a special case of raster resampling (see @sec-raster-resampling), where the target raster grid is aligned with the original raster, only with coarser pixels.
-Conversely, raster resampling is the general case where the new grid is not necessarily an aggregation of the original one, but any other type of grid (such as a rotated and/or shifted one, etc.).
+Conversely, raster resampling is the general case where the new grid is not necessarily an aggregation of the original one, but any other type of grid (i.e., shifted and or having increased/reduced resolution, by any factor).
 :::
 
+As an example, we here change the spatial resolution of `dem.tif` by a factor of `5` (@fig-raster-aggregate).
 To aggregate a raster using **rasterio**, we go through [two steps](https://rasterio.readthedocs.io/en/stable/topics/resampling.html):
 
 -   Reading the raster values (using `.read`) into an `out_shape` that is different from the original `.shape`
@@ -1091,7 +1091,7 @@ Here, we calculate a new shape which is downscaled by a factor of `5`, i.e., the
 We must truncate any "partial" rows and columns, e.g., using `int`.
 Each new pixel is now obtained, or "resampled", from $\sim 5 \times 5 = \sim 25$ "old" raster values.
 It is crucial to choose an appropriate *resampling method* through the `resampling` parameter.
-Here we use [`rasterio.enums.Resampling.average`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling), i.e., the new "large" pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in `dem.tif`. 
+Here we use `rasterio.enums.Resampling.average`, i.e., the new "large" pixel value is the average of all coinciding small pixels, which makes sense for our elevation data in `dem.tif`. 
 See @sec-raster-resampling for a list of other available methods.
 
 ```{python}
@@ -1225,7 +1225,7 @@ new_transform2
 
 The original raster `dem.tif` was already quite detailed, so it would be difficult to see any difference when plotting it along with the disaggregation result.
 A zoom-in of a small section of the rasters works better.
-@fig-raster-disaggregate allows us to see the top-left corner of the original raster and the disaggregated one, demonstrating the increase in the number of pixels through disaggregation.
+@fig-raster-disaggregate shows the top-left corners of the original raster and the disaggregated one, demonstrating the increase in the number of pixels through disaggregation.
 
 ```{python}
 #| label: fig-raster-disaggregate
@@ -1250,20 +1250,20 @@ In short, this process takes the values of our original raster and recalculates 
 There are several methods for estimating values for a raster with different resolutions/origins (@fig-raster-resample).
 The main resampling methods include:
 
--   Nearest neighbor: assigns the value of the nearest cell of the original raster to the cell of the target one. This is a fast simple technique that is usually suitable for resampling categorical rasters
--   Bilinear interpolation: assigns a weighted average of the four nearest cells from the original raster to the cell of the target one. This is the fastest method that is appropriate for continuous rasters
--   Cubic interpolation: uses values of the 16 nearest cells of the original raster to determine the output cell value, applying third-order polynomial functions. Used for continuous rasters and results in a smoother surface compared to bilinear interpolation, but is computationally more demanding
--   Cubic spline interpolation: also uses values of the 16 nearest cells of the original raster to determine the output cell value, but applies cubic splines (piecewise third-order polynomial functions). Used for continuous rasters
--   Lanczos windowed sinc resampling: uses values of the 36 nearest cells of the original raster to determine the output cell value. Used for continuous rasters
+-   Nearest neighbor---assigns the value of the nearest cell of the original raster to the cell of the target one. This is a fast simple technique that is usually suitable for resampling categorical rasters
+-   Bilinear interpolation---assigns a weighted average of the four nearest cells from the original raster to the cell of the target one. This is the fastest method that is appropriate for continuous rasters
+-   Cubic interpolation---uses values of the 16 nearest cells of the original raster to determine the output cell value, applying third-order polynomial functions. Used for continuous rasters and results in a smoother surface compared to bilinear interpolation, but is computationally more demanding
+-   Cubic spline interpolation---also uses values of the 16 nearest cells of the original raster to determine the output cell value, but applies cubic splines (piecewise third-order polynomial functions). Used for continuous rasters
+-   Lanczos windowed sinc resampling---uses values of the 36 nearest cells of the original raster to determine the output cell value. Used for continuous rasters
 -   Additionally, we can use straightforward summary methods, taking into account all pixels that coincide with the target pixel, such as average (@fig-raster-aggregate), minimum, maximum (@fig-raster-resample), median, mode, and sum
 
 The above explanation highlights that only nearest neighbor resampling is suitable for categorical rasters, while all remaining methods can be used (with different outcomes) for continuous rasters.
 
-With **rasterio**, resampling can be done using the [`rasterio.warp.reproject`](https://rasterio.readthedocs.io/en/stable/api/rasterio.warp.html#rasterio.warp.reproject) function .
+With **rasterio**, resampling can be done using the `rasterio.warp.reproject` function.
 To clarify this naming convention, note that raster *reprojection* is not fundamentally different from *resampling*---the difference is just whether the target grid is in the same CRS as the origin (resampling) or in a different CRS (reprojection).
 In other words, reprojection is *resampling* into a grid that is in a different CRS.
 Accordingly, both resampling and reprojection are done using the same function `rasterio.warp.reproject`.
-We will demonstrate reprojection using `rasterio.warp.reproject` later in @sec-reprojecting-raster-geometries.
+We will demonstrate *reprojection* using `rasterio.warp.reproject` later in @sec-reprojecting-raster-geometries.
 
 The information required for `rasterio.warp.reproject`, whether we are resampling or reprojecting, is:
 
@@ -1274,21 +1274,22 @@ Importantly, `rasterio.warp.reproject` can work with file connections, such as a
 This makes the function efficient for large rasters.
 
 The target and destination CRS are straightforward to specify, depending on our choice.
-The source transform is also available, e.g., through the `.transform` property of the source file connection.
+The source transform is also readily available, through the `.transform` property of the source file connection.
 The only complicated part is to figure out the *destination transform*.
 When resampling, the transform is typically derived either from a *template* raster, such as an existing raster file that we would like our origin raster to match, or from a numeric specification of our target grid (see below).
 Otherwise, when the exact grid is not of importance, we can simply aggregate or disaggregate our raster as shown above (@sec-raster-agg-disagg).
-(Note that when *reprojecting*, the target transform is not as straightforward to figure out, therefore we further use the `rasterio.warp.calculate_default_transform` function to compute it, as will be shown in @sec-reprojecting-raster-geometries.)
+(Note that when *reprojecting*, the target transform is more difficult to figure out, therefore we further use the `rasterio.warp.calculate_default_transform` function to compute it, as will be shown in @sec-reprojecting-raster-geometries.)
 
 Finally, the resampling method is specified through the `resampling` parameter of `rasterio.warp.reproject`. 
 The default is nearest neighbor resampling. 
 However, as mentioned above, you should be aware of the distiction between resampling methods, and choose the appropriate one according to the data type (continuous/categorical), the input and output resolution, and resampling purposes.
-Possible arguments for [`resampling`](https://rasterio.readthedocs.io/en/stable/api/rasterio.enums.html#rasterio.enums.Resampling) include:
+Possible arguments for `resampling` include:
 
 -   `rasterio.enums.Resampling.nearest`---Nearest neighbor
 -   `rasterio.enums.Resampling.bilinear`---Bilinear
 -   `rasterio.enums.Resampling.cubic`---Cubic
 -   `rasterio.enums.Resampling.lanczos`---Lanczos windowed
+-   `rasterio.enums.Resampling.average`---Average
 -   `rasterio.enums.Resampling.mode`---Mode. i.e., most common value
 -   `rasterio.enums.Resampling.min`---Minimum
 -   `rasterio.enums.Resampling.max`---Maximum
@@ -1296,7 +1297,7 @@ Possible arguments for [`resampling`](https://rasterio.readthedocs.io/en/stable/
 -   `rasterio.enums.Resampling.sum`---Median
 
 Let's demonstrate resampling into a destination grid which is specified through numeric constraints, such as the extent and resolution.
-These could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match.
+Again, these could have been specified manually (such as here), or obtained from a template raster metadata that we would like to match.
 Note that the resolution of the destination grid is \~10 times more coarse (300 $m$) than the original resolution of `dem.tif` (\~30 $m$) (@fig-raster-resample).
 
 ```{python}
@@ -1319,10 +1320,10 @@ dst_transform = rasterio.transform.from_origin(
 dst_transform
 ```
 
-Again, note that in case we needed to resample into a grid specified by an existing "template" raster, we could skip this step and simply read the transform from the template file, as in `rasterio.open('template.tif').transform`.
+In case we needed to resample into a grid specified by an existing "template" raster, we could have skipped this step and simply read the transform from the template file, as in `rasterio.open('template.tif').transform`.
 
 Now, we can move on to creating the destination file connection.
-For that, we also have to know the raster dimensions that can be derived from the extent and the resolution.
+For that, we also have to know the raster dimensions, which can be derived from the extent and the resolution.
 
 ```{python}
 width = int((xmax - xmin) / res)
@@ -1344,11 +1345,10 @@ dst = rasterio.open('output/dem_resample_nearest.tif', 'w', **dst_kwargs)
 ```
 
 Finally, we reproject using function `rasterio.warp.reproject`.
-Note that the source and destination are specified using [`rasterio.band`](https://rasterio.readthedocs.io/en/latest/api/rasterio.html#rasterio.band) applied on either the file connection, reflecting the fact that we operate on a specific layer of the rasters.
+Note that the source and destination are specified using `rasterio.band` applied on both file connections, reflecting the fact that we operate on a specific layer of the rasters.
 The resampling method being used here is nearest neighbor resampling (`rasterio.enums.Resampling.nearest`).
 
 ```{python}
-#| output: false
 rasterio.warp.reproject(
     source=rasterio.band(src, 1),
     destination=rasterio.band(dst, 1),
@@ -1360,7 +1360,7 @@ rasterio.warp.reproject(
 )
 ```
 
-In the end, we close the file connection and create a new file `output/dem_resample_nearest.tif` with the resampling result (@fig-raster-resample).
+In the end, we close the file connection, thus finalizing the new file `output/dem_resample_nearest.tif` with the resampling result (@fig-raster-resample).
 
 ```{python}
 dst.close()
@@ -1370,7 +1370,6 @@ Here is another code section just to demonstrate a different resampling method, 
 Note that all arguments in the `rasterio.warp.reproject` function call are identical to the previous example, except for the `resampling` method.
 
 ```{python}
-#| eval: false
 dst = rasterio.open('output/dem_resample_maximum.tif', 'w', **dst_kwargs)
 rasterio.warp.reproject(
     source=rasterio.band(src, 1),
@@ -1388,7 +1387,7 @@ The original raster `dem.tif`, and the two resampling results `dem_resample_near
 
 ```{python}
 #| label: fig-raster-resample
-#| fig-cap: Visual comparison of the original raster and two different resampling methods'
+#| fig-cap: The original raster `dem.tif` and two different resampling method results
 #| layout-ncol: 3
 #| fig-subcap: 
 #| - Input
