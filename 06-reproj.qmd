@@ -34,6 +34,7 @@ import rasterio.warp
 It also relies on the following data files:
 
 ```{python}
+#| warning: false
 src_srtm = rasterio.open('data/srtm.tif')
 src_nlcd = rasterio.open('data/nlcd.tif')
 zion = gpd.read_file('data/zion.gpkg')
@@ -56,16 +57,16 @@ This chapter teaches the fundamentals of CRSs, demonstrates the consequences of 
 In the next section we introduce CRSs in Python, followed by @sec-querying-and-setting-coordinate-systems which shows how to get and set CRSs associated with spatial objects.
 @sec-geometry-operations-on-projected-and-unprojected-data demonstrates the importance of knowing what CRS your data is in with reference to a worked example of creating buffers.
 We tackle questions of when to reproject and which CRS to use in @sec-when-to-reproject and @sec-which-crs-to-use, respectively.
-Finally, we cover reprojecting vector and raster objects in @sec-reprojecting-vector-geometries and @sec-reprojecting-raster-geometries and modifying map projections in @sec-custom-map-projections.
+Finally, we cover reprojecting vector and raster objects in @sec-reprojecting-vector-geometries and @sec-reprojecting-raster-geometries and using custom projections in @sec-custom-map-projections.
 
 ## Coordinate Reference Systems {#sec-coordinate-reference-systems}
 
 Most modern geographic tools that require CRS conversions, including Python packages and desktop GIS software such as QGIS, interface with [PROJ](https://proj.org/), an open source C++ library that "transforms coordinates from one coordinate reference system (CRS) to another".
 CRSs can be described in many ways, including the following:
 
--   Simple, yet potentially ambiguous, statements, such as, "it's in lon/lat coordinates"
--   Formalized, yet now outdated, 'proj-strings' such as `+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs`
--   With an identifying 'authority:code' text string such as `EPSG:4326`
+-   Simple, yet potentially ambiguous, statements, such as "it's in lon/lat coordinates"
+-   Formalized, yet now outdated, 'proj-strings', such as `+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs`
+-   With an identifying 'authority:code' text string, such as `EPSG:4326`
 
 Each refers to the same thing: the 'WGS84' coordinate system that forms the basis of Global Positioning System (GPS) coordinates and many other datasets.
 But which one is correct?
@@ -145,8 +146,7 @@ world.crs.is_geographic
 CRS units of both axes (typically identical) can be retrieved with the `.axis_info` property.
 
 ```{python}
-world.crs.axis_info[0].unit_name
-world.crs.axis_info[1].unit_name
+world.crs.axis_info[0].unit_name, world.crs.axis_info[1].unit_name
 ```
 
 `AUTHORITY` and `CODE` strings may be obtained with the `.to_authority()` method.
@@ -190,7 +190,7 @@ src_nlcd2.crs
 ```
 
 ::: callout-note
-The `rasterio.open` function `mode`s generally follows Python's standard [file connection](https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files) modes, with possible arguments being `'r'` (read), `'w'` (write), `'r+'` (read/write), and `'w+'` (write/read) (the `'a'` "append" mode is irrelevant for raster files). In the book, and in general, the most commonly used modes are `'r'` (read) and `'w'` (write). `'r+'`, used in the last example, means 'read/write'. Unlike with `'w'`, `'r+'` does not delete the existing content on open, making `'r+'` suitable for making changes in an existing file (such as in the last example, where we replaced the CRS).
+The `rasterio.open` function `mode`s generally follows Python's standard [file connection](https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files) modes, with possible arguments being `'r'` (read), `'w'` (write), `'r+'` (read/write), and `'w+'` (write/read) (the `'a'` "append" mode is irrelevant for raster files). In the book, and in general, the most commonly used modes are `'r'` (read) and `'w'` (write). `'r+'`, used in the last example, means 'read/write'. Unlike with `'w'`, `'r+'` does not delete the existing content on open, making `'r+'` suitable for making changes in an existing file (such as here, replacing the CRS).
 :::
 
 To replace the definition with a new one, such as `EPSG:3857`, we can use the `.crs` method, as shown below.
