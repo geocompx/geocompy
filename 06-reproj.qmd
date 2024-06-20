@@ -291,12 +291,12 @@ The association between degrees and true distance varies over the surface of the
 uk = world[world['name_long'] == 'United Kingdom']
 uk_proj = uk.to_crs(27700)
 # Around projected point
-base = uk_proj.plot(color='none', edgecolor='darkgrey')
-lnd_layer_proj_buff.plot(color='lightgrey', edgecolor='black', ax=base)
+base = uk_proj.plot(color='none', edgecolor='darkgrey', linewidth=0.5)
+lnd_layer_proj_buff.plot(color='grey', edgecolor='black', alpha=0.5, ax=base)
 lnd_layer_proj.plot(color='red', ax=base);
 # Around point in lon/lat
-base = uk.plot(color='none', edgecolor='darkgrey')
-lnd_layer_buff.plot(color='lightgrey', edgecolor='black', ax=base)
+base = uk.plot(color='none', edgecolor='darkgrey', linewidth=0.5)
+lnd_layer_buff.plot(color='grey', edgecolor='black', alpha=0.5, ax=base)
 lnd_layer.plot(color='red', ax=base);
 ```
 
@@ -329,7 +329,7 @@ Another case is when two objects with different CRSs must be compared or combine
 lnd_layer.distance(lnd_layer_proj)
 ```
 
-Here, we got a meaningless result, and a warning.
+Here, we got a meaningless distance value of `559715`, and a warning.
 
 To make the `lnd_layer` and `lnd_layer_proj` objects geographically comparable, one of them must be transformed into the CRS of the other.
 But which CRS to use?
@@ -418,7 +418,7 @@ The last section, @sec-custom-map-projections, shows how to create custom map pr
 Reprojecting vectors thus consists of transforming the coordinates of these points, which form the vertices of lines and polygons.
 
 @sec-geometry-operations-on-projected-and-unprojected-data contains an example in which at a `GeoDataFrame` had to be transformed into an equivalent object, with a different CRS, to calculate the distance between two objects. 
-Reprojection of vector layers is done using the [.to_crs](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.to_crs.html) method.
+Reprojection of vector layers is done using the `.to_crs` method.
 
 ```{python}
 lnd_layer2 = lnd_layer.to_crs(27700)
@@ -431,7 +431,7 @@ lnd_layer2.distance(lnd_layer_proj)
 ```
 
 It may come as a surprise that `lnd_layer` and `lnd_layer2` are just over 2 $km$ apart!
-The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually-created coordinates that created `lnd_layer` and `lnd_layer_proj`.
+The difference in location between the two points is not due to imperfections in the transforming operation (which is in fact very accurate) but the low precision of the manually specified coordinates when creating `lnd_layer` and `lnd_layer_proj`.
 
 Reprojecting to a different CRS is also demonstrated below using `cycle_hire_osm`, a point layer that represents 'docking stations' where you can hire bicycles in London.
 The contents of the CRS object associated with a given geometry column is changed when the object's CRS is transformed.
@@ -442,8 +442,8 @@ cycle_hire_osm_projected = cycle_hire_osm.to_crs(27700)
 cycle_hire_osm_projected.crs
 ```
 
-The resulting object has a new CRS with an EPSG code `27700`.
-But how to find out more details about this EPSG code, or any code?
+The resulting object has a new CRS according to the EPSG code `27700`.
+How to find out more details about this EPSG code, or any code?
 One option is to search for it online.
 Another option is to create a standalone CRS object within the Python environment (using `pyproj.CRS.from_string` or `pyproj.CRS.from_epsg`, see @sec-coordinate-reference-systems), and then query its properties, such as `.name` and `.to_wkt()`.
 
@@ -452,7 +452,7 @@ crs_lnd_new = pyproj.CRS.from_epsg(27700)
 crs_lnd_new.name, crs_lnd_new.to_wkt()
 ```
 
-The result shows that the EPSG code `27700` represents the British National Grid, a result that could have been found by searching online for "[EPSG 27700](https://www.google.com/search?q=CRS+27700)".
+The result shows that the EPSG code `27700` represents the British National Grid, a result that could have been found by searching online for "[EPSG 27700](https://www.google.com/search?q=EPSG+27700)".
 
 ## Reprojecting raster geometries {#sec-reprojecting-raster-geometries}
 
@@ -475,9 +475,9 @@ The **xarray** package, for instance, can be used to [work with](https://docs.xa
 
 The raster reprojection process is done using two functions from the `rasterio.warp` sub-package:
 
-1. `rasterio.warp.calculate_default_transform`: [`calculate_default_transform`](https://rasterio.readthedocs.io/en/latest/api/rasterio.warp.html#rasterio.warp.calculate_default_transform), is used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds.
+1. `rasterio.warp.calculate_default_transform`, used to calculate the new transformation matrix in the destination CRS, according to the source raster dimensions and bounds.
 Alternatively, the destination transformation matrix can be obtained from an existing raster; this is common practice when we need to align one raster with another, for instance to be able to combine them in raster algebra operations (@sec-raster-local-operations) (see below)
-2. `rasterio.warp.reproject`: introduced in @sec-raster-resampling, calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear)
+2. `rasterio.warp.reproject`, introduced in @sec-raster-resampling, calculates cell values in the destination grid, using the user-selected resampling method (such as nearest neighbor, or bilinear)
 
 Let's take a look at two examples of raster transformation: using categorical and continuous data.
 Land cover data are usually represented by categorical maps.
@@ -510,6 +510,11 @@ dst_transform, dst_width, dst_height = rasterio.warp.calculate_default_transform
     src_nlcd.height,
     *src_nlcd.bounds
 )
+```
+
+Here is the result.
+
+```{python}
 dst_transform
 ```
 
@@ -653,7 +658,7 @@ template = rasterio.open('output/nlcd_4326.tif')
 template.meta
 ```
 
-Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that as the resampling result is going to have identical properties as the "template".
+Then, we create a write-mode connection to our destination raster, using this exact metadata, meaning that the resampling result is going to have identical properties as the "template".
 
 ```{python}
 dst_nlcd_2 = rasterio.open('output/nlcd_4326_2.tif', 'w', **template.meta)
@@ -694,8 +699,8 @@ This is demonstrated below with `srtm.tif` from the Shuttle Radar Topography Mis
 We will reproject this dataset into a projected CRS, but not with the nearest neighbor method.
 Instead, we will use the bilinear method which computes the output cell value based on the four nearest cells in the original raster.
 The values in the projected dataset are the distance-weighted average of the values from these four cells: the closer the input cell is to the center of the output cell, the greater its weight.
-The following code section create a text string representing WGS 84 / UTM zone 12N, and reproject the raster into this CRS, using the bilinear method.
-The code is practically the same, except for changing the source and destination file names, and replacing `rasterio.enums.Resampling.nearest` with `rasterio.enums.Resampling.bilinear`.
+The following code section creates a text string representing WGS 84 / UTM zone 12N, and reprojects the raster into this CRS, using the bilinear method.
+The code is practically the same as in the first example in this section, except for changing the source and destination file names, and replacing `rasterio.enums.Resampling.nearest` with `rasterio.enums.Resampling.bilinear`.
 
 ```{python}
 dst_crs = 'EPSG:32612'
@@ -746,7 +751,7 @@ However, it is desirable to use alternative projections or to create custom CRSs
 @sec-which-crs-to-use mentioned reasons for using custom CRSs, and provided several possible approaches.
 Here, we show how to apply these ideas in Python.
 
-One is to take an existing WKT definition of a CRS, modify some of its elements, and then use the new definition for reprojecting, using the reprojection methods shown above for vector layers (@sec-reprojecting-vector-geometries) and rasters (@sec-reprojecting-raster-geometries).
+One approach is to take an existing WKT definition of a CRS, modify some of its elements, and then use the new definition for reprojecting, using the reprojection methods shown above for vector layers (@sec-reprojecting-vector-geometries) and rasters (@sec-reprojecting-raster-geometries).
 For example, let's transforms the `zion.gpkg` vector layer to a custom azimuthal equidistant (AEQD) CRS.
 Using a custom AEQD CRS requires knowing the coordinates of the center point of a dataset in degrees (geographic CRS).
 In our case, this information can be extracted by calculating the centroid of the `zion` layer transformed into WGS84:
@@ -802,9 +807,9 @@ The list also contains WKT definitions of the projections that you can copy and 
 See Open Geospatial Consortium ([2019](https://r.geocompx.org/references.html#ref-opengeospatialconsortium_wellknown_2019)) for details on creating custom CRS definitions with WKT strings.
 
 PROJ strings can also be used to create custom projections, accepting the limitations inherent to projections, especially of geometries covering large geographic areas, as mentioned in @sec-coordinate-reference-systems.
-Many projections have been developed and can be set with the `+proj=` element of PROJ strings, with dozens of projects described in detail on the [PROJ website](https://proj.org/operations/projections/index.html) alone.
+Many projections have been developed and can be set with the `+proj=` element of PROJ strings, with dozens of projections described in detail on the [PROJ website](https://proj.org/operations/projections/index.html) alone.
 
-When mapping the world while preserving area relationships the Mollweide projection, illustrated in @fig-mollweide, is a popular and often sensible choice [@jenny_guide_2017].
+When mapping the world while preserving area relationships, the Mollweide projection, illustrated in @fig-mollweide, is a popular and often sensible choice [@jenny_guide_2017].
 To use this projection, we need to specify it using the proj-string element, `'+proj=moll'`, in the `.to_crs` method:
 
 ```{python}
