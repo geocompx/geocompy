@@ -53,8 +53,8 @@ Taken together, these processes of input/output can be referred to as data I/O.
 Geographic data I/O is often done with few lines of code at the beginning and end of projects.
 It is often overlooked as a simple one step process.
 However, mistakes made at the outset of projects (e.g., using an out-of-date or in some way faulty dataset) can lead to large problems later down the line, so it is worth putting considerable time into identifying which datasets are available, where they can be found and how to retrieve them.
-These topics are covered in @sec-retrieving-open-data, which describes various geoportals, which collectively contain many terabytes of data, and how to use them.
-To further ease data access, a number of packages for downloading geographic data have been developed, as described in @sec-geographic-data-packages.
+These topics are covered in @sec-retrieving-open-data, which describes several geoportals, which collectively contain many terabytes of data, and how to use them.
+To further ease data access, a number of packages for downloading geographic data have been developed, as demonstrated in @sec-geographic-data-packages.
 
 There are many geographic file formats, each of which has pros and cons, described in @sec-file-formats.
 The process of reading and writing files efficiently is covered in Sections @sec-data-input and @sec-data-output, respectively.
@@ -73,10 +73,11 @@ Some global geoportals overcome this issue.
 The [GEOSS portal](http://www.geoportal.org/) and the [Copernicus Open Access Hub](https://scihub.copernicus.eu/), for example, contain many raster datasets with global coverage.
 A wealth of vector datasets can be accessed from the [SEDAC](http://sedac.ciesin.columbia.edu/) portal run by the National Aeronautics and Space Administration (NASA) and the European Union's [INSPIRE geoportal](http://inspire-geoportal.ec.europa.eu/), with global and regional coverage.
 
-Most geoportals provide a graphical interface allowing datasets to be queried based on characteristics such as spatial and temporal extent, the United States Geological Survey's [EarthExplorer](https://earthexplorer.usgs.gov/) being a prime example.
+Most geoportals provide a graphical interface allowing datasets to be queried based on characteristics such as spatial and temporal extent, the United States Geological Survey's [EarthExplorer](https://earthexplorer.usgs.gov/) and NASA's [EarthData Search](https://search.earthdata.nasa.gov/search) being prime examples.
 Exploring datasets interactively on a browser is an effective way of understanding available layers.
 From reproducibility and efficiency perspectives, downloading data is, however, best done with code.
 Downloads can be initiated from the command line using a variety of techniques, primarily via URLs and APIs (see the [Sentinel API](https://scihub.copernicus.eu/twiki/do/view/SciHubWebPortal/APIHubDescription), for example).
+
 Files hosted on static URLs can be downloaded with the following method, as illustrated in the code chunk below which accesses the [Natural Earth Data](https://www.naturalearthdata.com/) website to download the world airports layer zip file and to extract the contained ESRI Shapefile.
 Note that the download code is complicated by the fact that the server checks the `User-agent` header of the request, basically to make sure that the download takes place through a browser.
 To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code.
@@ -117,7 +118,7 @@ Several Python packages have been developed for accessing geographic data, two o
 These provide interfaces to one or more spatial libraries or geoportals and aim to make data access even quicker from the command line.
 
 Administrative borders are often useful in spatial analysis.
-These can be accessed with the [`cartopy.io.shapereader.natural_earth`](https://scitools.org.uk/cartopy/docs/latest/reference/generated/cartopy.io.shapereader.natural_earth.html) function from the **cartopy** package [@cartopy].
+These can be accessed with the `cartopy.io.shapereader.natural_earth` function from the **cartopy** package [@cartopy].
 For example, the following code loads the `'admin_2_counties'` dataset of US counties into a `GeoDataFrame`.
 
 ```{python}
@@ -140,16 +141,17 @@ counties.plot();
 
 Note that @fig-ne-counties x-axis spans the entire range of longitues, between `-180` and `180`, since the Aleutian Islands county (which is small and difficult to see on the map) crosses the [International Date Line](https://en.wikipedia.org/wiki/International_Date_Line).
 
-Other layers can be accessed the same way.
+Other layers can from NaturalEarth be accessed the same way.
 You need to specify the `resolution`, `category`, and `name` of the requested dataset in [Natural Earth Data](https://www.naturalearthdata.com/downloads/), then  run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and read the file into the Python environment, e.g., using `gpd.read_file`.
 This is an alternative approach to "directly" downloading files as shown earlier (@sec-retrieving-open-data).
 
 The second example uses the **osmnx** package [@osmnx] to find parks from the OpenStreetMap (OSM) database.
-As illustrated in the code-chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` function.
+As illustrated in the code chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` function.
 The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can also be used to query a custom area of interest).
 The second argument specifies the OSM [tag(s)](https://wiki.openstreetmap.org/wiki/Map_features), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs.
 
 ```{python}
+#| warning: false
 parks = ox.features.features_from_place(
     query='leeds uk', 
     tags={'leisure': 'park'}
@@ -192,7 +194,7 @@ This is typically done by sending a query to an online service and getting the l
 Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements.
 [Nominatim](https://nominatim.openstreetmap.org/ui/about.html) is a well-known free service, based on OpenStreetMap data, and there are many other free and commercial geocoding services.
 
-**geopandas** provides the [`gpd.tools.geocode`](https://geopandas.org/en/stable/docs/reference/api/geopandas.tools.geocode.html), which can geocode addresses to a `GeoDataFrame`.
+**geopandas** provides the `gpd.tools.geocode`, which can geocode addresses to a `GeoDataFrame`.
 Internally it uses the **geopy** package, supporting several providers through the `provider` parameter (use `geopy.geocoders.SERVICE_TO_GEOCODER` to see possible options).
 The example below searches for [John Snow blue plaque](https://en.m.wikipedia.org/wiki/John_Snow_(public_house)) coordinates located on a building in the Soho district of London.
 The result is a `GeoDataFrame` with the address we passed to `gpd.tools.geocode`, and the detected point location.
@@ -248,11 +250,11 @@ Many open and proprietary GIS programs, including GRASS, ArcGIS and QGIS, use GD
 Most Python packages for working with spatial data, including **geopandas** and **rasterio** used in this book, also rely on GDAL for importing and exporting spatial data files.
 
 GDAL provides access to more than 200 vector and raster data formats.
-@tbl-file-formats presents some basic information about selected and often used spatial file formats.
+@tbl-file-formats presents some basic information about selected and often-used spatial file formats.
 
 | Name              | Extension              | Info                                                                                                                                                                                               | Type                             | Model          |
 |-------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------|----------------|
-| ESRI Shapefile    | `.shp` (the main file) | Popular format consisting of at least three files. No support for: files \> 2GB;mixed types; names \> 10 chars; cols \> 255.                                                                       | Vector                           | Partially open |
+| ESRI Shapefile    | `.shp` (the main file) | Popular format consisting of at least three files. No support for: files \> 2GB; mixed types; names \> 10 chars; cols \> 255.                                                                      | Vector                           | Partially open |
 | GeoJSON           | `.geojson`             | Extends the JSON exchange format by including a subset of the simple feature representation; mostly used for storing coordinates in longitude and latitude; it is extended by the TopoJSON format. | Vector                           | Open           |
 | KML               | `.kml`                 | XML-based format for spatial visualization, developed for use with Google Earth. Zipped KML file forms the KMZ format.                                                                             | Vector                           | Open           |
 | GPX               | `.gpx`                 | XML schema created for exchange of GPS data.                                                                                                                                                       | Vector                           | Open           |
@@ -261,7 +263,7 @@ GDAL provides access to more than 200 vector and raster data formats.
 | Arc ASCII         | `.asc`                 | Text format where the first six lines represent the raster header, followed by the raster cell values arranged in rows and columns.                                                                | Raster                           | Open           |
 | SQLite/SpatiaLite | `.sqlite`              | Standalone relational database, SpatiaLite is the spatial extension of SQLite.                                                                                                                     | Vector and raster                | Open           |
 | ESRI FileGDB      | `.gdb`                 | Spatial and nonspatial objects created by ArcGIS. Allows: multiple feature classes; topology. Limited support from GDAL.                                                                           | Vector and raster                | Proprietary    |
-| GeoPackage        | `.gpkg`                | Lightweight database container based on SQLite allowing an easy and platform-independent exchange of geodata                                                                                       | Vector and (very limited) raster | Open           |
+| GeoPackage        | `.gpkg`                | Lightweight database container based on SQLite allowing an easy and platform-independent exchange of geodata.                                                                                      | Vector and (very limited) raster | Open           |
 
 : Commonly used spatial data file formats {#tbl-file-formats tbl-colwidths="[23, 13, 54, 15, 15]"}
 
@@ -269,7 +271,7 @@ An important development ensuring the standardization and open-sourcing of file 
 Beyond defining the Simple Features data model (see @sec-simple-features), the OGC also coordinates the development of open standards, for example as used in file formats such as KML and GeoPackage.
 Open file formats of the kind endorsed by the OGC have several advantages over proprietary formats: the standards are published, ensure transparency and open up the possibility for users to further develop and adjust the file formats to their specific needs.
 
-ESRI Shapefile is the most popular vector data exchange format; however, it is not an fully open format (though its specification is open).
+ESRI Shapefile is the most popular vector data exchange format; however, it is not a fully open format (though its specification is open).
 It was developed in the early 1990s and, from a modern standpoint, has a number of limitations.
 First of all, it is a multi-file format, which consists of at least three files.
 It also only supports 255 columns, its column names are restricted to ten characters and the file size limit is 2 GB.
@@ -291,9 +293,9 @@ Raster objects saved as COGs can be hosted on HTTP servers, so other people can 
 There is also a plethora of other spatial data formats that we do not explain in detail or mention in @tbl-file-formats due to the book limits.
 If you need to use other formats, we encourage you to read the GDAL documentation about [vector](https://gdal.org/drivers/vector/index.html) and [raster](https://gdal.org/drivers/raster/index.html) drivers.
 Additionally, some spatial data formats can store other data models (types) than vector or raster.
-It includes LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays.
+Two examples are LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays.
 
-Finally, spatial data is also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets.
+Finally, spatial data are also often stored using tabular (non-spatial) text formats, including CSV files or Excel spreadsheets.
 This can be convenient to share spatial (point) datasets with people who, or software that, struggle with spatial data formats.
 If necessary, the table can be converted to a point layer (see examples in @sec-vector-layer-from-scratch and @sec-spatial-joining).
 
