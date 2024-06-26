@@ -316,7 +316,7 @@ Spatial vector data comes in a wide variety of file formats.
 Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with **geopandas** functions `read_file` and `to_file` (covered in @sec-data-output), respectively.
 
 **geopandas** uses GDAL to read and write data, via **pyogrio** since `geopandas` version `1.0.0` (previously via **fiona**).
-After **pyogrio** is imported, `pyogrio.list_drivers` can be used to list drivers available to GDAL, including whether they can (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
+After **pyogrio** is imported, `pyogrio.list_drivers` can be used to list drivers available to GDAL, including whether they can read (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
 
 ```{python}
 #| eval: false
@@ -362,7 +362,7 @@ tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
 tanzania
 ```
 
-If you do not know the names of the available columns, a good approach is to read the layer metadata using [`pyogrio.read_info`](https://pyogrio.readthedocs.io/en/latest/api.html#pyogrio.read_info). The resulting object contains, among other properties, the column names (`fields`) and data types (`dtypes`): 
+If you do not know the names of the available columns, a good approach is to read the layer metadata using `pyogrio.read_info`. The resulting object contains, among other properties, the column names (`fields`) and data types (`dtypes`): 
 
 ```{python}
 info = pyogrio.read_info('data/world.gpkg')
@@ -424,6 +424,7 @@ For example, the table `cycle_hire_xy.csv`, where the coordinates are stored in 
 ```{python}
 #| label: fig-cycle_hire_xy-layer
 #| fig-cap: The `cycle_hire_xy.csv` table transformed to a point layer
+#| warning: false
 cycle_hire = pd.read_csv('data/cycle_hire_xy.csv')
 geom = gpd.points_from_xy(cycle_hire['X'], cycle_hire['Y'], crs=4326)
 geom = gpd.GeoSeries(geom)
@@ -431,7 +432,7 @@ cycle_hire_xy = gpd.GeoDataFrame(data=cycle_hire, geometry=geom)
 cycle_hire_xy.plot();
 ```
 
-Instead of columns describing 'XY' coordinates, a single column can also contain the geometry information, not necessarily points but possible any other geometry type.
+Instead of columns describing 'XY' coordinates, a single column can also contain the geometry information, not necessarily points but possibly any other geometry type.
 Well-known text (WKT), well-known binary (WKB), and GeoJSON are examples of formats used to encode geometry in such a column.
 For instance, the `world_wkt.csv` file has a column named `'WKT'`, representing polygons of the world's countries (in WKT format).
 When importing the CSV file into a `DataFrame`, the `'WKT'` column is interpreted just like any other string column.
@@ -441,7 +442,7 @@ world_wkt = pd.read_csv('data/world_wkt.csv')
 world_wkt
 ```
 
-To convert it to a `GeoDataFrame`, we can apply the [`gpd.GeoSeries.from_wkt`](https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoSeries.from_wkt.html) function (which is analogous to `shapely`'s `shapely.from_wkt`, see @sec-geometries) on the WKT strings, to convert the series of WKT strings into a `GeoSeries` with the geometries. 
+To convert it to a `GeoDataFrame`, we can apply the `gpd.GeoSeries.from_wkt` function (which is analogous to `shapely`'s `shapely.from_wkt`, see @sec-geometries) on the WKT strings, to convert the series of WKT strings into a `GeoSeries` with the geometries. 
 
 ```{python}
 world_wkt['geometry'] = gpd.GeoSeries.from_wkt(world_wkt['WKT'])
@@ -454,6 +455,7 @@ The resulting layer is shown in @fig-world_wkt-layer.
 ```{python}
 #| label: fig-world_wkt-layer
 #| fig-cap: The `world_wkt.csv` table transformed to a polygon layer
+#| warning: false
 world_wkt.plot();
 ```
 
