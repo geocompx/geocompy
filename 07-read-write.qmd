@@ -518,7 +518,7 @@ ymin=60
 ymax=70
 ```
 
-Using the extent coordinates along with the raster transformation matrix, we create a window object, using the [`rasterio.windows.from_bounds`](https://rasterio.readthedocs.io/en/stable/api/rasterio.windows.html#rasterio.windows.from_bounds) function.
+Using the extent coordinates along with the raster transformation matrix, we create a window object, using the `rasterio.windows.from_bounds` function.
 This function basically "translates" the extent from coordinates, to row/column ranges.
 
 ```{python}
@@ -616,6 +616,7 @@ world.to_file('output/w_many_features.gpkg', mode='a')
 Now, `w_many_features.gpkg` contains a polygonal layer named `world` with two "copies" of each country (that is 177×2=354 features, whereas the `world` layer has 177 features).
 
 ```{python}
+#| warning: false
 gpd.read_file('output/w_many_features.gpkg').shape
 ```
 
@@ -706,7 +707,7 @@ new_transform = rasterio.transform.from_origin(
 new_transform
 ```
 
-Then, we establish the writing-mode file connection to `r.tif`, which will be eithe created or overwritten.
+Then, we establish the writing-mode file connection to `r.tif`, which will be either created or overwritten.
 
 ```{python}
 dst = rasterio.open(
@@ -746,9 +747,9 @@ The most useful types for raster data, and thir support in GeoTIFF are summarize
 
 | Data type | Description                                                          | GeoTIFF  |
 |-----------|----------------------------------------------------------------------|:--------:|
-| `int8`    | Integer in a single byte (`-128` to `127`)                           | +        |
+| `int8`    | Integer in a single byte (`-128` to `127`)                           |          |
 | `int16`   | Integer in 16 bits (`-32768` to `32767`)                             | +        |
-| `int32`   | Integer in 32 bits (`-2147483648` to `2147483647`)                   |          |
+| `int32`   | Integer in 32 bits (`-2147483648` to `2147483647`)                   | +        |
 | `int64`   | Integer in 64 bits (`-9223372036854775808` to `9223372036854775807`) |          |
 | `uint8`   | Unsigned integer in 8 bits (`0` to `255`)                            | +        |
 | `uint16`  | Unsigned integer in 16 bits (`0` to `65535`)                         | +        |
@@ -900,7 +901,7 @@ rasterio.open('output/r_nodata_int.tif').meta
 ```
 
 If you try to open the file in GIS software, such as QGIS, you will see the missing data interpreted (e.g., the pixel shown as blank), meaning that the software is aware of the flag.
-However, reading the data back into Python reproduces an `int` array with `-9999`, due to the limitation of `int` arrays stated before/
+However, reading the data back into Python reproduces an `int` array with `-9999`, due to the limitation of `int` arrays stated before.
 
 ```{python}
 src = rasterio.open('output/r_nodata_int.tif')
