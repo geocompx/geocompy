@@ -83,7 +83,7 @@ Therefore, all ordinary table-related operations from package **pandas** are sup
 
 ### Vector attribute subsetting {#sec-vector-attribute-subsetting}
 
-**pandas** supports several subsetting interfaces, though the most [recommended](https://stackoverflow.com/questions/38886080/python-pandas-series-why-use-loc) ones are `.loc`, which uses **pandas** indices, and `.iloc`, which uses (implicit) **numpy**-style numeric indices.
+**pandas** supports several subsetting interfaces, though the most recommended ones are `.loc`, which uses **pandas** indices, and `.iloc`, which uses (implicit) **numpy**-style numeric indices.
 
 In both cases, the method is followed by square brackets, and two indices, separated by a comma.
 Each index can be:
@@ -195,7 +195,9 @@ world[world['continent'] == 'Asia']  \
 
 Logical operators `&`, `|`, and `~` (@tbl-comparison-operators) can be used to combine multiple conditions.
 For example, here are all countries in North America or South America.
-Keep in mind that the parentheses around each condition (here, and in analogous cases using other operators) are crucial; otherwise, due to Python's [precedence rules](https://docs.python.org/3/reference/expressions.html#operator-precedence), the `|` operator is executed before `==` and we get an error.
+Keep in mind that the parentheses around each condition (here, and in analogous cases using other operators) are crucial; otherwise, due to Python's precedence rules[^python_precedence_rules], the `|` operator is executed before `==` and we get an error.
+
+[^python_precedence_rules]: [https://docs.python.org/3/reference/expressions.html#operator-precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence)
 
 ```{python}
 world[
@@ -234,7 +236,7 @@ The result, in this case, is a (non-spatial) table with eight rows, one per uniq
 If we want to include the geometry in the aggregation result, we can use the `.dissolve` method.
 That way, in addition to the summed population, we also get the associated geometry per continent, i.e., the union of all countries.
 Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the aggregation function for non-geometry columns.
-Again, note that the `.reset_index` method is used (here, and elsewhere in the book) to turn **pandas** and **geopandas** [*indices*](https://pandas.pydata.org/docs/reference/api/pandas.Index.html), which are automatically created for grouping variables in grouping operations such as `.dissolve`, "back" into ordinary columns, which are more appropriate in the scope of this book.
+Again, note that the `.reset_index` method is used (here, and elsewhere in the book) to turn **pandas** and **geopandas** row *indices*, which are automatically created for grouping variables in grouping operations such as `.dissolve`, "back" into ordinary columns, which are more appropriate in the scope of this book.
 
 ```{python}
 world_agg2 = world[['continent', 'pop', 'geometry']] \
@@ -508,7 +510,7 @@ np.mean(elev)
 ```
 
 Note that "No Data"-safe functions--such as `np.nanmean`---should be used in case the raster contains "No Data" values which need to be ignored.
-Before we can demonstrate that, we must convert the array from `int` to `float`, as `int` arrays cannot contain `np.nan` (due to [computer memory limitations](https://en.wikipedia.org/wiki/NaN#Integer_NaN)).
+Before we can demonstrate that, we must convert the array from `int` to `float`, as `int` arrays cannot contain `np.nan` (due to computer memory limitations).
 
 ```{python}
 elev1 = elev.copy()

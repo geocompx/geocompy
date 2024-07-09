@@ -215,16 +215,18 @@ Despite their mathematical origins, topological relations can be understood intu
 The third and fourth pairs in @fig-spatial-relations (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if `x.relation(y)` is true, `y.relation(x)` will also be true, relations in which the order of the geometries are important such as contains and within are not.
 
 ::: callout-note
-Notice that each geometry pair has a ["DE-9IM"](https://en.wikipedia.org/wiki/DE-9IM) string such as `FF2F11212`.
+Notice that each geometry pair has a "DE-9IM"[^de-9im] string such as `FF2F11212`.
 DE-9IM strings describe the dimensionality (0=points, 1=lines, 2=polygons) of the pairwise intersections of the interior, boundary, and exterior, of two geometries (i.e., nine values of 0/1/2 encoded into a string).
 This is an advanced topic beyond the scope of this book, which can be useful to understand the difference between relation types, or define custom types of relations.
-See the [DE-9IM strings](https://r.geocompx.org/spatial-operations#de-9im-strings) section in Geocomputation with R [@lovelace_geocomputation_2019]. 
-Also note that the **shapely** package contains the `.relate` and `.relate_pattern` [methods](https://shapely.readthedocs.io/en/stable/manual.html#de-9im-relationships), to derive and to test for DE-9IM patterns, respectively.
+See the DE-9IM strings section in Geocomputation with R [@lovelace_geocomputation_2019]. 
+Also note that the **shapely** package contains the `.relate` and `.relate_pattern` methods, to derive and to test for DE-9IM patterns, respectively.
 :::
+
+[^de-9im]: [https://en.wikipedia.org/wiki/DE-9IM](https://en.wikipedia.org/wiki/DE-9IM)
 
 ![Topological relations between vector geometries, inspired by Figures 1 and 2 in [@egenhofer_mathematical_1990]. The relations for which the `x.relation(y)` is true are printed for each geometry pair, with `x` represented in pink and `y` represented in blue. The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](images/relations-1.png){#fig-spatial-relations}
 
-In **shapely**, methods testing for different types of topological relations are known as ["relationships"](https://shapely.readthedocs.io/en/stable/manual.html#relationships).
+In **shapely**, methods testing for different types of topological relations are known as "relationships".
 **geopandas** provides their wrappers (with the same method name) which can be applied on multiple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting-vector).
 To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in @fig-spatial-relations and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries).
 
@@ -566,7 +568,7 @@ Incongruent aggregating objects, by contrast, do not share common borders with t
 This is problematic for spatial aggregation (and other spatial operations) illustrated in @fig-nz-and-grid: aggregating the centroid of each sub-zone will not return accurate results.
 Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods [@tobler_smooth_1979].
 
-To demonstrate joining incongruent layers, we will create a "synthetic" layer comprising a [regular grid](https://gis.stackexchange.com/questions/322589/rasterizing-polygon-grid-in-python-geopandas-rasterio) of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer. 
+To demonstrate joining incongruent layers, we will create a "synthetic" layer comprising a regular grid of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer. 
 This recipe can be used to create a regular grid covering any given layer (other than `nz`), at the specified resolution (`res`). 
 Most of the functions have been explained in previous chapters; we leave it as an exerise for the reader to explore how the code works.
 
@@ -608,7 +610,7 @@ nz.plot(
     column='Population', 
     edgecolor='black', 
     legend=True, 
-    cmap='viridis_r'
+    cmap='Reds'
 );
 ```
 
@@ -655,8 +657,13 @@ The resulting layer `nz_grid`, with the `area_sub` attribute, is shown in @fig-n
 #| label: fig-nz-and-grid2
 #| fig-cap: The areas of pairwise intersections in the `nz_grid` layer
 base = grid.plot(color='none', edgecolor='grey')
-nz_grid.plot(ax=base, column='area_sub', edgecolor='black',
-             legend=True, cmap='viridis_r');
+nz_grid.plot(
+    ax=base, 
+    column='area_sub', 
+    edgecolor='black',
+    legend=True, 
+    cmap='Reds'
+);
 ```
 
 Note that each of the "intersections" still holds the `Population` attribute of its "origin" feature of `nz`, i.e., each portion of the `nz` area is associated with the original complete population count for that area.
@@ -688,7 +695,7 @@ base = grid.plot(
     column='population', 
     edgecolor='black',
     legend=True, 
-    cmap='viridis_r'
+    cmap='Reds'
 );
 nz.plot(ax=base, color='none', edgecolor='grey', legend=True);
 ```
@@ -712,7 +719,7 @@ An area-weighted interpolation of a spatially *intensive* variable (e.g., popula
 In intensive interpolation, we assume that the variable of interest represents counts per unit area, i.e., density.
 Since density is (assumed to be) uniform, any "part" of a given polygon has exactly the same density as that of the whole polygon.
 Density values are therefore computed as weighted averages, rather than sums, of the parts. 
-Also see the "Area-weighted interpolation" [section](https://r-spatial.org/book/05-Attributes.html#sec-area-weighted) in @pebesma_spatial_2023.
+Also see the "Area-weighted interpolation" section in @pebesma_spatial_2023.
 
 ### Distance relations {#sec-distance-relations}
 
@@ -869,7 +876,7 @@ Next, suppose that we want to keep only those values of `elev` which are `False`
 In other words, we want to mask `elev` with `mask`.
 The result will be stored in a copy named `masked_elev` (@fig-raster-subset (c)).
 In the case of `elev.tif`, to be able to store `np.nan` in the array of values, we also need to convert it to `float` (see @sec-summarizing-raster-objects). 
-Afterwards, masking is a matter of assigning `np.nan` into a subset defined by the mask, using the ["boolean array indexing"](https://numpy.org/doc/stable/user/basics.indexing.html#boolean-array-indexing) syntax of **numpy**.
+Afterwards, masking is a matter of assigning `np.nan` into a subset defined by the mask, using the "boolean array indexing" syntax of **numpy**.
 
 ```{python}
 masked_elev = elev.copy()
@@ -893,7 +900,7 @@ rasterio.plot.show(mask);
 rasterio.plot.show(masked_elev);
 ```
 
-The "mask" can be create from the array itself, using condition(s). 
+The "mask" can be created from the array itself, using condition(s). 
 That way, we can replace some values (e.g., values assumed to be wrong) with `np.nan`, such as in the following example.
 
 ```{python}
@@ -1007,10 +1014,12 @@ rasterio.plot.show(elev, cmap='Oranges');
 rasterio.plot.show(recl, cmap='Oranges');
 ```
 
-The calculation of the [Normalized Difference Vegetation Index (NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) is a well-known local (pixel-by-pixel) raster operation.
+The calculation of the Normalized Difference Vegetation Index (NDVI)[^ndvi] is a well-known local (pixel-by-pixel) raster operation.
 It returns a raster with values between `-1` and `1`; positive values indicate the presence of living plants (mostly \> `0.2`).
 NDVI is calculated from red and near-infrared (NIR) bands of remotely sensed imagery, typically from satellite systems such as Landsat or Sentinel-2.
 Vegetation absorbs light heavily in the visible light spectrum, and especially in the red channel, while reflecting NIR light, which is emulated in the NVDI formula (@eq-ndvi),
+
+[^ndvi]: [https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index)
 
 $$
 NDVI=\frac{NIR-Red} {NIR+Red}
@@ -1080,7 +1089,7 @@ Other names for this operation are spatial filtering and convolution [@burrough_
 
 ![Input raster (left) and resulting output raster (right) due to a focal operation---finding the minimum value in $3 \times 3$ moving windows.](images/04_focal_example.png){#fig-focal-filter}
 
-In Python, the **scipy.ndimage** [@scipy] package has a comprehensive collection of [functions](https://docs.scipy.org/doc/scipy/reference/ndimage.html#filters) to perform filtering of **numpy** arrays, such as:
+In Python, the **scipy.ndimage** [@scipy] package has a comprehensive collection of functions to perform filtering of **numpy** arrays, such as:
 
 -   `scipy.ndimage.minimum_filter`,
 -   `scipy.ndimage.maximum_filter`,
@@ -1149,7 +1158,7 @@ grain_mode
 
 Terrain processing is another important application of focal operations.
 Such functions are provided by multiple Python packages, including the general purpose **xarray** package, and more specialized packages such as **richdem** and **pysheds**.
-Useful terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.html?highlight=TerrainAttribute#richdem.TerrainAttribute) include:
+Useful terrain metrics include:
 
 -   Slope, measured in units of percent, degreees, or radians [@horn_1981]
 -   Aspect, meaning each cell's downward slope direction [@horn_1981]
@@ -1158,15 +1167,26 @@ Useful terrain [metrics](https://richdem.readthedocs.io/en/latest/python_api.htm
 For example, each of these, and other, terrain metrics can be computed with the **richdem** package.
 
 ::: callout-note
-Terrain metrics are essentially focal filters with customized functions. Using `scipy.ndimage.generic_filter`, along with such custom functions, is an option for those who would like to calculate terrain metric through coding by hand and/or limiting their code dependencies. For example, the [How Aspect works](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-aspect-works.htm) and [How Slope works](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-slope-works.htm) pages from the ArcGIS Pro documentation provide exlanations and formulas of the required funtions for aspect and slope metrics (@fig-raster-slope), respectively, which can be translated to **numpy**-based functions to be used in `scipy.ndimage.generic_filter` to calculate those metrics.
+Terrain metrics are essentially focal filters with customized functions. Using `scipy.ndimage.generic_filter`, along with such custom functions, is an option for those who would like to calculate terrain metric through coding by hand and/or limiting their code dependencies. For example, the *How Aspect works*[^how_aspect_works] and *How Slope works*[^how_slope_works] pages from the ArcGIS Pro documentation provide exlanations and formulas of the required funtions for aspect and slope metrics (@fig-raster-slope), respectively, which can be translated to **numpy**-based functions to be used in `scipy.ndimage.generic_filter` to calculate those metrics.
 :::
 
-Another extremely fast, memory-efficient, and concise, alternative, is to the use the GDAL program called [`gdaldem`](https://gdal.org/programs/gdaldem.html).
+[^how_aspect_works]: [https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-aspect-works.htm](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-aspect-works.htm)
+
+[^how_slope_works]: [https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-slope-works.htm](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-slope-works.htm)
+
+Another extremely fast, memory-efficient, and concise, alternative, is to the use the GDAL program called `gdaldem`.
 `gdaldem` can be used to calculate slope, aspect, and other terrain metrics through a single command, accepting an input file path and exporting the result to a new file.
 This is our first example in the book where we demonstrate a situation where it may be worthwhile to leave the Python environment, and utilize a GDAL program directly, rather than through their wrappers (such as **rasterio** and other Python packages), whether to access a computational algorithm not easily accessible in a Python package, or for GDAL's memory-efficiency and speed benefits.
 
 ::: callout-note
-GDAL contains a collection of over 40 [programs](https://gdal.org/programs/index.html), mostly aimed at raster processing. These include programs for fundamental operations, such as [`gdal_translate`](https://gdal.org/programs/gdal_translate.html#gdal-translate) (convert between raster file formats), [`gdalwarp`](https://gdal.org/programs/gdalwarp.html#gdalwarp) (raster reprojection), [`gdal_rasterize`](https://gdal.org/programs/gdal_rasterize.html#gdal-rasterize) (rasterize vector features), and [`gdal_merge.py`](https://gdal.org/programs/gdal_merge.html#gdal-merge) (raster mosaic), as well as numerous miscellaneous programs. In this book, we use **rasterio** for the above-mentioned operations, although the GDAL programs are a good alternative for those who are more comfortable with the command line. However, we do use two GDAL programs for tasks that are lacking in **rasterio** and not well-implemented in other Python packages: `gdaldem` (this section), and `gdal_contour` (@sec-raster-to-contours).
+GDAL contains a collection of over 40 programs, mostly aimed at raster processing. These include programs for fundamental operations, such as:
+
+* `gdal_translate`---convert between raster file formats
+* `gdalwarp`---raster reprojection
+* `gdal_rasterize`---rasterize vector features
+* `gdal_merge.py`---raster mosaic 
+
+In this book, we use **rasterio** for the above-mentioned operations, although the GDAL programs are a good alternative for those who are more comfortable with the command line. However, we do use two GDAL programs for tasks that are lacking in **rasterio** and not well-implemented in other Python packages: `gdaldem` (this section), and `gdal_contour` (@sec-raster-to-contours).
 :::
 
 GDAL, along with all of its programs should be available in your Python environment, since GDAL is a dependency of **rasterio**.
@@ -1194,7 +1214,7 @@ os.system('gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif')
 ```
 
 @fig-raster-slope shows the results, using our more familiar plotting methods from **rasterio**.
-The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the [cyclic color scales](https://matplotlib.org/stable/users/explain/colors/colormaps.html#cyclic) (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
+The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the cyclic color scales (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
 
 ```{python}
 #| label: fig-raster-slope
@@ -1245,7 +1265,7 @@ To do that, first we first obtain the unique values defining the zones using `np
 np.unique(grain)
 ```
 
-Now, we can use [dictionary comprehension](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) to "split" the `elev` array into separate one-dimensional arrays with values per `grain` group, with keys being the unique `grain` values.
+Now, we can use dictionary comprehension (see note below) to "split" the `elev` array into separate one-dimensional arrays with values per `grain` group, with keys being the unique `grain` values.
 
 ```{python}
 z = {i: elev[grain == i] for i in np.unique(grain)}
@@ -1253,7 +1273,7 @@ z
 ```
 
 ::: callout-note
-[List comprehension](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions) and dictionary comprehension are concise ways to create a `list` or a `dict`, respectively, from an iterable object.
+*List comprehension* and *dictionary comprehension* are concise ways to create a `list` or a `dict`, respectively, from an iterable object.
 Both are, conceptually, a concise syntax to replace `for` loops where we iterate over an object and return a same-length object with the results.
 Here are minimal examples of list and dictionary comprehension, respectively, to demonstrate the idea:
 
