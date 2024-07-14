@@ -98,7 +98,7 @@ When stored in a file, standard formats include `.png` and `.pdf` for graphical 
 Thanks to their simplicity, static maps can be shared in a wide variety of ways: in print, through files sent by e-mail, embedded in documents and web pages, etc.
 
 Nevertheless, there are many aesthetic considerations when making a static map, and there is also a wide variety of ways to create static maps using novel presentation methods. 
-This is the focus of the field of [cartography](https://en.wikipedia.org/wiki/Cartography), and beyond the scope of this book.
+This is the focus of the field of cartography, and beyond the scope of this book.
 
 <!-- Decision of whether to use static or interactive. -->
 <!-- Flow diagram? -->
@@ -143,7 +143,7 @@ nz.plot(color='lightgrey', edgecolor='blue');
 ```
 
 The next example uses `markersize` to get larger points (@fig-basic-plot-markersize).
-It also demonstrates how to control the overall [figure size](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/figure_size_units.html), such as $4 \times 4$ $in$ in this case, using `plt.subplots` to initialize the plot and its `figsize` parameter to specify dimensions.
+It also demonstrates how to control the overall figure size, such as $4 \times 4$ $in$ in this case, using `plt.subplots` to initialize the plot and its `figsize` parameter to specify dimensions.
 
 ```{python}
 #| label: fig-basic-plot-markersize
@@ -181,10 +181,13 @@ nz.plot(column='Median_income', legend=True);
 
 The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`.
 The `cmap` ("color map") argument can be used to specify one of countless color scales.
-A first safe choice is often the [ColorBrewer](https://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3) collection of color scales, specifically designed for mapping.
+A first safe choice is often the ColorBrewer[^colorbrewer] collection of color scales, specifically designed for mapping.
 Any color scale can be reversed, using the `_r` suffix.
-Finally, other color scales are available: see the **matplotlib** [colormaps article](https://matplotlib.org/stable/tutorials/colors/colormaps.html) for details.
+Finally, other color scales are available: see the **matplotlib** colormaps article[^matplotlib_colormaps] for details.
 The following code sections demonstrates three color scale specifications other than the default (@fig-plot-symbology-colors).
+
+[^colorbrewer]: <https://colorbrewer2.org/>
+[^matplotlib_colormaps]: <https://matplotlib.org/stable/tutorials/colors/colormaps.html>
 
 ```{python}
 #| label: fig-plot-symbology-colors
@@ -233,7 +236,7 @@ rasterio.plot.show(nz_elev, cmap='gist_earth');
 ```
 
 Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`.
-The following [workaround](https://stackoverflow.com/questions/61327088/rio-plot-show-with-colorbar), reverting to **matplotlib** methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale).
+The following workaround, reverting to **matplotlib** methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale).
 Basically, the code reverts to the **matplotlib** `.colorbar` method to add a legend, using the `plt.imshow` function that draws an image of a **numpy** array (which `rasterio.plot.show` is a wrapper of).
 
 ```{python}
@@ -262,7 +265,7 @@ To add a label in **matplotlib**, we use the `.annotate` method where the import
 When labeling vector layers, we typically want to add numerous labels, based on (one or more) attribute of each feature. 
 To do that, we can run a `for` loop, or use the `.apply` method, to pass the label text and the coordinates of each feature to `.annotate`.
 In the following example, we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.
-We are also using `ha`, short for `horizontalalignment`, with `'center'` (other options are `'right'` and `'left'`, see [Text properties and layout](https://matplotlib.org/stable/users/explain/text/text_props.html) reference for **matplotlib**) (@fig-labels-polygon).
+We are also using `ha`, short for `horizontalalignment`, with `'center'` (other options are `'right'` and `'left'`) (@fig-labels-polygon).
 
 ```{python}
 #| label: fig-labels-polygon
@@ -290,7 +293,7 @@ ctr
 
 Then, we again use `.apply`, combined with `.annotate`, to add the text labels. 
 The main difference compared to the previous example (@fig-labels-polygon) is that we are directly passing the geometry coordinates (`.geometry.coords[0]`), since the geometries are points rather than polygons.
-We are also using the `weight='bold'` argument to use bold font (see [Text properties and layout](https://matplotlib.org/stable/users/explain/text/text_props.html) reference for **matplotlib** for list of other options) (@fig-labels-points1).
+We are also using the `weight='bold'` argument to use bold font (@fig-labels-points1).
 <!-- jn: what are other weight options? where to find them? -->
 <!-- md: now added a link to the page with other options -->
 
@@ -358,7 +361,7 @@ The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `a
 For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
 
 -   Panel (a) shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)
--   Panel (b) shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's [territorial waters](https://en.wikipedia.org/wiki/Territorial_waters) (see @sec-global-operations-and-distances)
+-   Panel (b) shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's territorial waters (see @sec-global-operations-and-distances)
 -   Panel (c) shows the raster with two vector layers: the territorial waters (in red) and elevation measurement points (in yellow)
 
 ```{python}
@@ -393,7 +396,7 @@ nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');
 ```
 
 ::: callout-note
-Note that the drawing order of layers is not necessarily according to the order of expressions, in the code, but according to layer *type*. For example, by [default](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) line layers are drawn on top of point layers. To override the default plotting order, we can use the `zorder` argument of `.plot`. Layers with higher `zorder` values will be drawn on top. For example, the following would draw `layer2` on top of `layer1` (regaredless of their types).
+Note that the drawing order of layers is not necessarily according to the order of expressions, in the code, but according to layer *type*. For example, by default line layers are drawn on top of point layers. To override the default plotting order, we can use the `zorder` argument of `.plot`. Layers with higher `zorder` values will be drawn on top. For example, the following would draw `layer2` on top of `layer1` (regaredless of their types).
 
 ```python
 base = layer1.plot(zorder=1)
@@ -408,10 +411,10 @@ Basemaps are ubiquitous in interactive maps (see @sec-interactive-maps).
 However, they are often useful in static maps too.
 
 Basemaps can be added to **geopandas** static plots using the **contextily** package.
-A preliminary step is to convert our layers to `EPSG:3857` (["Web Mercator"](https://en.wikipedia.org/wiki/Web_Mercator_projection)), to be in agreement with the basemaps, which are typically provided in this CRS[^reproject_tiles].
+A preliminary step is to convert our layers to `EPSG:3857` ("Web Mercator"), to be in agreement with the basemaps, which are typically provided in this CRS[^reproject_tiles].
 For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it to `3857`.
 
-[^reproject_tiles]: Another option is to [reproject the tiles](https://contextily.readthedocs.io/en/latest/warping_guide.html) to match the CRS of the foreground layers; this is less commonly used workflow, as it may lead to distorted appearance of the background layer. 
+[^reproject_tiles]: Another option is to reproject the tiles to match the CRS of the foreground layers; this is less commonly used workflow, as it may lead to distorted appearance of the background layer. 
 
 ```{python}
 nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)
@@ -438,9 +441,12 @@ ax = nzw.plot(color='none', ax=ax)
 cx.add_basemap(ax, source=cx.providers.CartoDB.Positron);
 ```
 
-Check out the [gallery](https://xyzservices.readthedocs.io/en/stable/gallery.html) for more possible basemaps.
-Custom basemaps (such as from your own raster tile server) can be  also specified using a [URL](https://contextily.readthedocs.io/en/latest/providers_deepdive.html#Manually-specifying-a-provider).
-Finally, you may read the [Adding a background map to plots](https://geopandas.org/en/stable/gallery/plotting_basemap_background.html) tutorial for more examples.
+Check out the gallery[^xyzservices_gallery] for more possible basemaps.
+Custom basemaps (such as from your own raster tile server) can be  also specified using a URL.
+Finally, you may read the *Adding a background map to plots*[^basemaps_tutorial] tutorial for more examples.
+
+[^xyzservices_gallery]: <https://xyzservices.readthedocs.io/en/stable/gallery.html>
+[^basemaps_tutorial]: <https://geopandas.org/en/stable/gallery/plotting_basemap_background.html>
 
 ### Faceted maps {#sec-faceted-maps}
 
@@ -544,7 +550,7 @@ More advanced levels of interactivity include the ability to tilt and rotate map
 
 The most important type of interactivity, however, is the display of geographic data on interactive or 'slippy' web maps.
 Significant features of web maps are that (1) they eventually comprise static HTML files, easily shared and accessed by a wide audience, and (2) they can "grab" content (e.g., basemaps) or use services from other locations on the internet, that way providing detailed context without much requiring much effort from the person who created the map.
-The most popular approaches for web mapping, in Python and elsewhere, are based on the [Leaflet](https://leafletjs.com/) JavaScript library [@dorman2020introduction]. 
+The most popular approaches for web mapping, in Python and elsewhere, are based on the Leaflet JavaScript library [@dorman2020introduction]. 
 The **folium** Python package provides an extensive interface to create customized web maps based on Leaflet; it is recommended for highly-custimized maps.
 However, the **geopandas** wrapper `.explore`, introduced in @sec-vector-layers, can be used for a wide range of scenarios which are often sufficient.
 This is what we cover in this section.
@@ -843,7 +849,7 @@ map_to_png.map_to_png(nz.explore(tiles='CartoDB positron'), 'fig-explore-basemap
 
 An interactive map can be exported to an HTML file using the `.save` method of the `map` object.
 The HTML file can then be shared with other people, or published on a server and shared through a URL[^leaflet_size].
-A good free option for publishing a web map is through [GitHub Pages](https://pages.github.com/).
+A good free option for publishing a web map is through GitHub Pages.
 
 [^leaflet_size]: The GeoJSON representation of the data is embedded in the HTML file, which means that the file size can get large, and the web map may become unusable due to browser performance limitations.
 

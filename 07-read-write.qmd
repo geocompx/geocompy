@@ -61,26 +61,39 @@ The process of reading and writing files efficiently is covered in Sections @sec
 
 ## Retrieving open data {#sec-retrieving-open-data}
 
-A vast and ever-increasing amount of geographic data is available on the internet, much of which is free to access and use (with appropriate credit given to its providers).[^07-read-write-plot-1]
+A vast and ever-increasing amount of geographic data is available on the internet, much of which is free to access and use (with appropriate credit given to its providers)[^07-read-write-plot-1].
 In some ways there is now too much data, in the sense that there are often multiple places to access the same dataset.
 Some datasets are of poor quality.
 In this context, it is vital to know where to look, so the first section covers some of the most important sources.
-Various 'geoportals' (web services providing geospatial datasets such as [Data.gov](https://catalog.data.gov/dataset?metadata_type=geospatial)) are a good place to start, providing a wide range of data but often only for specific locations (as illustrated in the updated [Wikipedia page](https://en.wikipedia.org/wiki/Geoportal) on the topic).
+Various 'geoportals' (web services providing geospatial datasets, such as Data.gov[^data_gov]) are a good place to start, providing a wide range of data but often only for specific locations (as illustrated in the updated Wikipedia page[^wiki_geoportal] on the topic).
 
 [^07-read-write-plot-1]: For example, visit <https://freegisdata.rtwilson.com/> for a vast list of websites with freely available geographic datasets.
+[^data_gov]: <https://catalog.data.gov/dataset?metadata_type=geospatial>
+[^wiki_geoportal]: <https://en.wikipedia.org/wiki/Geoportal>
 
 Some global geoportals overcome this issue.
-The [GEOSS portal](http://www.geoportal.org/) and the [Copernicus Open Access Hub](https://scihub.copernicus.eu/), for example, contain many raster datasets with global coverage.
-A wealth of vector datasets can be accessed from the [SEDAC](http://sedac.ciesin.columbia.edu/) portal run by the National Aeronautics and Space Administration (NASA) and the European Union's [INSPIRE geoportal](http://inspire-geoportal.ec.europa.eu/), with global and regional coverage.
+The GEOSS portal[^geoss_portal] and the Copernicus Open Access Hub[^copernicus], for example, contain many raster datasets with global coverage.
+A wealth of vector datasets can be accessed from the SEDAC[^sedac] portal run by the National Aeronautics and Space Administration (NASA) and the European Union's INSPIRE geoportal[^inspire_geoportal], with global and regional coverage.
 
-Most geoportals provide a graphical interface allowing datasets to be queried based on characteristics such as spatial and temporal extent, the United States Geological Survey's [EarthExplorer](https://earthexplorer.usgs.gov/) and NASA's [EarthData Search](https://search.earthdata.nasa.gov/search) being prime examples.
+[^geoss_portal]: <http://www.geoportal.org/>
+[^copernicus]: <https://scihub.copernicus.eu/>
+[^sedac]: <http://sedac.ciesin.columbia.edu/>
+[^inspire_geoportal]: <http://inspire-geoportal.ec.europa.eu/>
+
+Most geoportals provide a graphical interface allowing datasets to be queried based on characteristics such as spatial and temporal extent, the United States Geological Survey's EarthExplorer[^earthexplorer] and NASA's EarthData Search[^earthdata_search] being prime examples.
 Exploring datasets interactively on a browser is an effective way of understanding available layers.
 From reproducibility and efficiency perspectives, downloading data is, however, best done with code.
-Downloads can be initiated from the command line using a variety of techniques, primarily via URLs and APIs (see the [Sentinel API](https://scihub.copernicus.eu/twiki/do/view/SciHubWebPortal/APIHubDescription), for example).
+Downloads can be initiated from the command line using a variety of techniques, primarily via URLs and APIs (see the Sentinel API[^sentinel_api], for example).
 
-Files hosted on static URLs can be downloaded with the following method, as illustrated in the code chunk below which accesses the [Natural Earth Data](https://www.naturalearthdata.com/) website to download the world airports layer zip file and to extract the contained ESRI Shapefile.
+[^earthexplorer]: <https://earthexplorer.usgs.gov/>
+[^earthdata_search]: <https://search.earthdata.nasa.gov/search>
+[^sentinel_api]: <https://scihub.copernicus.eu/twiki/do/view/SciHubWebPortal/APIHubDescription>
+
+Files hosted on static URLs can be downloaded with the following method, as illustrated in the code chunk below which accesses the Natural Earth Data[^natural_earth_data] website to download the world airports layer zip file and to extract the contained ESRI Shapefile.
 Note that the download code is complicated by the fact that the server checks the `User-agent` header of the request, basically to make sure that the download takes place through a browser.
 To overcome this, we add a header corresponding to a request coming from a browser (such as Firefox) in our code.
+
+[^natural_earth_data]: <https://www.naturalearthdata.com/>
 
 ```{python}
 #| eval: false
@@ -144,16 +157,18 @@ The resulting layer `counties` is shown in @fig-ne-counties.
 counties.plot();
 ```
 
-Note that @fig-ne-counties x-axis spans the entire range of longitues, between `-180` and `180`, since the Aleutian Islands county (which is small and difficult to see on the map) crosses the [International Date Line](https://en.wikipedia.org/wiki/International_Date_Line).
+Note that @fig-ne-counties x-axis spans the entire range of longitues, between `-180` and `180`, since the Aleutian Islands county (which is small and difficult to see on the map) crosses the International Date Line.
 
 Other layers can from NaturalEarth be accessed the same way.
-You need to specify the `resolution`, `category`, and `name` of the requested dataset in [Natural Earth Data](https://www.naturalearthdata.com/downloads/), then  run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and read the file into the Python environment, e.g., using `gpd.read_file`.
+You need to specify the `resolution`, `category`, and `name` of the requested dataset in Natural Earth Data, then  run the `cartopy.io.shapereader.natural_earth`, which downloads the file(s) and returns the path, and read the file into the Python environment, e.g., using `gpd.read_file`.
 This is an alternative approach to "directly" downloading files as shown earlier (@sec-retrieving-open-data).
 
 The second example uses the **osmnx** package [@osmnx] to find parks from the OpenStreetMap (OSM) database.
 As illustrated in the code chunk below, OpenStreetMap data can be obtained using the `ox.features.features_from_place` function.
 The first argument is a string which is geocoded to a polygon (the `ox.features.features_from_bbox` and `ox.features.features_from_polygon` can also be used to query a custom area of interest).
-The second argument specifies the OSM [tag(s)](https://wiki.openstreetmap.org/wiki/Map_features), selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs.
+The second argument specifies the OSM tag(s)[^osm_tags], selecting which OSM elements we're interested in (parks, in this case), represented by key-value pairs.
+
+[^osm_tags]: <https://wiki.openstreetmap.org/wiki/Map_features>
 
 ```{python}
 #| warning: false
@@ -187,22 +202,31 @@ map_to_png.map_to_png(parks[['name', 'geometry']].explore(), 'fig-ox-features')
 ![Parks in Leeds, based on OpenStreetMap data, downloaded using package **osmnx**](images/fig-ox-features.png){#fig-ox-features}
 :::
 
-It should be noted that the **osmnx** package downloads OSM data from the [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API), which is rate limited and therefore unsuitable for queries covering very large areas.
-To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from [Geofabrik](https://download.geofabrik.de/), and then load them from the file into the Python environment.
+It should be noted that the **osmnx** package downloads OSM data from the Overpass API[^overpass_api], which is rate limited and therefore unsuitable for queries covering very large areas.
+To overcome this limitation, you can download OSM data extracts, such as in Shapefile format from Geofabrik[^geofabrik], and then load them from the file into the Python environment.
 
-OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the [Overpass turbo](https://overpass-turbo.eu/) web service for rapid development and testing of OSM queries to [osm2pgsql](https://osm2pgsql.org/) for importing the data into a PostGIS database.
+[^overpass_api]: <https://wiki.openstreetmap.org/wiki/Overpass_API>
+[^geofabrik]: <https://download.geofabrik.de/>
+
+OpenStreetMap is a vast global database of crowd-sourced data, is growing daily, and has a wider ecosystem of tools enabling easy access to the data, from the Overpass turbo[^overpass_turbo] web service for rapid development and testing of OSM queries to `osm2pgsql` for importing the data into a PostGIS database.
 Although the quality of datasets derived from OSM varies, the data source and wider OSM ecosystems have many advantages: they provide datasets that are available globally, free of charge, and constantly improving thanks to an army of volunteers.
-Using OSM encourages 'citizen science' and contributions back to the digital commons (you can start editing data representing a part of the world you know well at [www.openstreetmap.org](https://www.openstreetmap.org/)).
+Using OSM encourages 'citizen science' and contributions back to the digital commons (you can start editing data representing a part of the world you know well at <https://www.openstreetmap.org/>).
+
+[^overpass_turbo]: <https://overpass-turbo.eu/>
 
 One way to obtain spatial information is to perform geocoding---transform a description of a location, usually an address, into a set of coordinates.
 This is typically done by sending a query to an online service and getting the location as a result.
 Many such services exist that differ in the used method of geocoding, usage limitations, costs, or API key requirements.
-[Nominatim](https://nominatim.openstreetmap.org/ui/about.html) is a well-known free service, based on OpenStreetMap data, and there are many other free and commercial geocoding services.
+Nominatim[^nominatim] is a well-known free service, based on OpenStreetMap data, and there are many other free and commercial geocoding services.
+
+[^nominatim]: <https://nominatim.openstreetmap.org/ui/about.html>
 
 **geopandas** provides the `gpd.tools.geocode`, which can geocode addresses to a `GeoDataFrame`.
 Internally it uses the **geopy** package, supporting several providers through the `provider` parameter (use `geopy.geocoders.SERVICE_TO_GEOCODER` to see possible options).
-The example below searches for [John Snow blue plaque](https://en.m.wikipedia.org/wiki/John_Snow_(public_house)) coordinates located on a building in the Soho district of London.
+The example below searches for John Snow blue plaque[^john_snow_blue_plaque] coordinates located on a building in the Soho district of London.
 The result is a `GeoDataFrame` with the address we passed to `gpd.tools.geocode`, and the detected point location.
+
+[^john_snow_blue_plaque]: <https://en.m.wikipedia.org/wiki/John_Snow_(public_house)>
 
 ```{python}
 result = gpd.tools.geocode('54 Frith St, London W1D 4SJ, UK', timeout=10)
@@ -246,8 +270,8 @@ map_to_png.map_to_png(result.iloc[[0]].explore(color='red', marker_kwds={'radius
 ## File formats {#sec-file-formats}
 
 Geographic datasets are usually stored as files or in spatial databases.
-File formats usually can either store vector or raster data, while spatial databases such as [PostGIS](https://postgis.net/) can store both.
-The large variety of file formats may seem bewildering, but there has been much consolidation and standardization since the beginnings of GIS software in the 1960s when the first widely distributed program ([SYMAP](https://news.harvard.edu/gazette/story/2011/10/the-invention-of-gis/)) for spatial analysis was created at Harvard University [@coppock_history_1991].
+File formats usually can either store vector or raster data, while spatial databases such as PostGIS can store both.
+The large variety of file formats may seem bewildering, but there has been much consolidation and standardization since the beginnings of GIS software in the 1960s when the first widely distributed program SYMAP for spatial analysis was created at Harvard University [@coppock_history_1991].
 
 GDAL (which originally was pronounced as "goo-dal", with the double "o" making a reference to object-orientation), the Geospatial Data Abstraction Library, has resolved many issues associated with incompatibility between geographic file formats since its release in 2000.
 GDAL provides a unified and high-performance interface for reading and writing of many raster and vector data formats.
@@ -272,7 +296,7 @@ GDAL provides access to more than 200 vector and raster data formats.
 
 : Commonly used spatial data file formats {#tbl-file-formats tbl-colwidths="[23, 13, 54, 15, 15]"}
 
-An important development ensuring the standardization and open-sourcing of file formats was the founding of the Open Geospatial Consortium ([OGC](http://www.opengeospatial.org/)) in 1994.
+An important development ensuring the standardization and open-sourcing of file formats was the founding of the Open Geospatial Consortium (OGC) in 1994.
 Beyond defining the Simple Features data model (see @sec-simple-features), the OGC also coordinates the development of open standards, for example as used in file formats such as KML and GeoPackage.
 Open file formats of the kind endorsed by the OGC have several advantages over proprietary formats: the standards are published, ensure transparency and open up the possibility for users to further develop and adjust the file formats to their specific needs.
 
@@ -282,7 +306,7 @@ First of all, it is a multi-file format, which consists of at least three files.
 It also only supports 255 columns, its column names are restricted to ten characters and the file size limit is 2 GB.
 Furthermore, ESRI Shapefile does not support all possible geometry types, for example, it is unable to distinguish between a polygon and a multipolygon.
 Despite these limitations, a viable alternative had been missing for a long time.
-In 2014, [GeoPackage](https://www.geopackage.org/) emerged, and seems to be a more than suitable replacement candidate for ESRI Shapefile.
+In 2014, GeoPackage emerged, and seems to be a more than suitable replacement candidate for ESRI Shapefile.
 GeoPackage is a format for exchanging geospatial information and an OGC standard.
 This standard describes the rules on how to store geospatial information in a tiny SQLite container.
 Hence, GeoPackage is a lightweight spatial database container, which allows the storage of vector and raster data but also of non-spatial data and extensions.
@@ -296,7 +320,7 @@ One of the most significant recent addition to the GeoTIFF format is its variant
 Raster objects saved as COGs can be hosted on HTTP servers, so other people can read only parts of the file without downloading the whole file (@sec-input-raster).
 
 There is also a plethora of other spatial data formats that we do not explain in detail or mention in @tbl-file-formats due to the book limits.
-If you need to use other formats, we encourage you to read the GDAL documentation about [vector](https://gdal.org/drivers/vector/index.html) and [raster](https://gdal.org/drivers/raster/index.html) drivers.
+If you need to use other formats, we encourage you to read the GDAL documentation about vector and raster drivers.
 Additionally, some spatial data formats can store other data models (types) than vector or raster.
 Two examples are LAS and LAZ formats for storing lidar point clouds, and NetCDF and HDF for storing multidimensional arrays.
 
@@ -510,7 +534,7 @@ Using parameters of `.read` allows us to just read a small portion of the data, 
 This is very useful when working with large datasets hosted online from resource-constrained computing environments such as laptops.
 
 For example, we can read a specified rectangular extent of the raster.
-With **rasterio**, this is done using the so-called [windowed reading](https://rasterio.readthedocs.io/en/latest/topics/windowed-rw.html) capabilities.
+With **rasterio**, this is done using the so-called *windowed reading* capabilities.
 Note that, with windowed reading, we import just a subset of the raster extent into an `ndarray` covering any partial extent.
 Windowed reading is therefore memory- (and, in this case, bandwidth-) efficient, since it avoids reading the entire raster into memory.
 It can also be considered an alternative pathway to *cropping* (@sec-raster-cropping).
@@ -663,7 +687,7 @@ As opposed to reading mode (`'r'`, the default) mode, the `rasterio.open` functi
 -   `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [does not work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters
 
 ::: callout-note
-Note that `'GTiff` (GeoTIFF, `.tif`), which is the recommended driver, [supports](https://gdal.org/drivers/raster/gtiff.html) just some of the possible **numpy** data types (see @tbl-numpy-data-types). Importantly, it does not support `np.int64`, the default `int` type. The recommendation in such case it to use `np.int32` (if the range is sufficient), or `np.float64`. 
+Note that `'GTiff` (GeoTIFF, `.tif`), which is the recommended driver, supports just some of the possible **numpy** data types (see @tbl-numpy-data-types). Importantly, it does not support `np.int64`, the default `int` type. The recommendation in such case it to use `np.int32` (if the range is sufficient), or `np.float64`. 
 :::
 
 Once the file connection with the right metadata is ready, we do the actual writing using the `.write` method of the file connection.
@@ -941,7 +965,7 @@ From there on, we deal with `np.nan` the usual way, such as using `np.nanmean` t
 np.nanmean(r)
 ```
 
-The second approach is to read the values into a so-called ["masked" array](https://numpy.org/doc/stable/reference/maskedarray.generic.html#what-is-a-masked-array), using the argument `masked=True` of the `.read` method.
+The second approach is to read the values into a so-called *"masked" array*, using the argument `masked=True` of the `.read` method.
 A masked array can be thought of as an extended `ndarray`, with two components: `.data` (the values) and `.mask` (a corresponding boolean array marking "No Data" values).
 
 ```{python}
