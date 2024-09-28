@@ -70,7 +70,7 @@ Spatial joining (@sec-spatial-joining) and aggregation (@sec-vector-spatial-aggr
 
 Spatial operations differ from non-spatial operations in a number of ways, however. 
 Spatial joins, for example, can be done in a number of ways---including matching entities that intersect with or are within a certain distance of the target dataset---while the attribution joins discussed in @sec-vector-attribute-joining in the previous chapter can only be done in one way.
-Different types of spatial relationship between objects, including intersects and disjoint, are described in @sec-topological-relations.
+Different types of spatial relationships between objects, including intersects and disjoints, are described in @sec-topological-relations.
 Another unique aspect of spatial objects is distance: all spatial objects are related through space, and distance calculations can be used to explore the strength of this relationship, as described in the context of vector data in @sec-distance-relations.
 
 Spatial operations on raster objects include subsetting---covered in @sec-spatial-subsetting-raster---and merging several raster 'tiles' into a single object, as demonstrated in @sec-merging-rasters.
@@ -95,7 +95,7 @@ packages.
 
 Spatial subsetting is the process of taking a spatial object and returning a new object containing only features that relate in space to another object.
 Analogous to attribute subsetting (covered in @sec-vector-attribute-subsetting), subsets of `GeoDataFrame`s can be created with square bracket (`[`) operator using the syntax `x[y]`, where `x` is an `GeoDataFrame` from which a subset of rows/features will be returned, and `y` is a boolean `Series`.
-The difference is, that, in spatial subsetting `y` is created based on another geometry and using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations), rather based on comparison based on ordinary columns.
+The difference is, that, in spatial subsetting `y` is created based on another geometry and using one of the binary geometry relation methods, such as `.intersects` (see @sec-topological-relations), rather than based on comparison based on ordinary columns.
 
 To demonstrate spatial subsetting, we will use the `nz` and `nz_height` layers, which contain geographic data on the 16 main regions and 101 highest points in New Zealand, respectively (@fig-spatial-subset (a)), in a projected coordinate system.
 The following expression creates a new object, `canterbury`, representing only one region --- Canterbury.
@@ -106,7 +106,7 @@ canterbury
 ```
 
 Then, we use the `.intersects` method to evaluate, for each of the `nz_height` points, whether they intersect with Canterbury.
-The result `canterbury_height` is a boolean `Series` with the "answers".
+The result `canterbury_height` is a boolean `Series` with the 'answers'.
 
 ```{python}
 sel = nz_height.intersects(canterbury.geometry.iloc[0])
@@ -175,7 +175,7 @@ canterbury_height2.plot(ax=base, color='None', edgecolor='red');
 
 In case we need to subset according to several geometries at once, e.g., find out which points intersect with both Canterbury and Southland, we can dissolve the filtering subset, using `.union_all`, before applying the `.intersects` (or any other) operator.
 For example, here is how we can subset the `nz_height` points which intersect with Canterbury or Southland.
-(Note that we are also using the `.isin` method, as demonstrated in the end of @sec-vector-attribute-subsetting.)
+(Note that we are also using the `.isin` method, as demonstrated at the end of @sec-vector-attribute-subsetting.)
 
 ```{python}
 canterbury_southland = nz[nz['Name'].isin(['Canterbury', 'Southland'])]
@@ -188,7 +188,7 @@ canterbury_southland_height
 
 ```{python}
 #| label: fig-spatial-subset2
-#| fig-cap: Spatial subsetting of points by intersection with more that one polygon
+#| fig-cap: Spatial subsetting of points by intersection with more than one polygon
 #| fig-subcap: 
 #| - Original points (red)
 #| - Spatial subset based on intersection (red), geometry used for subsetting (Canterbury and Southland) (grey)
@@ -202,12 +202,12 @@ canterbury_southland.plot(ax=base, color='lightgrey', edgecolor='darkgrey')
 canterbury_southland_height.plot(ax=base, color='None', edgecolor='red');
 ```
 
-The next section further explores different types of spatial relation, also known as binary predicates (of which `.intersects` and `.disjoint` are two examples), that can be used to identify whether or not two features are spatially related.
+The next section further explores different types of spatial relations, also known as binary predicates (of which `.intersects` and `.disjoint` are two examples), that can be used to identify whether or not two features are spatially related.
 
 ### Topological relations {#sec-topological-relations}
 
 Topological relations describe the spatial relationships between objects.
-"Binary topological relationships", to give them their full name, are logical statements (in that the answer can only be `True` or `False`) about the spatial relationships between two objects defined by ordered sets of points (typically forming points, lines and polygons) in two or more dimensions [@egenhofer_mathematical_1990].
+'Binary topological relationships', to give them their full name, are logical statements (in that the answer can only be `True` or `False`) about the spatial relationships between two objects defined by ordered sets of points (typically forming points, lines, and polygons) in two or more dimensions [@egenhofer_mathematical_1990].
 That may sound rather abstract and, indeed, the definition and classification of topological relations is based on mathematical foundations first published in book form in 1966 [@spanier_algebraic_1995], with the field of algebraic topology continuing into the 21st century [@dieck_algebraic_2008].
 
 Despite their mathematical origins, topological relations can be understood intuitively with reference to visualizations of commonly used functions that test for common types of spatial relationships.
@@ -215,7 +215,7 @@ Despite their mathematical origins, topological relations can be understood intu
 The third and fourth pairs in @fig-spatial-relations (from left to right and then down) demonstrate that, for some relations, order is important: while the relations equals, intersects, crosses, touches and overlaps are symmetrical, meaning that if `x.relation(y)` is true, `y.relation(x)` will also be true, relations in which the order of the geometries are important such as contains and within are not.
 
 ::: callout-note
-Notice that each geometry pair has a "DE-9IM"[^de-9im] string such as `FF2F11212`.
+Notice that each geometry pair has a 'DE-9IM'[^de-9im] string such as `FF2F11212`.
 DE-9IM strings describe the dimensionality (0=points, 1=lines, 2=polygons) of the pairwise intersections of the interior, boundary, and exterior, of two geometries (i.e., nine values of 0/1/2 encoded into a string).
 This is an advanced topic beyond the scope of this book, which can be useful to understand the difference between relation types, or define custom types of relations.
 See the DE-9IM strings section in Geocomputation with R [@lovelace_geocomputation_2019]. 
@@ -226,7 +226,7 @@ Also note that the **shapely** package contains the `.relate` and `.relate_patte
 
 ![Topological relations between vector geometries, inspired by Figures 1 and 2 in [@egenhofer_mathematical_1990]. The relations for which the `x.relation(y)` is true are printed for each geometry pair, with `x` represented in pink and `y` represented in blue. The nature of the spatial relationship for each pair is described by the Dimensionally Extended 9-Intersection Model string.](images/relations-1.png){#fig-spatial-relations}
 
-In **shapely**, methods testing for different types of topological relations are known as "relationships".
+In **shapely**, methods testing for different types of topological relations are known as 'relationships'.
 **geopandas** provides their wrappers (with the same method name) which can be applied on multiple geometries at once (such as `.intersects` and `.disjoint` applied on all points in `nz_height`, see @sec-spatial-subsetting-vector).
 To see how topological relations work in practice, let's create a simple reproducible example, building on the relations illustrated in @fig-spatial-relations and consolidating knowledge of how vector geometries are represented from a previous chapter (@sec-geometry-columns and @sec-geometries).
 
@@ -249,7 +249,7 @@ The last expression is a `for` loop used to add text labels (`0`, `1`, and `2`) 
 
 ```{python}
 #| label: fig-spatial-relations-geoms
-#| fig-cap: Points (`points`), line (`line`) and polygon (`poly`) objects used to illustrate topological relations
+#| fig-cap: Points (`points`), line (`line`), and polygon (`poly`) objects used to illustrate topological relations
 base = poly.plot(color='lightgrey', edgecolor='red')
 line.plot(ax=base, color='black', linewidth=7)
 points.plot(ax=base, color='none', edgecolor='black')
@@ -272,14 +272,14 @@ The result shown above is a boolean `Series`.
 Its contents should match our intuition: positive (`True`) results are returned for the points `0` and `2`, and a negative result (`False`) for point `1`.
 Each value in this `Series` represents a feature in the first input (`points`).
 
-All earlier examples in this chapter demonstrate the "many-to-one" mode of `.intersects` and analogous methods, where the relation is evaluated between each of several geometries in a `GeoSeries`/`GeoDataFrame`, and an individual `shapely` geometry.
+All earlier examples in this chapter demonstrate the 'many-to-one' mode of `.intersects` and analogous methods, where the relation is evaluated between each of several geometries in a `GeoSeries`/`GeoDataFrame`, and an individual `shapely` geometry.
 A second mode of those methods (not demonstrated here) is when both inputs are `GeoSeries`/`GeoDataFrame` objects.
-In such case, a "pairwise" evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`).
+In such case, a 'pairwise' evaluation takes place between geometries aligned by index (`align=True`, the default) or by position (`align=False`).
 For example, the expression `nz.intersects(nz)` returns a `Series` of 16 `True` values, indicating (unsurprisingly) that each geometry in `nz` intersects with itself.
 
-A third mode is when we are interested in a "many-to-many" evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two `GeoSeries` objects.
+A third mode is when we are interested in a 'many-to-many' evaluation, i.e., obtaining a matrix of all pairwise combinations of geometries from two `GeoSeries` objects.
 At the time of writing, there is no built-in method to do this in **geopandas**.
-However, the `.apply` method (package **pandas**) can be used to repeat a "many-to-one" evaluation over all geometries in the second layer, resulting in a matrix of *pairwise* results.
+However, the `.apply` method (package **pandas**) can be used to repeat a 'many-to-one' evaluation over all geometries in the second layer, resulting in a matrix of *pairwise* results.
 We will create another `GeoSeries` with two polygons, named `poly2`, to demonstrate this.
 
 ```{python}
@@ -327,7 +327,7 @@ points.apply(lambda x: poly2.intersects(x)).to_numpy()
 ```
 :::
 
-The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relation, as illustrated in @fig-spatial-relations.
+The `.intersects` method returns `True` even in cases where the features just touch: intersects is a 'catch-all' topological operation which identifies many types of spatial relations, as illustrated in @fig-spatial-relations.
 More restrictive questions include which points lie within the polygon, and which features are on or contain a shared boundary with it?
 The first question can be answered with `.within`, and the second with `.touches`.
 
@@ -346,7 +346,7 @@ The opposite of `.intersects` is `.disjoint`, which returns only objects that do
 points.disjoint(poly.iloc[0])
 ```
 
-Another useful type of relation is "within distance", where we detect features that intersect with the target buffered by particular distance.
+Another useful type of relation is 'within distance', where we detect features that intersect with the target buffered by particular distance.
 Buffer distance determines how close target objects need to be before they are selected.
 This can be done by literally buffering (@sec-geometries) the target geometry, and evaluating intersection (`.intersects`).
 Another way is to calculate the distances using the `.distance` method, and then evaluate whether they are within a threshold distance.
@@ -356,7 +356,7 @@ points.distance(poly.iloc[0]) < 0.2
 ```
 
 Note that although point `1` is more than `0.2` units of distance from the nearest vertex of `poly`, it is still selected when the distance is set to `0.2`.
-This is because distance is measured to the nearest edge, in this case the part of the the polygon that lies directly above point 2 in Figure @fig-spatial-relations.
+This is because distance is measured to the nearest edge, in this case, the part of the the polygon that lies directly above point 2 in Figure @fig-spatial-relations.
 We can verify that the actual distance between point `1` and the polygon is `0.13`, as follows.
 
 ```{python}
@@ -385,7 +385,7 @@ random_points = gpd.GeoDataFrame({'geometry': random_points})
 random_points
 ```
 
-The scenario illustrated in @fig-spatial-join shows that the `random_points` object (top left) lacks attribute data, while the world (top right) has attributes, including country names shown for a sample of countries in the legend.
+The scenario illustrated in @fig-spatial-join shows that the `random_points` object (top left) lacks attribute data, while the world (top right) has attributes, including country names that are shown for a sample of countries in the legend.
 Before creating the joined dataset, we use spatial subsetting to create `world_random`, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of @fig-spatial-join (b)).
 
 ```{python}
@@ -566,11 +566,11 @@ Often this is the case for administrative boundary data, whereby larger units---
 
 Incongruent aggregating objects, by contrast, do not share common borders with the target [@qiu_development_2012].
 This is problematic for spatial aggregation (and other spatial operations) illustrated in @fig-nz-and-grid: aggregating the centroid of each sub-zone will not return accurate results.
-Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods [@tobler_smooth_1979].
+Areal interpolation overcomes this issue by transferring values from one set of areal units to another, using a range of algorithms including simple area-weighted approaches and more sophisticated approaches such as 'pycnophylactic' methods [@tobler_smooth_1979].
 
-To demonstrate joining incongruent layers, we will create a "synthetic" layer comprising a regular grid of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer. 
+To demonstrate joining incongruent layers, we will create a 'synthetic' layer comprising a regular grid of rectangles of size $100\times100$ $km$, covering the extent of the `nz` layer. 
 This recipe can be used to create a regular grid covering any given layer (other than `nz`), at the specified resolution (`res`). 
-Most of the functions have been explained in previous chapters; we leave it as an exerise for the reader to explore how the code works.
+Most of the functions have been explained in previous chapters; we leave it as an exercise for the reader to explore how the code works.
 
 ```{python}
 # Settings: grid extent, resolution, and CRS
@@ -614,9 +614,9 @@ nz.plot(
 );
 ```
 
-Our goal, now, is to "transfer" the `'Population'` attribute (@fig-nz-and-grid) to the rectangular grid polygons, which is an example of a join between incongruent layers.
+Our goal, now, is to 'transfer' the `'Population'` attribute (@fig-nz-and-grid) to the rectangular grid polygons, which is an example of a join between incongruent layers.
 To do that, we basically need to calculate--for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell.
-The weights in the weighted sum calculation are the ratios between the area of the coinciding "part" out of the entire `nz` polygon.
+The weights in the weighted sum calculation are the ratios between the area of the coinciding 'part' out of the entire `nz` polygon.
 That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
 
 We start by calculating the entire area of each `nz` polygon, as follows, using the `.area` method (@sec-area-length).
@@ -627,7 +627,7 @@ nz
 ```
 
 Next, we use the `.overlay` method to calculate the pairwise intersections between `nz` and `grid`.
-As a result, we now have a layer where each `nz` polygon is "split" according to the `grid` polygons, hereby named `nz_grid`.
+As a result, we now have a layer where each `nz` polygon is split according to the `grid` polygons, hereby named `nz_grid`.
 
 ```{python}
 nz_grid = nz.overlay(grid)
@@ -666,9 +666,9 @@ nz_grid.plot(
 );
 ```
 
-Note that each of the "intersections" still holds the `Population` attribute of its "origin" feature of `nz`, i.e., each portion of the `nz` area is associated with the original complete population count for that area.
+Note that each of the intersections still holds the `Population` attribute of its 'origin' feature of `nz`, i.e., each portion of the `nz` area is associated with the original complete population count for that area.
 The real population size of each `nz_grid` feature, however, is smaller, or equal, depending on the geographic area proportion that it occupies out of the original `nz` feature.
-To make the "correction", we first calculate the ratio (`area_prop`) and then multiply it by the population.
+To make the correction, we first calculate the ratio (`area_prop`) and then multiply it by the population.
 The new (lowercase) attribute `population` now has the correct estimate of population sizes in `nz_grid`:
 
 ```{python}
@@ -678,7 +678,7 @@ nz_grid
 ```
 
 What is left to be done is to sum (see @sec-vector-attribute-aggregation) the population in all parts forming the same grid cell and join (see @sec-vector-attribute-joining) them back to the `grid` layer.
-Note that many of the grid cells have "No Data" for population, because they have no intersection with `nz` at all (@fig-nz-and-grid).
+Note that many of the grid cells have 'No Data' for population, because they have no intersection with `nz` at all (@fig-nz-and-grid).
 
 ```{python}
 nz_grid = nz_grid.groupby('id')['population'].sum().reset_index()
@@ -712,14 +712,14 @@ grid['population'].sum()
 
 The procedure in this section is known as an area-weighted interpolation of a spatially *extensive* (e.g., population) variable.
 In extensive interpolation, we assume that the variable of interest represents counts (such as, here, inhabitants) uniformly distributed across space. 
-In such case, each "part" of a given polygon captures the respective proportion of counts (such as, half of a region with $N$ inhabitants contains $N/2$ ihnabitants).
+In such case, each part of a given polygon captures the respective proportion of counts (such as, half of a region with $N$ inhabitants contains $N/2$ inhabitants).
 Accordingly, summing the parts gives the total count of the total area.
 
 An area-weighted interpolation of a spatially *intensive* variable (e.g., population density) is almost identical, except that we would have to calculate the weighted `.mean` rather than `.sum`, to preserve the average rather than the sum.
 In intensive interpolation, we assume that the variable of interest represents counts per unit area, i.e., density.
-Since density is (assumed to be) uniform, any "part" of a given polygon has exactly the same density as that of the whole polygon.
+Since density is (assumed to be) uniform, any part of a given polygon has exactly the same density as that of the whole polygon.
 Density values are therefore computed as weighted averages, rather than sums, of the parts. 
-Also see the "Area-weighted interpolation" section in @pebesma_spatial_2023.
+Also, see the 'Area-weighted interpolation' section in @pebesma_spatial_2023.
 
 ### Distance relations {#sec-distance-relations}
 
@@ -732,16 +732,16 @@ The result is a `Series` of pairwise distances.
 **geopandas** uses similar syntax and mode of operation for many of its methods and functions, including:
 
 * Numeric calculations, such as `.distance` (this section), returning numeric values
-* Topological evaluations methods, such as `.intersects` or `.disjoint` (@sec-topological-relations), returning boolean values 
+* Topological evaluation methods, such as `.intersects` or `.disjoint` (@sec-topological-relations), returning boolean values 
 * Geometry generating-methods, such as `.intersection` (@sec-clipping), returning geometries
 
 In all cases, the input is a `GeoSeries` and (or a `GeoDataFrame`) and a `shapely` geometry, and the output is a `Series` or `GeoSeries` of results, contrasting each geometry from the `GeoSeries` with the `shapely` geometry. 
-The examples in this book demonstrate this, so called "many-to-one", mode of the functions. 
+The examples in this book demonstrate this, so-called 'many-to-one', mode of the functions. 
 
 All of the above-mentioned methods also have a pairwise mode, perhaps less useful and not used in the book, where we evaluate relations between pairs of geometries in two `GeoSeries`, aligned either by index or by position. 
 :::
 
-To illustrate the `.distance` method, let's take the three highest point in New Zealand with `.sort_values` and `.iloc`.
+To illustrate the `.distance` method, let's take the three highest points in New Zealand with `.sort_values` and `.iloc`.
 
 ```{python}
 nz_highest = nz_height.sort_values(by='elevation', ascending=False).iloc[:3, :]
@@ -778,7 +778,7 @@ d
 ```
 
 Note that the distance between the second and third features in `nz_height` and the second feature in `co` is zero.
-This demonstrates the fact that distances between points and polygons refer to the distance to any part of the polygon: the second and third points in `nz_height` are in Otago, which can be verified by plotting them (two almost completly overlappling points in @fig-nz-height-and-otago).
+This demonstrates the fact that distances between points and polygons refer to the distance to any part of the polygon: the second and third points in `nz_height` are in Otago, which can be verified by plotting them (two almost completely overlappling points in @fig-nz-height-and-otago).
 
 ```{python}
 #| label: fig-nz-height-and-otago
@@ -805,10 +805,10 @@ This section builds on @sec-manipulating-raster-objects, which highlights variou
 The previous chapter (and especially @sec-manipulating-raster-objects) demonstrated how to retrieve values associated with specific row and column combinations from a raster.
 Raster values can also be extracted by location (coordinates) and other spatial objects.
 To use coordinates for subsetting, we can use the `.sample` method of a `rasterio` file connection object, combined with a list of coordinate tuples.
-The methods is demonstrated below to find the value of the cell that covers a point located at coordinates of `(0.1,0.1)` in `elev`.
+The method is demonstrated below to find the value of the cell that covers a point located at coordinates of `(0.1,0.1)` in `elev`.
 The returned object is a *generator*. 
 The rationale for returning a generator, rather than a `list`, is memory efficiency. 
-The number of sampled points may be huge, in which case we would want to "generate" the values one at a time rather than all at once.
+The number of sampled points may be huge, in which case we would want to generate the values one at a time rather than all at once.
 
 ```{python}
 src_elev.sample([(0.1, 0.1)])
@@ -856,7 +856,7 @@ We will also introduce a more user-friendly and general method to extract raster
 :::
 
 Another common use case of spatial subsetting is using a boolean mask, based on another raster with the same extent and resolution, or the original one, as illustrated in @fig-raster-subset.
-To do that, we "erase" the values in the array of one raster, according to another corresponding "mask" raster.
+To do that, we erase the values in the array of one raster, according to another corresponding mask raster.
 For example, let's read (@sec-using-rasterio) the `elev.tif` raster values into an array named `elev` (@fig-raster-subset (a)).
 
 ```{python}
@@ -876,7 +876,7 @@ Next, suppose that we want to keep only those values of `elev` which are `False`
 In other words, we want to mask `elev` with `mask`.
 The result will be stored in a copy named `masked_elev` (@fig-raster-subset (c)).
 In the case of `elev.tif`, to be able to store `np.nan` in the array of values, we also need to convert it to `float` (see @sec-summarizing-raster-objects). 
-Afterwards, masking is a matter of assigning `np.nan` into a subset defined by the mask, using the "boolean array indexing" syntax of **numpy**.
+Afterwards, masking is a matter of assigning `np.nan` into a subset defined by the mask, using the 'boolean array indexing' syntax of **numpy**.
 
 ```{python}
 masked_elev = elev.copy()
@@ -900,7 +900,7 @@ rasterio.plot.show(mask);
 rasterio.plot.show(masked_elev);
 ```
 
-The "mask" can be created from the array itself, using condition(s). 
+The mask can be created from the array itself, using condition(s). 
 That way, we can replace some values (e.g., values assumed to be wrong) with `np.nan`, such as in the following example.
 
 ```{python}
@@ -914,13 +914,13 @@ This technique is also used to reclassify raster values (see @sec-raster-local-o
 
 ### Map algebra {#sec-map-algebra}
 
-The term 'map algebra' was coined in the late 1970s to describe a "set of conventions, capabilities, and techniques" for the analysis of geographic raster and (although less prominently) vector data [@tomlin_map_1994].
+The term 'map algebra' was coined in the late 1970s to describe a 'set of conventions, capabilities, and techniques' for the analysis of geographic raster and (although less prominently) vector data [@tomlin_map_1994].
 In this context, we define map algebra more narrowly, as operations that modify or summarize raster cell values, with reference to surrounding cells, zones, or statistical functions that apply to every cell.
 
-Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage "raster is faster but vector is corrector".
+Map algebra operations tend to be fast, because raster datasets only implicitly store coordinates, hence the old adage 'raster is faster but vector is corrector'.
 The location of cells in raster datasets can be calculated by using its matrix position and the resolution and origin of the dataset (stored in the raster metadata, @sec-using-rasterio).
 For the processing, however, the geographic position of a cell is barely relevant as long as we make sure that the cell position is still the same after the processing.
-Additionally, if two or more raster datasets share the same extent, projection and resolution, one could treat them as matrices for the processing.
+Additionally, if two or more raster datasets share the same extent, projection, and resolution, one could treat them as matrices for the processing.
 
 Map algebra (or cartographic modeling with raster data) divides raster operations into four subclasses [@tomlin_geographic_1990], with each working on one or several grids simultaneously:
 
@@ -929,14 +929,14 @@ Map algebra (or cartographic modeling with raster data) divides raster operation
 -   Zonal operations are similar to focal operations, but the surrounding pixel grid on which new values are computed can have irregular sizes and shapes (@sec-zonal-operations)
 -   Global or per-raster operations; that means the output cell derives its value potentially from one or several entire rasters (@sec-global-operations-and-distances)
 
-This typology classifies map algebra operations by the number of cells used for each pixel processing step and the type of the output.
-For the sake of completeness, we should mention that raster operations can also be classified by discipline such as terrain, hydrological analysis, or image classification.
+This typology classifies map algebra operations by the number of cells used for each pixel processing step and the type of output.
+For the sake of completeness, we should mention that raster operations can also be classified by disciplines such as terrain, hydrological analysis, or image classification.
 The following sections explain how each type of map algebra operations can be used, with reference to worked examples.
 
 ### Local operations {#sec-raster-local-operations}
 
 Local operations comprise all cell-by-cell operations in one or several layers.
-Raster algebra is a classical use case of local operations---this includes adding or subtracting values from a raster, squaring and multiplying rasters.
+Raster algebra is a classical use case of local operations---this includes adding or subtracting values from a raster, squaring,, and multiplying rasters.
 Raster algebra also allows logical operations such as finding all raster cells that are greater than a specific value (e.g., `5` in our example below).
 Local operations are applied using the **numpy** array operations syntax, as demonstrated below.
 
@@ -947,22 +947,22 @@ elev
 ```
 
 Now, any element-wise array operation can be applied using **numpy** arithmetic or conditional operators and functions, comprising local raster operations in spatial analysis terminology.
-For example `elev + elev` adds the values of `elev` to itself, resulting in a raster with double values.
+For example, `elev + elev` adds the values of `elev` to itself, resulting in a raster with double values.
 
 ```{python}
 elev + elev
 ```
 
-Note that some functions and operators automatically change the data type to accommodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as trying to accomodate values above `255` in an `int8` array).
+Note that some functions and operators automatically change the data type to accommodate the resulting values, while other operators do not, potentially resulting in overflow (i.e., incorrect values for results beyond the data type range, such as trying to accommodate values above `255` in an `int8` array).
 For example, `elev**2` (`elev` squared) results in overflow.
-Since the `**` operator does not automatically change the data type, leaving it as `int8`, the resulting array has incorrect values for `16**2`, `17**2`, etc., which are above `255` and therefore cannot be accomodated.
+Since the `**` operator does not automatically change the data type, leaving it as `int8`, the resulting array has incorrect values for `16**2`, `17**2`, etc., which are above `255` and therefore cannot be accommodated.
 
 ```{python}
 elev**2
 ```
 
 To avoid this situation, we can, for instance, transform `elev` to the standard `int64` data type, using `.astype` before applying the `**` operator.
-That way, all results, up to `36**2` (`1296`), can be easily accomodated, since the `int64` data type supports values up to `9223372036854775807` (@tbl-numpy-data-types).
+That way, all results, up to `36**2` (`1296`), can be easily accommodated, since the `int64` data type supports values up to `9223372036854775807` (@tbl-numpy-data-types).
 
 ```{python}
 elev.astype(int)**2
@@ -988,7 +988,7 @@ rasterio.plot.show(elev > 5, cmap='Oranges');
 ```
 
 Another good example of local operations is the classification of intervals of numeric values into groups such as grouping a digital elevation model into low (class `1`), middle (class `2`) and high (class `3`) elevations.
-Here, the raster values in the ranges `0`--`12`, `12`--`24` and `24`--`36` are reclassified to take values `1`, `2` and `3`, respectively.
+Here, the raster values in the ranges `0`--`12`, `12`--`24`, and `24`--`36` are reclassified to take values `1`, `2`, and `3`, respectively.
 
 ```{python}
 recl = elev.copy()
@@ -1024,7 +1024,7 @@ $$ {#eq-ndvi}
 , where $NIR$ is the near-infrared band and $Red$ is the red band.
 
 Let's calculate NDVI for the multispectral Landsat satellite file (`landsat.tif`) of the Zion National Park.
-The file `landsat.tif` contains surface reflectance values (range `0`-`1`) in the blue, green, red and near-infrared (NIR) bands.
+The file `landsat.tif` contains surface reflectance values (range `0`-`1`) in the blue, green, red, and near-infrared (NIR) bands.
 We start by reading the file and extracting the NIR and red bands, which are the fourth and third bands, respectively.
 Next, we apply the formula to calculate the NDVI values.
 
@@ -1036,14 +1036,8 @@ red = landsat[2]
 ndvi = (nir-red)/(nir+red)
 ```
 
-<!-- We also convert values \>`1` to "No Data". -->
-<!-- ndvi[ndvi>1] = np.nan -->
-<!-- jn: explain why -->
-<!-- md: I guess because the 'landsat' dataset has (uncorrected) brightness values, so the NDVI turns out to be beyond the valid range? I suggest adding a box to explain that, but I'm not sure what are the values exactly. this dataset is from 'geocomr' so maybe Jakub/Robin, can you please help with that? -->
-<!-- md: Solved now after discussion on GitHub and help from Jakub https://github.com/geocompx/geocompy/issues/218 --> 
-
 When plotting an RGB image using the `rasterio.plot.show` function, the function assumes that values are in the range `[0,1]` for floats, or `[0,255]` for integers (otherwise clipped) and the order of bands is RGB.
-To "prepare" the multi-band raster for `rasterio.plot.show`, we therefore reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the `[:3]` slice to select the first three bands and then the `[::-1]` slice to reverse the bands order, and divide by the raster maximum to set the maximum value to `1`.
+To prepare the multi-band raster for `rasterio.plot.show`, we, therefore, reverse the order of the first three bands (to go from B-G-R-NIR to R-G-B), using the `[:3]` slice to select the first three bands and then the `[::-1]` slice to reverse the bands order, and divide by the raster maximum to set the maximum value to `1`.
 
 ```{python}
 landsat_rgb = landsat[:3][::-1] / landsat.max()
@@ -1054,7 +1048,7 @@ Python slicing notation, which **numpy**, **pandas** and **geopandas** also foll
 The default is to start from the beginning, go to the end, and use steps of `1`. 
 Otherwise, `start` is inclusive and `end` is exclusive, whereas negative `step` values imply going backwards starting from the end. 
 Also, always keep in mind that Python indices start from `0`.
-When subsetting two- or three-dimensional objects, indices for each dimension are separated by commas, where either index can be set to `:` meaning "all values".
+When subsetting two- or three-dimensional objects, indices for each dimension are separated by commas, where either index can be set to `:` meaning 'all values'.
 The last dimensions can also be omitted implying `:`, e.g., to subset the first three bands from a three-dimensional array `a` we can use either `a[:3,:,:]` or `a[:3]`.
 
 In the above example: 
@@ -1078,9 +1072,9 @@ rasterio.plot.show(ndvi, cmap='Greens');
 
 ### Focal operations {#sec-focal-operations}
 
-While local functions operate on one cell at time (though possibly from multiple layers), focal operations take into account a central (focal) cell and its neighbors.
-The neighborhood (also named kernel, filter or moving window) under consideration is typically of $3 \times 3$ cells (that is, the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user.
-A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the the central cell, and moves on to the next central cell (@fig-focal-filter).
+While local functions operate on one cell at a time (though possibly from multiple layers), focal operations take into account a central (focal) cell and its neighbors.
+The neighborhood (also named kernel, filter, or moving window) under consideration is typically of $3 \times 3$ cells (that is, the central cell and its eight surrounding neighbors), but can take on any other (not necessarily rectangular) shape as defined by the user.
+A focal operation applies an aggregation function to all cells within the specified neighborhood, uses the corresponding output as the new value for the central cell, and moves on to the next central cell (@fig-focal-filter).
 Other names for this operation are spatial filtering and convolution [@burrough_principles_2015].
 
 ![Input raster (left) and resulting output raster (right) due to a focal operation---finding the minimum value in $3 \times 3$ moving windows.](images/04_focal_example.png){#fig-focal-filter}
@@ -1107,10 +1101,10 @@ elev_min
 Special care should be given to the edge pixels -- how should they be calculated?
 The **scipy.ndimage** filtering functions give several options through the `mode` parameter (see the documentation of any filtering function, such as `scipy.ndimage.median_filter`, for the definition of each mode): `reflect` (the default), `constant`, `nearest`, `mirror`, `wrap`.
 Sometimes artificially extending raster edges is considered unsuitable.
-In other words, we may wish the resulting raster to contain pixel values with "complete" windows only, for example to have a uniform sample size or because values in all directions matter (such as in topographic calculations).
+In other words, we may wish the resulting raster to contain pixel values with 'complete' windows only, for example, to have a uniform sample size or because values in all directions matter (such as in topographic calculations).
 There is no specific option *not* to extend edges in **scipy.ndimage**.
 However, to get the same effect, the edges of the filtered array can be assigned with `np.nan`, in a number of rows and columns according to filter size.
-For example, when using a filter of `size=3`, the outermost "layer" of pixels may be assigned with `np.nan`, reflecting the fact that these pixels have incomplete $3 \times 3$ neighborhoods (@fig-focal-filter):
+For example, when using a filter of `size=3`, the outermost 'layer' of pixels may be assigned with `np.nan`, reflecting the fact that these pixels have incomplete $3 \times 3$ neighborhoods (@fig-focal-filter):
 
 ```{python}
 elev_min = elev_min.astype(float)
@@ -1163,7 +1157,9 @@ Useful terrain metrics include:
 For example, each of these, and other, terrain metrics can be computed with the **richdem** package.
 
 ::: callout-note
-Terrain metrics are essentially focal filters with customized functions. Using `scipy.ndimage.generic_filter`, along with such custom functions, is an option for those who would like to calculate terrain metric through coding by hand and/or limiting their code dependencies. For example, the *How Aspect works*[^how_aspect_works] and *How Slope works*[^how_slope_works] pages from the ArcGIS Pro documentation provide exlanations and formulas of the required funtions for aspect and slope metrics (@fig-raster-slope), respectively, which can be translated to **numpy**-based functions to be used in `scipy.ndimage.generic_filter` to calculate those metrics.
+Terrain metrics are essentially focal filters with customized functions. 
+Using `scipy.ndimage.generic_filter`, along with such custom functions, is an option for those who would like to calculate terrain metric through coding by hand and/or limiting their code dependencies.
+For example, the *How Aspect works*[^how_aspect_works] and *How Slope works*[^how_slope_works] pages from the ArcGIS Pro documentation provide explanations and formulas of the required functions for aspect and slope metrics (@fig-raster-slope), respectively, which can be translated to **numpy**-based functions to be used in `scipy.ndimage.generic_filter` to calculate those metrics.
 :::
 
 [^how_aspect_works]: [https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-aspect-works.htm](https://pro.arcgis.com/en/pro-app/latest/tool-reference/spatial-analyst/how-aspect-works.htm)
@@ -1210,7 +1206,7 @@ os.system('gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif')
 ```
 
 @fig-raster-slope shows the results, using our more familiar plotting methods from **rasterio**.
-The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing "No Data" flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the cyclic color scales (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
+The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing 'No Data' flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the cyclic color scales (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
 
 ```{python}
 #| label: fig-raster-slope
@@ -1261,7 +1257,7 @@ To do that, first we first obtain the unique values defining the zones using `np
 np.unique(grain)
 ```
 
-Now, we can use dictionary comprehension (see note below) to "split" the `elev` array into separate one-dimensional arrays with values per `grain` group, with keys being the unique `grain` values.
+Now, we can use dictionary comprehension (see note below) to split the `elev` array into separate one-dimensional arrays with values per `grain` group, with keys being the unique `grain` values.
 
 ```{python}
 z = {i: elev[grain == i] for i in np.unique(grain)}
@@ -1299,15 +1295,15 @@ Aside from that, global operations are also useful for the computation of distan
 In the first case, one can calculate the distance from each cell to specific target cells or vector geometries.
 For example, one might want to compute the distance to the nearest coast (see @sec-distance-to-nearest-geometry).
 We might also want to consider topography, that means, we are not only interested in the pure distance but would like also to avoid the crossing of mountain ranges when going to the coast.
-To do so, we can weight the distance with elevation so that each additional altitudinal meter "prolongs" the Euclidean distance (this is beyond the scope of the book).
+To do so, we can weight the distance with elevation so that each additional altitudinal meter 'prolongs' the Euclidean distance (this is beyond the scope of the book).
 Visibility and viewshed computations also belong to the family of global operations (also beyond the scope of the book).
 
 ### Map algebra counterparts in vector processing
 
 Many map algebra operations have a counterpart in vector processing [@liu_essential_2009].
-Computing a distance raster (global operation) while only considering a maximum distance (logical focal operation) is the equivalent to a vector buffer operation (@sec-buffers).
+Computing a distance raster (global operation) while only considering a maximum distance (logical focal operation) is the equivalent of a vector buffer operation (@sec-buffers).
 Reclassifying raster data (either local or zonal function depending on the input) is equivalent to dissolving vector data (@sec-geometry-unions).
-Overlaying two rasters (local operation), where one contains "No Data" values representing a mask, is similar to vector clipping (Section @sec-clipping).
+Overlaying two rasters (local operation), where one contains 'No Data' values representing a mask, is similar to vector clipping (Section @sec-clipping).
 Quite similar to spatial clipping is intersecting two layers (@sec-spatial-subsetting-vector, @sec-joining-incongruent-layers).
 The difference is that these two layers (vector or raster) simply share an overlapping area.
 However, be careful with the wording.
@@ -1319,12 +1315,12 @@ Zonal operations dissolve the cells of one raster in accordance with the zones (
 
 Suppose we would like to compute the NDVI (see @sec-raster-local-operations), and additionally want to compute terrain attributes from elevation data for observations within a study area.
 Such computations rely on remotely sensed information.
-The corresponding source imagery is often divided into scenes covering a specific spatial extent (i.e., "tiles"), and frequently, a study area covers more than one scene.
-Then, we would need to merge (also known as "mosaic") the scenes covering our study area.
-In case when all scenes are "aligned" (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes need to be resampled (see @sec-raster-resampling) to the same grid (e.g., the one defined by the first scene).
+The corresponding source imagery is often divided into scenes covering a specific spatial extent (i.e., tiles), and frequently, a study area covers more than one scene.
+Then, we would need to merge (also known as mosaic) the scenes covering our study area.
+In case when all scenes are aligned (i.e., share the same origin and resolution), this can be thought of as simply gluing them into one big raster; otherwise, all scenes need to be resampled (see @sec-raster-resampling) to the same grid (e.g., the one defined by the first scene).
 
 For example, let's merge digital elevation data from two SRTM elevation tiles, for Austria (`'aut.tif'`) and Switzerland (`'ch.tif'`).
-Merging can be done using function `rasterio.merge.merge`, which accepts a `list` of raster file connections, and returns the new `ndarray` and the corresponding "transform" object, representing the resulting mosaic.
+Merging can be done using function `rasterio.merge.merge`, which accepts a `list` of raster file connections, and returns the new `ndarray` and the corresponding transform object, representing the resulting mosaic.
 
 ```{python}
 src_1 = rasterio.open('data/aut.tif')
@@ -1367,10 +1363,10 @@ Other possible methods are:
 When dealing with non-overlapping tiles, such as `aut.tif` and `ch.tif` (above), the `method` argument has no practical effect.
 However, it becomes relevant when we want to combine spectral imagery from scenes that were taken on different dates.
 The above four options for `method` do not cover the commonly required scenario when we would like to compute the *mean* value---for example to calculate a seasonal average NDVI image from a set of partially overlapping satellite images (such as Landsat).
-An alternative worflow to `rasterio.merge.merge`, for calculating a mosaic as well as "averaging" any overlaps, is to go through two steps:
+An alternative workflow to `rasterio.merge.merge`, for calculating a mosaic as well as averaging any overlaps, is to go through two steps:
 
--   Resampling all scenes into a common "global" grid (@sec-raster-resampling), thereby producing a series of "matching" rasters (with the area surrounding each scene set as "No Data")
--   Averaging the rasters through raster algebra (@sec-raster-local-operations), using `np.mean(m,axis=0)` or `np.nanmean(m,axis=0)` (depending whether we prefer to ignore "No Data" or not), where `m` is the multi-band array, which would return a single-band array of averages
+-   Resampling all scenes into a common 'global' grid (@sec-raster-resampling), thereby producing a series of matching rasters (with the area surrounding each scene set as 'No Data')
+-   Averaging the rasters through raster algebra (@sec-raster-local-operations), using `np.mean(m,axis=0)` or `np.nanmean(m,axis=0)` (depending whether we prefer to ignore 'No Data' or not), where `m` is the multi-band array, which would return a single-band array of averages
 
 <!-- ## Exercises
 
