@@ -58,7 +58,7 @@ It includes four main techniques:
 -   Extracting raster values using different types of vector data (Section @sec-raster-extraction)
 -   Raster-vector conversion (@sec-rasterization and @sec-spatial-vectorization)
 
-These concepts are demonstrated using data from in previous chapters, to understand their potential real-world applications.
+These concepts are demonstrated using data from previous chapters, to understand their potential real-world applications.
 
 ## Raster masking and cropping {#sec-raster-cropping}
 
@@ -79,7 +79,7 @@ Since it is easier and more precise to reproject vector layers, compared to rast
 zion = zion.to_crs(src_srtm.crs)
 ```
 
-To mask the image, i.e., convert all pixels which do not intersect with the `zion` polygon to "No Data", we use the `rasterio.mask.mask` function.
+To mask the image, i.e., convert all pixels which do not intersect with the `zion` polygon to 'No Data', we use the `rasterio.mask.mask` function.
 
 
 ```{python}
@@ -91,9 +91,9 @@ out_image_mask, out_transform_mask = rasterio.mask.mask(
 )
 ```
 
-Note that we need to choose and specify a "No Data" value, within the valid range according to the data type.
+Note that we need to choose and specify a 'No Data' value, within the valid range according to the data type.
 Since `srtm.tif` is of type `uint16` (how can we check?), we choose `9999` (a positive integer that is guaranteed not to occur in the raster).
-Also note that **rasterio** does not directly support **geopandas** data structures, so we need to pass a "collection" of **shapely** geometries: a `GeoSeries` (see above) or a `list` of **shapely** geometries (see next example) both work.
+Also note that **rasterio** does not directly support **geopandas** data structures, so we need to pass a 'collection' of **shapely** geometries: a `GeoSeries` (see above) or a `list` of **shapely** geometries (see next example) both work.
 The output consists of two objects.
 The first one is the `out_image` array with the masked values.
 
@@ -110,9 +110,9 @@ out_transform_mask
 Note that masking (without cropping!) does not modify the raster extent.
 Therefore, the new transform is identical to the original (`src_srtm.transform`).
 
-Unfortunately, the `out_image` and `out_transform` objects do not contain any information indicating that `9999` represents "No Data".
+Unfortunately, the `out_image` and `out_transform` objects do not contain any information indicating that `9999` represents 'No Data'.
 To associate the information with the raster, we must write it to file along with the corresponding metadata.
-For example, to write the masked raster to file, we first need to modify the "No Data" setting in the metadata.
+For example, to write the masked raster to file, we first need to modify the 'No Data' setting in the metadata.
 
 ```{python}
 dst_kwargs = src_srtm.meta
@@ -128,14 +128,14 @@ new_dataset.write(out_image_mask)
 new_dataset.close()
 ```
 
-Now we can re-import the raster and check that the "No Data" value is correctly set.
+Now we can re-import the raster and check that the 'No Data' value is correctly set.
 
 ```{python}
 src_srtm_mask = rasterio.open('output/srtm_masked.tif')
 ```
 
 The `.meta` property contains the `nodata` entry.
-Now, any relevant operation (such as plotting, see @fig-raster-crop (b)) will take "No Data" into account.
+Now, any relevant operation (such as plotting, see @fig-raster-crop (b)) will take 'No Data' into account.
 
 ```{python}
 src_srtm_mask.meta
@@ -156,7 +156,7 @@ bb
 ```
 
 The extent can now be used for masking.
-Here, we are also using the `all_touched=True` option so that pixels partially overlapping with the extent are also included in the output.
+Here, we are also using the `all_touched=True` option, so that pixels which are partially overlapping with the extent are also included in the output.
 
 ```{python}
 out_image_crop, out_transform_crop = rasterio.mask.mask(
@@ -168,7 +168,7 @@ out_image_crop, out_transform_crop = rasterio.mask.mask(
 )
 ```
 
-In the case of cropping, there is no particular reason to write the result to file for easier plotting, such as in the other two examples, since there are no "No Data" values (@fig-raster-crop (c)).
+In the case of cropping, there is no particular reason to write the result to file for easier plotting, such as in the other two examples, since there are no 'No Data' values (@fig-raster-crop (c)).
 
 ::: callout-note
 As mentioned above, **rasterio** functions typically accept vector geometries in the form of `lists` of `shapely` objects. `GeoSeries` are conceptually very similar, and also accepted. However, even an individual geometry has to be in a `list`, which is why we pass `[bb]`, and not `bb`, in the above `rasterio.mask.mask` function call (the latter would raise an error).
@@ -185,7 +185,7 @@ out_image_mask_crop, out_transform_mask_crop = rasterio.mask.mask(
 )
 ```
 
-When writing the result to file, it is here crucial to update the transform and dimensions, since they were modified as a result of cropping.
+When writing the result to a file, it is here crucial to update the transform and dimensions, since they were modified as a result of cropping.
 Also note that `out_image_mask_crop` is a three-dimensional array (even though it has one band in this case), so the number of rows and columns are in `.shape[1]` and `.shape[2]` (rather than `.shape[0]` and `.shape[1]`), respectively.
 
 ```{python}
@@ -257,7 +257,7 @@ To demonstrate extraction to points, we will use `zion_points`, which contains a
 
 ```{python}
 #| label: fig-zion-points
-#| fig-cap: 30 point locations within the Zion National Park, with elevation in the background
+#| fig-cap: 30-point locations within the Zion National Park, with elevation in the background
 fig, ax = plt.subplots()
 rasterio.plot.show(src_srtm, ax=ax)
 zion_points.plot(ax=ax, color='black', edgecolor='white');
@@ -276,8 +276,8 @@ result1 = rasterstats.point_query(
 ```
 
 The first two arguments are the vector layer and the array with raster values. 
-The `nodata` and `affine` arguments are used to align the array values into the CRS, and to correctly treat "No Data" flags. 
-Finally, the `interpolate` argument controls the way that the cell values are asigned to the point; `interpolate='nearest'` typically makes more sense, as opposed to the other option `interpolate='bilinear'` which is the default.
+The `nodata` and `affine` arguments are used to align the array values into the CRS, and to correctly treat 'No Data' flags. 
+Finally, the `interpolate` argument controls the way that the cell values are assigned to the point; `interpolate='nearest'` typically makes more sense, as opposed to the other option `interpolate='bilinear'` which is the default.
 
 Alternatively, we can pass a raster file path to `rasterstats.point_query`, in which case `nodata` and `affine` are not necessary, as the function can understand those properties directly from the raster file.
 
@@ -315,7 +315,7 @@ Raster extraction is also applicable with line selectors.
 The typical line extraction algorithm is to extract one value for each raster cell touched by a line.
 However, this particular approach is not recommended to obtain values along the transects, as it is hard to get the correct distance between each pair of extracted raster values.
 
-For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points using the "extraction to points" technique (@sec-extraction-to-points).
+For line extraction, a better approach is to split the line into many points (at equal distances along the line) and then extract the values for these points using the 'extraction to points' technique (@sec-extraction-to-points).
 To demonstrate this, the code below creates (see @sec-vector-data for recap) `zion_transect`, a straight line going from northwest to southeast of the Zion National Park.
 
 ```{python}
@@ -351,7 +351,7 @@ distances = np.arange(0, zion_transect_utm.length, 250)
 distances[:7]  ## First 7 distance cutoff points
 ```
 
-The distance cutoffs are used to sample ("interpolate") points along the line.
+The distance cutoffs are used to sample ('interpolate') points along the line.
 The **shapely** `.interpolate` method is used to generate the points, which then are reprojected back to the geographic CRS of the raster (EPSG:`4326`).
 
 ```{python}
@@ -362,7 +362,7 @@ zion_transect_pnt = gpd.GeoSeries(zion_transect_pnt, crs=32612) \
 zion_transect_pnt
 ```
 
-Finally, we extract the elevation values for each point in our transect and combine the information with `zion_transect_pnt` (after "promoting" it to a `GeoDataFrame`, to accommodate extra attributes), using the point extraction method shown earlier (@sec-extraction-to-points).
+Finally, we extract the elevation values for each point in our transect and combine the information with `zion_transect_pnt` (after 'promoting' it to a `GeoDataFrame`, to accommodate extra attributes), using the point extraction method shown earlier (@sec-extraction-to-points).
 We also attach the respective distance cutoff points `distances`.
 
 ```{python}
@@ -435,8 +435,8 @@ The result provides useful summaries, for example that the maximum height in the
 Note the `stats` argument, where we determine what type of statistics are calculated per polygon.
 Possible values other than `'mean'`, `'min'`, and `'max'` are:
 
--   `'count'`---The number of valid (i.e., excluding "No Data") pixels
--   `'nodata'`---The number of pixels with 'No Data"
+-   `'count'`---The number of valid (i.e., excluding 'No Data') pixels
+-   `'nodata'`---The number of pixels with 'No Data'
 -   `'majority'`---The most frequently occurring value
 -   `'median'`---The median value
 
@@ -456,7 +456,7 @@ counts = np.unique(out_image, return_counts=True)
 counts
 ```
 
-According to the result, for example, the value `2` ("Developed" class) appears in `4205` pixels within the Zion polygon.
+According to the result, for example, the value `2` ('Developed' class) appears in `4205` pixels within the Zion polygon.
 
 @fig-raster-extract-to-polygon illustrates the two types of raster extraction to polygons described above.
 
@@ -488,17 +488,17 @@ As we saw in @sec-spatial-class, the raster data model has some characteristics 
 Furthermore, the process of rasterization can help simplify datasets because the resulting values all have the same spatial resolution: rasterization can be seen as a special type of geographic data aggregation.
 
 The **rasterio** package contains the `rasterio.features.rasterize` function for doing this work.
-To make it happen, we need to have the "template" grid definition, i.e., the "template" raster defining the extent, resolution and CRS of the output, in the `out_shape` (the output dimensions) and `transform` (the transformation matrix) arguments of `rasterio.features.rasterize`.
+To make it happen, we need to have the 'template' grid definition, i.e., the 'template' raster defining the extent, resolution and CRS of the output, in the `out_shape` (the output dimensions) and `transform` (the transformation matrix) arguments of `rasterio.features.rasterize`.
 In case we have an existing template raster, we simply need to query its `.shape` and `.transform`.
 On the other hand, if we need to create a custom template, e.g., covering the vector layer extent with specified resolution, there is some extra work to calculate both of these objects (see next example).
 
 As for the vector geometries and their associated values, the `rasterio.features.rasterize` function requires the input vector shapes in the form of an iterable object of `geometry,value` pairs, where:
 
 -   `geometry` is the given geometry (**shapely** geometry object)
--   `value` is the value to be "burned" into pixels coinciding with the geometry (`int` or `float`)
+-   `value` is the value to be 'burned' into pixels coinciding with the geometry (`int` or `float`)
 
 Furthermore, we define how to deal with multiple values burned into the same pixel, using the `merge_alg` parameter.
-The default `merge_alg=rasterio.enums.MergeAlg.replace` means that "later" values replace "earlier" ones, i.e., the pixel gets the "last" burned value.
+The default `merge_alg=rasterio.enums.MergeAlg.replace` means that 'later' values replace 'earlier' ones, i.e., the pixel gets the 'last' burned value.
 The other option `merge_alg=rasterio.enums.MergeAlg.add` means that burned values are summed, i.e., the pixel gets the sum of all burned values.
 
 When rasterizing lines and polygons, we also have the choice between two pixel-matching algorithms. 
@@ -507,22 +507,22 @@ The other option `all_touched=True`, as the name suggests, implies that all pixe
 
 [^bresenham]: [https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm](https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm)
 
-Finally, we can set the `fill` value, which is the value that "unaffected" pixels get, with `fill=0` being the default.
+Finally, we can set the `fill` value, which is the value that 'unaffected' pixels get, with `fill=0` being the default.
 
 How the `rasterio.features.rasterize` function works with all of these various parameters will be made clear in the next examples.
 
-The geographic resolution of the "template" raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive.
+The geographic resolution of the 'template' raster has a major impact on the results: if it is too low (cell size is too large), the result may miss the full geographic variability of the vector data; if it is too high, computational times may be excessive.
 There are no simple rules to follow when deciding an appropriate geographic resolution, which is heavily dependent on the intended use of the results.
 Often the target resolution is imposed on the user, for example when the output of rasterization needs to be aligned to an existing raster.
 
 Depending on the input data, rasterization typically takes one of two forms which we demonstrate next:
 
 -   in *point* rasterization (@sec-rasterizing-points), we typically choose how to treat multiple points: either to summarize presence/absence, point count, or summed attribute values (@fig-rasterize-points)
--   in *line* and *polygon* rasterization (@sec-rasterizing-lines-and-polygons), there are typically no such "overlaps" and we simply "burn" attribute values, or fixed values, into pixels coinciding with the given geometries (@fig-rasterize-lines-polygons)
+-   in *line* and *polygon* rasterization (@sec-rasterizing-lines-and-polygons), there are typically no such 'overlaps' and we simply 'burn' attribute values, or fixed values, into pixels coinciding with the given geometries (@fig-rasterize-lines-polygons)
 
 ### Rasterizing points {#sec-rasterizing-points}
 
-To demonstrate point rasterization, we will prepare a "template" raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London, illustrated in @fig-rasterize-points (a)) and a spatial resolution of 1000 $m$.
+To demonstrate point rasterization, we will prepare a 'template' raster that has the same extent and CRS as the input vector data `cycle_hire_osm_projected` (a dataset on cycle hire points in London, illustrated in @fig-rasterize-points (a)) and a spatial resolution of 1000 $m$.
 To do that, we first take our point layer and transform it to a projected CRS.
 
 ```{python}
@@ -554,7 +554,7 @@ shape
 ```
 
 Finally, we are ready to rasterize.
-As mentioned above, point rasterization can be a very flexible operation: the results depend not only on the nature of the template raster, but also on the the pixel "activation" method, namely the way we deal with multiple points matching the same pixel.
+As mentioned above point rasterization can be a very flexible operation: the results depend not only on the nature of the template raster, but also on the pixel 'activation' method, namely the way we deal with multiple points matching the same pixel.
 
 To illustrate this flexibility, we will try three different approaches to point rasterization (@fig-rasterize-points (b)-(d)).
 First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters).
@@ -569,8 +569,8 @@ g[:5]
 ```
 
 The list of `geometry,value` pairs is passed to `rasterio.features.rasterize`, along with the `out_shape` and `transform` which define the raster template.
-The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in "unaffected" pixels.
-Note that `merge_alg=rasterio.enums.MergeAlg.replace` (the default) is used here, which means that a pixel get `1` when one or more point fall in it, or keeps the original `0` value otherwise.
+The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in 'unaffected' pixels.
+Note that `merge_alg=rasterio.enums.MergeAlg.replace` (the default) is used here, which means that a pixel get `1` when one or more points fall in it, or keeps the original `0` value otherwise.
 
 ```{python}
 ch_raster1 = rasterio.features.rasterize(
@@ -599,7 +599,7 @@ ch_raster2
 
 The cycle hire locations have different numbers of bicycles described by the capacity variable, raising the question, what is the capacity in each grid cell?
 To calculate that, in our third point rasterization variant we sum the field (`'capacity'`) rather than the fixed values of `1`.
-This requires using a more complex list comprehension expression, where we also (1) extract both geometries and the attribute of interest, and (2) filter out "No Data" values, which can be done as follows.
+This requires using a more complex list comprehension expression, where we also (1) extract both geometries and the attribute of interest, and (2) filter out 'No Data' values, which can be done as follows.
 You are invited to run the separate parts to see how this works; the important point is that, in the end, we get the list `g` with the `geometry,value` pairs to be burned, only that the `value` is now variable, rather than fixed, among points.
 
 ```{python}
@@ -660,14 +660,14 @@ california = us_states[us_states['NAME'] == 'California']
 california
 ```
 
-Second, we "cast" the polygon into a `'MultiLineString'` geometry, using the `.boundary` property that `GeoSeries` and `DataFrame`s have.
+Second, we 'cast' the polygon into a `'MultiLineString'` geometry, using the `.boundary` property that `GeoSeries` and `DataFrame`s have.
 
 ```{python}
 california_borders = california.boundary
 california_borders
 ```
 
-Third, we create the `transform` and `shape` describing our template raster, with a resolution of a `0.5` degree, using the same approach as in @sec-rasterizing-points.
+Third, we create the `transform` and `shape` describing our template raster, with a resolution of `0.5` degree, using the same approach as in @sec-rasterizing-points.
 
 ```{python}
 bounds = california_borders.total_bounds
@@ -688,7 +688,7 @@ Finally, we rasterize `california_borders` based on the calculated template's `s
 When considering line or polygon rasterization, one useful additional argument is `all_touched`.
 By default it is `False`, but when changed to `True`---all cells that are touched by a line or polygon border get a value.
 Line rasterization with `all_touched=True` is demonstrated in the code below (@fig-rasterize-lines-polygons, left).
-We are also using `fill=np.nan` to set "background" values to "No Data".
+We are also using `fill=np.nan` to set 'background' values to 'No Data'.
 
 ```{python}
 california_raster1 = rasterio.features.rasterize(
@@ -700,7 +700,7 @@ california_raster1 = rasterio.features.rasterize(
 )
 ```
 
-Compare it to a polygon rasterization, with `all_touched=False` (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in @fig-rasterize-lines-polygons (right).
+Compare it to polygon rasterization, with `all_touched=False` (the default), which selects only raster cells whose centroids are inside the selector polygon, as illustrated in @fig-rasterize-lines-polygons (right).
 
 ```{python}
 california_raster2 = rasterio.features.rasterize(
@@ -751,7 +751,7 @@ pnt.plot(ax=ax, color='black', markersize=1);
 ## Spatial vectorization {#sec-spatial-vectorization}
 
 Spatial vectorization is the counterpart of rasterization (@sec-rasterization).
-It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines or polygons.
+It involves converting spatially continuous raster data into spatially discrete vector data such as points, lines, or polygons.
 There are three standard methods to convert a raster to a vector layer, which we cover next:
 
 -   Raster to polygons (@sec-raster-to-polygons)---converting raster cells to rectangular polygons, representing pixel areas
@@ -786,7 +786,7 @@ pol[0]
 ```
 
 ::: callout-note
-Note that, when transforming a raster cell into a polygon, five coordinate pairs need to be kept in memory to represent  its geometry (explaining why rasters are often fast compared with vectors!).
+Note that, when transforming a raster cell into a polygon, five-coordinate pairs need to be kept in memory to represent its geometry (explaining why rasters are often fast compared with vectors!).
 :::
 
 To transform the `list` coming out of `rasterio.features.shapes` into the familiar `GeoDataFrame`, we need few more steps of data reshaping.
@@ -891,8 +891,8 @@ pnt = gpd.GeoDataFrame(data={'value':z}, geometry=geom)
 pnt
 ```
 
-This "high-level" workflow, like many other **rasterio**-based workflows covered in the book, is a commonly used one but lacking from the package itself. 
-From the user perspective, it may be a good idea to wrap the workflow into a function (e.g., `raster_to_points(src)`, returning a `GeoDataFrame`), to be re-used whenever we need it.
+This 'high-level' workflow, like many other **rasterio**-based workflows covered in the book, is a commonly used one but lacking from the package itself. 
+From the user's perspective, it may be a good idea to wrap the workflow into a function (e.g., `raster_to_points(src)`, returning a `GeoDataFrame`), to be re-used whenever we need it.
 
 @fig-raster-to-points shows the input raster and the resulting point layer.
 
@@ -913,7 +913,7 @@ pnt.plot(column='value', legend=True, edgecolor='black', ax=ax)
 rasterio.plot.show(src_elev, alpha=0, ax=ax);
 ```
 
-Note that "No Data" pixels can be filtered out from the conversion, if necessary (see @sec-distance-to-nearest-geometry).
+Note that 'No Data' pixels can be filtered out from the conversion, if necessary (see @sec-distance-to-nearest-geometry).
 
 ### Raster to contours {#sec-raster-to-contours}
 
@@ -975,11 +975,11 @@ contours1.plot(ax=ax, edgecolor='black');
 
 ## Distance to nearest geometry {#sec-distance-to-nearest-geometry}
 
-Calculating a raster of distances to the nearest geometry is an example of a "global" raster operation (@sec-global-operations-and-distances).
+Calculating a raster of distances to the nearest geometry is an example of a 'global' raster operation (@sec-global-operations-and-distances).
 To demonstrate it, suppose that we need to calculate a raster representing the distance to the nearest coast in New Zealand.
 This example also wraps many of the concepts introduced in this chapter and in previous chapters, such as raster aggregation (@sec-raster-agg-disagg), raster conversion to points (@sec-raster-to-points), and rasterizing points (@sec-rasterizing-points).
 
-For the coastline, we will dissolve the New Zealand administrative division polygon layer and "extract" the boundary as a `'MultiLineString'` geometry (@fig-nz-coastline). Note that `.dissolve(by=None)` (@sec-vector-attribute-aggregation) calls `.union_all` on all geometries (i.e., aggregates everything into one group), which is what we want to do here.
+For the coastline, we will dissolve the New Zealand administrative division polygon layer and 'extract' the boundary as a `'MultiLineString'` geometry (@fig-nz-coastline). Note that `.dissolve(by=None)` (@sec-vector-attribute-aggregation) calls `.union_all` on all geometries (i.e., aggregates everything into one group), which is what we want to do here.
 
 ```{python}
 #| label: fig-nz-coastline
@@ -988,8 +988,8 @@ coastline = nz.dissolve().to_crs(src_nz_elev.crs).boundary.iloc[0]
 coastline
 ```
 
-For a "template" raster, we will aggregate the New Zealand DEM, in the `nz_elev.tif` file, to 5 times coarser resolution.
-The code section below follows the aggeregation example in @sec-raster-agg-disagg.
+For a 'template' raster, we will aggregate the New Zealand DEM, in the `nz_elev.tif` file, to 5 times coarser resolution.
+The code section below follows the aggregation example in @sec-raster-agg-disagg.
 
 ```{python}
 factor = 0.2
