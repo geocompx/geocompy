@@ -29,7 +29,7 @@
 # 
 # There are several partially overlapping packages for working with raster data, each with its own advantages and disadvantages.
 # In this book, we focus on the most prominent one: **rasterio**, which represents "simple" raster datasets with a combination of a **numpy** array, and a metadata object (`dict`) providing geographic metadata such as the coordinate system.
-# **xarray** is a notable alternative to **rasterio** not covered in this book which uses native `xarray.Dataset` and `xarray.DataArray` classes to effectively represent complex raster datasets such as 'NetCDF' files with multiple bands and metadata.
+# **xarray** is a notable alternative to **rasterio** not covered in this book which uses native `xarray.Dataset` and `xarray.DataArray` classes to effectively represent complex raster datasets such as NetCDF files with multiple bands and metadata.
 # 
 # There is much overlap in some fields and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data.
 # Furthermore, it is possible to convert between the two forms (see @sec-raster-vector).
