@@ -17,7 +17,7 @@
 # Which to use?
 # The answer likely depends on your domain of application, and the datasets you have access to:
 # 
-# -   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?--> <!-- md: I think that's true but now sure how we can back up this idea, will be happy to hear what everyone thinks -->
+# -   Vector datasets and methods dominate the social sciences because human settlements and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?--> <!-- md: I think that's true but now sure how we can back up this idea, will be happy to hear what everyone thinks -->
 # -   Raster datasets and methods dominate many environmental sciences because of the reliance on remote sensing data
 # 
 # Python has strong support for both data models.
