@@ -17,7 +17,7 @@
 # Which to use?
 # The answer likely depends on your domain of application, and the datasets you have access to:
 # 
-# -   Vector datasets and methods dominate the social sciences because human settlements and and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?--> <!-- md: I think that's true but now sure how we can back up this idea, will be happy to hear what everyone thinks -->
+# -   Vector datasets and methods dominate the social sciences because human settlements and processes (e.g., transport infrastructure) tend to have discrete borders<!--jn: is that true?--> <!-- md: I think that's true but now sure how we can back up this idea, will be happy to hear what everyone thinks -->
 # -   Raster datasets and methods dominate many environmental sciences because of the reliance on remote sensing data
 # 
 # Python has strong support for both data models.
@@ -29,7 +29,7 @@
 # 
 # There are several partially overlapping packages for working with raster data, each with its own advantages and disadvantages.
 # In this book, we focus on the most prominent one: **rasterio**, which represents "simple" raster datasets with a combination of a **numpy** array, and a metadata object (`dict`) providing geographic metadata such as the coordinate system.
-# **xarray** is a notable alternative to **rasterio** not covered in this book which uses native `xarray.Dataset` and `xarray.DataArray` classes to effectively represent complex raster datasets such as 'NetCDF' files with multiple bands and metadata.
+# **xarray** is a notable alternative to **rasterio** not covered in this book which uses native `xarray.Dataset` and `xarray.DataArray` classes to effectively represent complex raster datasets such as NetCDF files with multiple bands and metadata.
 # 
 # There is much overlap in some fields and raster and vector datasets can be used together: ecologists and demographers, for example, commonly use both vector and raster data.
 # Furthermore, it is possible to convert between the two forms (see @sec-raster-vector).
@@ -39,7 +39,7 @@
 # 
 # The geographic vector data model is based on points located within a coordinate reference system (CRS).
 # Points can represent self-standing features (e.g., the location of a bus stop), or they can be linked together to form more complex geometries such as lines and polygons.
-# Most point geometries contain only two dimensions (3-dimensional CRSs may contain an additional $z$ value, typically representing height above sea level).
+# Most point geometries contain only two dimensions (three-dimensional CRSs may contain an additional $z$ value, typically representing height above sea level).
 # 
 # In this system, London, for example, can be represented by the coordinates `(-0.1,51.5)`.
 # This means that its location is -0.1 degrees east and 51.5 degrees north of the origin.
@@ -616,7 +616,7 @@ lnd_data = {
 }
 
 
-# Finally, the `dict` can be coverted to a `GeoDataFrame` object, as shown in the following code.
+# Finally, the `dict` can be converted to a `GeoDataFrame` object, as shown in the following code.
 
 # In[ ]:
 
@@ -783,7 +783,7 @@ import rasterio.plot
 # The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size.
 # <!-- jn: what do you mean with "selective"? did you mean "optional"? -->
 # <!-- md: meaning that we can choose what to read; now rephrased to make it more clear -->
-# Accordingly, the second step (`.read`) is selective, meaning that the user can fine tune the subset of values (bands, rows/columns, resolution, etc.) that are actually being read.
+# Accordingly, the second step (`.read`) is selective, meaning that the user can fine-tune the subset of values (bands, rows/columns, resolution, etc.) that are actually being read.
 # For example, we may want to read just one raster band rather than reading all bands.
 # 
 # In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection.
@@ -1125,7 +1125,7 @@ zion.crs
 
 
 #| label: fig-zion-crs
-#| fig-cap: Examples of Coordinate Refrence Systems (CRS) for a vector layer 
+#| fig-cap: Examples of Coordinate Reference Systems (CRS) for a vector layer 
 #| fig-subcap: 
 #| - Geographic (WGS84)
 #| - Projected (NAD83 / UTM zone 12N)
