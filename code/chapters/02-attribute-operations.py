@@ -1,23 +1,26 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# ---
+# jupyter: python3
+# ---
+# 
 # # Attribute data operations {#sec-attr}
 # 
 # ## Prerequisites {.unnumbered}
-# 
-# <!--jn: why pd.options.display.max_rows = 6 and not 4 as in the previous chapter?-->
-# <!--md: not sure what was the reason... in general we used 6, now also changed to 6 in ch01 -->
 
 # In[ ]:
 
 
 #| echo: false
-import matplotlib.pyplot as plt
-import pandas as pd
-pd.options.display.max_rows = 6
-pd.options.display.max_columns = 6
-pd.options.display.max_colwidth = 35
-plt.rcParams['figure.figsize'] = (5, 5)
+import book_options
+
+
+# In[ ]:
+
+
+#| echo: false
+import book_options_pdf
 
 
 # This chapter requires importing the following packages:
@@ -38,6 +41,7 @@ import rasterio
 
 
 #| echo: false
+#| include: false
 import os
 from urllib.request import urlretrieve
 
@@ -65,15 +69,15 @@ src_multi_rast = rasterio.open('data/landsat.tif')
 # 
 # Attribute data is non-spatial information associated with geographic (geometry) data.
 # A bus stop provides a simple example: its position would typically be represented by latitude and longitude coordinates (geometry data), in addition to its name.
-# The Elephant & Castle / New Kent Road bus stop in London, for example has coordinates of `-0.098` degrees longitude and `51.495` degrees latitude which can be represented as `POINT (-0.098 51.495)` using the Simple Feature representation described in @sec-spatial-class.
+# A bus stop in London, for example, has coordinates of `-0.098` degrees longitude and `51.495` degrees latitude which can be represented as `POINT (-0.098 51.495)` using the Simple Feature representation described in @sec-spatial-class.
 # Attributes, such as the name of the bus stop, are the topic of this chapter.
 # 
 # Another example of an attribute is the elevation value for a specific grid cell in raster data.
 # Unlike the vector data model, the raster data model stores the coordinate of the grid cell indirectly, meaning the distinction between attribute and spatial information is less clear.
-# Think of a pixel in the 3rd row and the 4th column of a raster matrix: its spatial location is defined by its index in the matrix.
+# Think of a pixel in the 3^rd^ row and the 4^th^ column of a raster matrix: its spatial location is defined by its index in the matrix.
 # In this case, we need to move four cells in the x direction (typically east/right on maps) and three cells in the y direction (typically south/down) from the origin.
 # The raster's resolution is also important as it defines the distance for each x- and y-step.
-# The resolution and the origin are stored in the raster's header, which is a vital component of raster datasets which specifies how pixels relate to geographic coordinates (see also @sec-spatial-operations).
+# The resolution and the origin are stored in the raster's metadata (header), which is a vital component of raster datasets which specifies how pixels relate to geographic coordinates (see also @sec-spatial-operations).
 # 
 # This chapter teaches how to manipulate geographic objects based on attributes such as the names of bus stops in a vector dataset and elevations of pixels in a raster dataset.
 # For vector data, this means techniques such as subsetting and aggregation (see @sec-vector-attribute-subsetting and @sec-vector-attribute-aggregation).
@@ -82,17 +86,17 @@ src_multi_rast = rasterio.open('data/landsat.tif')
 # This is good news: skills developed in this chapter are cross-transferable.
 # @sec-spatial-operations extends the methods presented here to the spatial world.
 # 
-# After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in @sec-raster-subsetting, which demonstrates extracting cell values from one or more layer (raster subsetting).
+# After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in @sec-raster-subsetting, which demonstrates extracting cell values from one or more layers (raster subsetting).
 # @sec-summarizing-raster-objects provides an overview of 'global' raster operations which can be used to summarize entire raster datasets.
 # 
 # ## Vector attribute manipulation {#sec-vector-attribute-manipulation}
 # 
-# As mentioned in @sec-vector-layers, vector layers (`GeoDataFrame`, from package **geopandas**) are basically extended tables (`DataFrame` from package **pandas**), the difference being that a vector layer has a geometry column.
+# As mentioned in @sec-vector-layers, vector layers (`GeoDataFrame`, from package **geopandas**) are basically extended tables (`DataFrame` from package **pandas**), the only differences being the geometry column and class.
 # Therefore, all ordinary table-related operations from package **pandas** are supported for **geopandas** vector layers as well, as shown below.
 # 
 # ### Vector attribute subsetting {#sec-vector-attribute-subsetting}
 # 
-# **pandas** supports several subsetting interfaces, though the most [recommended](https://stackoverflow.com/questions/38886080/python-pandas-series-why-use-loc) ones are `.loc`, which uses **pandas** indices, and `.iloc`, which uses (implicit) **numpy**-style numeric indices.
+# **pandas** supports several subsetting interfaces, though the most recommended ones are `.loc`, which uses **pandas** indices, and `.iloc`, which uses (implicit) **numpy**-style numeric indices.
 # 
 # In both cases, the method is followed by square brackets, and two indices, separated by a comma.
 # Each index can be:
@@ -100,33 +104,19 @@ src_multi_rast = rasterio.open('data/landsat.tif')
 # -   A specific value, as in `1`
 # -   A `list`, as in `[0,2,4]`
 # -   A slice, as in `0:3`
-# -   `:`---indicating "all" indices, as in `[:]`<!--jn: a short example is missing for this case--> <!--md: now added--> 
+# -   `:`---indicating 'all' indices, as in `[:]`
 # 
-# An exception to this rule is selecting columns using a list, which we do using shorter notation, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
+# An exception to this guideline is selecting columns using a list, which we do using shorter notation, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
 # 
 # Here are few examples of subsetting the `GeoDataFrame` of world countries (@fig-gdf-plot).
 # First, we are subsetting rows by position.
-# This can be done using the three following approaches, which all return the same result. 
-# <!-- jn: maybe it would be good to add a sentence or two explaining this approaches? -->
-# <!-- md: agree, now added an explanation -->
-# <!-- jn: also, maybe it would be worth explaining that 0:3 means 0, 1, 2, and not 0, 1, 2, 3? (I think this is a common source of confusion for beginners) -->
-# <!-- md: agree, now added -->
-# In the expression #1, we are using the expressive notation `[0:3,:]`, meaning "rows 1,2,3, all columns". Keep in mind that indices in Python start from 0, and slices are inclusive of the start and exclusive of the end.; therefore, `0:3` means indices `0`, `1`, `2`, i.e., first three rows in this example. In expression #2, we omit the columns index, as well as the starting index, that is, `[:3]`, doing the same with less code. In expression #3, we are using the `.head` method to select the first N rows.
+# In the first example, we are using `[0:3,:]`, meaning 'rows 1,2,3, all columns'. Keep in mind that indices in Python start from 0, and slices are inclusive of the start and exclusive of the end; therefore, `0:3` means indices `0`, `1`, `2`, i.e., first three rows in this example.
+# <!-- md: IMHO this was too much basic pandas material, as suggested by one reviewer. Also was contradicting the previous paragraph where we advocate explicit approaches. -->
 
 # In[ ]:
 
 
-#| eval: false
-world.iloc[0:3, :]  # approach #1
-world.iloc[:3]      # approach #2
-world.head(3)       # approach #3
-
-
-# In[ ]:
-
-
-#| echo: false
-world.head(3)
+world.iloc[0:3, :]
 
 
 # Subsetting columns by position requires specifying that we want to keep all of the rows (`:`) and then the indexes of the columns we want to keep.
@@ -145,7 +135,7 @@ world.iloc[:, 0:3]
 world.iloc[0:3, 0:3]
 
 
-# Subsetting columns by name is not done with the `.iloc` method, but requires specifying the column names directly in a double square bracket `[[` notation.
+# Subsetting columns by name is not done with the `.iloc` method, but instead requires specifying the column names in `.loc`, or directly in a double square bracket `[[` notation.
 
 # In[ ]:
 
@@ -153,7 +143,7 @@ world.iloc[0:3, 0:3]
 world[['name_long', 'geometry']]
 
 
-# To select many successive columns, we can use the `:` notation, as in `world.loc[:, 'name_long':'pop']`, which selects all columns from `name_long` to `pop` (inclusive).
+# To select many successive columns, we can use the `:` (slice) notation, as in `world.loc[:, 'name_long':'pop']`, which selects all columns from `name_long` to `pop` (inclusive).
 
 # In[ ]:
 
@@ -161,9 +151,6 @@ world[['name_long', 'geometry']]
 world.loc[:, 'name_long':'pop']
 
 
-# <!--jn: is this example actually used in practice? if not, maybe we should remove it?-->
-# <!-- md: agree, this can be confusing because it's not used in practice, now removed -->
-# 
 # Removing rows or columns is done using the `.drop` method.
 # We can remove specific rows by specifying their ids, e.g., dropping rows 2, 3, and 5 in the following example.
 
@@ -181,7 +168,7 @@ world.drop([2, 3, 5])
 world.drop(['name_long', 'continent'], axis=1)
 
 
-# We can also rename columns using the [`.rename`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.rename.html) method, in which we pass a dictionary of the form `old_name:new_name` to the `columns` argument.
+# We can also rename columns using the `.rename` method, in which we pass a dictionary with items of the form `old_name:new_name` to the `columns` argument.
 
 # In[ ]:
 
@@ -192,7 +179,7 @@ world[['name_long', 'pop']].rename(columns={'pop': 'population'})
 # The standard **numpy** comparison operators (@tbl-comparison-operators) can be used in boolean subsetting with **pandas**/**geopandas**.
 # 
 # | `Symbol`      | `Name`                          |
-# |---------------|---------------------------------|
+# |:---------------:|:---------------------------------:|
 # | `==`          | Equal to                        |
 # | `!=`          | Not equal to                    |
 # | `>`, `<`      | Greater/Less than               |
@@ -201,7 +188,7 @@ world[['name_long', 'pop']].rename(columns={'pop': 'population'})
 # 
 # : Comparison operators that return boolean values (`True`/`False`). {#tbl-comparison-operators}
 # 
-# The following example demonstrates logical vectors for subsetting by creating a new `GeoDataFrame` object called `small_countries` that contains only those countries and other teritories from the `world` object whose surface area is smaller than 10,000 $km^2$.
+# The following example demonstrates logical vectors for subsetting by creating a new `GeoDataFrame` object called `small_countries` that contains only those countries and other territories from the `world` object whose surface area is smaller than 10,000 $km^2$.
 # The first step is to create a logical vector (a `Series` object) that is `True` for countries with an area smaller than 10,000 $km^2$ and `False` otherwise.
 # Then, we use this vector to subset the `world` dataset, which returns a new `GeoDataFrame` object containing only the small countries.
 
@@ -245,7 +232,9 @@ world[world['continent'] == 'Asia']  \
 
 # Logical operators `&`, `|`, and `~` (@tbl-comparison-operators) can be used to combine multiple conditions.
 # For example, here are all countries in North America or South America.
-# Keep in mind that the parentheses around each condition (here, and in analogous cases using other operators) are crucial; otherwise, due to Python's [precedence rules](https://docs.python.org/3/reference/expressions.html#operator-precedence), the `|` operator is executed before `==` and we get an error.
+# Keep in mind that the parentheses around each condition (here, and in analogous cases using other operators) are crucial; otherwise, due to Python's precedence rules[^python_precedence_rules], the `|` operator is executed before `==` and we get an error.
+# 
+# [^python_precedence_rules]: [https://docs.python.org/3/reference/expressions.html#operator-precedence](https://docs.python.org/3/reference/expressions.html#operator-precedence)
 
 # In[ ]:
 
@@ -257,7 +246,7 @@ world[
     .loc[:, ['name_long', 'continent']]
 
 
-# However, specifically, expressions combining multiple comparisons with `==` combined with `|` can be replaced with the [`.isin`](https://pandas.pydata.org/docs/reference/api/pandas.Series.isin.html) method and a `list` of values to compare with.
+# However, specifically, expressions combining multiple comparisons with `==` combined with `|` can be replaced with the `.isin` method and a `list` of values to compare with.
 # The advantage of `.isin` is more concise and easy to manage code, especially when the number of comparisons is large.
 # For example, the following expression gives the same result as above.
 
@@ -276,12 +265,12 @@ world[world['continent'].isin(['North America', 'South America'])]  \
 # The aim is to find the `sum()` of country populations for each continent, resulting in a smaller table or vector layer (of continents).
 # Since aggregation is a form of data reduction, it can be a useful early step when working with large datasets.
 # 
-# Attribute-based aggregation can be achieved using a combination of `.groupby` and `.sum`, where the former groups the data by the grouping variable(s) and the latter calculates the sum of the remaining columns.
+# Attribute-based aggregation can be achieved using a combination of `.groupby` and `.sum` (package **pandas**), where the former groups the data by the grouping variable(s) and the latter calculates the sum of the specified column(s). The `.reset_index` methods moves the grouping variable into an ordinary column, rather than an index (the default), which is something we typically want to do.
 
 # In[ ]:
 
 
-world_agg1 = world[['continent', 'pop']].groupby('continent').sum()
+world_agg1 = world.groupby('continent')[['pop']].sum().reset_index()
 world_agg1
 
 
@@ -290,9 +279,7 @@ world_agg1
 # If we want to include the geometry in the aggregation result, we can use the `.dissolve` method.
 # That way, in addition to the summed population, we also get the associated geometry per continent, i.e., the union of all countries.
 # Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the aggregation function for non-geometry columns.
-# Note that the `.reset_index` method is used (here, and elsewhere in the book) to turn **pandas** and **geopandas** [*indices*](https://pandas.pydata.org/docs/reference/api/pandas.Index.html), which are automatically created for grouping variables in grouping operations such as `.dissolve`, "back" into ordinary columns, which are more appropriate in the scope of this book.
-# <!-- jn: `reset_index()` should be explained in the text -->
-# <!-- md: right, now explained -->
+# Again, note that the `.reset_index` method is used (here, and elsewhere in the book) to turn **pandas** and **geopandas** row *indices*, which are automatically created for grouping variables in grouping operations such as `.dissolve`, 'back' into ordinary columns, which are more appropriate in the scope of this book.
 
 # In[ ]:
 
@@ -303,9 +290,7 @@ world_agg2 = world[['continent', 'pop', 'geometry']] \
 world_agg2
 
 
-# In this case, the resulting `world_agg2` object is a `GeoDataFrame` containing 8 features representing the continents of the world (and the open ocean) that we can plot (@fig-spatial-aggregation). The `plt.subplots` function is hereby used to control plot dimensions (to make the plot wider and narrower) (see @sec-static-styling).
-# <!-- jn: plt.subplots should be either explained here or there should be a link to the relevant section in some other chapter -->
-# <!-- md: agree, now referred to ch08-->
+# In this case, the resulting `world_agg2` object is a `GeoDataFrame` containing 8 features representing the continents of the world that we can plot (@fig-spatial-aggregation). The `plt.subplots` function is hereby used to control plot dimensions (to make the plot wider and narrower) (see @sec-static-styling).
 
 # In[ ]:
 
@@ -323,8 +308,6 @@ world_agg2.plot(column='pop', edgecolor='black', legend=True, ax=ax);
 # It is done by passing a dictionary to the `aggfunc` parameter, where the keys are the column names and the values are the aggregation functions.
 # The result is a `GeoDataFrame` object with 8 rows (one per continent) and 4 columns (one for the continent name and one for each of the three aggregated attributes).
 # The `rename` method is used to rename the `'name_long'` column into `'n'`, as it now expresses the count of names (i.e., the number of countries) rather than their names.
-# <!-- jn: rename here should be also explained in the text -->
-# <!-- md: agree, now added (there is also a definition earlier, where it first appears) -->
 
 # In[ ]:
 
@@ -335,11 +318,11 @@ world_agg3 = world.dissolve(
         'name_long': 'count',
         'pop': 'sum',
         'area_km2': 'sum'
-    }).rename(columns={'name_long': 'n'})
+    }).rename(columns={'name_long': 'n'}).reset_index()
 world_agg3
 
 
-# Figure @fig-spatial-aggregation-different-functions visualizes the three aggregated attributes of our resulting layer `world_agg3`.
+# @fig-spatial-aggregation-different-functions visualizes the three aggregated attributes of our resulting layer `world_agg3`.
 
 # In[ ]:
 
@@ -365,9 +348,9 @@ world_agg3.plot(column='n', edgecolor='black', legend=True, ax=ax);
 # There are several other table-related operations that are possible, such as creating new columns or sorting the values.
 # In the following code example, given the `world_agg3` continent summary (@fig-spatial-aggregation-different-functions), we:
 # 
-# -   drop the geometry columns,
+# -   drop the geometry column,
 # -   calculate population density of each continent,
-# -   arrange continents by the number countries they contain, and
+# -   arrange continents by the number of countries each contains, and
 # -   keep only the 3 most populous continents.
 
 # In[ ]:
@@ -383,8 +366,8 @@ world_agg4
 # ### Vector attribute joining {#sec-vector-attribute-joining}
 # 
 # Combining data from different sources is a common task in data preparation.
-# Joins do this by combining tables based on a shared "key" variable.
-# **pandas** has a function named [`pd.merge`](https://pandas.pydata.org/docs/reference/api/pandas.merge.html) for joining `(Geo)DataFrames` based on common column(s) that follows conventions used in the database language SQL [@grolemund_r_2016].
+# Joins do this by combining tables based on a shared 'key' variable.
+# **pandas** has a function named `pd.merge` for joining `(Geo)DataFrames` based on common column(s) that follows conventions used in the database language SQL [@grolemund_r_2016].
 # The `pd.merge` result can be either a `DataFrame` or a `GeoDataFrame` object, depending on the inputs.
 # 
 # A common type of attribute join on spatial data is to join `DataFrames` to `GeoDataFrames`.
@@ -412,7 +395,7 @@ world_coffee
 
 # The result is a `GeoDataFrame` object identical to the original `world` object, but with two new variables (`coffee_production_2016` and `coffee_production_2017`) on coffee production.
 # This can be plotted as a map, as illustrated (for `coffee_production_2017`) in @fig-join-coffee-production. 
-# Note that, here and in many other examples in later chapters, we are using a technique to plot two layers (all of the world countries outline, and coffee production with symbology) at once, which will be "formally" introduced towards the end of the book in @sec-plot-static-layers.
+# Note that, here and in many other examples in later chapters, we are using a technique to plot two layers (all of the world countries outline, and coffee production with symbology) at once, which will be 'formally' introduced towards the end of the book in @sec-plot-static-layers.
 # <!-- jn: this plotting code style is slightly different from the previous examples in this chapter... why? (I think it would be good to have a consistent style throughout the chapter) -->
 # <!-- md: right, the `.set_title` is now removed to keep styling consistent. I'm sure there are more places where we can keep plotting style more uniform, that's an important point to keep in mind! -->
 
@@ -425,15 +408,13 @@ base = world_coffee.plot(color='white', edgecolor='lightgrey')
 coffee_map = world_coffee.plot(ax=base, column='coffee_production_2017');
 
 
-# To work, attribute-based joins need a "key variable" in both datasets (`on` parameter of `pd.merge`).
+# To work, attribute-based joins need a 'key variable' in both datasets (`on` parameter of `pd.merge`).
 # In the above example, both `world_coffee` and `world` DataFrames contained a column called `name_long`.
 # 
 # ::: callout-note
 # By default, `pd.merge` uses all columns with matching names. However, it is recommended to explicitly specify the names of the columns to be used for matching, like we did in the last example.
 # :::
 # 
-# <!-- jn: maybe replace the above sentence with a block? -->
-# <!-- md: good idea! done -->
 # In case where column names are not the same, you can use `left_on` and `right_on` to specify the respective columns.
 # 
 # Note that the result `world_coffee` has the same number of rows as the original dataset `world`.
@@ -451,23 +432,6 @@ coffee_map = world_coffee.plot(ax=base, column='coffee_production_2017');
 pd.merge(world, coffee_data, on='name_long', how='inner')
 
 
-# <!-- An alternative way to join two `(Geo)DataFrame`s is the aptly called `join` function. -->
-# <!-- jn: 1. I think it would be good to explain the difference between `pd.merge` and `join` -->
-# <!-- jn: 2. I think it would be good to explain why we need to set the index of `coffee_data` to `name_long`  -->
-# <!-- jn: 3. if the difference is minor -- consider using a block for it -->
-# <!-- md: I agree this is not very clear without more explanations, therefore suggest to remove the `.join` example to keep things simple, since we in the book (and I think in general) use the `pd.merge` rather than `.join` for any non-spatial joins -->
-# 
-# <!--
-
-# In[ ]:
-
-
-world.join(coffee_data.set_index('name_long'), on='name_long', how='inner')
-
-
-# Note that in this case, we need to set the index of `coffee_data` to the `name_long` values.
-# -->
-# 
 # ### Creating attributes and removing spatial information {#sec-creating-attributes-and-removing-spatial-information}
 # 
 # Often, we would like to create a new column based on already existing columns.
@@ -496,11 +460,9 @@ world2
 
 
 # The resulting `GeoDataFrame` object has a new column called `con_reg` representing the continent and region of each country, e.g., `'South America:Americas'` for Argentina and other South America countries.
-# The opposite operation, splitting one column into multiple columns based on a separator string, is done using the [`.str.split`](https://pandas.pydata.org/docs/reference/api/pandas.Series.str.split.html) method.
-# As a result we go back to the previous state of two separate `continent` and `region_un` columns (only that their position is now last, since they are newly created).
+# The opposite operation, splitting one column into multiple columns based on a separator string, is done using the `.str.split` method.
+# As a result, we go back to the previous state of two separate `continent` and `region_un` columns (only that their position is now last, since they are newly created).
 # The `str.split` method returns a column of `list`s by default; to place the strings into separate `str` columns we use the `expand=True` argument.
-# <!-- jn: what is the purpose of the `expand=True` argument? (I think it would be good to explain it in the text) -->
-# <!-- md: agree, now added -->
 
 # In[ ]:
 
@@ -519,7 +481,7 @@ world2
 world2.rename(columns={'name_long': 'name'})
 
 
-# To change all column names at once, we assign a `list` of the "new" column names into the `.columns` property.
+# To change all column names at once, we assign a `list` of the 'new' column names into the `.columns` property.
 # The `list` must be of the same length as the number of columns (i.e., `world.shape[1]`).
 # This is illustrated below, which outputs the same `world2` object, but with very short names.
 
@@ -563,10 +525,7 @@ world2
 # 
 # Raster cell values can be considered the counterpart of vector attribute values. 
 # In this section, we cover operations that deal with raster values in a similar way, namely as a series of numbers. 
-# This type of operations include subsetting raster values (@sec-raster-subsetting) and calculating global summaries of raster values (@sec-summarizing-raster-objects).
-# 
-# <!-- jn: there should be a sentence or two of an intro (see the intro to the vector section above) -->
-# <!-- md: done -->
+# This type of operations includes subsetting raster values (@sec-raster-subsetting) and calculating global summaries of raster values (@sec-summarizing-raster-objects).
 # 
 # ### Raster subsetting {#sec-raster-subsetting}
 # 
@@ -586,7 +545,7 @@ elev
 # In[ ]:
 
 
-elev[1, 2]  ## Value at row 2, column 3
+elev[1, 2]
 
 
 # Cell values can be modified by overwriting existing values in conjunction with a subsetting operation, e.g., `elev[1,2]=0` to set cell at row 2, column 3 of `elev` to `0`.
@@ -617,21 +576,18 @@ elev3d
 
 
 # ::: callout-note
-# You can see that the above array is three-dimensional according to the number of brackets `[`, or check explicitly using `.shape` or [`.ndim`](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.ndim.html).
+# You can see that the above array is three-dimensional according to the number of brackets `[`, or check explicitly using `.shape` or `.ndim`.
 # :::
 # 
 # In three-dimensional arrays, we access cell values using three indices, keeping in mind that dimensions order is `(layers,rows, columns)`
-# For example, to get the same value shown above, at row 2, column 3 (at band 1), we use `elev[0,1,2]` returns instead of `elev[1,2]`.
+# For example, to get the same value shown above, at row 2, column 3 (at band 1), we use `elev[0,1,2]` instead of `elev[1,2]`.
 
 # In[ ]:
 
 
-elev3d[0, 1, 2]  ## Value at band 1, row 2, column 3
+elev3d[0, 1, 2] 
 
 
-# <!-- jn: how to deal with multilayer rasters? -->
-# <!-- md: good point! now added into this section -->
-# 
 # ### Summarizing raster objects {#sec-summarizing-raster-objects}
 # 
 # Global summaries of raster values can be calculated by applying **numpy** summary functions on the array with raster values, e.g., `np.mean`.
@@ -642,10 +598,8 @@ elev3d[0, 1, 2]  ## Value at band 1, row 2, column 3
 np.mean(elev)
 
 
-# Note that "No Data"-safe functions--such as `np.nanmean`---should be used in case the raster contains "No Data" values which need to be ignored.
-# Before we can demonstrate that, we must convert the array from `int` to `float`, as `int` arrays cannot contain `np.nan` (due to [computer memory limitations](https://en.wikipedia.org/wiki/NaN#Integer_NaN)).
-# <!--jn: "due to computer memory limitations" can we add some reference to this? -->
-# <!--md: now added link to wikipedia -->
+# Note that 'No Data'-safe functions--such as `np.nanmean`---should be used in case the raster contains 'No Data' values which need to be ignored.
+# Before we can demonstrate that, we must convert the array from `int` to `float`, as `int` arrays cannot contain `np.nan` (due to computer memory limitations).
 
 # In[ ]:
 
@@ -656,9 +610,7 @@ elev1
 
 
 # Now we can insert an `np.nan` value into the array, for example to a cell located in the first row and third column.
-# (Trying to do so in the original `elev` array raises an error, because an `int` array cannot accomodate `np.nan`, as mentioned above; try it to see for yourself.)
-# <!--jn: "(Trying to do so in the original `elev` array raises an error, try it to see for yourself.)" why? please explain -->
-# <!--md: sure, now added -->
+# (Doing so in the original `elev` array raises an error, because an `int` array cannot accommodate `np.nan`, as mentioned above; try it to see for yourself.)
 
 # In[ ]:
 
@@ -667,7 +619,7 @@ elev1[0, 2] = np.nan
 elev1
 
 
-# With the `np.nan` value inplace, the summary value becomes unknown (`np.nan`).
+# With the `np.nan` value inplace, the `np.mean` summary value becomes unknown (`np.nan`).
 
 # In[ ]:
 
@@ -675,7 +627,7 @@ elev1
 np.mean(elev1)
 
 
-# To get a summary of all non-missing values, we need to use the specialized **numpy** functions that ignore "No Data" values:
+# To get a summary of all non-missing values, we need to use one of the specialized **numpy** functions that ignore 'No Data' values, such as `np.nanmean`:
 
 # In[ ]:
 
@@ -684,20 +636,17 @@ np.nanmean(elev1)
 
 
 # Raster value statistics can be visualized in a variety of ways.
-# One approach is to "flatten" the raster values into a one-dimensional array (`flatten`), then use a graphical function such as [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html) or [`plt.boxplot`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.boxplot.html) (from **matplotlib.pyplot**).
+# One approach is to 'flatten' the raster values into a one-dimensional array (using `.flatten`), then use a graphical function such as `plt.hist` or `plt.boxplot` (from **matplotlib.pyplot**).
 # For example, the following code section shows the distribution of values in `elev` using a histogram (@fig-raster-hist).
 
 # In[ ]:
 
 
 #| label: fig-raster-hist
-#| fig-cap: Distribution of cell values in continuous raster (`elev.tif`)
+#| fig-cap: Distribution of cell values in a continuous raster (`elev.tif`)
 plt.hist(elev.flatten());
 
 
-# <!-- jn: how to deal with categorical rasters? -->
-# <!-- md: great idea! now added -->
-# 
 # To summarize the distribution of values in a categorical raster, we can calculate the frequencies of unique values, and draw them using a barplot. 
 # Let's demonstrate using the `grain.tif` small categorical raster. 
 
@@ -708,7 +657,7 @@ grain = src_grain.read(1)
 grain
 
 
-# To calculate the frequency of unique values in an array, we use the [`np.unique`](https://numpy.org/doc/stable/reference/generated/numpy.unique.html) with the `return_counts=True` option. 
+# To calculate the frequency of unique values in an array, we use the `np.unique` with the `return_counts=True` option. 
 # The result is a `tuple` with two corresponding arrays: the unique values, and their counts.
 
 # In[ ]:
@@ -718,7 +667,7 @@ freq = np.unique(grain, return_counts=True)
 freq
 
 
-# These two arrays can be passed to the [`plt.bar`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html) function to draw a barplot, as shown in @fig-raster-bar.
+# These two arrays can be passed to the `plt.bar` function to draw a barplot, as shown in @fig-raster-bar.
 
 # In[ ]:
 
@@ -728,6 +677,5 @@ freq
 plt.bar(*freq);
 
 
-# ## Exercises
+# <!-- ## Exercises -->
 # 
-# ## References
