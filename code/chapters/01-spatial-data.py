@@ -39,7 +39,7 @@
 # 
 # The geographic vector data model is based on points located within a coordinate reference system (CRS).
 # Points can represent self-standing features (e.g., the location of a bus stop), or they can be linked together to form more complex geometries such as lines and polygons.
-# Most point geometries contain only two dimensions (3-dimensional CRSs may contain an additional $z$ value, typically representing height above sea level).
+# Most point geometries contain only two dimensions (three-dimensional CRSs may contain an additional $z$ value, typically representing height above sea level).
 # 
 # In this system, London, for example, can be represented by the coordinates `(-0.1,51.5)`.
 # This means that its location is -0.1 degrees east and 51.5 degrees north of the origin.
