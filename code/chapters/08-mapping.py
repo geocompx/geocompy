@@ -553,7 +553,7 @@ for i in range(len(vars)):
 
 
 #| label: fig-faceted-map3
-#| fig-cap: 2D layout in a faceted map, using "manual" specification of the panels 
+#| fig-cap: Two-dimensional layout in a faceted map, using 'manual' specification of the panels 
 fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))
 nz.plot(ax=ax[0][0], column=vars[0], legend=True)
 ax[0][0].set_title(vars[0])
