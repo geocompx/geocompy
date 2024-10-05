@@ -783,7 +783,7 @@ import rasterio.plot
 # The rationale is that we do not always want to read all information from the file into memory, which is particularly important as rasters size can be larger than RAM size.
 # <!-- jn: what do you mean with "selective"? did you mean "optional"? -->
 # <!-- md: meaning that we can choose what to read; now rephrased to make it more clear -->
-# Accordingly, the second step (`.read`) is selective, meaning that the user can fine tune the subset of values (bands, rows/columns, resolution, etc.) that are actually being read.
+# Accordingly, the second step (`.read`) is selective, meaning that the user can fine-tune the subset of values (bands, rows/columns, resolution, etc.) that are actually being read.
 # For example, we may want to read just one raster band rather than reading all bands.
 # 
 # In the first step, we pass a file path to the `rasterio.open` function to create a `DatasetReader` file connection.
@@ -1125,7 +1125,7 @@ zion.crs
 
 
 #| label: fig-zion-crs
-#| fig-cap: Examples of Coordinate Refrence Systems (CRS) for a vector layer 
+#| fig-cap: Examples of Coordinate Reference Systems (CRS) for a vector layer 
 #| fig-subcap: 
 #| - Geographic (WGS84)
 #| - Projected (NAD83 / UTM zone 12N)
