@@ -73,12 +73,12 @@ Each of these operations has a spatial equivalent: `[` operator for subsetting a
 This is good news: skills developed in this chapter are cross-transferable.
 @sec-spatial-operations extends the methods presented here to the spatial world.
 
-After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in @sec-raster-subsetting, which demonstrates extracting cell values from one or more layer (raster subsetting).
+After a deep dive into various types of vector attribute operations in the next section, raster attribute data operations are covered in @sec-raster-subsetting, which demonstrates extracting cell values from one or more layers (raster subsetting).
 @sec-summarizing-raster-objects provides an overview of 'global' raster operations which can be used to summarize entire raster datasets.
 
 ## Vector attribute manipulation {#sec-vector-attribute-manipulation}
 
-As mentioned in @sec-vector-layers, vector layers (`GeoDataFrame`, from package **geopandas**) are basically extended tables (`DataFrame` from package **pandas**), the difference being that a vector layer has a geometry column.
+As mentioned in @sec-vector-layers, vector layers (`GeoDataFrame`, from package **geopandas**) are basically extended tables (`DataFrame` from package **pandas**), the only difference being the geometry column and class.
 Therefore, all ordinary table-related operations from package **pandas** are supported for **geopandas** vector layers as well, as shown below.
 
 ### Vector attribute subsetting {#sec-vector-attribute-subsetting}
@@ -91,13 +91,13 @@ Each index can be:
 -   A specific value, as in `1`
 -   A `list`, as in `[0,2,4]`
 -   A slice, as in `0:3`
--   `:`---indicating "all" indices, as in `[:]`
+-   `:`---indicating 'all' indices, as in `[:]`
 
 An exception to this guideline is selecting columns using a list, which we do using shorter notation, as in `df[['a','b']]`, instead of `df.loc[:, ['a','b']]`, to select columns `'a'` and `'b'` from `df`.
 
 Here are few examples of subsetting the `GeoDataFrame` of world countries (@fig-gdf-plot).
 First, we are subsetting rows by position.
-In the first example, we are using `[0:3,:]`, meaning "rows 1,2,3, all columns". Keep in mind that indices in Python start from 0, and slices are inclusive of the start and exclusive of the end; therefore, `0:3` means indices `0`, `1`, `2`, i.e., first three rows in this example.
+In the first example, we are using `[0:3,:]`, meaning 'rows 1,2,3, all columns'. Keep in mind that indices in Python start from 0, and slices are inclusive of the start and exclusive of the end; therefore, `0:3` means indices `0`, `1`, `2`, i.e., first three rows in this example.
 <!-- md: IMHO this was too much basic pandas material, as suggested by one reviewer. Also was contradicting the previous paragraph where we advocate explicit approaches. -->
 
 ```{python}
@@ -236,7 +236,7 @@ The result, in this case, is a (non-spatial) table with eight rows, one per uniq
 If we want to include the geometry in the aggregation result, we can use the `.dissolve` method.
 That way, in addition to the summed population, we also get the associated geometry per continent, i.e., the union of all countries.
 Note that we use the `by` parameter to choose which column(s) are used for grouping, and the `aggfunc` parameter to choose the aggregation function for non-geometry columns.
-Again, note that the `.reset_index` method is used (here, and elsewhere in the book) to turn **pandas** and **geopandas** row *indices*, which are automatically created for grouping variables in grouping operations such as `.dissolve`, "back" into ordinary columns, which are more appropriate in the scope of this book.
+Again, note that the `.reset_index` method is used (here, and elsewhere in the book) to turn **pandas** and **geopandas** row *indices*, which are automatically created for grouping variables in grouping operations such as `.dissolve`, 'back' into ordinary columns, which are more appropriate in the scope of this book.
 
 ```{python}
 world_agg2 = world[['continent', 'pop', 'geometry']] \
@@ -313,7 +313,7 @@ world_agg4
 ### Vector attribute joining {#sec-vector-attribute-joining}
 
 Combining data from different sources is a common task in data preparation.
-Joins do this by combining tables based on a shared "key" variable.
+Joins do this by combining tables based on a shared 'key' variable.
 **pandas** has a function named `pd.merge` for joining `(Geo)DataFrames` based on common column(s) that follows conventions used in the database language SQL [@grolemund_r_2016].
 The `pd.merge` result can be either a `DataFrame` or a `GeoDataFrame` object, depending on the inputs.
 
@@ -338,7 +338,7 @@ world_coffee
 
 The result is a `GeoDataFrame` object identical to the original `world` object, but with two new variables (`coffee_production_2016` and `coffee_production_2017`) on coffee production.
 This can be plotted as a map, as illustrated (for `coffee_production_2017`) in @fig-join-coffee-production. 
-Note that, here and in many other examples in later chapters, we are using a technique to plot two layers (all of the world countries outline, and coffee production with symbology) at once, which will be "formally" introduced towards the end of the book in @sec-plot-static-layers.
+Note that, here and in many other examples in later chapters, we are using a technique to plot two layers (all of the world countries outline, and coffee production with symbology) at once, which will be 'formally' introduced towards the end of the book in @sec-plot-static-layers.
 <!-- jn: this plotting code style is slightly different from the previous examples in this chapter... why? (I think it would be good to have a consistent style throughout the chapter) -->
 <!-- md: right, the `.set_title` is now removed to keep styling consistent. I'm sure there are more places where we can keep plotting style more uniform, that's an important point to keep in mind! -->
 
@@ -349,7 +349,7 @@ base = world_coffee.plot(color='white', edgecolor='lightgrey')
 coffee_map = world_coffee.plot(ax=base, column='coffee_production_2017');
 ```
 
-To work, attribute-based joins need a "key variable" in both datasets (`on` parameter of `pd.merge`).
+To work, attribute-based joins need a 'key variable' in both datasets (`on` parameter of `pd.merge`).
 In the above example, both `world_coffee` and `world` DataFrames contained a column called `name_long`.
 
 ::: callout-note
@@ -412,7 +412,7 @@ The following command, for example, renames the lengthy `name_long` column to si
 world2.rename(columns={'name_long': 'name'})
 ```
 
-To change all column names at once, we assign a `list` of the "new" column names into the `.columns` property.
+To change all column names at once, we assign a `list` of the 'new' column names into the `.columns` property.
 The `list` must be of the same length as the number of columns (i.e., `world.shape[1]`).
 This is illustrated below, which outputs the same `world2` object, but with very short names.
 
@@ -509,7 +509,7 @@ Global summaries of raster values can be calculated by applying **numpy** summar
 np.mean(elev)
 ```
 
-Note that "No Data"-safe functions--such as `np.nanmean`---should be used in case the raster contains "No Data" values which need to be ignored.
+Note that 'No Data'-safe functions--such as `np.nanmean`---should be used in case the raster contains 'No Data' values which need to be ignored.
 Before we can demonstrate that, we must convert the array from `int` to `float`, as `int` arrays cannot contain `np.nan` (due to computer memory limitations).
 
 ```{python}
@@ -532,14 +532,14 @@ With the `np.nan` value inplace, the `np.mean` summary value becomes unknown (`n
 np.mean(elev1)
 ```
 
-To get a summary of all non-missing values, we need to use one of the specialized **numpy** functions that ignore "No Data" values, such as `np.nanmean`:
+To get a summary of all non-missing values, we need to use one of the specialized **numpy** functions that ignore 'No Data' values, such as `np.nanmean`:
 
 ```{python}
 np.nanmean(elev1)
 ```
 
 Raster value statistics can be visualized in a variety of ways.
-One approach is to "flatten" the raster values into a one-dimensional array (using `.flatten`), then use a graphical function such as `plt.hist` or `plt.boxplot` (from **matplotlib.pyplot**).
+One approach is to 'flatten' the raster values into a one-dimensional array (using `.flatten`), then use a graphical function such as `plt.hist` or `plt.boxplot` (from **matplotlib.pyplot**).
 For example, the following code section shows the distribution of values in `elev` using a histogram (@fig-raster-hist).
 
 ```{python}
