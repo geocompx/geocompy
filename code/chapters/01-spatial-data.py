@@ -616,7 +616,7 @@ lnd_data = {
 }
 
 
-# Finally, the `dict` can be coverted to a `GeoDataFrame` object, as shown in the following code.
+# Finally, the `dict` can be converted to a `GeoDataFrame` object, as shown in the following code.
 
 # In[ ]:
 
