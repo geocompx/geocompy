@@ -1,0 +1,1596 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "# Making maps with Python {#sec-map-making}\n",
+        "\n",
+        "## Prerequisites {.unnumbered}\n"
+      ],
+      "id": "c1615b46"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| include: false\n",
+        "#| error: true\n",
+        "import map_to_png"
+      ],
+      "id": "e73b0dae",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "import book_options"
+      ],
+      "id": "323c45a5",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "import book_options_pdf"
+      ],
+      "id": "00c3aa32",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| label: getdata\n",
+        "from pathlib import Path\n",
+        "data_path = Path(\"data\")\n",
+        "if data_path.is_dir():\n",
+        "  pass\n",
+        "  # print(\"path exists\") # directory exists\n",
+        "else:\n",
+        "  print(\"Attempting to get and unzip the data\")\n",
+        "  import requests, zipfile, io\n",
+        "  r = requests.get(\"https://github.com/geocompx/geocompy/releases/download/0.1/data.zip\")\n",
+        "  z = zipfile.ZipFile(io.BytesIO(r.content))\n",
+        "  z.extractall(\".\")"
+      ],
+      "id": "getdata",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "This chapter requires importing the following packages:\n"
+      ],
+      "id": "d20c766f"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "import matplotlib.pyplot as plt\n",
+        "import geopandas as gpd\n",
+        "import rasterio\n",
+        "import rasterio.plot\n",
+        "import contextily as cx\n",
+        "import folium"
+      ],
+      "id": "8194414e",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "It also relies on the following data files:\n"
+      ],
+      "id": "4e97c9be"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "nz = gpd.read_file('data/nz.gpkg')\n",
+        "nz_height = gpd.read_file('data/nz_height.gpkg')\n",
+        "nz_elev = rasterio.open('data/nz_elev.tif')\n",
+        "tanzania = gpd.read_file('data/world.gpkg', where='name_long=\"Tanzania\"')\n",
+        "tanzania_buf = tanzania.to_crs(32736).buffer(50000).to_crs(4326)\n",
+        "tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)"
+      ],
+      "id": "b85251b6",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Introduction\n",
+        "\n",
+        "<!-- - Geopandas explore has been used in previous chapters. -->\n",
+        "<!-- - When to focus on visualisation? At the end of geographic data processing workflows. -->\n",
+        "<!-- Input datasets: https://github.com/geocompx/spDatapy -->\n",
+        "\n",
+        "A satisfying and important aspect of geographic research is communicating the results.\n",
+        "Map making---the art of cartography---is an ancient skill that involves communication, intuition, and an element of creativity.\n",
+        "In addition to being fun and creative, cartography also has important practical applications.\n",
+        "A carefully crafted map can be the best way of communicating the results of your work, but poorly designed maps can leave a bad impression.\n",
+        "Common design issues include poor placement, size and readability of text and careless selection of colors, as outlined in the style guide of the Journal of Maps.\n",
+        "Furthermore, poor map making can hinder the communication of results [@brewer_designing_2015]:\n",
+        "\n",
+        "> Amateur-looking maps can undermine your audience's ability to understand important information and weaken the presentation of a professional data investigation.\n",
+        "\n",
+        "Maps have been used for several thousand years for a wide variety of purposes.\n",
+        "Historic examples include maps of buildings and land ownership in the Old Babylonian dynasty more than 3000 years ago and Ptolemy's world map in his masterpiece Geography nearly 2000 years ago [@talbert_ancient_2014].\n",
+        "\n",
+        "Map making has historically been an activity undertaken only by, or on behalf of, the elite.\n",
+        "This has changed with the emergence of open-source mapping software such as mapping packages in Python, R, and other languages, and the 'print composer' in QGIS, which enable anyone to make high-quality maps, enabling 'citizen science'.\n",
+        "Maps are also often the best way to present the findings of geocomputational research in a way that is accessible.\n",
+        "Map making is therefore a critical part of geocomputation and its emphasis not only on describing, but also changing the world.\n",
+        "\n",
+        "Basic static display of vector layers in Python is done with the `.plot` method or the `rasterio.plot.show` function, for vector layers and rasters, as we saw in Sections @sec-vector-layers and @sec-using-rasterio, respectively.\n",
+        "Other, more advanced uses of these methods, were also encountered in subsequent chapters, when demonstrating the various outputs we got.\n",
+        "In this chapter, we provide a comprehensive summary of the most useful workflows of these two methods for creating static maps (@sec-static-maps).\n",
+        "Static maps can be easily shared and viewed (whether digitally or in print), however they can only convey as much information as a static image can.\n",
+        "Interactive maps provide much more flexibility in terms of user experience and amount of information, however they often require more work to design and effectively share.\n",
+        "Thus, in @sec-interactive-maps, we move on to elaborate on the `.explore` method for creating interactive maps, which was also briefly introduced earlier in @sec-vector-layers.\n",
+        "\n",
+        "## Static maps {#sec-static-maps}\n",
+        "\n",
+        "Static maps are the most common type of visual output from geocomputation. \n",
+        "For example, we have been using `.plot` and `rasterio.plot.show` throughout the book, to display **geopandas** and **rasterio** geocomputation results, respectively. \n",
+        "In this section, we systematically review and elaborate on the various properties that can be customized when using those functions.\n",
+        "\n",
+        "A static map is basically a digital image. \n",
+        "When stored in a file, standard formats include `.png` and `.pdf` for graphical raster and vector outputs, respectively. \n",
+        "Thanks to their simplicity, static maps can be shared in a wide variety of ways: in print, through files sent by e-mail, embedded in documents and web pages, etc.\n",
+        "\n",
+        "Nevertheless, there are many aesthetic considerations when making a static map, and there is also a wide variety of ways to create static maps using novel presentation methods. \n",
+        "This is the focus of the field of cartography, and beyond the scope of this book.\n",
+        "\n",
+        "<!-- Decision of whether to use static or interactive. -->\n",
+        "<!-- Flow diagram? -->\n",
+        "\n",
+        "Let's move on to the basics of static mapping with Python.\n",
+        "\n",
+        "### Minimal examples \n",
+        "\n",
+        "A vector layer (`GeoDataFrame`) or a geometry column (`GeoSeries`) can be displayed using their `.plot` method (@sec-vector-layers).\n",
+        "A minimal example of a vector layer map is obtained using `.plot` with nothing but the defaults (@fig-vector-minimal).\n"
+      ],
+      "id": "d042eb7b"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-vector-minimal\n",
+        "#| fig-cap: Minimal example of a static vector layer plot with `.plot`\n",
+        "nz.plot();"
+      ],
+      "id": "fig-vector-minimal",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "A `rasterio` raster file connection, or a numpy `ndarray`, can be displayed using `rasterio.plot.show` (@sec-using-rasterio).\n",
+        "@fig-raster-minimal shows a minimal example of a static raster map.\n"
+      ],
+      "id": "f400d63b"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-raster-minimal\n",
+        "#| fig-cap: Minimal example of a static raster plot with `rasterio.plot.show`\n",
+        "rasterio.plot.show(nz_elev);"
+      ],
+      "id": "fig-raster-minimal",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### Styling {#sec-static-styling}\n",
+        "\n",
+        "The most useful visual properties of the geometries, that can be specified in `.plot`, include `color`, `edgecolor`, and `markersize` (for points) (@fig-basic-plot).\n"
+      ],
+      "id": "bd21a638"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-basic-plot\n",
+        "#| fig-cap: Setting `color` and `edgecolor` in static maps of a vector layer\n",
+        "#| fig-subcap:\n",
+        "#|   - Light grey fill\n",
+        "#|   - 'No fill, blue edge'\n",
+        "#|   - 'Light grey fill, blue edge'\n",
+        "#| layout-ncol: 3\n",
+        "nz.plot(color='lightgrey');\n",
+        "nz.plot(color='none', edgecolor='blue');\n",
+        "nz.plot(color='lightgrey', edgecolor='blue');"
+      ],
+      "id": "fig-basic-plot",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The next example uses `markersize` to get larger points (@fig-basic-plot-markersize).\n",
+        "It also demonstrates how to control the overall figure size, such as $4 \\times 4$ $in$ in this case, using `plt.subplots` to initialize the plot and its `figsize` parameter to specify dimensions.\n"
+      ],
+      "id": "a49b55f2"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-basic-plot-markersize\n",
+        "#| fig-cap: Setting `markersize` in a static map of a vector layer\n",
+        "fig, ax = plt.subplots(figsize=(4,4))\n",
+        "nz_height.plot(markersize=100, ax=ax);"
+      ],
+      "id": "fig-basic-plot-markersize",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "::: callout-note\n",
+        "As you have probably noticed throughout the book, the `plt.subplots` function is used to initialize a **maptplotlib** plot layout, possibly also specifying image size (e.g., @fig-basic-plot-markersize) and multi-panel layout (e.g., @fig-faceted-map).\n",
+        "The returned value is a `tuple` of `Figure` and `Axes` objects, which we conventionally unpack to variables named `fig` and `ax`. \n",
+        "These two variables represent the entire figure, and the elements of individual sub-figures, respectively.\n",
+        "\n",
+        "For our purposes in this book, we have been using just the `ax` object, passing it to the `ax` parameter in further function calls, in order to add subsequent layers (e.g., @fig-plot-raster-and-vector) or other elements (e.g., @fig-plot-symbology-colors-r-scale) into the same panel.\n",
+        "In a single-panel figure, we pass `ax` itself, whereas in a multi-panel figure we pass individual elements representing a specific panel (such as `ax[0]` or `ax[0][0]`, depending of the layout; see @sec-faceted-maps)\n",
+        "\n",
+        "Note that in some of the cases we have used an alternative to `plt.subplots`---we assigned an initial plot into a variable, conventionally named `base`, similarly passing it to the `ax` parameter of further calls, e.g., to add subsequent layers (e.g., @fig-two-layers); this (shorter) syntax, though, is less general than `plt.subplots` and not applicable in some of the cases (such as displaying a raster and a vector layer in the same plot, e.g., @fig-plot-raster-and-vector).\n",
+        ":::\n",
+        "\n",
+        "### Symbology {#sec-plot-symbology}\n",
+        "\n",
+        "We can set symbology in a `.plot` using the following parameters:\n",
+        "\n",
+        "-   `column`---a column name\n",
+        "-   `legend`---whether to show a legend\n",
+        "-   `cmap`---color map, a.k.a. color scale, a palette from which the colors are sampled\n",
+        "\n",
+        "For example, @fig-plot-symbology shows the `nz` polygons colored according to the `'Median_income'` attribute (column), with a legend.\n"
+      ],
+      "id": "61db8c75"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-plot-symbology\n",
+        "#| fig-cap: Symbology in a static map created with `.plot`\n",
+        "nz.plot(column='Median_income', legend=True);"
+      ],
+      "id": "fig-plot-symbology",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The default color scale which you see in @fig-plot-symbology is `cmap='viridis'`.\n",
+        "The `cmap` ('color map') argument can be used to specify one of countless color scales.\n",
+        "A first safe choice is often the ColorBrewer[^colorbrewer] collection of color scales, specifically designed for mapping.\n",
+        "Any color scale can be reversed, using the `_r` suffix.\n",
+        "Finally, other color scales are available: see the **matplotlib** colormaps article[^matplotlib_colormaps] for details.\n",
+        "The following code section demonstrates three-color scale specifications other than the default (@fig-plot-symbology-colors).\n",
+        "\n",
+        "[^colorbrewer]: <https://colorbrewer2.org/>\n",
+        "[^matplotlib_colormaps]: <https://matplotlib.org/stable/tutorials/colors/colormaps.html>\n"
+      ],
+      "id": "aa306bf2"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-plot-symbology-colors\n",
+        "#| fig-cap: 'Symbology in a static map of a vector layer, created with `.plot`'\n",
+        "#| fig-subcap:\n",
+        "#|   - The `'Reds'` color scale from ColorBrewer\n",
+        "#|   - Reversed `'Reds'` color scale\n",
+        "#|   - The `'plasma'` color scale from **matplotlib**\n",
+        "#| layout-ncol: 3\n",
+        "nz.plot(column='Median_income', legend=True, cmap='Reds');\n",
+        "nz.plot(column='Median_income', legend=True, cmap='Reds_r');\n",
+        "nz.plot(column='Median_income', legend=True, cmap='plasma');"
+      ],
+      "id": "fig-plot-symbology-colors",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Categorical symbology is also supported, such as when `column` points to an `str` attribute.\n",
+        "For categorical variables, it makes sense to use a qualitative color scale, such as `'Set1'` from ColorBrewer.\n",
+        "For example, the following expression sets symbology according to the `'Island'` column (@fig-plot-symbology-categorical).\n"
+      ],
+      "id": "d4ce6429"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-plot-symbology-categorical\n",
+        "#| fig-cap: Symbology for a categorical variable\n",
+        "nz.plot(column='Island', legend=True, cmap='Set1');"
+      ],
+      "id": "fig-plot-symbology-categorical",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "In case the legend interferes with the contents (such as in @fig-plot-symbology-categorical), we can modify the legend position using the `legend_kwds` argument (@fig-plot-legend-pos).\n"
+      ],
+      "id": "b6ff97d2"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-plot-legend-pos\n",
+        "#| fig-cap: Setting legend position in `.plot`\n",
+        "nz.plot(column='Island', legend=True, cmap='Set1', legend_kwds={'loc': 4});"
+      ],
+      "id": "fig-plot-legend-pos",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "The `rasterio.plot.show` function is also based on **matplotlib** [@matplotlib], and thus supports the same kinds of `cmap` arguments (@fig-plot-symbology-colors-r).\n"
+      ],
+      "id": "00615bcd"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-plot-symbology-colors-r\n",
+        "#| fig-cap: 'Symbology in a static map of a raster, with `rasterio.plot.show`'\n",
+        "#| layout-ncol: 3\n",
+        "#| fig-subcap:\n",
+        "#|   - The `'BrBG'` color scale from ColorBrewer\n",
+        "#|   - Reversed `'BrBG_r'` color scale\n",
+        "#|   - The `'gist_earth'` color scale from **matplotlib**\n",
+        "rasterio.plot.show(nz_elev, cmap='BrBG');\n",
+        "rasterio.plot.show(nz_elev, cmap='BrBG_r');\n",
+        "rasterio.plot.show(nz_elev, cmap='gist_earth');"
+      ],
+      "id": "fig-plot-symbology-colors-r",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Unfortunately, there is no built-in option to display a legend in `rasterio.plot.show`.\n",
+        "The following workaround, reverting to **matplotlib** methods, can be used to acheive it instead (@fig-plot-symbology-colors-r-scale).\n",
+        "Basically, the code reverts to the **matplotlib** `.colorbar` method to add a legend, using the `plt.imshow` function that draws an image of a **numpy** array (which `rasterio.plot.show` is a wrapper of).\n"
+      ],
+      "id": "ba95c237"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-plot-symbology-colors-r-scale\n",
+        "#| fig-cap: Adding a legend in `rasterio.plot.show`\n",
+        "fig, ax = plt.subplots()\n",
+        "i = plt.imshow(nz_elev.read(1), cmap='BrBG')\n",
+        "rasterio.plot.show(nz_elev, cmap='BrBG', ax=ax);\n",
+        "fig.colorbar(i, ax=ax);"
+      ],
+      "id": "fig-plot-symbology-colors-r-scale",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### Labels {#sec-plot-static-labels}\n",
+        "\n",
+        "Labels are often useful to annotate maps and identify the location of specific features. \n",
+        "GIS software, as opposed to **matplotlib**, has specialized algorithms for label placement, e.g., to avoid overlaps between adjacent labels.\n",
+        "Furthermore, editing in graphical editing software is sometimes used for fine-tuning of label placement.\n",
+        "Nevertheless, simple labels added within the Python environment can be a good starting point, both for interactive exploration and sharing analysis results.\n",
+        "\n",
+        "To demonstrate it, suppose that we have a layer `nz1` of regions comprising the New Zealand southern Island.\n"
+      ],
+      "id": "962b22be"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "nz1 = nz[nz['Island'] == 'South']"
+      ],
+      "id": "da6dd7f0",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "To add a label in **matplotlib**, we use the `.annotate` method where the important arguments are the label string and the placement (a `tuple` of the form `(x,y)`). \n",
+        "When labeling vector layers, we typically want to add numerous labels, based on (one or more) attribute of each feature. \n",
+        "To do that, we can run a `for` loop, or use the `.apply` method, to pass the label text and the coordinates of each feature to `.annotate`.\n",
+        "In the following example, we use the `.apply` method the pass the region name (`'Name'` attribute) and the geometry centroid coordinates, for each region, to `.annotate`.\n",
+        "We are also using `ha`, short for `horizontalalignment`, with `'center'` (other options are `'right'` and `'left'`) (@fig-labels-polygon).\n"
+      ],
+      "id": "f3d826c4"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-labels-polygon\n",
+        "#| fig-cap: Labels at polygon centroids\n",
+        "fig, ax = plt.subplots()\n",
+        "nz1.plot(ax=ax, color='lightgrey', edgecolor='grey')\n",
+        "nz1.apply(\n",
+        "    lambda x: ax.annotate(\n",
+        "        text=x['Name'], \n",
+        "        xy=x.geometry.centroid.coords[0], \n",
+        "        ha='center'\n",
+        "    ), \n",
+        "    axis=1\n",
+        ");"
+      ],
+      "id": "fig-labels-polygon",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "As another example, let's create a map of all regions of New Zealand, with labels for the island names. \n",
+        "First, we will calculate the island centroids, which will be the label placement positions.\n"
+      ],
+      "id": "d6fae788"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "ctr = nz[['Island', 'geometry']].dissolve(by='Island').reset_index()\n",
+        "ctr['geometry'] = ctr.centroid\n",
+        "ctr"
+      ],
+      "id": "f0d75693",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Then, we again use `.apply`, combined with `.annotate`, to add the text labels. \n",
+        "The main difference compared to the previous example (@fig-labels-polygon) is that we are directly passing the geometry coordinates (`.geometry.coords[0]`), since the geometries are points rather than polygons.\n",
+        "We are also using the `weight='bold'` argument to use bold font (@fig-labels-points1).\n",
+        "<!-- jn: what are other weight options? where to find them? -->\n",
+        "<!-- md: now added a link to the page with other options -->\n"
+      ],
+      "id": "1b3ca479"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-labels-points1\n",
+        "#| fig-cap: Labels at points\n",
+        "fig, ax = plt.subplots()\n",
+        "nz.plot(ax=ax, color='none', edgecolor='lightgrey')\n",
+        "ctr.apply(\n",
+        "    lambda x: ax.annotate(\n",
+        "        text=x['Island'], \n",
+        "        xy=x.geometry.coords[0], \n",
+        "        ha='center',\n",
+        "        weight='bold'\n",
+        "    ), \n",
+        "    axis=1\n",
+        ");"
+      ],
+      "id": "fig-labels-points1",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "It should be noted that sometimes we wish to add text labels 'manually', one by one, rather than use a loop or `.apply`. \n",
+        "For example, we may want to add labels of specific locations not stored in a layer, or to have control over the specific properties of each label. \n",
+        "To add text labels manually, we can run the `.annotate` expressions one at a time, as shown in the code section below recreating the last result with the 'manual' approach (@fig-labels-points2).\n"
+      ],
+      "id": "611537b2"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-labels-points2\n",
+        "#| fig-cap: Labels at points (manual)\n",
+        "fig, ax = plt.subplots()\n",
+        "nz.plot(ax=ax, color='none', edgecolor='lightgrey')\n",
+        "ax.annotate('This is label 1', (1.8e6, 5.8e6), ha='center', weight='bold')\n",
+        "ax.annotate('This is label 2', (1.4e6, 5.2e6), ha='center', weight='bold');"
+      ],
+      "id": "fig-labels-points2",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "### Layers {#sec-plot-static-layers}\n",
+        "\n",
+        "To display more than one layer in the same static map, we can:\n",
+        "\n",
+        "1.   Store the first plot in a variable (e.g., `base`)\n",
+        "2.   Pass it as the `ax` argument of any subsequent plot(s) (e.g., `ax=base`)\n",
+        "\n",
+        "For example, here is how we can plot `nz` and `nz_height` together (@fig-two-layers).\n"
+      ],
+      "id": "c95b08e6"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-two-layers\n",
+        "#| fig-cap: 'Plotting two layers, `nz` (polygons) and `nz_height` (points)'\n",
+        "base = nz.plot(color='none')\n",
+        "nz_height.plot(ax=base, color='red');"
+      ],
+      "id": "fig-two-layers",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Alternatively (see note in @sec-static-styling), we can:\n",
+        "\n",
+        "1. Initialize the plot using `fig,ax=plt.subplots()`\n",
+        "2. Pass `ax` to any subsequent plot\n"
+      ],
+      "id": "befba059"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-two-layers2\n",
+        "#| fig-cap: 'Plotting two layers, `nz` (polygons) and `nz_height` (points), using `plt.subplots`'\n",
+        "fig, ax = plt.subplots()\n",
+        "nz.plot(ax=ax, color='none')\n",
+        "nz_height.plot(ax=ax, color='red');"
+      ],
+      "id": "fig-two-layers2",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).\n",
+        "The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together.\n",
+        "\n",
+        "For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:\n",
+        "\n",
+        "-   Panel (a) shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)\n",
+        "-   Panel (b) shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's territorial waters (see @sec-global-operations-and-distances)\n",
+        "-   Panel (c) shows the raster with two vector layers: the territorial waters (in red) and elevation measurement points (in yellow)\n"
+      ],
+      "id": "b735dc37"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-plot-raster-and-vector\n",
+        "#| fig-cap: Combining a raster and vector layers in the same plot\n",
+        "#| fig-subcap:\n",
+        "#|   - Raster + vector layer\n",
+        "#|   - Raster + computed vector layer\n",
+        "#|   - Raster + two vector layers\n",
+        "#| layout-ncol: 3\n",
+        "# Raster + vector layer\n",
+        "fig, ax = plt.subplots(figsize=(5, 5))\n",
+        "rasterio.plot.show(nz_elev, ax=ax)\n",
+        "nz.to_crs(nz_elev.crs).plot(ax=ax, color='none', edgecolor='red');\n",
+        "# Raster + computed vector layer\n",
+        "fig, ax = plt.subplots(figsize=(5, 5))\n",
+        "rasterio.plot.show(nz_elev, ax=ax)\n",
+        "gpd.GeoSeries(nz.union_all(), crs=nz.crs) \\\n",
+        "    .to_crs(nz_elev.crs) \\\n",
+        "    .buffer(22200) \\\n",
+        "    .exterior \\\n",
+        "    .plot(ax=ax, color='red');\n",
+        "# Raster + two vector layers\n",
+        "fig, ax = plt.subplots(figsize=(5, 5))\n",
+        "rasterio.plot.show(nz_elev, ax=ax)\n",
+        "gpd.GeoSeries(nz.union_all(), crs=nz.crs) \\\n",
+        "    .to_crs(nz_elev.crs) \\\n",
+        "    .buffer(22200) \\\n",
+        "    .exterior \\\n",
+        "    .plot(ax=ax, color='red')\n",
+        "nz_height.to_crs(nz_elev.crs).plot(ax=ax, color='yellow');"
+      ],
+      "id": "fig-plot-raster-and-vector",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "::: callout-note\n",
+        "Note that the drawing order of layers is not necessarily according to the order of expressions, in the code, but according to layer *type*. For example, by default line layers are drawn on top of point layers. To override the default plotting order, we can use the `zorder` argument of `.plot`. Layers with higher `zorder` values will be drawn on top. For example, the following would draw `layer2` on top of `layer1` (regaredless of their types).\n",
+        "\n",
+        "```python\n",
+        "base = layer1.plot(zorder=1)\n",
+        "layer2.plot(ax=base, zorder=2);\n",
+        "```\n",
+        ":::\n",
+        "\n",
+        "### Basemaps\n",
+        "\n",
+        "Basemaps, or background layers, are often useful to provide context to the displayed layers (which are in the 'foreground').\n",
+        "Basemaps are ubiquitous in interactive maps (see @sec-interactive-maps).\n",
+        "However, they are often useful in static maps too.\n",
+        "\n",
+        "Basemaps can be added to **geopandas** static plots using the **contextily** package.\n",
+        "A preliminary step is to convert our layers to `EPSG:3857` ('Web Mercator'), to be in agreement with the basemaps, which are typically provided in this CRS[^reproject_tiles].\n",
+        "For example, let's take the small `\"Nelson\"` polygon from `nz`, and reproject it to `3857`.\n",
+        "\n",
+        "[^reproject_tiles]: Another option is to reproject the tiles to match the CRS of the foreground layers; this is less commonly used workflow, as it may lead to distorted appearance of the background layer. \n"
+      ],
+      "id": "860d7151"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)"
+      ],
+      "id": "26701a53",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "To add a basemap, we use the `contextily.add_basemap` function, similarly to the way we added multiple layers (@sec-plot-static-layers).\n",
+        "The default basemap is 'OpenStreetMap'.\n",
+        "You can specify a different basemap using the `source` parameter, with one of the values in `cx.providers` (@fig-basemap).\n"
+      ],
+      "id": "adabc709"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-basemap\n",
+        "#| fig-cap: 'Adding a basemap to a static map, using **contextily**'\n",
+        "#| layout-ncol: 2\n",
+        "#| fig-subcap:\n",
+        "#|   - '''OpenStreetMap'' basemap'\n",
+        "#|   - '''CartoDB Positron'' basemap'\n",
+        "# OpenStreetMap\n",
+        "fig, ax = plt.subplots(figsize=(7, 7))\n",
+        "ax = nzw.plot(color='none', ax=ax)\n",
+        "cx.add_basemap(ax, source=cx.providers.OpenStreetMap.Mapnik);\n",
+        "# CartoDB.Positron\n",
+        "fig, ax = plt.subplots(figsize=(7, 7))\n",
+        "ax = nzw.plot(color='none', ax=ax)\n",
+        "cx.add_basemap(ax, source=cx.providers.CartoDB.Positron);"
+      ],
+      "id": "fig-basemap",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Check out the gallery[^xyzservices_gallery] for more possible basemaps.\n",
+        "Custom basemaps (such as from your own raster tile server) can be  also specified using a URL.\n",
+        "Finally, you may read the *Adding a background map to plots*[^basemaps_tutorial] tutorial for more examples.\n",
+        "\n",
+        "[^xyzservices_gallery]: <https://xyzservices.readthedocs.io/en/stable/gallery.html>\n",
+        "[^basemaps_tutorial]: <https://geopandas.org/en/stable/gallery/plotting_basemap_background.html>\n",
+        "\n",
+        "### Faceted maps {#sec-faceted-maps}\n",
+        "\n",
+        "Faceted maps are multiple maps displaying the same symbology for the same spatial layers, but with different data in each panel.\n",
+        "The data displayed in the different panels typically refer to different properties, or time steps.\n",
+        "For example, the `nz` layer has several different properties for each polygon, stored as separate attributes:\n"
+      ],
+      "id": "484ecca9"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "vars = ['Land_area', 'Population', 'Median_income', 'Sex_ratio']\n",
+        "nz[vars]"
+      ],
+      "id": "c7b26294",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "We may want to plot them all in a faceted map, that is, four small maps of `nz` with the different variables.\n",
+        "To do that, we initialize the plot with the expected number of panels, such as `ncols=len(vars)` if we wish to have one row and four columns, and then go over the variables in a `for` loop, each time plotting `vars[i]` into the `ax[i]` panel (@fig-faceted-map).\n"
+      ],
+      "id": "a3f8477f"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-faceted-map\n",
+        "#| fig-cap: 'Faceted map, four different variables of `nz`'\n",
+        "fig, ax = plt.subplots(ncols=len(vars), figsize=(9, 2))\n",
+        "for i in range(len(vars)):\n",
+        "    nz.plot(ax=ax[i], column=vars[i], legend=True)\n",
+        "    ax[i].set_title(vars[i])"
+      ],
+      "id": "fig-faceted-map",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "In case we prefer a specific layout, rather than one row or one column, we can initialize the required number or rows and columns, as in `plt.subplots(nrows,ncols)`, 'flatten' `ax`, so that the facets are still accessible using a single index `ax[i]` (rather than the default `ax[i][j]`), and plot into `ax[i]`.\n",
+        "For example, here is how we can reproduce the last plot, this time in a $2 \\times 2$ layout, instead of a $1 \\times 4$ layout (@fig-faceted-map2).\n",
+        "One more modification we are doing here is hiding the axis ticks and labels, to make the map less 'crowded', using `ax[i].xaxis.set_visible(False)` (and same for `.yaxis`).\n"
+      ],
+      "id": "f2ff1537"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-faceted-map2\n",
+        "#| fig-cap: 'Two-dimensional layout in a faceted map, using a `for` loop'\n",
+        "fig, ax = plt.subplots(nrows=int(len(vars)/2), ncols=2, figsize=(6, 6))\n",
+        "ax = ax.flatten()\n",
+        "for i in range(len(vars)):\n",
+        "    nz.plot(ax=ax[i], column=vars[i], legend=True)\n",
+        "    ax[i].set_title(vars[i])\n",
+        "    ax[i].xaxis.set_visible(False)\n",
+        "    ax[i].yaxis.set_visible(False)"
+      ],
+      "id": "fig-faceted-map2",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "It is also possible to 'manually' specify the properties of each panel, and which row/column it goes in (e.g., @fig-spatial-aggregation-different-functions).\n",
+        "This can be useful when the various panels have different components, or even completely different types of plots (e.g., @fig-zion-transect), making automation with a `for` loop less applicable.\n",
+        "For example, here is a plot similar to @fig-faceted-map2, but specifying each panel using a separate expression instead of using a `for` loop (@fig-faceted-map3).\n"
+      ],
+      "id": "960d7e15"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-faceted-map3\n",
+        "#| fig-cap: 'Two-dimensional layout in a faceted map, using ''manual'' specification of the panels'\n",
+        "fig, ax = plt.subplots(ncols=2, nrows=int(len(vars)/2), figsize=(6, 6))\n",
+        "nz.plot(ax=ax[0][0], column=vars[0], legend=True)\n",
+        "ax[0][0].set_title(vars[0])\n",
+        "nz.plot(ax=ax[0][1], column=vars[1], legend=True)\n",
+        "ax[0][1].set_title(vars[1])\n",
+        "nz.plot(ax=ax[1][0], column=vars[2], legend=True)\n",
+        "ax[1][0].set_title(vars[2])\n",
+        "nz.plot(ax=ax[1][1], column=vars[3], legend=True)\n",
+        "ax[1][1].set_title(vars[3]);"
+      ],
+      "id": "fig-faceted-map3",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "See the first code chunk in the next section for another example of manual panel contents specification.\n",
+        "\n",
+        "### Exporting {#sec-exporting-static-maps}\n",
+        "\n",
+        "Static maps can be exported to a file using the `matplotlib.pyplot.savefig` function.\n",
+        "For example, the following code section recreates @fig-two-layers, but this time the last expression saves the image to a JPG image named `plot_geopandas.jpg`.\n"
+      ],
+      "id": "6006d66a"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| output: false\n",
+        "base = nz.plot(color='none')\n",
+        "nz_height.plot(ax=base, color='red');\n",
+        "plt.savefig('output/plot_geopandas.jpg')"
+      ],
+      "id": "ce245210",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Figures with rasters can be exported exactly the same way.\n",
+        "For example, the following code section (@sec-plot-static-layers) creates an image of a raster and a vector layer, which is then exported to a file named `plot_rasterio.jpg`.\n"
+      ],
+      "id": "66ddfa29"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| output: false\n",
+        "fig, ax = plt.subplots(figsize=(5, 5))\n",
+        "rasterio.plot.show(nz_elev, ax=ax)\n",
+        "nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');\n",
+        "plt.savefig('output/plot_rasterio.jpg')"
+      ],
+      "id": "331f03e7",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "Image file properties can be controlled through the `plt.subplots` and `plt.savefig` parameters.\n",
+        "For example, the following code section exports the same raster plot to a file named `plot_rasterio2.svg`, which has different dimensions (width = 5 $in$, height = 7 $in$), a different format (SVG), and different resolution (300 $DPI$).\n"
+      ],
+      "id": "ec94d7fe"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| output: false\n",
+        "fig, ax = plt.subplots(figsize=(5, 7))\n",
+        "rasterio.plot.show(nz_elev, ax=ax)\n",
+        "nz.to_crs(nz_elev.crs).plot(ax=ax, facecolor='none', edgecolor='r');\n",
+        "plt.savefig('output/plot_rasterio2.svg', dpi=300)"
+      ],
+      "id": "0777e20c",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "## Interactive maps {#sec-interactive-maps}\n",
+        "\n",
+        "While static maps can enliven geographic datasets, interactive maps can take them to a new level. \n",
+        "Interactivity can take many forms, the most common and useful of which is the ability to pan around and zoom into any part of a geographic dataset overlaid on a 'web map' to show context.\n",
+        "Less advanced interactivity levels include popups which appear when you click on different features, a kind of interactive label.\n",
+        "More advanced levels of interactivity include the ability to tilt and rotate maps, and the provision of 'dynamically linked' sub-plots which automatically update when the user pans and zooms [@pezanowski_senseplace3_2018].\n",
+        "\n",
+        "The most important type of interactivity, however, is the display of geographic data on interactive or 'slippy' web maps.\n",
+        "Significant features of web maps are that (1) they eventually comprise static HTML files, easily shared and accessed by a wide audience, and (2) they can 'grab' content (e.g., basemaps) or use services from other locations on the internet, that way providing detailed context without much requiring much effort from the person who created the map.\n",
+        "The most popular approaches for web mapping, in Python and elsewhere, are based on the Leaflet JavaScript library [@dorman2020introduction]. \n",
+        "The **folium** Python package provides an extensive interface to create customized web maps based on Leaflet; it is recommended for highly customized maps.\n",
+        "However, the **geopandas** wrapper `.explore`, introduced in @sec-vector-layers, can be used for a wide range of scenarios which are often sufficient.\n",
+        "This is what we cover in this section.\n",
+        "\n",
+        "### Minimal example\n",
+        "\n",
+        "An interactive map of a `GeoSeries` or `GeoDataFrame` can be created with `.explore` (@sec-vector-layers).\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "168ba0d9"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore\n",
+        "#| fig-cap: Minimal example of an interactive vector layer plot with `.explore`\n",
+        "nz.explore()"
+      ],
+      "id": "fig-explore",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "83eec23c"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "nz.explore()"
+      ],
+      "id": "de510638",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "map_to_png.map_to_png(nz.explore(), 'fig-explore')"
+      ],
+      "id": "3580344d",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Minimal example of an interactive vector layer plot with `.explore`](images/fig-explore.png){#fig-explore}\n",
+        ":::\n",
+        "\n",
+        "### Styling {#sec-interactive-styling}\n",
+        "\n",
+        "The `.explore` method has a `color` parameter which affects both the fill and outline color.\n",
+        "Other styling properties are specified using a `dict` through `style_kwds` (for general properties) and the `marker_kwds` (point-layer specific properties), as follows.\n",
+        "\n",
+        "The `style_kwds` keys are mostly used to control the color and opacity of the outline and the fill:\n",
+        "\n",
+        "-   `stroke`---Whether to draw the outline\n",
+        "-   `color`---Outline color\n",
+        "-   `weight`---Outline width (in pixels)\n",
+        "-   `opacity`---Outline opacity (from `0` to `1`)\n",
+        "-   `fill`---Whether to draw fill\n",
+        "-   `fillColor`---Fill color\n",
+        "-   `fillOpacity`---Fill opacity (from `0` to `1`)\n",
+        "\n",
+        "For example, here is how we can set green fill color and 30% opaque black outline of `nz` polygons in `.explore` (@fig-explore-styling-polygons).\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "8fde2f26"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-styling-polygons\n",
+        "#| fig-cap: Styling of polygons in `.explore`\n",
+        "nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})"
+      ],
+      "id": "fig-explore-styling-polygons",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "155f6c18"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3})"
+      ],
+      "id": "7598a21f",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "map_to_png.map_to_png(nz.explore(color='green', style_kwds={'color':'black', 'opacity':0.3}), 'fig-explore-styling-polygons')"
+      ],
+      "id": "4185e1b2",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Styling of polygons in `.explore`](images/fig-explore-styling-polygons.png){#fig-explore-styling-polygons}\n",
+        ":::\n",
+        "\n",
+        "The `dict` passed to `marker_kwds` controls the way that points are displayed:\n",
+        "\n",
+        "-   `radius`---Curcle radius, in $m$ for `circle` (see below), or in pixels for `circle_marker`\n",
+        "-   `fill`---Whether to draw fill (for `circle` or `circle_marker`)\n",
+        "\n",
+        "Accordingly, for points, we can set the `marker_type`, to one of:\n",
+        "\n",
+        "-   `'marker'`---A PNG image of a marker\n",
+        "-   `'circle'`---A vector circle with radius specified in $m$\n",
+        "-   `'circle_marker'`---A vector circle with radius specified in pixels (the default)\n",
+        "\n",
+        "For example, the following expression draws `'circe_marker`' points with 20-pixel radius, green fill, and black outline (@fig-explore-styling-points).\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "8e480342"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-styling-points\n",
+        "#| fig-cap: Styling of points in `.explore` (using `circle_marker`)\n",
+        "nz_height.explore(\n",
+        "    color='green', \n",
+        "    style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, \n",
+        "    marker_kwds={'radius':20}\n",
+        ")"
+      ],
+      "id": "fig-explore-styling-points",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "657edc70"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "nz_height.explore(\n",
+        "    color='green', \n",
+        "    style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, \n",
+        "    marker_kwds={'radius':20}\n",
+        ")"
+      ],
+      "id": "897cfbd4",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "map_to_png.map_to_png(nz_height.explore(\n",
+        "    color='green', \n",
+        "    style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, \n",
+        "    marker_kwds={'radius':20}\n",
+        "), 'fig-explore-styling-points')"
+      ],
+      "id": "ef75025d",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Styling of points in `.explore` (using `circle_marker`)](images/fig-explore-styling-points.png){#fig-explore-styling-points}\n",
+        ":::\n",
+        "\n",
+        "@fig-explore-styling-points2 demonstrates the `'marker_type'` option.\n",
+        "Note that the above-mentioned styling properties (other than `opacity`) are not applicable when using `marker_type='marker'`, because the markers are fixed PNG images.\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "76d3653d"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-styling-points2\n",
+        "#| fig-cap: Styling of points in `.explore` (using `marker`)\n",
+        "nz_height.explore(marker_type='marker')"
+      ],
+      "id": "fig-explore-styling-points2",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "99011090"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "nz_height.explore(marker_type='marker')"
+      ],
+      "id": "465272f7",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "map_to_png.map_to_png(nz_height.explore(marker_type='marker'), 'fig-explore-styling-points2')"
+      ],
+      "id": "64c691e9",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Styling of points in `.explore` (using `marker`)](images/fig-explore-styling-points2.png){#fig-explore-styling-points2}\n",
+        ":::\n",
+        "\n",
+        "### Layers\n",
+        "\n",
+        "To display multiple layers, one on top of another, with `.explore`, we use the `m` argument, which stands for the previous map (@fig-explore-layers).\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "f1e55fbe"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-layers\n",
+        "#| fig-cap: Displaying multiple layers in an interactive map with `.explore`\n",
+        "m = nz.explore()\n",
+        "nz_height.explore(m=m, color='red')"
+      ],
+      "id": "fig-explore-layers",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "1fdfa183"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "m = nz.explore()\n",
+        "nz_height.explore(m=m, color='red')"
+      ],
+      "id": "dd57eac3",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "m = nz.explore()\n",
+        "map_to_png.map_to_png(nz_height.explore(m=m, color='red'), 'fig-explore-layers')"
+      ],
+      "id": "2a2788e9",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Displaying multiple layers in an interactive map with `.explore`](images/fig-explore-layers.png){#fig-explore-layers}\n",
+        ":::\n",
+        "\n",
+        "One of the advantages of interactive maps is the ability to turn layers 'on' and 'off'.\n",
+        "This capability is implemented in `folium.LayerControl` from package **folium**, which the **geopandas** `.explore` method is a wrapper of.\n",
+        "For example, this is how we can add a layer control for the `nz` and `nz_height` layers (@fig-explore-layers-controls).\n",
+        "Note the `name` properties, used to specify layer names in the control, and the `collapsed` property, used to specify whether the control is fully visible at all times (`False`), or only on mouse hover (`True`, the default).\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "a7f9b629"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-layers-controls\n",
+        "#| fig-cap: Displaying multiple layers in an interactive map with `.explore`\n",
+        "m = nz.explore(name='Polygons (adm. areas)')\n",
+        "nz_height.explore(m=m, color='red', name='Points (elevation)')\n",
+        "folium.LayerControl(collapsed=False).add_to(m)\n",
+        "m"
+      ],
+      "id": "fig-explore-layers-controls",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "b4e48e1a"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "m = nz.explore(name='Polygons (adm. areas)')\n",
+        "nz_height.explore(m=m, color='red', name='Points (elevation)')\n",
+        "folium.LayerControl(collapsed=False).add_to(m)\n",
+        "m"
+      ],
+      "id": "995a801f",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "m = nz.explore(name='Polygons (adm. areas)')\n",
+        "nz_height.explore(m=m, color='red', name='Points (elevation)')\n",
+        "folium.LayerControl(collapsed=False).add_to(m)\n",
+        "map_to_png.map_to_png(m, 'fig-explore-layers-controls')"
+      ],
+      "id": "22e25f9e",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Displaying multiple layers in an interactive map with `.explore`](images/fig-explore-layers-controls.png){#fig-explore-layers-controls}\n",
+        ":::\n",
+        "\n",
+        "### Symbology {#sec-explore-symbology}\n",
+        "\n",
+        "Symbology can be specified in `.explore` using similar arguments as in `.plot` (@sec-plot-symbology).\n",
+        "For example, @fig-explore-symbology is an interactive version of @fig-plot-symbology-colors (a).\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "0d2cf9d9"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-symbology\n",
+        "#| fig-cap: 'Symbology in an interactive map of a vector layer, created with `.explore`'\n",
+        "nz.explore(column='Median_income', legend=True, cmap='Reds')"
+      ],
+      "id": "fig-explore-symbology",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "5df82096"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "nz.explore(column='Median_income', legend=True, cmap='Reds')"
+      ],
+      "id": "df27f045",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "map_to_png.map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds'), 'fig-explore-symbology')"
+      ],
+      "id": "debc0586",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Symbology in an interactive map of a vector layer, created with `.explore`](images/fig-explore-symbology.png){#fig-explore-symbology}\n",
+        ":::\n",
+        "\n",
+        "Fixed styling (@sec-explore-symbology) can be combined with symbology settings.\n",
+        "For example, polygon outline colors in @fig-explore-symbology are styled according to `'Median_income'`, however, this layer has overlapping outlines and their color is arbitrarily set according to the order of features (top-most features), which may be misleading and confusing.\n",
+        "To specify fixed outline colors (e.g., black), we can use the `color` and `weight` properties of `style_kwds` (@fig-explore-symbology2):\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "8d7c77d7"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-symbology2\n",
+        "#| fig-cap: Symbology combined with fixed styling in `.explore`\n",
+        "nz.explore(\n",
+        "    column='Median_income', \n",
+        "    legend=True, \n",
+        "    cmap='Reds', \n",
+        "    style_kwds={'color':'black', 'weight': 0.5}\n",
+        ")"
+      ],
+      "id": "fig-explore-symbology2",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "39b12cd1"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "nz.explore(\n",
+        "    column='Median_income', \n",
+        "    legend=True, \n",
+        "    cmap='Reds',\n",
+        "    style_kwds={'color':'black', 'weight': 0.5}\n",
+        ")"
+      ],
+      "id": "7c3cf15b",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "map_to_png.map_to_png(nz.explore(column='Median_income', legend=True, cmap='Reds', style_kwds={'color':'black', 'weight': 0.5}), 'fig-explore-symbology2')"
+      ],
+      "id": "d0901071",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Symbology combined with fixed styling in `.explore`](images/fig-explore-symbology2.png){#fig-explore-symbology2}\n",
+        ":::\n",
+        "\n",
+        "### Basemaps\n",
+        "\n",
+        "The basemap in `.explore` can be specified using the `tiles` argument.\n",
+        "Several popular built-in basemaps can be specified using a string:\n",
+        "\n",
+        "-   `'OpenStreetMap'`\n",
+        "-   `'CartoDB positron'`\n",
+        "-   `'CartoDB dark_matter'`\n",
+        "\n",
+        "Other basemaps are available through the **xyzservices** package (see `xyzservices.providers` for a list), or using a custom tile server URL.\n",
+        "For example, the following expression displays the `'CartoDB positron'` tiles in an `.explore` map (@fig-explore-basemaps).\n",
+        "\n",
+        ":::  {.content-visible when-format=\"html\"}\n"
+      ],
+      "id": "c1299717"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| label: fig-explore-basemaps\n",
+        "#| fig-cap: Specifying the basemap in `.explore`\n",
+        "nz.explore(tiles='CartoDB positron')"
+      ],
+      "id": "fig-explore-basemaps",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        ":::\n",
+        ":::  {.content-visible when-format=\"pdf\"}\n"
+      ],
+      "id": "9bbb0a2b"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| eval: false\n",
+        "nz.explore(tiles='CartoDB positron')"
+      ],
+      "id": "aea7942c",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| echo: false\n",
+        "#| output: false\n",
+        "#| error: true\n",
+        "map_to_png.map_to_png(nz.explore(tiles='CartoDB positron'), 'fig-explore-basemaps')"
+      ],
+      "id": "23366cc7",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "![Specifying the basemap in `.explore`](images/fig-explore-basemaps.png){#fig-explore-basemaps}\n",
+        ":::\n",
+        "\n",
+        "### Exporting\n",
+        "\n",
+        "An interactive map can be exported to an HTML file using the `.save` method of the `map` object.\n",
+        "The HTML file can then be shared with other people, or published on a server and shared through a URL[^leaflet_size].\n",
+        "A good free option for publishing a web map is through GitHub Pages.\n",
+        "\n",
+        "[^leaflet_size]: The GeoJSON representation of the data is embedded in the HTML file, which means that the file size can get large, and the web map may become unusable due to browser performance limitations.\n",
+        "\n",
+        "For example, here is how we can export the map shown in @fig-explore-layers-controls, to a file named `map.html`.\n"
+      ],
+      "id": "31df6257"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "#| output: false\n",
+        "m = nz.explore(name='Polygons (adm. areas)')\n",
+        "nz_height.explore(m=m, color='red', name='Points (elevation)')\n",
+        "folium.LayerControl(collapsed=False).add_to(m)\n",
+        "m.save('output/map.html')"
+      ],
+      "id": "539dc246",
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "<!-- ## Linking geographic and non-geographic visualizations -->\n",
+        "\n",
+        "<!-- ## Mapping applications Streamlit? -->\n",
+        "\n",
+        "<!-- ## Exercises -->"
+      ],
+      "id": "a6a35875"
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "python3",
+      "language": "python",
+      "display_name": "Python 3 (ipykernel)",
+      "path": "/home/michael/Sync/venv/g/share/jupyter/kernels/python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}

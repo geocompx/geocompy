@@ -545,20 +545,20 @@ for their contributions during the open-source development of the book.
 
 \section{Introduction}\label{introduction}
 
-This chapter outlines two fundamental geographic data models --- vector
-and raster --- and introduces the main Python packages for working with
-them. Before demonstrating their implementation in Python, we will
-introduce the theory behind each data model and the disciplines in which
-they predominate.
+This chapter outlines two fundamental geographic data models (vector and
+raster) and introduces Python packages for working with them. Before
+demonstrating their implementation in Python, we will introduce the
+theory behind each data model and the disciplines in which they
+predominate.
 
-The vector data model (Section~\ref{sec-vector-data}) represents the
-world using points, lines, and polygons. These have discrete,
-well-defined borders, meaning that vector datasets usually have a high
-level of precision (but not necessarily accuracy). The raster data model
-(Section~\ref{sec-raster-data}), on the other hand, divides the surface
-up into cells of constant size. Raster datasets are the basis of
-background images used in web-mapping and have been a vital source of
-geographic data since the origins of aerial photography and
+The vector data model (Section~\ref{sec-vector-data}) represents
+geographic entities with points, lines, and polygons. These have
+discrete, well-defined borders, meaning that vector datasets usually
+have a high level of precision (but not necessarily accuracy). The
+raster data model (Section~\ref{sec-raster-data}), on the other hand,
+divides the surface up into cells of constant size. Raster datasets are
+the basis of background images used in online maps and have been a vital
+source of geographic data since the origins of aerial photography and
 satellite-based remote sensing devices. Rasters aggregate spatially
 specific features to a given resolution, meaning that they are
 consistent over space and scalable, with many worldwide raster datasets
@@ -571,7 +571,7 @@ and the datasets you have access to:
 \tightlist
 \item
   Vector datasets and methods dominate the social sciences because human
-  settlements and and processes (e.g., transport infrastructure) tend to
+  settlements and processes (e.g., transport infrastructure) tend to
   have discrete borders
 \item
   Raster datasets and methods dominate many environmental sciences
@@ -582,8 +582,8 @@ Python has strong support for both data models. We will focus on
 \textbf{shapely} and \textbf{geopandas} for working with geograpic
 vector data, and \textbf{rasterio} for working with rasters.
 
-\textbf{shapely} is a ``low-level'' package for working with individual
-vector geometry objects. \textbf{geopandas} is a ``high-level'' package
+\textbf{shapely} is a `low-level' package for working with individual
+vector geometry objects. \textbf{geopandas} is a `high-level' package
 for working with geometry columns (\texttt{GeoSeries} objects), which
 internally contain \textbf{shapely} geometries, and with vector layers
 (\texttt{GeoDataFrame} objects). The \textbf{geopandas} ecosystem
@@ -593,19 +593,19 @@ Python, with many packages building on it.
 There are several partially overlapping packages for working with raster
 data, each with its own advantages and disadvantages. In this book, we
 focus on the most prominent one: \textbf{rasterio}, which represents
-``simple'' raster datasets with a combination of a \textbf{numpy} array,
+`simple' raster datasets with a combination of a \textbf{numpy} array,
 and a metadata object (\texttt{dict}) providing geographic metadata such
 as the coordinate system. \textbf{xarray} is a notable alternative to
 \textbf{rasterio} not covered in this book which uses native
 \texttt{xarray.Dataset} and \texttt{xarray.DataArray} classes to
-effectively represent complex raster datasets such as `NetCDF' files
-with multiple bands and metadata.
+effectively represent complex raster datasets such as NetCDF files with
+multiple bands and metadata.
 
-There is much overlap in some fields and raster and vector datasets can
+There is much overlap in some fields, and raster and vector datasets can
 be used together: ecologists and demographers, for example, commonly use
 both vector and raster data. Furthermore, it is possible to convert
 between the two forms (see Chapter~\ref{sec-raster-vector}). Whether
-your work involves more use of vector or raster datasets, it is worth
+your work involves use of vector or raster datasets, it is worth
 understanding the underlying data models before using them, as discussed
 in subsequent chapters.
 
@@ -615,9 +615,9 @@ The geographic vector data model is based on points located within a
 coordinate reference system (CRS). Points can represent self-standing
 features (e.g., the location of a bus stop), or they can be linked
 together to form more complex geometries such as lines and polygons.
-Most point geometries contain only two dimensions (3-dimensional CRSs
-may contain an additional \(z\) value, typically representing height
-above sea level).
+Most point geometries contain only two dimensions (three-dimensional
+CRSs may contain an additional \(z\) value, typically representing
+height above sea level).
 
 In this system, London, for example, can be represented by the
 coordinates \texttt{(-0.1,51.5)}. This means that its location is -0.1
@@ -659,9 +659,8 @@ dimensions.
 \textbf{geopandas} (Bossche et al. 2023) provides classes for geographic
 vector data and a consistent command-line interface for reproducible
 geographic data analysis in Python. It also provides an interface to
-three mature libraries for geocomputation which, in combination,
-represent a strong foundation on which many geographic applications are
-built (including QGIS and R's spatial ecosystem):
+three mature libraries for geocomputation, a strong foundation on which
+many geographic applications are built:
 
 \begin{itemize}
 \tightlist
@@ -678,22 +677,22 @@ built (including QGIS and R's spatial ecosystem):
 \end{itemize}
 
 Tight integration with these geographic libraries makes reproducible
-geocomputation possible: an advantage of using a higher level language
+geocomputation possible: an advantage of using a higher-level language
 such as Python to access these libraries is that you do not need to know
-the intricacies of the low level components, enabling focus on the
+the intricacies of the low-level components, enabling focus on the
 methods rather than the implementation.
 
 \subsection{Vector data classes}\label{vector-data-classes}
 
 The main classes for working with geographic vector data in Python are
-hierarchical, meaning the highest level `vector layer' class is composed
-of simpler `geometry column' and individual `geometry' components. This
+hierarchical, meaning that the `vector layer' class is composed of
+simpler `geometry column' and individual `geometry' components. This
 section introduces them in order, starting with the highest level class.
-For many applications, the high level vector layer class, which are
-essentially a data frame with geometry columns, are all that's needed.
-However, it's important to understand the structure of vector geographic
-objects and their component pieces for more advanced applications. The
-three main vector geographic data classes in Python are:
+For many applications, the vector layer class, a data frame with
+geometry columns, is all that's needed. However, it's important to
+understand the structure of vector geographic objects and their
+components for some applications and for a deep understanding. The three
+main vector geographic data classes in Python are:
 
 \begin{itemize}
 \tightlist
@@ -704,7 +703,7 @@ three main vector geographic data classes in Python are:
   \texttt{GeoSeries}, a class that is used to represent the geometry
   column in \texttt{GeoDataFrame} objects
 \item
-  \texttt{shapely} geometry objects which represent individual
+  \texttt{shapely} geometry objects, which represent individual
   geometries, such as a point or a polygon in \texttt{GeoSeries} objects
 \end{itemize}
 
@@ -960,8 +959,8 @@ bounding box of each feature, involve just the geometry. Applying this
 type of operation on a \texttt{GeoDataFrame} is therefore basically a
 shortcut to applying it on the \texttt{GeoSeries} object in the geometry
 column. For example, the two following commands return exactly the same
-result, a \texttt{GeoSeries} with country bounding box polygons (using
-the \texttt{.envelope} method).
+result, a \texttt{GeoSeries} containing bounding box polygons (using the
+\texttt{.envelope} method).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1000,11 +999,11 @@ Length: 177, dtype: geometry
 Note that \texttt{.envelope}, and other similar operators in
 \textbf{geopandas} such as \texttt{.centroid}
 (Section~\ref{sec-centroids}), \texttt{.buffer}
-(Section~\ref{sec-buffers}) or \texttt{.convex\_hull}, return only the
+(Section~\ref{sec-buffers}), or \texttt{.convex\_hull}, return only the
 geometry (i.e., a \texttt{GeoSeries}), not a \texttt{GeoDataFrame} with
 the original attribute data. In case we want the latter, we can create a
-copy of the \texttt{GeoDataFrame} and then ``overwrite'' its geometry
-(or, we can overwrite the geometries directly in case we do not need the
+copy of the \texttt{GeoDataFrame} and then `overwrite' its geometry (or,
+we can overwrite the geometries directly in case we do not need the
 original ones, as in \texttt{gdf.geometry=gdf.envelope}).
 
 \begin{Shaded}
@@ -1084,8 +1083,8 @@ columns, as demonstrated in the following code section.
 \end{Highlighting}
 \end{Shaded}
 
-Only one geometry column at a time is ``active'', in the sense that it
-is being accessed in operations involving the geometries (such as
+Only one geometry column at a time is `active', in the sense that it is
+being accessed in operations involving the geometries (such as
 \texttt{.centroid}, \texttt{.crs}, etc.). To switch the active geometry
 column from one \texttt{GeoSeries} column to another, we use
 \texttt{.set\_geometry}. Figure~\ref{fig-switch-to-centroids} and
@@ -1156,8 +1155,8 @@ description of Simple Features. Both formats are exchangeable, and if we
 present one, we will naturally choose the WKT representation.
 
 The foundation of each geometry type is the point. A point is simply a
-coordinate in 2D, 3D, or 4D space such as shown in
-Figure~\ref{fig-point}.
+coordinate in two-dimensional, three-dimensional, or four-dimensional
+space such as shown in Figure~\ref{fig-point}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1186,7 +1185,7 @@ the same coordinates (Figure~\ref{fig-polygon}).
 
 So far we have created geometries with only one geometric entity per
 feature. However, the Simple Features standard allows multiple
-geometries to exist within a single feature, using ``multi'' versions of
+geometries to exist within a single feature, using `multi' versions of
 each geometry type, as illustrated in Figure~\ref{fig-multipoint},
 Figure~\ref{fig-multilinestring}, and Figure~\ref{fig-multipolygon1}.
 
@@ -1531,7 +1530,7 @@ scratch}\label{sec-vector-layer-from-scratch}
 
 In the previous sections, we started with a vector layer
 (\texttt{GeoDataFrame}), from an existing GeoPackage file, and
-``decomposed'' it to extract the geometry column (\texttt{GeoSeries},
+`decomposed' it to extract the geometry column (\texttt{GeoSeries},
 Section~\ref{sec-geometry-columns}) and separate geometries
 (\texttt{shapely}, see Section~\ref{sec-geometries}). In this section,
 we will demonstrate the opposite process, constructing a
@@ -1563,8 +1562,8 @@ scratch}
 The final result, a vector layer (\texttt{GeoDataFrame}) is therefore a
 hierarchical structure (Figure~\ref{fig-gdf-structure}), containing the
 geometry column (\texttt{GeoSeries}), which in turn contains geometries
-(\texttt{shapely}). Each of the ``internal'' components can be accessed,
-or ``extracted'', which is sometimes necessary, as we will see later on.
+(\texttt{shapely}). Each of the `internal' components can be accessed,
+or `extracted', which is sometimes necessary, as we will see later on.
 
 \begin{figure}
 
@@ -1582,7 +1581,7 @@ Non-geographic attributes may represent the name of the feature, and
 other attributes such as measured values, groups, etc. To illustrate
 attributes, we will represent a temperature of 25°C in London on June
 21st, 2023. This example contains a geometry (the coordinates), and
-three attributes with three different classes (place name, temperature
+three attributes with three different classes (place name, temperature,
 and date). Objects of class \texttt{GeoDataFrame} represent such data by
 combining the attributes (\texttt{Series}) with the simple feature
 geometry column (\texttt{GeoSeries}). First, we create a point geometry,
@@ -1647,7 +1646,7 @@ creating a layer with more than one feature (i.e., multiple rows).
 \end{Highlighting}
 \end{Shaded}
 
-Finally, the \texttt{dict} can be coverted to a \texttt{GeoDataFrame}
+Finally, the \texttt{dict} can be converted to a \texttt{GeoDataFrame}
 object, as shown in the following code.
 
 \begin{Shaded}
@@ -1838,10 +1837,10 @@ rectilinear, and curvilinear grids (see Chapter 1 of Pebesma and Bivand
 The raster data model usually consists of a raster header (or metadata)
 and a matrix (with rows and columns) representing equally spaced cells
 (often also called pixels; Figure~\ref{fig-raster-intro-plot1} (A)). The
-raster header defines the coordinate reference system, the the origin
-and the resolution. The origin (or starting point) is typically the
+raster header defines the coordinate reference system, the origin and
+the resolution. The origin (or starting point) is typically the
 coordinate of the lower-left corner of the matrix. The metadata defines
-the the origin, and the cell size, i.e., resolution. Combined with the
+the origin, and the cell size, i.e., resolution. Combined with the
 column and row count, the extent can also be derived. The matrix
 representation avoids storing explicitly the coordinates for the four
 corner points (in fact it only stores one coordinate, namely the origin)
@@ -1867,9 +1866,9 @@ continuous or a categorical variable
 \end{figure}%
 
 Raster maps usually represent continuous phenomena such as elevation,
-temperature, population density or spectral data. Discrete features such
-as soil or land-cover classes can also be represented in the raster data
-model. Both uses of raster datasets are illustrated in
+temperature, population density, or spectral data. Discrete features
+such as soil or land-cover classes can also be represented in the raster
+data model. Both uses of raster datasets are illustrated in
 Figure~\ref{fig-raster-intro-plot2}, which shows how the borders of
 discrete features may become blurred in raster datasets. Depending on
 the nature of the application, vector representations of discrete
@@ -1899,8 +1898,8 @@ will see shortly, they differ in scope and underlying data models.
 Specifically, \textbf{rasterio} represents rasters as \textbf{numpy}
 arrays associated with a separate object holding the spatial metadata.
 The \textbf{rioxarray} package, a wrapper of \textbf{rasterio}, however,
-represents rasters with \textbf{xarray} ``extended'' arrays, which are
-an extension of \textbf{numpy} array designed to hold axis labels and
+represents rasters with \textbf{xarray} `extended' arrays, which are an
+extension of \textbf{numpy} array designed to hold axis labels and
 attributes in the same object, together with the array of raster values.
 Similar approaches are provided by less well-known
 \textbf{xarray-spatial} and \textbf{geowombat} packages. Comparatively,
@@ -1941,8 +1940,7 @@ Rasters are typically imported from existing files. When working with
 \begin{itemize}
 \tightlist
 \item
-  First, we open a raster file ``connection'' using
-  \texttt{rasterio.open}
+  First, we open a raster file `connection' using \texttt{rasterio.open}
 \item
   Second, we read raster values from the connection using the
   \texttt{.read} method
@@ -1954,7 +1952,7 @@ from a text file. The rationale is that we do not always want to read
 all information from the file into memory, which is particularly
 important as rasters size can be larger than RAM size. Accordingly, the
 second step (\texttt{.read}) is selective, meaning that the user can
-fine tune the subset of values (bands, rows/columns, resolution, etc.)
+fine-tune the subset of values (bands, rows/columns, resolution, etc.)
 that are actually being read. For example, we may want to read just one
 raster band rather than reading all bands.
 
@@ -2031,7 +2029,7 @@ elaborate on below, and in later chapters:
 \item
   \texttt{dtype}---Data type (see Table~\ref{tbl-numpy-data-types})
 \item
-  \texttt{nodata}---The value being used as ``No Data'' flag (see
+  \texttt{nodata}---The value being used as `No Data' flag (see
   Section~\ref{sec-data-output-raster})
 \item
   Dimensions:
@@ -2156,7 +2154,7 @@ creating a vector layer (see
 Section~\ref{sec-vector-layer-from-scratch}), creating a raster from
 scratch is rarely needed in practice because aligning a raster with the
 proper spatial extent is challenging to do programmatically
-(``georeferencing'' tools in GIS software are a better fit for the job).
+(`georeferencing' tools in GIS software are a better fit for the job).
 Nevertheless, the examples will be helpful to become more familiar with
 the \textbf{rasterio} data structures.
 
@@ -2199,10 +2197,10 @@ array([[ 1,  2,  3,  4,  5,  6],
 \end{verbatim}
 
 The \texttt{grain} array represents a categorical raster with values
-\texttt{0}, \texttt{1}, \texttt{2}, corresponding to categories
-``clay'', ``silt'', ``sand'', respectively. We will create it from a
-specific arrangement of pixel values, using \textbf{numpy}'s
-\texttt{np.array} and \texttt{.reshape}.
+\texttt{0}, \texttt{1}, \texttt{2}, corresponding to categories `clay',
+`silt', `sand', respectively. We will create it from a specific
+arrangement of pixel values, using \textbf{numpy}'s \texttt{np.array}
+and \texttt{.reshape}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2639,7 +2637,7 @@ method of \textbf{matplotlib} to draw grid lines on top of the plot.
 
 \end{minipage}%
 
-\caption{\label{fig-zion-crs}Examples of Coordinate Refrence Systems
+\caption{\label{fig-zion-crs}Examples of Coordinate Reference Systems
 (CRS) for a vector layer}
 
 \end{figure}%
@@ -2739,13 +2737,12 @@ It also relies on the following data files:
 Attribute data is non-spatial information associated with geographic
 (geometry) data. A bus stop provides a simple example: its position
 would typically be represented by latitude and longitude coordinates
-(geometry data), in addition to its name. The Elephant \& Castle / New
-Kent Road bus stop in London, for example, has coordinates of
-\texttt{-0.098} degrees longitude and \texttt{51.495} degrees latitude
-which can be represented as \texttt{POINT\ (-0.098\ 51.495)} using the
-Simple Feature representation described in
-Chapter~\ref{sec-spatial-class}. Attributes, such as the name of the bus
-stop, are the topic of this chapter.
+(geometry data), in addition to its name. A bus stop in London, for
+example, has coordinates of \texttt{-0.098} degrees longitude and
+\texttt{51.495} degrees latitude which can be represented as
+\texttt{POINT\ (-0.098\ 51.495)} using the Simple Feature representation
+described in Chapter~\ref{sec-spatial-class}. Attributes, such as the
+name of the bus stop, are the topic of this chapter.
 
 Another example of an attribute is the elevation value for a specific
 grid cell in raster data. Unlike the vector data model, the raster data
@@ -2785,7 +2782,7 @@ to the spatial world.
 After a deep dive into various types of vector attribute operations in
 the next section, raster attribute data operations are covered in
 Section~\ref{sec-raster-subsetting}, which demonstrates extracting cell
-values from one or more layer (raster subsetting).
+values from one or more layers (raster subsetting).
 Section~\ref{sec-summarizing-raster-objects} provides an overview of
 `global' raster operations which can be used to summarize entire raster
 datasets.
@@ -2796,8 +2793,8 @@ manipulation}\label{sec-vector-attribute-manipulation}
 As mentioned in Section~\ref{sec-vector-layers}, vector layers
 (\texttt{GeoDataFrame}, from package \textbf{geopandas}) are basically
 extended tables (\texttt{DataFrame} from package \textbf{pandas}), the
-difference being that a vector layer has a geometry column. Therefore,
-all ordinary table-related operations from package \textbf{pandas} are
+only differences being the geometry column and class. Therefore, all
+ordinary table-related operations from package \textbf{pandas} are
 supported for \textbf{geopandas} vector layers as well, as shown below.
 
 \subsection{Vector attribute
@@ -2820,7 +2817,7 @@ indices, separated by a comma. Each index can be:
 \item
   A slice, as in \texttt{0:3}
 \item
-  \texttt{:}---indicating ``all'' indices, as in \texttt{{[}:{]}}
+  \texttt{:}---indicating `all' indices, as in \texttt{{[}:{]}}
 \end{itemize}
 
 An exception to this guideline is selecting columns using a list, which
@@ -2834,7 +2831,7 @@ to select columns \texttt{\textquotesingle{}a\textquotesingle{}} and
 Here are few examples of subsetting the \texttt{GeoDataFrame} of world
 countries (Figure~\ref{fig-gdf-plot}). First, we are subsetting rows by
 position. In the first example, we are using \texttt{{[}0:3,:{]}},
-meaning ``rows 1,2,3, all columns''. Keep in mind that indices in Python
+meaning `rows 1,2,3, all columns'. Keep in mind that indices in Python
 start from 0, and slices are inclusive of the start and exclusive of the
 end; therefore, \texttt{0:3} means indices \texttt{0}, \texttt{1},
 \texttt{2}, i.e., first three rows in this example.
@@ -3079,7 +3076,7 @@ operators: And, Or, Not \\
 The following example demonstrates logical vectors for subsetting by
 creating a new \texttt{GeoDataFrame} object called
 \texttt{small\_countries} that contains only those countries and other
-teritories from the \texttt{world} object whose surface area is smaller
+territories from the \texttt{world} object whose surface area is smaller
 than 10,000 \(km^2\). The first step is to create a logical vector (a
 \texttt{Series} object) that is \texttt{True} for countries with an area
 smaller than 10,000 \(km^2\) and \texttt{False} otherwise. Then, we use
@@ -3324,9 +3321,8 @@ parameter to choose the aggregation function for non-geometry columns.
 Again, note that the \texttt{.reset\_index} method is used (here, and
 elsewhere in the book) to turn \textbf{pandas} and \textbf{geopandas}
 row \emph{indices}, which are automatically created for grouping
-variables in grouping operations such as \texttt{.dissolve}, ``back''
-into ordinary columns, which are more appropriate in the scope of this
-book.
+variables in grouping operations such as \texttt{.dissolve}, `back' into
+ordinary columns, which are more appropriate in the scope of this book.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -3514,7 +3510,7 @@ example, given the \texttt{world\_agg3} continent summary
 \item
   calculate population density of each continent,
 \item
-  arrange continents by the number countries they contain, and
+  arrange continents by the number of countries each contains, and
 \item
   keep only the 3 most populous continents.
 \end{itemize}
@@ -3545,7 +3541,7 @@ example, given the \texttt{world\_agg3} continent summary
 joining}\label{sec-vector-attribute-joining}
 
 Combining data from different sources is a common task in data
-preparation. Joins do this by combining tables based on a shared ``key''
+preparation. Joins do this by combining tables based on a shared `key'
 variable. \textbf{pandas} has a function named \texttt{pd.merge} for
 joining \texttt{(Geo)DataFrames} based on common column(s) that follows
 conventions used in the database language SQL (Grolemund and Wickham
@@ -3626,8 +3622,8 @@ plotted as a map, as illustrated (for \texttt{coffee\_production\_2017})
 in Figure~\ref{fig-join-coffee-production}. Note that, here and in many
 other examples in later chapters, we are using a technique to plot two
 layers (all of the world countries outline, and coffee production with
-symbology) at once, which will be ``formally'' introduced towards the
-end of the book in Section~\ref{sec-plot-static-layers}.
+symbology) at once, which will be `formally' introduced towards the end
+of the book in Section~\ref{sec-plot-static-layers}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -3650,12 +3646,12 @@ Organization).}
 
 \end{figure}%
 
-To work, attribute-based joins need a ``key variable'' in both datasets
+To work, attribute-based joins need a `key variable' in both datasets
 (\texttt{on} parameter of \texttt{pd.merge}). In the above example, both
 \texttt{world\_coffee} and \texttt{world} DataFrames contained a column
 called \texttt{name\_long}.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 By default, \texttt{pd.merge} uses all columns with matching names.
 However, it is recommended to explicitly specify the names of the
@@ -3782,7 +3778,7 @@ e.g.,
 \texttt{\textquotesingle{}South\ America:Americas\textquotesingle{}} for
 Argentina and other South America countries. The opposite operation,
 splitting one column into multiple columns based on a separator string,
-is done using the \texttt{.str.split} method. As a result we go back to
+is done using the \texttt{.str.split} method. As a result, we go back to
 the previous state of two separate \texttt{continent} and
 \texttt{region\_un} columns (only that their position is now last, since
 they are newly created). The \texttt{str.split} method returns a column
@@ -3843,7 +3839,7 @@ for example, renames the lengthy \texttt{name\_long} column to simply
 \end{longtable}
 
 To change all column names at once, we assign a \texttt{list} of the
-``new'' column names into the \texttt{.columns} property. The
+`new' column names into the \texttt{.columns} property. The
 \texttt{list} must be of the same length as the number of columns (i.e.,
 \texttt{world.shape{[}1{]}}). This is illustrated below, which outputs
 the same \texttt{world2} object, but with very short names.
@@ -3950,7 +3946,7 @@ objects}\label{sec-manipulating-raster-objects}
 Raster cell values can be considered the counterpart of vector attribute
 values. In this section, we cover operations that deal with raster
 values in a similar way, namely as a series of numbers. This type of
-operations include subsetting raster values
+operations includes subsetting raster values
 (Section~\ref{sec-raster-subsetting}) and calculating global summaries
 of raster values (Section~\ref{sec-summarizing-raster-objects}).
 
@@ -4053,7 +4049,7 @@ array([[[ 1,  2,  3,  4,  5,  6],
         [31, 32, 33, 34, 35, 36]]], dtype=uint8)
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 You can see that the above array is three-dimensional according to the
 number of brackets \texttt{{[}}, or check explicitly using
@@ -4094,12 +4090,11 @@ Global summaries of raster values can be calculated by applying
 np.float64(18.083333333333332)
 \end{verbatim}
 
-Note that ``No Data''-safe functions--such as
-\texttt{np.nanmean}---should be used in case the raster contains ``No
-Data'' values which need to be ignored. Before we can demonstrate that,
-we must convert the array from \texttt{int} to \texttt{float}, as
-\texttt{int} arrays cannot contain \texttt{np.nan} (due to computer
-memory limitations).
+Note that `No Data'-safe functions--such as \texttt{np.nanmean}---should
+be used in case the raster contains `No Data' values which need to be
+ignored. Before we can demonstrate that, we must convert the array from
+\texttt{int} to \texttt{float}, as \texttt{int} arrays cannot contain
+\texttt{np.nan} (due to computer memory limitations).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -4121,7 +4116,7 @@ array([[ 0.,  0.,  0.,  4.,  5.,  6.],
 Now we can insert an \texttt{np.nan} value into the array, for example
 to a cell located in the first row and third column. (Doing so in the
 original \texttt{elev} array raises an error, because an \texttt{int}
-array cannot accomodate \texttt{np.nan}, as mentioned above; try it to
+array cannot accommodate \texttt{np.nan}, as mentioned above; try it to
 see for yourself.)
 
 \begin{Shaded}
@@ -4154,8 +4149,8 @@ np.float64(nan)
 \end{verbatim}
 
 To get a summary of all non-missing values, we need to use one of the
-specialized \textbf{numpy} functions that ignore ``No Data'' values,
-such as \texttt{np.nanmean}:
+specialized \textbf{numpy} functions that ignore `No Data' values, such
+as \texttt{np.nanmean}:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -4168,8 +4163,8 @@ np.float64(18.6)
 \end{verbatim}
 
 Raster value statistics can be visualized in a variety of ways. One
-approach is to ``flatten'' the raster values into a one-dimensional
-array (using \texttt{.flatten}), then use a graphical function such as
+approach is to `flatten' the raster values into a one-dimensional array
+(using \texttt{.flatten}), then use a graphical function such as
 \texttt{plt.hist} or \texttt{plt.boxplot} (from
 \textbf{matplotlib.pyplot}). For example, the following code section
 shows the distribution of values in \texttt{elev} using a histogram
@@ -4341,7 +4336,7 @@ operations, which generate summary statistics representing an entire
 raster dataset, and distance calculations on rasters, are discussed in
 Section Section~\ref{sec-global-operations-and-distances}.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 It is important to note that spatial operations that use two spatial
 objects rely on both objects having the same coordinate reference
@@ -4379,7 +4374,7 @@ To demonstrate spatial subsetting, we will use the \texttt{nz} and
 regions and 101 highest points in New Zealand, respectively
 (Figure~\ref{fig-spatial-subset} (a)), in a projected coordinate system.
 The following expression creates a new object, \texttt{canterbury},
-representing only one region --- Canterbury.
+representing only one region---Canterbury.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -4512,11 +4507,11 @@ determine the type of spatial relationship that features in the target
 object must have with the subsetting object to be selected. These
 include touches, crosses, or within, as we will see shortly in
 Section~\ref{sec-topological-relations}. Intersects
-(\texttt{.intersects}), which we used in the last example, is the the
-most commonly used method. This is a `catch all' topological relation,
-that will return features in the target that touch, cross or are within
-the source `subsetting' object. As an example of another method, we can
-use \texttt{.disjoint} to obtain all points that \emph{do not} intersect
+(\texttt{.intersects}), which we used in the last example, is the most
+commonly used method. This is a `catch all' topological relation, that
+will return features in the target that touch, cross or are within the
+source `subsetting' object. As an example of another method, we can use
+\texttt{.disjoint} to obtain all points that \emph{do not} intersect
 with Canterbury.
 
 \begin{Shaded}
@@ -4688,7 +4683,7 @@ symmetrical, meaning that if \texttt{x.relation(y)} is true,
 \texttt{y.relation(x)} will also be true, relations in which the order
 of the geometries are important such as contains and within are not.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Notice that each geometry pair has a `DE-9IM'\footnotemark{} string such
 as \texttt{FF2F11212}. DE-9IM strings describe the dimensionality
@@ -4903,7 +4898,7 @@ the polygons each.
 2 & True & False \\
 \end{longtable}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The \texttt{.apply} method (package \textbf{pandas}) is used to apply a
 function along one of the axes of a \texttt{DataFrame} (or
@@ -4918,7 +4913,7 @@ example.)
 
 \end{tcolorbox}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Since the above result, like any pairwise matrix, (1) is composed of
 values of the same type, and (2) has no contrasting role for rows and
@@ -5019,8 +5014,8 @@ dtype: bool
 Note that although point \texttt{1} is more than \texttt{0.2} units of
 distance from the nearest vertex of \texttt{poly}, it is still selected
 when the distance is set to \texttt{0.2}. This is because distance is
-measured to the nearest edge, in this case, the part of the the polygon
-that lies directly above point 2 in Figure
+measured to the nearest edge, in this case, the part of the polygon that
+lies directly above point 2 in Figure
 Figure~\ref{fig-spatial-relations}. We can verify that the actual
 distance between point \texttt{1} and the polygon is \texttt{0.13}, as
 follows.
@@ -5984,7 +5979,7 @@ method. The method is applied on a \texttt{GeoSeries} (or a
 \texttt{shapely} geometry. The result is a \texttt{Series} of pairwise
 distances.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 \textbf{geopandas} uses similar syntax and mode of operation for many of
 its methods and functions, including:
@@ -6192,10 +6187,10 @@ rather than all at once.
 \end{Shaded}
 
 \begin{verbatim}
-<generator object sample_gen at 0x7df9f9c08f40>
+<generator object sample_gen at 0x7995b6120f40>
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The technical terms \emph{iterable}, \emph{iterator}, and
 \emph{generator} in Python may be confusing, so here is a short summary,
@@ -6280,7 +6275,7 @@ two points where we extract its values}
 
 \end{figure}%
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 We elaborate on the plotting technique used to display the points and
 the raster in Section~\ref{sec-plot-static-layers}. We will also
@@ -6776,7 +6771,7 @@ and divide by the raster maximum to set the maximum value to \texttt{1}.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Python slicing notation, which \textbf{numpy}, \textbf{pandas} and
 \textbf{geopandas} also follow, is \texttt{object{[}start:stop:step{]}}.
@@ -7019,7 +7014,7 @@ array([[nan, nan, nan, nan, nan, nan],
        [nan, nan, nan, nan, nan, nan]])
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 \texttt{scipy.stats.mode} is a function to summarize array values,
 returning the mode (most common value). It is analogous to
@@ -7049,7 +7044,7 @@ include:
 For example, each of these, and other, terrain metrics can be computed
 with the \textbf{richdem} package.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Terrain metrics are essentially focal filters with customized functions.
 Using \texttt{scipy.ndimage.generic\_filter}, along with such custom
@@ -7079,7 +7074,7 @@ their wrappers (such as \textbf{rasterio} and other Python packages),
 whether to access a computational algorithm not easily accessible in a
 Python package, or for GDAL's memory-efficiency and speed benefits.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 GDAL contains a collection of over 40 programs, mostly aimed at raster
 processing. These include programs for fundamental operations, such as:
@@ -7275,7 +7270,7 @@ Now, we can use dictionary comprehension (see note below) to split the
  np.uint8(2): array([ 4,  5,  6,  8, 11, 14, 15, 18, 28, 31, 33, 34, 36], dtype=uint8)}
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 \emph{List comprehension} and \emph{dictionary comprehension} are
 concise ways to create a \texttt{list} or a \texttt{dict}, respectively,
@@ -7404,7 +7399,7 @@ the resulting mosaic.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Some Python packages (such as \texttt{rasterio}) are split into several
 so-called sub-modules. The sub-modules are installed collectively when
@@ -8063,8 +8058,8 @@ just the \texttt{GeoSeries} of transformed geometries.
 
 Affine transformations of \texttt{GeoSeries} can be done using the
 \texttt{.affine\_transform} method, which is a wrapper around the
-\texttt{shapely.affinity.affine\_transform} function. A 2D affine
-transformation requires a six-parameter list
+\texttt{shapely.affinity.affine\_transform} function. A two-dimensional
+affine transformation requires a six-parameter list
 \texttt{{[}a,b,d,e,xoff,yoff{]}} which represents
 Equation~\ref{eq-affine1} and Equation~\ref{eq-affine2} for transforming
 the coordinates.
@@ -8113,7 +8108,7 @@ x-coordinates untouched.
 Length: 16, dtype: geometry
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 \textbf{shapely}, and consequently \textbf{geopandas}, operations,
 typically ignore the z-dimension (if there is one) of geometries in
@@ -9916,7 +9911,7 @@ be used to reduce computational resource requirements of raster storage
 and subsequent steps, while disaggregation can be used to match other
 datasets, or to add detail.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Raster aggregation is, in fact, a special case of raster resampling (see
 Section~\ref{sec-raster-resampling}), where the target raster grid is
@@ -10113,7 +10108,7 @@ writing raster files with \textbf{rasterio}).
 \end{Highlighting}
 \end{Shaded}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The \texttt{**} syntax in Python is known as variable-length
 `\emph{keyword} arguments'. It is used to pass a dictionary of numerous
@@ -10902,7 +10897,7 @@ In the case of cropping, there is no particular reason to write the
 result to file for easier plotting, such as in the other two examples,
 since there are no `No Data' values (Figure~\ref{fig-raster-crop} (c)).
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 As mentioned above, \textbf{rasterio} functions typically accept vector
 geometries in the form of \texttt{lists} of \texttt{shapely} objects.
@@ -11408,7 +11403,7 @@ is just one polygon).
 [{'min': 1122.0, 'max': 2661.0, 'mean': 1818.211830154405}]
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 \texttt{rasterstats.zonal\_stats}, just like
 \texttt{rasterstats.point\_query}
@@ -12180,7 +12175,7 @@ For example, the following expression returns a generator named
 \end{Shaded}
 
 \begin{verbatim}
-<generator object shapes at 0x750a66310240>
+<generator object shapes at 0x703619705d40>
 \end{verbatim}
 
 We can generate all shapes at once into a \texttt{list} named
@@ -12213,7 +12208,7 @@ is the first element of \texttt{pol}.
  1.0)
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Note that, when transforming a raster cell into a polygon,
 five-coordinate pairs need to be kept in memory to represent its
@@ -12350,7 +12345,7 @@ the coordinates of the top-left pixel can be calculated passing the
 (np.float64(-1.25), np.float64(1.25))
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Keep in mind that the coordinates of the top-left pixel
 (\texttt{(-1.25,\ 1.25)}), as calculated in the above expression, refer
@@ -13116,7 +13111,7 @@ Longer explanations of the evolution of CRS definitions and the PROJ
 library can be found in (Bivand 2021), Chapter 2 of (Pebesma and Bivand
 2022), and a blog post by Floris Vanderhaeghe\footnote{\url{https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/}}.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 As outlined in the PROJ documentation, there are different versions of
 the WKT CRS format including WKT1 and two variants of WKT2, the latter
@@ -13291,7 +13286,7 @@ and examine its existing CRS.
 CRS.from_epsg(26912)
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The \texttt{rasterio.open} function \texttt{mode}s generally follows
 Python's standard file connection modes, with possible arguments being
@@ -13489,7 +13484,7 @@ to use a distance of 1 degree, which is roughly equivalent to 100 \(km\)
 \end{Shaded}
 
 \begin{verbatim}
-/tmp/ipykernel_128449/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+/tmp/ipykernel_68710/855451079.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'buffer' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer_buff = lnd_layer.buffer(1)
 \end{verbatim}
@@ -13551,7 +13546,7 @@ using distance of 1 degree (incorrectly approximating 100 \(km\))}
 
 \end{figure}%
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The distance between two lines of longitude, called meridians, is around
 111 \(km\) at the equator (execute
@@ -13565,7 +13560,7 @@ the poles.
 
 \end{tcolorbox}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The \href{https://github.com/benbovy/spherely}{\textbf{spherely}}
 package, which is in early stages of development, is aimed at providing
@@ -13601,10 +13596,10 @@ between two objects with different CRSs.
 \end{Shaded}
 
 \begin{verbatim}
-/tmp/ipykernel_128449/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
+/tmp/ipykernel_68710/2145313019.py:1: UserWarning: Geometry is in a geographic CRS. Results from 'distance' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation.
 
   lnd_layer.distance(lnd_layer_proj)
-/tmp/ipykernel_128449/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
+/tmp/ipykernel_68710/2145313019.py:1: UserWarning: CRS mismatch between the CRS of left geometries and the CRS of right geometries.
 Use `to_crs()` to reproject one of the input geometries to match the CRS of the other.
 
 Left CRS: EPSG:4326
@@ -13904,7 +13899,7 @@ new pixel values through resampling
 complexity, in most cases when both raster and vector data are used, it
 is better to avoid reprojecting rasters and reproject vectors instead.
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Reprojection of the regular rasters is also known as warping.
 Additionally, there is a second similar operation called
@@ -14024,7 +14019,7 @@ Affine(0.00031506316853514724, 0.0, -113.24138811813536,
 1246
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The \texttt{*} syntax in Python is known as variable-length
 `\emph{positional} arguments'. It is used to pass a \texttt{list} or
@@ -14528,7 +14523,7 @@ PROJCS["Custom_AEQD",
  UNIT["Meter",1.0]]
 \end{verbatim}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 The above expression uses the so-called `f-strings' syntax, which is one
 of several Python techniques to embed values inside a string (as
@@ -15985,7 +15980,7 @@ information, in addition to the file path and mode:
   not work well} for writing multiband rasters
 \end{itemize}
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Note that \texttt{\textquotesingle{}GTiff} (GeoTIFF, \texttt{.tif}),
 which is the recommended driver, supports just some of the possible
@@ -16914,7 +16909,7 @@ a static map of a vector layer}
 
 \end{figure}%
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 As you have probably noticed throughout the book, the
 \texttt{plt.subplots} function is used to initialize a
@@ -17513,7 +17508,7 @@ layers in the same plot}
 
 \end{figure}%
 
-\begin{tcolorbox}[enhanced jigsaw, rightrule=.15mm, breakable, titlerule=0mm, coltitle=black, toprule=.15mm, colframe=quarto-callout-note-color-frame, bottomrule=.15mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomtitle=1mm, opacityback=0, leftrule=.75mm, toptitle=1mm, arc=.35mm, left=2mm, colbacktitle=quarto-callout-note-color!10!white, colback=white, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, opacityback=0, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, titlerule=0mm, leftrule=.75mm, colframe=quarto-callout-note-color-frame, breakable, bottomrule=.15mm, opacitybacktitle=0.6, rightrule=.15mm, left=2mm, toptitle=1mm, bottomtitle=1mm, toprule=.15mm, arc=.35mm, colback=white]
 
 Note that the drawing order of layers is not necessarily according to
 the order of expressions, in the code, but according to layer
