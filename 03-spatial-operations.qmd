@@ -386,7 +386,7 @@ random_points
 ```
 
 The scenario illustrated in @fig-spatial-join shows that the `random_points` object (top left) lacks attribute data, while the world (top right) has attributes, including country names that are shown for a sample of countries in the legend.
-Before creating the joined dataset, we use spatial subsetting to create `world_random`, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see the top right panel of @fig-spatial-join (b)).
+Before creating the joined dataset, we use spatial subsetting to create `world_random`, which contains only countries that contain random points, to verify the number of country names returned in the joined dataset should be four (see @fig-spatial-join (b)).
 
 ```{python}
 world_random = world[world.intersects(random_points.union_all())]
@@ -542,7 +542,7 @@ nz2 = pd.merge(nz[['Name', 'geometry']], nz_height2, on='Name', how='left')
 nz2
 ```
 
-We now have create the `nz2` layer, which gives the average `nz_height` elevation value per polygon.
+We now have created the `nz2` layer, which gives the average `nz_height` elevation value per polygon.
 The result is shown in @fig-nz-avg-nz-height.
 Note that the `missing_kwds` part determines the style of geometries where the symbology attribute (`elevation`) is missing, because there were no `nz_height` points overlapping with them.
 The default is to omit them, which is usually not what we want, but with `{'color':'grey','edgecolor':'black'}`, those polygons are shown with black outline and grey fill.
@@ -615,7 +615,7 @@ nz.plot(
 ```
 
 Our goal, now, is to 'transfer' the `'Population'` attribute (@fig-nz-and-grid) to the rectangular grid polygons, which is an example of a join between incongruent layers.
-To do that, we basically need to calculate--for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell.
+To do that, we basically need to calculate---for each `grid` cell---the weighted sum of the population in `nz` polygons coinciding with that cell.
 The weights in the weighted sum calculation are the ratios between the area of the coinciding 'part' out of the entire `nz` polygon.
 That is, we (inevitably) assume that the population in each `nz` polygon is equally distributed across space, therefore a partial `nz` polygon contains the respective partial population size.
 
@@ -936,7 +936,7 @@ The following sections explain how each type of map algebra operations can be us
 ### Local operations {#sec-raster-local-operations}
 
 Local operations comprise all cell-by-cell operations in one or several layers.
-Raster algebra is a classical use case of local operations---this includes adding or subtracting values from a raster, squaring,, and multiplying rasters.
+Raster algebra is a classical use case of local operations---this includes adding or subtracting values from a raster, squaring, and multiplying rasters.
 Raster algebra also allows logical operations such as finding all raster cells that are greater than a specific value (e.g., `5` in our example below).
 Local operations are applied using the **numpy** array operations syntax, as demonstrated below.
 
@@ -947,7 +947,7 @@ elev
 ```
 
 Now, any element-wise array operation can be applied using **numpy** arithmetic or conditional operators and functions, comprising local raster operations in spatial analysis terminology.
-For example, `elev + elev` adds the values of `elev` to itself, resulting in a raster with double values.
+For example, `elev+elev` adds the values of `elev` to itself, resulting in a raster with double values.
 
 ```{python}
 elev + elev
@@ -1114,7 +1114,7 @@ elev_min
 ```
 
 We can quickly check if the output meets our expectations.
-In our example, the minimum value has to be always the upper left corner of the moving window (remember we have created the input raster by row-wise incrementing the cell values by one starting at the upper left corner).
+In our example, the minimum value has to be always the upper left corner of the moving window (remember we have created the input raster by row-wise incrementing the cell values by one, starting at the upper left corner).
 
 Focal functions or filters play a dominant role in image processing.
 For example, low-pass or smoothing filters use the mean function to remove extremes.
@@ -1181,7 +1181,7 @@ GDAL contains a collection of over 40 programs, mostly aimed at raster processin
 In this book, we use **rasterio** for the above-mentioned operations, although the GDAL programs are a good alternative for those who are more comfortable with the command line. However, we do use two GDAL programs for tasks that are lacking in **rasterio** and not well-implemented in other Python packages: `gdaldem` (this section), and `gdal_contour` (@sec-raster-to-contours).
 :::
 
-GDAL, along with all of its programs should be available in your Python environment, since GDAL is a dependency of **rasterio**.
+GDAL, along with all of its programs, should be available in your Python environment, since GDAL is a dependency of **rasterio**.
 The following example, which should be run from the command line, takes the `srtm_32612.tif` raster (which we are going to create in @sec-reprojecting-raster-geometries, therefore it is in the `'output'` directory), calculates slope (in decimal degrees, between `0` and `90`), and exports the result to a new file `srtm_32612_slope.tif`.
 Note that the arguments of `gdaldem` are the metric name (`slope`), then the input file path, and finally the output file path.
 
@@ -1206,7 +1206,7 @@ os.system('gdaldem aspect output/srtm_32612.tif output/srtm_32612_aspect.tif')
 ```
 
 @fig-raster-slope shows the results, using our more familiar plotting methods from **rasterio**.
-The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing 'No Data' flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s the cyclic color scales (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
+The code section is relatively long due to the workaround to create a color key (see @sec-plot-symbology) and removing 'No Data' flag values from the arrays so that the color key does not include them. Also note that we are using one of **matplotlib**'s cyclic color scales (`'twilight'`) when plotting aspect (@fig-raster-slope (c)).
 
 ```{python}
 #| label: fig-raster-slope
