@@ -52,7 +52,7 @@ src_nz_elev = rasterio.open('data/nz_elev.tif')
 ## Introduction
 
 This chapter focuses on interactions between raster and vector geographic data models, both introduced in @sec-spatial-class.
-It includes four main techniques:
+It includes three main techniques:
 
 -   Raster cropping and masking using vector objects (@sec-raster-cropping)
 -   Extracting raster values using different types of vector data (@sec-raster-extraction)
@@ -146,7 +146,7 @@ The related operation, cropping, reduces the raster extent to the extent of the 
 * To crop *and* mask, we can use `rasterio.mask.mask`, same as above for masking, while setting `crop=True` (@fig-raster-crop (d))
 * To just crop, *without* masking, we can derive the bounding box polygon of the vector layer, and then crop using that polygon, also combined with `crop=True` (@fig-raster-crop (c))
 
-For the example of cropping only, the extent polygon of `zion` can be obtained as a `shapely` geometry object using `.union_all().envelope`(@fig-zion-bbox).
+For the example of cropping only, the extent polygon of `zion` can be obtained as a `shapely` geometry object using `.union_all().envelope` (@fig-zion-bbox).
 
 ```{python}
 #| label: fig-zion-bbox
@@ -171,7 +171,7 @@ out_image_crop, out_transform_crop = rasterio.mask.mask(
 In the case of cropping, there is no particular reason to write the result to file for easier plotting, such as in the other two examples, since there are no 'No Data' values (@fig-raster-crop (c)).
 
 ::: callout-note
-As mentioned above, **rasterio** functions typically accept vector geometries in the form of `lists` of `shapely` objects. `GeoSeries` are conceptually very similar, and also accepted. However, even an individual geometry has to be in a `list`, which is why we pass `[bb]`, and not `bb`, in the above `rasterio.mask.mask` function call (the latter would raise an error).
+As mentioned above, **rasterio** functions typically accept vector geometries in the form of `list`s of `shapely` objects. `GeoSeries` are conceptually very similar, and also accepted. However, even an individual geometry has to be in a `list`, which is why we pass `[bb]`, and not `bb`, in the above `rasterio.mask.mask` function call (the latter would raise an error).
 :::
 
 Finally, the third example is where we perform both crop and mask operations, using `rasterio.mask.mask` with `crop=True` passing `zion.geometry`.
@@ -433,7 +433,7 @@ However, if `zion` was composed of more than one polygon, we would accordingly g
 The result provides useful summaries, for example that the maximum height in the park is `2661` $m$ above see level.
 
 Note the `stats` argument, where we determine what type of statistics are calculated per polygon.
-Possible values other than `'mean'`, `'min'`, and `'max'` are:
+Possible values other than `'mean'`, `'min'`, and `'max'` include:
 
 -   `'count'`---The number of valid (i.e., excluding 'No Data') pixels
 -   `'nodata'`---The number of pixels with 'No Data'
@@ -554,13 +554,13 @@ shape
 ```
 
 Finally, we are ready to rasterize.
-As mentioned above point rasterization can be a very flexible operation: the results depend not only on the nature of the template raster, but also on the pixel 'activation' method, namely the way we deal with multiple points matching the same pixel.
+As mentioned above, point rasterization can be a very flexible operation: the results depend not only on the nature of the template raster, but also on the pixel 'activation' method, namely the way we deal with multiple points matching the same pixel.
 
 To illustrate this flexibility, we will try three different approaches to point rasterization (@fig-rasterize-points (b)-(d)).
 First, we create a raster representing the presence or absence of cycle hire points (known as presence/absence rasters).
 In this case, we transfer the value of `1` to all pixels where at least one point falls in.
 In the **rasterio** framework, we use the `rasterio.features.rasterize` function, which requires an iterable object of `geometry,value` pairs. 
-In this first example, we transform the point `GeoDataFrame` into a `list` of `shapely` geometries and the (fixed) value of `1`, using list comprehension as follows.
+In this first example, we transform the point `GeoDataFrame` into a `list` of `shapely` geometries and the (fixed) value of `1`, using list comprehension, as follows.
 The first five elements of the `list` are hereby printed to illustrate its structure.
 
 ```{python}
@@ -570,7 +570,7 @@ g[:5]
 
 The list of `geometry,value` pairs is passed to `rasterio.features.rasterize`, along with the `out_shape` and `transform` which define the raster template.
 The result `ch_raster1` is an `ndarray` with the burned values of `1` where the pixel coincides with at least one point, and `0` in 'unaffected' pixels.
-Note that `merge_alg=rasterio.enums.MergeAlg.replace` (the default) is used here, which means that a pixel get `1` when one or more points fall in it, or keeps the original `0` value otherwise.
+Note that `merge_alg=rasterio.enums.MergeAlg.replace` (the default) is used here, which means that a pixel gets `1` when one or more points fall in it, or keeps the original `0` value otherwise.
 
 ```{python}
 ch_raster1 = rasterio.features.rasterize(
@@ -770,7 +770,7 @@ The returned object is a generator (see note in @sec-spatial-subsetting-raster),
 For example, the following expression returns a generator named `shapes`, referring to the pixel polygons.
 
 ```{python}
-shapes = rasterio.features.shapes(rasterio.band(src_grain, 1) )
+shapes = rasterio.features.shapes(rasterio.band(src_grain, 1))
 shapes
 ```
 
