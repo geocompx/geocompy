@@ -309,7 +309,7 @@ nz_scale
 When setting the `origin` in `.scale`, other than `'centroid'` it is possible to use `'center'`, for the bounding box center, or specific point coordinates, such as `(0,0)`.
 
 Rotating the geometries can be done using the `.rotate` method.
-When rotating, we need to specify the rotation angle (positive values imply clockwise rotation) and the `origin` points (using the same options as in `scale`).
+When rotating, we need to specify the rotation angle (positive values imply clockwise rotation) and the `origin` points (using the same options as in `.scale`).
 For example, the following expression rotates `nz` by $30\degree$ counter-clockwise, around the geometry centroids.
 
 ```{python}
@@ -468,7 +468,7 @@ pnt = [shapely.Point(i) for i in coords]
 pnt = gpd.GeoSeries(pnt)
 ```
 
-The result `pnt`, which `x` and `y` circles in the background, is shown in @fig-random-points.
+The result `pnt`, with `x` and `y` circles in the background, is shown in @fig-random-points.
 
 ```{python}
 #| label: fig-random-points
@@ -478,7 +478,7 @@ gpd.GeoSeries(x).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries(y).plot(ax=base, color='none', edgecolor='darkgrey');
 ```
 
-Now, we can get back to our question: how to subset the points to only return the point that intersects with both `x` and `y`?
+Now, we can get back to our question: how to subset the points to only return the points that intersect with both `x` and `y`?
 The code chunks below demonstrate two ways to achieve the same result.
 In the first approach, we can calculate a boolean `Series`, evaluating whether each point of `pnt` intersects with the intersection of `x` and `y` (see @sec-spatial-subsetting-vector), and then use it to subset `pnt` to get the result `pnt1`.
 
@@ -500,7 +500,7 @@ The subset `pnt2` is shown in @fig-intersection-points.
 
 ```{python}
 #| label: fig-intersection-points
-#| fig-cap: Randomly distributed points within the bounding box enclosing circles x and y. The point that intersects with both objects x and y are highlighted. 
+#| fig-cap: Randomly distributed points within the bounding box enclosing circles `x` and `y`. The points that intersect with both objects `x` and `y` are highlighted. 
 base = pnt.plot(color='none', edgecolor='black')
 gpd.GeoSeries(x).plot(ax=base, color='none', edgecolor='darkgrey');
 gpd.GeoSeries(y).plot(ax=base, color='none', edgecolor='darkgrey');
@@ -583,7 +583,7 @@ texas_union
 ### Type transformations {#sec-type-transformations}
 
 Transformation of geometries, from one type to another, also known as 'geometry casting', is often required to facilitate spatial analysis.
-Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation, and the way that the input is organized (whether and individual geometry, or a vector layer).
+Either the **geopandas** or the **shapely** packages can be used for geometry casting, depending on the type of transformation, and the way that the input is organized (whether as individual geometry, or a vector layer).
 Therefore, the exact expression(s) depend on the specific transformation we are interested in.
 
 In general, you need to figure out the required input of the respective constructor function according to the 'destination' geometry (e.g., `shapely.LineString`, etc.), then reshape the input of the source geometry into the right form to be passed to that function.
@@ -656,7 +656,7 @@ gpd.GeoSeries(polygon).plot();
 ```
 
 Conversion from `'MultiPoint'` to `'LineString'`, shown above (@fig-type-transform-linestring), is a common operation that creates a line object from ordered point observations, such as GPS measurements or geotagged media.
-This allows spatial operations such as the length of the path traveled.
+This allows spatial operations, such as calculating the length of the path traveled.
 Conversion from `'MultiPoint'` or `'LineString'` to `'Polygon'` (@fig-type-transform-polygon) is often used to calculate an area, for example from the set of GPS measurements taken around a lake or from the corners of a building lot.
 
 Our `'LineString'` geometry can be converted back to a `'MultiPoint'` geometry by passing its coordinates directly to `shapely.MultiPoint` (@fig-type-transform-multipoint2).
@@ -750,7 +750,7 @@ Using **shapely** methods with which we are already familiar with (see above), t
 list(ml.geoms)
 ```
 
-However, specifically for the 'multi-part to single part' type transformation scenarios, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one.
+However, specifically for the 'multi-part to single part' type transformation scenario, there is also a method called `.explode`, which can convert an entire multi-part `GeoDataFrame` to a single-part one.
 The advantage is that the original attributes (such as `id`) are retained, so that we can keep track of the original multi-part geometry properties that each part came from.
 The `index_parts=True` argument also lets us keep track of the original multipart geometry indices, and part indices, named `level_0` and `level_1`, respectively.
 
@@ -768,8 +768,8 @@ For example, here we see that all `'LineString'` geometries came from the same m
 #| fig-cap: Transformation of a `'MultiLineString'` layer with one feature, into a `'LineString'` layer with three features, using `.explode`
 #| layout-ncol: 2
 #| fig-subcap: 
-#| - MultiLineString layer
-#| - LineString layer, after applying `.explode`
+#| - `'MultiLineString'` layer
+#| - `'LineString'` layer, after applying `.explode`
 dat.plot(column='id', linewidth=7);
 dat1.plot(column='level_1', linewidth=7);
 ```
@@ -792,8 +792,8 @@ The result is illustrated in @fig-linestring-to-multipoint.
 #| fig-cap: Transformation of a `'LineString'` layer with three features, into a `'MultiPoint'` layer (also with three features), using `.apply` and **shapely** methods
 #| layout-ncol: 2
 #| fig-subcap: 
-#| - LineString layer
-#| - MultiPoint layer
+#| - `'LineString'` layer
+#| - `'MultiPoint'` layer
 dat1.plot(column='level_1', linewidth=7);
 dat2.plot(column='level_1', markersize=50);
 ```
