@@ -109,7 +109,7 @@ They contain all relevant information about any given CRS, including its datum a
 
 Recent PROJ versions (6+) still allow use of proj-strings to define coordinate operations, but some proj-string keys (`+nadgrids`, `+towgs84`, `+k`, `+init=epsg:`) are either no longer supported or are discouraged.
 Additionally, only three datums (i.e., WGS84, NAD83, and NAD27) can be directly set in proj-string.
-Longer explanations of the evolution of CRS definitions and the PROJ library can be found in [@bivand_progress_2021], Chapter 2 of [@pebesma_spatial_2022], and a blog post by Floris Vanderhaeghe[^floris_blog].
+Longer explanations of the evolution of CRS definitions and the PROJ library can be found in @bivand_progress_2021, Chapter 2 of @pebesma_spatial_2022, and a blog post by Floris Vanderhaeghe[^floris_blog].
 
 [^floris_blog]: [https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/](https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/)
 
@@ -180,7 +180,7 @@ In **rasterio**, the CRS information is stored as part of a raster file connecti
 Replacing the CRS definition for a **rasterio** file connection is typically not necessary, because it is not considered in any operation; only the transformation matrix and coordinates are.
 One exception is when writing the raster, in which case we need to construct the metadata of the raster file to be written, and therein specify the CRS anyway (@sec-raster-from-scratch).
 However, if we, for some reason, need to change the CRS definition in the file connection metadata, we can do that when opening the file in `r+` (reading and writing) mode.
-To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd2.tif`, 
+To demonstrate, we will create a copy of the `nlcd.tif` file, named `nlcd_modified_crs.tif`, 
 
 ```{python}
 shutil.copy('data/nlcd.tif', 'output/nlcd_modified_crs.tif')
@@ -241,7 +241,7 @@ lnd_layer = lnd_layer.set_crs(4326)
 
 When working with **geopandas** and **rasterio**, datasets without a specified CRS are not an issue in most workflows, since only the coordinates are considered.
 It is up to the user to make sure that, when working with more than one layer, all of the coordinates are given in the same CRS (whether specified or not).
-When exporting the results, though, it is important to keep the CRS definition in place, because other software typically *do* use, and require, the CRS definition in calculation.
+When exporting the results, though, it is important to keep the CRS definition in place, because other software typically *do* use, and require, the CRS definition in calculations.
 It should also be mentioned that, in some cases the CRS specification is left unspecified on purpose, for example when working with layers in arbitrary or non-geographic space (simulations, internal building plans, analysis of plot-scale ecological patterns, etc.).
 
 ## Geometry operations on projected and unprojected data {#sec-geometry-operations-on-projected-and-unprojected-data}
@@ -312,8 +312,10 @@ Lines of latitude, by contrast, are equidistant from each other irrespective of 
 :::
 
 ::: callout-note
-The [**spherely**](https://github.com/benbovy/spherely) package, which is in early stages of development, is aimed at providing a spherical-geometry counterpart to **shapely**, so that true distances (in $m$) and areas (in $m^2$) can be directly calculated on geometries in geographic CRS.
+The **spherely**[^spherely] package, in early stages of development at the time of writing, is aimed at providing a spherical-geometry counterpart to **shapely**, so that true distances (in $m$) and areas (in $m^2$) can be directly calculated on geometries in geographic CRS.
 :::
+
+[^spherely]: [https://github.com/benbovy/spherely](https://github.com/benbovy/spherely)
 
 ## When to reproject? {#sec-when-to-reproject}
 
@@ -473,7 +475,7 @@ In other words, raster reprojection can be thought of as two separate spatial op
 Due to this additional complexity, in most cases when both raster and vector data are used, it is better to avoid reprojecting rasters and reproject vectors instead.
 
 ::: callout-note
-Reprojection of the regular rasters is also known as warping.
+Reprojection of regular rasters is also known as warping.
 Additionally, there is a second similar operation called 'transformation'.
 Instead of resampling all of the values, it leaves all values intact but recomputes new coordinates for every raster cell, changing the grid geometry.
 For example, it could convert the input raster (a regular grid) into a curvilinear grid.
@@ -496,8 +498,7 @@ We already created a connection to the `nlcd.tif` file at the beginning of this 
 src_nlcd
 ```
 
-Recall from previous chapters that the raster transformation matrix and dimensions are accessible from the file connection using `src_nlcd.transform`, `src_nlcd.width`, and `src_nlcd.height`, respectively.
-<!--src_nlcd.bounds is not mentioned here but it is used in the code chunk below... -->
+Recall from previous chapters that the raster transformation matrix and dimensions are accessible from the file connection using `src_nlcd.transform`, `src_nlcd.width`, `src_nlcd.height`, and `src_nlcd.bounds`, respectively.
 
 This information will be required to calculate the destination transformation matrix.
 
