@@ -221,7 +221,7 @@ Nominatim[^nominatim] is a well-known free service, based on OpenStreetMap data,
 
 [^nominatim]: <https://nominatim.openstreetmap.org/ui/about.html>
 
-**geopandas** provides the `gpd.tools.geocode`, which can geocode addresses to a `GeoDataFrame`.
+**geopandas** provides the `gpd.tools.geocode` function, which can geocode addresses to a `GeoDataFrame`.
 Internally it uses the **geopy** package, supporting several providers through the `provider` parameter (use `geopy.geocoders.SERVICE_TO_GEOCODER` to see possible options).
 The example below searches for John Snow blue plaque[^john_snow_blue_plaque] coordinates located on a building in the Soho district of London.
 The result is a `GeoDataFrame` with the address we passed to `gpd.tools.geocode`, and the detected point location.
@@ -342,7 +342,7 @@ In this section, we also show how to read specific rectangular extents ('windows
 ### Vector data {#sec-input-vector}
 
 Spatial vector data comes in a wide variety of file formats.
-Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with **geopandas** functions `read_file` and `to_file` (covered in @sec-data-output), respectively.
+Most popular representations such as `.shp`, `.geojson`, and `.gpkg` files can be imported and exported with **geopandas** function `gpd.read_file` and method `.to_file` (covered in @sec-data-output), respectively.
 
 **geopandas** uses GDAL to read and write data, via **pyogrio** since `geopandas` version `1.0.0` (previously via **fiona**).
 After **pyogrio** is imported, `pyogrio.list_drivers` can be used to list drivers available to GDAL, including whether they can read (`'r'`), append (`'a'`), or write (`'w'`) data, or all three.
@@ -659,7 +659,7 @@ world.to_file('output/w_many_layers.gpkg', layer='world2')
 ```
 
 In this case, `w_many_layers.gpkg` has two 'layers': `w_many_layers` (same as the file name, when `layer` is unspecified) and `world2`.
-Incidentally, the contents of the two layers are identical, but this does not have to be.
+Incidentally, the contents of the two layers are identical, but this does not have to be so.
 Each layer from such a file can be imported separately using the `layer` argument of `gpd.read_file`.
 
 ```{python}
@@ -684,7 +684,9 @@ As opposed to reading mode (`'r'`, the default) mode, the `rasterio.open` functi
 -   `dtype`---The raster data type, one of **numpy** types supported by the `driver` (e.g., `np.int64`) (see @tbl-numpy-data-types)
 -   `crs`---The CRS, e.g., using an EPSG code (such as `4326`)
 -   `transform`---The transform matrix
--   `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this [does not work well](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m) for writing multiband rasters
+-   `compress`---A compression method to apply, such as `'lzw'`. This is optional and most useful for large rasters. Note that, at the time of writing, this does not work well[^compress_note] for writing multiband rasters
+
+[^compress_note]: [https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m](https://gis.stackexchange.com/questions/404738/why-does-rasterio-compression-reduces-image-size-with-single-band-but-not-with-m)
 
 ::: callout-note
 Note that `'GTiff` (GeoTIFF, `.tif`), which is the recommended driver, supports just some of the possible **numpy** data types (see @tbl-numpy-data-types). Importantly, it does not support `np.int64`, the default `int` type. The recommendation in such case it to use `np.int32` (if the range is sufficient), or `np.float64`. 
@@ -696,7 +698,7 @@ Alternatively, we can write all bands at once, as in `.write(a)`, where `a` is a
 When done, we close the file connection using the `.close` method.
 Some functions, such as `rasterio.warp.reproject` used for resampling and reprojecting (@sec-raster-resampling and @sec-reprojecting-raster-geometries) directly accept a file connection in `'w'` mode, thus handling the writing (of a resampled or reprojected raster) for us.
 
-Most of the properties are either straightforward to choose, based on our aims, (e.g., `driver`, `crs`, `compress`, `nodata`), or directly derived from the array with the raster values itself (e.g., `height`, `width`, `count`, `dtype`).
+Most of the properties are either straightforward to choose, based on our aims (e.g., `driver`, `crs`, `compress`, `nodata`), or directly derived from the array with the raster values itself (e.g., `height`, `width`, `count`, `dtype`).
 The most complicated property is the `transform`, which specifies the raster origin and resolution.
 The `transform` is typically either obtained from an existing raster (serving as a 'template'), created from scratch based on manually specified origin and resolution values (e.g., using `rasterio.transform.from_origin`), or calculated automatically (e.g., using `rasterio.warp.calculate_default_transform`), as shown in previous chapters.
 
@@ -713,7 +715,7 @@ To summarize, the raster-writing scenarios differ in two aspects:
 1.  The way that the transformation matrix for the output raster is obtained:
     -   Imported from an existing raster (see below)
     -   Created from scratch, using `rasterio.transform.from_origin` (@sec-raster-from-scratch)
-    -   Calculate automatically, using `rasterio.warp.calculate_default_transform` (@sec-reprojecting-raster-geometries)
+    -   Calculated automatically, using `rasterio.warp.calculate_default_transform` (@sec-reprojecting-raster-geometries)
 2.  The way that the raster is written:
     -   Using the `.write` method, given an existing array (@sec-raster-from-scratch, @sec-raster-agg-disagg)
     -   Using `rasterio.warp.reproject` to calculate and write a resampled or reprojected array (@sec-raster-resampling, @sec-reprojecting-raster-geometries)
