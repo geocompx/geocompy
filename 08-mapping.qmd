@@ -52,9 +52,6 @@ It also relies on the following data files:
 nz = gpd.read_file('data/nz.gpkg')
 nz_height = gpd.read_file('data/nz_height.gpkg')
 nz_elev = rasterio.open('data/nz_elev.tif')
-tanzania = gpd.read_file('data/world.gpkg', where='name_long="Tanzania"')
-tanzania_buf = tanzania.to_crs(32736).buffer(50000).to_crs(4326)
-tanzania_neigh = gpd.read_file('data/world.gpkg', mask=tanzania_buf)
 ```
 
 ## Introduction
@@ -355,10 +352,10 @@ nz.plot(ax=ax, color='none')
 nz_height.plot(ax=ax, color='red');
 ```
 
-We can combine rasters and vector layers in the same plot as well, which we already used earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).
+We can combine rasters and vector layers in the same plot as well, which we already did earlier in the book, for example when explaining masking and cropping (@fig-raster-crop).
 The technique is to initialize a plot with `fig,ax=plt.subplots()`, then pass `ax` to any of the separate plots, making them appear together.
 
-For example, @fig-plot-raster-and-vector demonstrated plotting a raster with increasingly complicated additions:
+For example, @fig-plot-raster-and-vector demonstrates plotting a raster with increasingly complicated additions:
 
 -   Panel (a) shows a raster (New Zealand elevation) and a vector layer (New Zealand administrative division)
 -   Panel (b) shows the raster with a buffer of 22.2 $km$ around the dissolved administrative borders, representing New Zealand's territorial waters (see @sec-global-operations-and-distances)
@@ -420,7 +417,7 @@ For example, let's take the small `"Nelson"` polygon from `nz`, and reproject it
 nzw = nz[nz['Name'] == 'Nelson'].to_crs(epsg=3857)
 ```
 
-To add a basemap, we use the `contextily.add_basemap` function, similarly to the way we added multiple layers (@sec-plot-static-layers).
+To add a basemap, we use the `cx.add_basemap` function, similarly to the way we added multiple layers (@sec-plot-static-layers).
 The default basemap is 'OpenStreetMap'.
 You can specify a different basemap using the `source` parameter, with one of the values in `cx.providers` (@fig-basemap).
 
@@ -487,7 +484,7 @@ for i in range(len(vars)):
     ax[i].yaxis.set_visible(False)
 ```
 
-It is also possible to 'manually' specify the properties of each panel, and which row/column it goes in (e.g., @fig-spatial-aggregation-different-functions).
+It is also possible to 'manually' specify the properties of each panel, and which row/column it goes in.
 This can be useful when the various panels have different components, or even completely different types of plots (e.g., @fig-zion-transect), making automation with a `for` loop less applicable.
 For example, here is a plot similar to @fig-faceted-map2, but specifying each panel using a separate expression instead of using a `for` loop (@fig-faceted-map3).
 
@@ -504,8 +501,6 @@ ax[1][0].set_title(vars[2])
 nz.plot(ax=ax[1][1], column=vars[3], legend=True)
 ax[1][1].set_title(vars[3]);
 ```
-
-See the first code chunk in the next section for another example of manual panel contents specification.
 
 ### Exporting {#sec-exporting-static-maps}
 
@@ -549,7 +544,7 @@ Less advanced interactivity levels include popups which appear when you click on
 More advanced levels of interactivity include the ability to tilt and rotate maps, and the provision of 'dynamically linked' sub-plots which automatically update when the user pans and zooms [@pezanowski_senseplace3_2018].
 
 The most important type of interactivity, however, is the display of geographic data on interactive or 'slippy' web maps.
-Significant features of web maps are that (1) they eventually comprise static HTML files, easily shared and accessed by a wide audience, and (2) they can 'grab' content (e.g., basemaps) or use services from other locations on the internet, that way providing detailed context without much requiring much effort from the person who created the map.
+Significant features of web maps are that (1) they eventually comprise static HTML files, easily shared and accessed by a wide audience, and (2) they can 'grab' content (e.g., basemaps) or use services from other locations on the internet, that way providing detailed context without requiring much effort from the person who created the map.
 The most popular approaches for web mapping, in Python and elsewhere, are based on the Leaflet JavaScript library [@dorman2020introduction]. 
 The **folium** Python package provides an extensive interface to create customized web maps based on Leaflet; it is recommended for highly customized maps.
 However, the **geopandas** wrapper `.explore`, introduced in @sec-vector-layers, can be used for a wide range of scenarios which are often sufficient.
@@ -634,7 +629,7 @@ For example, the following expression draws `'circe_marker`' points with 20-pixe
 :::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-styling-points
-#| fig-cap: Styling of points in `.explore` (using `circle_marker`)
+#| fig-cap: Styling of points in `.explore` (using `'circle_marker'`)
 nz_height.explore(
     color='green', 
     style_kwds={'color':'black', 'opacity':0.5, 'fillOpacity':0.1}, 
@@ -661,16 +656,16 @@ map_to_png.map_to_png(nz_height.explore(
     marker_kwds={'radius':20}
 ), 'fig-explore-styling-points')
 ```
-![Styling of points in `.explore` (using `circle_marker`)](images/fig-explore-styling-points.png){#fig-explore-styling-points}
+![Styling of points in `.explore` (using `'circle_marker'`)](images/fig-explore-styling-points.png){#fig-explore-styling-points}
 :::
 
-@fig-explore-styling-points2 demonstrates the `'marker_type'` option.
+@fig-explore-styling-points2 demonstrates the `'marker'` option.
 Note that the above-mentioned styling properties (other than `opacity`) are not applicable when using `marker_type='marker'`, because the markers are fixed PNG images.
 
 :::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-styling-points2
-#| fig-cap: Styling of points in `.explore` (using `marker`)
+#| fig-cap: Styling of points in `.explore` (using `'marker'`)
 nz_height.explore(marker_type='marker')
 ```
 :::
@@ -685,7 +680,7 @@ nz_height.explore(marker_type='marker')
 #| error: true
 map_to_png.map_to_png(nz_height.explore(marker_type='marker'), 'fig-explore-styling-points2')
 ```
-![Styling of points in `.explore` (using `marker`)](images/fig-explore-styling-points2.png){#fig-explore-styling-points2}
+![Styling of points in `.explore` (using `'marker'`)](images/fig-explore-styling-points2.png){#fig-explore-styling-points2}
 :::
 
 ### Layers
@@ -724,7 +719,7 @@ Note the `name` properties, used to specify layer names in the control, and the 
 :::  {.content-visible when-format="html"}
 ```{python}
 #| label: fig-explore-layers-controls
-#| fig-cap: Displaying multiple layers in an interactive map with `.explore`
+#| fig-cap: Displaying multiple layers in an interactive map with `.explore`, with layer controls
 m = nz.explore(name='Polygons (adm. areas)')
 nz_height.explore(m=m, color='red', name='Points (elevation)')
 folium.LayerControl(collapsed=False).add_to(m)
@@ -748,7 +743,7 @@ nz_height.explore(m=m, color='red', name='Points (elevation)')
 folium.LayerControl(collapsed=False).add_to(m)
 map_to_png.map_to_png(m, 'fig-explore-layers-controls')
 ```
-![Displaying multiple layers in an interactive map with `.explore`](images/fig-explore-layers-controls.png){#fig-explore-layers-controls}
+![Displaying multiple layers in an interactive map with `.explore`, with layer controls](images/fig-explore-layers-controls.png){#fig-explore-layers-controls}
 :::
 
 ### Symbology {#sec-explore-symbology}
