@@ -1,5 +1,6 @@
-# geocompy
 
+
+# geocompy
 
 [![Render](https://github.com/geocompx/geocompy/actions/workflows/main.yaml/badge.svg)](https://github.com/geocompx/geocompy/actions/workflows/main.yaml)
 <!-- [![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/geocompr/py/main?urlpath=lab/tree/ipynb) -->
@@ -8,7 +9,8 @@ Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespa
 
 Geocomputation with Python is an open source book project that will be
 published as a physical book. We are developing it in the open and
-publishing an up-to-date online version at <https://py.geocompx.org>.
+publishing an up-to-date online version at <https://py.geocompx.org>
+(with a backup at <https://geocompx.github.io/geocompy>).
 
 ## Dependencies
 
@@ -42,8 +44,7 @@ a way to test changes and contribute fixes in an instant.
 
 To run the book in Codespaces, click on the link below.
 
-[![Open in GitHub
-Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
+[![](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=447558863)
 
 You should [see](https://github.com/geocompx/geocompy/issues/114)
 something like this, the result of running all the code in the book by
@@ -250,6 +251,7 @@ micromamba list export > environment.yml
 ```
 
 </details>
+
 <!-- 
 Note: we don't need this here but commenting out the content rather than deleting because some of it could be ported into the README.
 Reasonable? 
