@@ -10,11 +10,15 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Convert-and-push
         if: contains(github.event.head_commit.message, 'convert')
         run: |
-          pip3 install jupytext
+          if command -v uv >/dev/null 2>&1; then
+            uv pip install --system jupytext
+          else
+            pip3 install jupytext
+          fi
           # Convert .qmd files to .ipynb and .py files, see convert.sh
           ./convert.sh
       - name: Commit-and-push
